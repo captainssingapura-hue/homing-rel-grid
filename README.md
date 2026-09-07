@@ -45,4 +45,9 @@ mvn install
 cd rel-grid-workbench && mvn compile exec:java -Dexec.mainClass=hue.captains.singapura.js.homing.relgrid.workbench.GridWorkbenchServer
 ```
 
-Depends on the homing core artifacts (`LOCAL-SNAPSHOT`) being installed.
+Builds against the released homing core (`homing.core.version` in the root pom, currently
+`0.8.0`), so a clean machine needs nothing installed first. To build against local core work:
+
+```bash
+mvn -Dhoming.core.version=LOCAL-SNAPSHOT install
+```
