@@ -182,9 +182,30 @@ final class RelGridTestDom {
                     mods = mods || {};
                     table().dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
                 }
+                // A click as a browser actually sends one: mousedown, mouseup, click.
+                // Dispatching the click alone is not faithful — the grid arms a
+                // press-drag on mousedown, and a harness that skips it hides the
+                // arming from every test that uses it.
                 function click(i, j, mods) {
                     mods = mods || {};
-                    td(i, j).dispatch('click', { shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
+                    var ev = { shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl };
+                    td(i, j).dispatch('mousedown', ev);
+                    document.dispatch('mouseup', {});
+                    td(i, j).dispatch('click', ev);
+                }
+                // A press-drag, as a browser sends it: mousedown, a mousemove per
+                // slot the pointer reaches, mouseup at the document, and then the
+                // click the browser fires for a press and release in one slot.
+                function drag(from, through, mods) {
+                    mods = mods || {};
+                    td(from[0], from[1]).dispatch('mousedown', { shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
+                    for (var k = 0; k < through.length; k++)
+                        td(through[k][0], through[k][1]).dispatch('mousemove', {});
+                    document.dispatch('mouseup', {});
+                    var last = through.length ? through[through.length - 1] : from;
+                    // The browser fires click only when press and release share a slot.
+                    if (last[0] === from[0] && last[1] === from[1])
+                        td(from[0], from[1]).dispatch('click', { shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
                 }
                 // What the layout has actually painted, as 'i,j' in row-major order.
                 // A class check rather than a regex: \b in a Java text block is a
@@ -202,7 +223,7 @@ final class RelGridTestDom {
                 }
                 return { grid: grid, relation: relation, container: container, data: data,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
-                         td: td, cellEl: cellEl, key: key, click: click, painted: painted,
+                         td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
                          selections: selections,
                          arranged: arranged, moves: moves, started: started, ended: ended, commits: commits, resized: resized,
                          mints: function () { return mints; }, asked: function () { return asked; } };

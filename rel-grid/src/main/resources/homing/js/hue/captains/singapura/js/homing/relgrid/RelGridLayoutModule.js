@@ -15,7 +15,13 @@
 // Raw DOM inside the primitive; an injected stylesheet with theme tokens only,
 // under the hrg- prefix so this grid and the live one can share a page.
 //
-//   new RelGridLayout({ container, label?, showHeader?, onCellClick?, onCellDblClick?, onColResize? })
+// A PRESS-DRAG over the slots is captured here too, and reported as raw
+// pointer facts — a press, each slot the pointer reaches while held, and the
+// release. The layout decides nothing about what a drag MEANS; it does not
+// even know there is a selection.
+//
+//   new RelGridLayout({ container, label?, showHeader?, onCellClick?, onCellDblClick?,
+//                       onCellDown?, onCellDragTo?, onDragEnd?, onColResize? })
 // =============================================================================
 
 var _HRG_STYLE_ID = "homing-rel-grid-style";
@@ -93,8 +99,12 @@ class RelGridLayout {
         if (!opts.container) throw new Error("[RelGridLayout] opts.container is required");
         _hrgEnsureStyles();
         this._container = opts.container;
-        this._onCellClick = opts.onCellClick || null;         // (i, j)
+        this._onCellClick = opts.onCellClick || null;         // (i, j, mods)
         this._onCellDblClick = opts.onCellDblClick || null;   // (i, j)
+        this._onCellDown = opts.onCellDown || null;           // (i, j, mods) — a press
+        this._onCellDragTo = opts.onCellDragTo || null;       // (i, j) — reached while held
+        this._onDragEnd = opts.onDragEnd || null;             // () — released
+        this._press = null;                                   // the slot a button went down on
         this._table = document.createElement("table");
         this._table.className = "hrg-table";
         this._table.setAttribute("tabindex", "0");            // the keyboard host
@@ -120,6 +130,17 @@ class RelGridLayout {
         this._slots = [];        // [i][j] → td
         this._cursorTd = null;   // the slot currently painted as the cursor
         this._selTds = [];       // the slots currently painted as selected
+
+        // A press ends wherever the pointer happens to be — off the table, off
+        // the window — so the release is heard at the document, as the header
+        // drag hears its own.
+        var self = this;
+        this._mouseup = function () {
+            if (!self._press) return;
+            self._press = null;
+            if (self._onDragEnd) self._onDragEnd();
+        };
+        document.addEventListener("mouseup", this._mouseup);
     }
 
     /**
@@ -160,6 +181,23 @@ class RelGridLayout {
             });
             td.addEventListener("dblclick", function (e) {
                 if (self._onCellDblClick) self._onCellDblClick(i, j, _hrgMods(e));
+            });
+            // The press, and every slot the pointer reaches while it is held.
+            // Moving within the slot it went down on reports nothing — a press
+            // that never leaves its cell is a click, and is handled as one.
+            td.addEventListener("mousedown", function (e) {
+                self._press = { i: i, j: j };
+                if (self._onCellDown) self._onCellDown(i, j, _hrgMods(e));
+            });
+            td.addEventListener("mousemove", function () {
+                if (!self._press) return;
+                if (!self._press.moved) {
+                    if (self._press.i === i && self._press.j === j) return;   // never left its own slot
+                    self._press.moved = true;
+                }
+                // Once it HAS left, coming back to the press's slot is a report
+                // too — that is how a drag shrinks to 1x1 again.
+                if (self._onCellDragTo) self._onCellDragTo(i, j);
             });
         };
         for (var i = 0; i < rows; i++) {
@@ -250,8 +288,11 @@ class RelGridLayout {
     cols() { return this._slots.length ? this._slots[0].length : 0; }
 
     destroy() {
+        document.removeEventListener("mouseup", this._mouseup);
         if (this._table.parentNode) this._table.parentNode.removeChild(this._table);
         this._slots = [];
         this._cursorTd = null;
+        this._selTds = [];
+        this._press = null;
     }
 }

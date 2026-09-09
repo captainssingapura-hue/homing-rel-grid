@@ -44,6 +44,13 @@ is the same grid, constructed the same way, over the same persisted store. What 
   dish selling well lowers everyone else's. Nobody edited a popularity cell, and nobody can:
   the store refuses a commit to `sold` or `popularity` whichever relation asks.
 - **Reload the page.** Edits and sales are persisted; `popularity` is recomputed, not stored.
+- **Select a range.** Press and drag across the cells, or shift-click, or hold **Shift** and use
+  the arrows. **Ctrl**-click or ctrl-drag adds another range beside the first, and **Ctrl+A**
+  takes the whole table. A bare click or arrow starts over. Watch the cursor while you extend:
+  it does not move, because a selection reaches further and the cursor is not what reaches.
+  With nothing selected the selection *is* the cursor's own cell, which is why one cell is
+  always tinted. Nothing consumes a selection yet — copy and bulk editing are later rounds, and
+  the list is built and shown on its own for now.
 - Drag a header's right edge, or press **Alt+←/→** on a column. Widths are the grid's own
   geometry — held by column, applied in place — and are not remembered, because remembering is
   the domain's half.

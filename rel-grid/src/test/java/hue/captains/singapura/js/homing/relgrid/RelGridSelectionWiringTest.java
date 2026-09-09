@@ -178,6 +178,107 @@ class RelGridSelectionWiringTest extends JsModuleTestBase {
     }
 
     @Test
+    void aPressDragMakesARangeAndTheCursorStaysWhereItStarted() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture();
+                    f.click(2, 1);                                          // somewhere else first
+                    f.drag([0, 0], [[1, 0], [2, 1]]);
+                    if (f.grid.selectionCount() !== 1) return false;
+                    if (f.painted() !== '0,0 0,1 1,0 1,1 2,0 2,1') return false;
+                    // The press was a BARE one, so it cleared and moved the cursor to where
+                    // the drag began — and the drag itself never moved it again.
+                    var c = f.grid.cursor();
+                    return c.pk === 'mapo' && c.column === 'ingredient'
+                        && f.moves.join() === 'fish calories,mapo ingredient';
+                })()"""), "a bare press-drag clears, anchors at the press, and extends as the pointer travels");
+    }
+
+    @Test
+    void aDragThatComesBackShrinksToWhereItStarted() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture();
+                    f.drag([1, 1], [[2, 1], [2, 0], [1, 1]]);               // out, across, and back
+                    if (f.grid.selectionCount() !== 1) return false;
+                    if (f.painted() !== '1,1') return false;                // a 1x1 again
+                    return f.grid.cursor().pk === 'coq' && f.grid.cursor().column === 'calories';
+                })()"""), "returning to the press's own slot reports too, so a drag can shrink back to 1x1");
+    }
+
+    @Test
+    void aModifiedPressDragMeansWhatTheModifiedClickMeans() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture();
+                    f.click(0, 0);
+                    // ctrl: the press appends a 1x1 and goes there, then the drag grows THAT range.
+                    f.drag([2, 0], [[2, 1]], { ctrl: true });
+                    if (f.grid.selectionCount() !== 1) return false;
+                    if (f.painted() !== '2,0 2,1') return false;
+                    if (f.grid.cursor().pk !== 'fish') return false;         // ctrl moved it
+                    // shift: the press adds nothing; the drag extends from the cursor, which stays.
+                    f.click(0, 0);
+                    f.drag([1, 1], [[2, 1]], { shift: true });
+                    if (f.grid.selectionCount() !== 1) return false;
+                    if (f.painted() !== '0,0 0,1 1,0 1,1 2,0 2,1') return false;
+                    return f.grid.cursor().pk === 'mapo';
+                })()"""), "ctrl and shift mean the same during a drag as they do on a click");
+    }
+
+    @Test
+    void theClickThatFollowsADragDoesNotUndoIt() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture();
+                    // A ctrl press-drag that ends in the slot it began: the browser sends a
+                    // click too, and handling it would append a SECOND range.
+                    f.drag([1, 0], [[2, 0], [1, 0]], { ctrl: true });
+                    if (f.grid.selectionCount() !== 1) return false;
+                    if (f.painted() !== '1,0') return false;
+                    // And the swallow does not outlive its gesture: the very next plain click
+                    // works normally, even though the drag ended off the table.
+                    f.drag([0, 0], [[1, 1]]);
+                    f.click(2, 1);
+                    return f.grid.selectionCount() === 0 && f.painted() === '2,1'
+                        && f.grid.cursor().pk === 'fish';
+                })()"""), "a drag swallows exactly one following click, and never a later one");
+    }
+
+    @Test
+    void aPressThatNeverTravelsIsJustAClick() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture();
+                    f.click(0, 0); f.click(2, 1, { shift: true });
+                    var before = f.painted();
+                    // Down and up in one slot, with a mousemove inside it: no drag, and the
+                    // click is NOT swallowed — it is the whole gesture.
+                    f.td(1, 0).dispatch('mousedown', {});
+                    f.td(1, 0).dispatch('mousemove', {});
+                    document.dispatch('mouseup', {});
+                    if (f.painted() !== before) return false;               // nothing yet
+                    f.click(1, 0);
+                    return f.grid.selectionCount() === 0 && f.painted() === '1,0';
+                })()"""), "a press that never leaves its slot changes nothing until the click arrives");
+    }
+
+    @Test
+    void aDragIsInertWhileDeep() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture({ editable: true });
+                    f.click(1, 0);
+                    f.key('Enter');
+                    if (!f.grid.isDeep()) return false;
+                    var before = f.painted();
+                    f.drag([0, 0], [[2, 1]]);
+                    return f.grid.isDeep() && f.painted() === before && f.grid.selectionCount() === 0
+                        && f.grid.cursor().pk === 'coq';
+                })()"""), "a press-drag is blocked while a cell is deep, like every other selection gesture");
+    }
+
+    @Test
     void aDoubleClickIsABareMoveOfItsOwn() {
         assertTrue(evalBool("""
                 (() => {

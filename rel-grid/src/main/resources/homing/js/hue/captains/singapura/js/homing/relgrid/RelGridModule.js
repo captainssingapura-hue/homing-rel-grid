@@ -40,8 +40,10 @@
 // but positions — and does three things with it. It ROUTES the gestures
 // (shift extends the last range's far corner, ctrl adds a 1x1 and moves the
 // cursor, Ctrl+A takes the whole presented space, a BARE move clears the
-// list); it CLEARS on every arrangement, because a selection is positions and
-// these are not the same positions; and it asks what is selected in order to
+// list, and a PRESS-DRAG is whichever of those three the press meant followed
+// by an extension per slot the pointer reaches); it CLEARS on every
+// arrangement, because a selection is positions and these are not the same
+// positions; and it asks what is selected in order to
 // paint it. The cursor stays here rather than in the selection: it is
 // identity-first, it tells its cell and it paints, and none of that is the
 // selection's business. The two meet in exactly two lines — a bare move
@@ -111,6 +113,9 @@ class RelGrid {
             showHeader: this._showHead,
             onCellClick:    function (i, j, mods) { self._onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._onDblClick(i, j); },
+            onCellDown:     function (i, j, mods) { self._onDown(i, j, mods); },
+            onCellDragTo:   function (i, j) { self._onDragTo(i, j); },
+            onDragEnd:      function () { self._onDragEnd(); },
             // The staged drag MINTS (j, px) on release; position becomes identity
             // here, and the request is normalised where it is held.
             onColResize: function (j, px) {
@@ -313,19 +318,67 @@ class RelGrid {
         this._extendTo(from.i + di, from.j + dj);
     }
 
-    // ── capture: inert while deep ──────────────────────────────────────────
-
-    _onClick(i, j, mods) {
-        if (this._deep) return;                // the cell has the pointer and the keyboard
-        mods = mods || {};
-        if (mods.shift) { this._extendTo(i, j); return; }
-        if (mods.ctrl) {                       // ctrl adds a 1x1 AND goes there
+    /**
+     * The press action — what a click WOULD have done, performed early because
+     * the pointer has started to travel. The three meanings are the click's
+     * three, so a drag is only ever a click that kept going.
+     */
+    _press(i, j, mods) {
+        if (mods.shift) return;                // the range extends from where it already is
+        if (mods.ctrl) {
             this._selection.add({ i: i, j: j });
             this._setCursor(i, j);
             this._afterSelection();
             return;
         }
         this._bareMove(function () { this._setCursor(i, j); });
+    }
+
+    // ── capture: inert while deep ──────────────────────────────────────────
+
+    /** A button went down on a slot. Nothing happens yet — a press that never
+     *  travels is a click, and the click handler owns it. */
+    _onDown(i, j, mods) {
+        this._swallowClick = false;            // a fresh gesture; whatever the last one left, drop it
+        this._pressAt = { i: i, j: j, mods: mods || {} };
+        this._dragged = false;
+    }
+
+    /**
+     * The pointer reached another slot while held. The FIRST such report turns
+     * the press into a drag and performs the press action; every one after
+     * moves the far corner. Blocked while deep, like every other selection
+     * gesture.
+     */
+    _onDragTo(i, j) {
+        if (this._deep || !this._pressAt) return;
+        if (!this._dragged) {
+            this._dragged = true;
+            this._press(this._pressAt.i, this._pressAt.j, this._pressAt.mods);
+        }
+        this._extendTo(i, j);
+    }
+
+    /**
+     * Released. A drag is followed by a click — on the slot it started and
+     * ended in, or on none at all — and that click must not undo what the drag
+     * just made, so it is swallowed. The flag cannot outlive its gesture: the
+     * next press clears it whether a click came or not.
+     */
+    _onDragEnd() {
+        if (this._dragged) this._swallowClick = true;
+        this._pressAt = null;
+        this._dragged = false;
+    }
+
+    _onClick(i, j, mods) {
+        if (this._swallowClick) { this._swallowClick = false; return; }
+        if (this._deep) return;                // the cell has the pointer and the keyboard
+        mods = mods || {};
+        // A shift-click is an extension TO where it landed; the other two mean
+        // at the slot itself, which is exactly the press action.
+        if (mods.shift) this._extendTo(i, j);
+        else            this._press(i, j, mods);
     }
 
     _onDblClick(i, j) {
