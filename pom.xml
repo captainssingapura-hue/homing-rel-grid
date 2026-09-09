@@ -16,6 +16,9 @@
         every cell for its whole life, and edit, commit and update are the
         domain's operations that never change an arrangement.
 
+        rel-grid-selection is the selection: an ordered list of ranges over
+        positions, in a module that imports nothing at all.
+
         rel-grid is the primitive — plain JS classes with no runtime
         dependency on anything, packaged as homing DomModules for this stack.
         rel-grid-workbench is the solo studio of benches that try to make it
@@ -24,6 +27,7 @@
 
     <modules>
         <module>rel-grid</module>
+        <module>rel-grid-selection</module>
         <module>rel-grid-workbench</module>
     </modules>
 
