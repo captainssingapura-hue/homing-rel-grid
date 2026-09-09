@@ -125,6 +125,18 @@ class RelGridSelection {
     count() { return this._ranges.length; }
 
     /**
+     * The corner extension moves — the last range's far corner, copied, or
+     * null when the list is empty. Reading it is how a caller steps it by one
+     * position; it is not a second distinguished locus, because it is the
+     * range's own corner and a range owns its corners (law 41).
+     */
+    far() {
+        if (this._ranges.length === 0) return null;
+        var f = this._ranges[this._ranges.length - 1].far;
+        return { i: f.i, j: f.j };
+    }
+
+    /**
      * The raw list as rectangles, in creation order. Never merged, never
      * deduplicated, never reordered, and no bounding box is ever taken — the
      * grid imposes no shape rule (law 44), so an irregular selection reaches

@@ -43,11 +43,21 @@ var _HRG_STYLE_CSS = [
     ".hrg-td{padding:0;border-bottom:1px solid var(--color-border);",
     "  border-right:1px solid color-mix(in srgb, var(--color-border) 50%, transparent);",
     "  vertical-align:middle;overflow:hidden;}",
+    // The selection: a wash on every slot the resolved list covers. A slot may
+    // wear this and the cursor at once — with an empty list the selection IS
+    // the cursor's 1x1, so the cursor's slot is always one of them.
+    ".hrg-td.hrg-sel{background:color-mix(in srgb, var(--color-accent) 12%, transparent);}",
     // The cursor: painted on the slot, never on the cell. Solid while shallow;
     // dashed while the cell is deep, so the handover is visible.
     ".hrg-td.hrg-cursor{outline:2px solid var(--color-accent);outline-offset:-2px;}",
     ".hrg-table.hrg-deep .hrg-td.hrg-cursor{outline-style:dashed;}"
 ].join("\n");
+
+/** The two modifiers that change what a click means. Meta stands in for ctrl. */
+function _hrgMods(e) {
+    e = e || {};
+    return { shift: !!e.shiftKey, ctrl: !!(e.ctrlKey || e.metaKey) };
+}
 
 function _hrgEnsureStyles() {
     if (document.getElementById(_HRG_STYLE_ID)) return;
@@ -67,6 +77,13 @@ function _hrgRemoveClass(el, c) {
     var parts = el.className.split(" "), kept = [];
     for (var k = 0; k < parts.length; k++) if (parts[k] !== c) kept.push(parts[k]);
     el.className = kept.join(" ");
+}
+
+function _hrgHasClass(el, c) {
+    if (!el.className) return false;
+    var parts = el.className.split(" ");
+    for (var k = 0; k < parts.length; k++) if (parts[k] === c) return true;
+    return false;
 }
 
 class RelGridLayout {
@@ -102,6 +119,7 @@ class RelGridLayout {
         this._container.appendChild(this._table);
         this._slots = [];        // [i][j] → td
         this._cursorTd = null;   // the slot currently painted as the cursor
+        this._selTds = [];       // the slots currently painted as selected
     }
 
     /**
@@ -130,13 +148,18 @@ class RelGridLayout {
         this._tbody = document.createElement("tbody");
         this._slots = [];
         this._cursorTd = null;                                // the old tds go with the old body
+        this._selTds = [];
         var self = this;
         var wire = function (td, i, j) {
-            td.addEventListener("click", function () {
-                if (self._onCellClick) self._onCellClick(i, j);
+            // The MODIFIERS travel with the position: shift and ctrl are what
+            // separate a cursor move from an extension or an addition, and the
+            // layout decides neither — it reports both and lets the facade read
+            // the gesture. Meta stands in for ctrl, so the Mac chord works.
+            td.addEventListener("click", function (e) {
+                if (self._onCellClick) self._onCellClick(i, j, _hrgMods(e));
             });
-            td.addEventListener("dblclick", function () {
-                if (self._onCellDblClick) self._onCellDblClick(i, j);
+            td.addEventListener("dblclick", function (e) {
+                if (self._onCellDblClick) self._onCellDblClick(i, j, _hrgMods(e));
             });
         };
         for (var i = 0; i < rows; i++) {
@@ -180,6 +203,30 @@ class RelGridLayout {
         if (this._cursorTd) _hrgRemoveClass(this._cursorTd, "hrg-cursor");
         if (td) _hrgAddClass(td, "hrg-cursor");
         this._cursorTd = td;
+        return this;
+    }
+
+    /**
+     * Paint the selection: a list of rectangles in the presented space,
+     * {@code { i0, j0, i1, j1 }} inclusive of both corners. The layout is told
+     * WHICH SLOTS, never why — overlap between rectangles is nothing it has to
+     * resolve, since a slot either wears the predicate or does not.
+     */
+    paintSelection(rects) {
+        for (var k = 0; k < this._selTds.length; k++) _hrgRemoveClass(this._selTds[k], "hrg-sel");
+        this._selTds = [];
+        var list = rects || [];
+        for (var r = 0; r < list.length; r++) {
+            var box = list[r];
+            for (var i = box.i0; i <= box.i1; i++) {
+                for (var j = box.j0; j <= box.j1; j++) {
+                    var td = this.slotAt(i, j);
+                    if (!td || _hrgHasClass(td, "hrg-sel")) continue;    // already painted by an overlap
+                    _hrgAddClass(td, "hrg-sel");
+                    this._selTds.push(td);
+                }
+            }
+        }
         return this;
     }
 

@@ -19,6 +19,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
         js.eval("js", RelGridTestDom.FIXTURE);
     }

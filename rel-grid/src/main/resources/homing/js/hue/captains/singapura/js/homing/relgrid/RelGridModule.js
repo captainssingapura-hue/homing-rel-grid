@@ -15,7 +15,8 @@
 //       onCursorMoved?,   // (pk, column)
 //       onEditStarted?,   // (pk, column) — the grid went deep on this cell
 //       onEditEnded?,     // (pk, column) — the cell handed control back
-//       onColumnResized?  // (column, px) — a REPORT of what is now held; the grid keeps nothing
+//       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
+//       onSelectionChanged? // (rects) — the RESOLVED selection, in the presented space
 //   });
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
@@ -33,6 +34,22 @@
 //     what happened inside — it resumes: shallow, focus on the table, the
 //     cursor repainted. Edit, commit and update are the domain's operations
 //     and never change an arrangement.
+//
+// THE SELECTION IS ASKED, NEVER OBEYED (map 5): the facade holds a
+// RelGridSelection — an ordered list of position rectangles that knows nothing
+// but positions — and does three things with it. It ROUTES the gestures
+// (shift extends the last range's far corner, ctrl adds a 1x1 and moves the
+// cursor, Ctrl+A takes the whole presented space, a BARE move clears the
+// list); it CLEARS on every arrangement, because a selection is positions and
+// these are not the same positions; and it asks what is selected in order to
+// paint it. The cursor stays here rather than in the selection: it is
+// identity-first, it tells its cell and it paints, and none of that is the
+// selection's business. The two meet in exactly two lines — a bare move
+// clears, and an empty list resolves to the cursor's own 1x1.
+//
+// Nothing yet CONSUMES a selection. Copy, clear and bulk are later rounds, and
+// their absence here is the point: the list is built and painted, and no verb
+// reads it.
 //
 // WIDTHS ARE GEOMETRY, THE GRID'S ALONE (map 7): held by column IDENTITY,
 // applied by POSITION, in place — no arrangement runs, because no identity
@@ -64,6 +81,7 @@ class RelGrid {
         this._cbEditStarted = opts.onEditStarted || null;
         this._cbEditEnded   = opts.onEditEnded || null;
         this._cbResized     = opts.onColumnResized || null;
+        this._cbSelection   = opts.onSelectionChanged || null;
 
         var head = opts.header || {};
         this._showHead = head.show !== false;
@@ -78,6 +96,9 @@ class RelGrid {
         this._cursorPos = null;    // { i, j } | null
         this._deep = false;        // the one fact the grid holds about editing
         this._widths = new Map();  // column → px, identity-keyed; positional only at the layout
+        // The selection: POSITIONS, and it holds nothing else. The facade is
+        // the only thing that knows both it and the cursor.
+        this._selection = new RelGridSelection();
 
         this._maps = new RelGridViewMaps({
             pks: r.pks(),
@@ -88,7 +109,7 @@ class RelGrid {
             container: opts.container,
             label: opts.label || null,
             showHeader: this._showHead,
-            onCellClick:    function (i, j) { self._onClick(i, j); },
+            onCellClick:    function (i, j, mods) { self._onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._onDblClick(i, j); },
             // The staged drag MINTS (j, px) on release; position becomes identity
             // here, and the request is normalised where it is held.
@@ -125,6 +146,13 @@ class RelGrid {
         this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });
 
         this._resolveCursor();
+
+        // Law 43: every range goes when the presented space is rebuilt. A range
+        // is positions, and after an arrangement these are not the same
+        // positions — the cursor survives because it is an identity, and the
+        // selection does not because it is not.
+        this._selection.clear();
+        this._afterSelection();
 
         if (this._cbArranged) {
             try { this._cbArranged(kind); }
@@ -239,22 +267,72 @@ class RelGrid {
 
     _move(di, dj) {
         if (!this._cursorPos) return;
-        var maps = this._maps;
-        var i = Math.max(0, Math.min(maps.rows() - 1, this._cursorPos.i + di));
-        var j = Math.max(0, Math.min(maps.cols() - 1, this._cursorPos.j + dj));
-        this._setCursor(i, j);
+        this._setCursor(this._clampI(this._cursorPos.i + di), this._clampJ(this._cursorPos.j + dj));
+    }
+
+    _clampI(i) { return Math.max(0, Math.min(this._maps.rows() - 1, i)); }
+    _clampJ(j) { return Math.max(0, Math.min(this._maps.cols() - 1, j)); }
+
+    // ── the selection: routed here, held next door, painted by the layout ──
+
+    /** Ask what is selected, and paint it. The only reader of the list there is. */
+    _afterSelection() {
+        var rects = this._selection.resolve(this._cursorPos);
+        this._layout.paintSelection(rects);
+        if (this._cbSelection) {
+            try { this._cbSelection(rects); }
+            catch (e) { console.error("[RelGrid] onSelectionChanged threw:", e); }
+        }
+    }
+
+    /** A bare move: the gesture means START OVER, so the list goes (law 40). */
+    _bareMove(fn) {
+        this._selection.clear();
+        fn.call(this);
+        this._afterSelection();
+    }
+
+    /**
+     * Extension to a position. The cursor DOES NOT MOVE (law 39) — the anchor
+     * is where the cursor already is, and what travels is the last range's far
+     * corner.
+     */
+    _extendTo(i, j) {
+        if (!this._cursorPos) return false;
+        this._selection.extend({ i: this._clampI(i), j: this._clampJ(j) }, this._cursorPos);
+        this._afterSelection();
+        return true;
+    }
+
+    /** Shift+arrow: step the corner extension moves, from the cursor on the first one. */
+    _extendBy(key) {
+        if (!this._cursorPos) return;
+        var from = this._selection.far() || this._cursorPos;
+        var di = (key === "ArrowUp") ? -1 : (key === "ArrowDown") ? 1 : 0;
+        var dj = (key === "ArrowLeft") ? -1 : (key === "ArrowRight") ? 1 : 0;
+        this._extendTo(from.i + di, from.j + dj);
     }
 
     // ── capture: inert while deep ──────────────────────────────────────────
 
-    _onClick(i, j) {
+    _onClick(i, j, mods) {
         if (this._deep) return;                // the cell has the pointer and the keyboard
-        this._setCursor(i, j);
+        mods = mods || {};
+        if (mods.shift) { this._extendTo(i, j); return; }
+        if (mods.ctrl) {                       // ctrl adds a 1x1 AND goes there
+            this._selection.add({ i: i, j: j });
+            this._setCursor(i, j);
+            this._afterSelection();
+            return;
+        }
+        this._bareMove(function () { this._setCursor(i, j); });
     }
 
     _onDblClick(i, j) {
         if (this._deep) return;
-        this._setCursor(i, j);
+        // A bare move like any other. In a browser the click that precedes has
+        // already cleared, but the double-click must not depend on that.
+        this._bareMove(function () { this._setCursor(i, j); });
         this.beginEditAtCursor();
     }
 
@@ -272,10 +350,23 @@ class RelGrid {
             if (e.preventDefault) e.preventDefault();
             return;
         }
-        if      (key === "ArrowUp")    this._move(-1, 0);
-        else if (key === "ArrowDown")  this._move(1, 0);
-        else if (key === "ArrowLeft")  this._move(0, -1);
-        else if (key === "ArrowRight") this._move(0, 1);
+        var arrow = (key === "ArrowUp" || key === "ArrowDown" || key === "ArrowLeft" || key === "ArrowRight");
+        // Ctrl+A: the whole presented space, in one range. The cursor stays.
+        if ((e.ctrlKey || e.metaKey) && (key === "a" || key === "A")) {
+            this._selection.all(this._maps.rows(), this._maps.cols());
+            this._afterSelection();
+        }
+        // Shift+arrow: extension. The cursor stays here too (law 39).
+        else if (e.shiftKey && arrow) this._extendBy(key);
+        else if (arrow) {
+            var self = this;
+            this._bareMove(function () {
+                if      (key === "ArrowUp")    self._move(-1, 0);
+                else if (key === "ArrowDown")  self._move(1, 0);
+                else if (key === "ArrowLeft")  self._move(0, -1);
+                else                           self._move(0, 1);
+            });
+        }
         else if (key === "Enter")      this.beginEditAtCursor();
         else return;                           // not ours; let it bubble
         if (e.preventDefault) e.preventDefault();
@@ -332,12 +423,61 @@ class RelGrid {
 
     // ── the surface ────────────────────────────────────────────────────────
 
-    /** Programmatic shallow cursor; a position not presented is ignored. */
+    /** Programmatic shallow cursor; a position not presented is ignored. A
+     *  BARE move, so it clears the list exactly as a click without a modifier does. */
     selectCell(pk, column) {
         if (this._deep) return false;
         var at = this._maps.locate(pk, column);
-        return at ? this._setCursor(at.i, at.j) : false;
+        if (!at) return false;
+        var moved = false, self = this;
+        this._bareMove(function () { moved = self._setCursor(at.i, at.j); });
+        return moved;
     }
+
+    // ── the selection's surface: the gestures' API twins, and one read ─────
+
+    /** Extend to an identity — the shift gesture. The cursor does not move. */
+    extendSelection(pk, column) {
+        if (this._deep) return false;
+        var at = this._maps.locate(pk, column);
+        return at ? this._extendTo(at.i, at.j) : false;
+    }
+
+    /** Add a 1x1 at an identity and go there — the ctrl gesture. */
+    addToSelection(pk, column) {
+        if (this._deep) return false;
+        var at = this._maps.locate(pk, column);
+        if (!at) return false;
+        this._selection.add({ i: at.i, j: at.j });
+        this._setCursor(at.i, at.j);
+        this._afterSelection();
+        return true;
+    }
+
+    /** The whole presented space, in one range. */
+    selectAll() {
+        if (this._deep) return false;
+        this._selection.all(this._maps.rows(), this._maps.cols());
+        this._afterSelection();
+        return true;
+    }
+
+    clearSelection() {
+        this._selection.clear();
+        this._afterSelection();
+        return this;
+    }
+
+    /**
+     * What is selected: the RESOLVED list of rectangles in the presented
+     * space, so an empty list reads as the cursor's own 1x1 and no caller
+     * needs a case for "nothing selected". Positions, because that is what a
+     * range is; resolving them to identities is the business of whoever uses
+     * them, and in this round nobody does.
+     */
+    selectedRanges()  { return this._selection.resolve(this._cursorPos); }
+    /** How many ranges were actually MADE — zero when the selection is just the cursor. */
+    selectionCount()  { return this._selection.count(); }
 
     cursor()   { return this._cursor ? { pk: this._cursor.pk, column: this._cursor.column } : null; }
     isDeep()   { return this._deep; }

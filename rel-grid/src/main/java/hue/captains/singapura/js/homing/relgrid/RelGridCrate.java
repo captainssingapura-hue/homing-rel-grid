@@ -3,6 +3,7 @@ package hue.captains.singapura.js.homing.relgrid;
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
+import hue.captains.singapura.js.homing.relgrid.selection.RelGridSelectionCrate;
 
 import java.util.List;
 
@@ -19,7 +20,8 @@ public final class RelGridCrate implements Crate {
 
     @Override public String name() { return "homing-rel-grid"; }
 
-    @Override public List<Crate> requires() { return List.of(); }
+    /** The selection, which requires nothing itself — map 5's law 215. */
+    @Override public List<Crate> requires() { return List.of(RelGridSelectionCrate.INSTANCE); }
 
     @Override
     public List<CrateEntry> entries() {

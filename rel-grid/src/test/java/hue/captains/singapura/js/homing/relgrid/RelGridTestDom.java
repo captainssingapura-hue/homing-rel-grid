@@ -25,6 +25,10 @@ final class RelGridTestDom {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
             "RelGridStockCellsModule.js", "RelGridModule.js" };
 
+    /** The selection lives in its own module, and its own jar. */
+    static final String SELECTION =
+            "/homing/js/hue/captains/singapura/js/homing/relgrid/selection/RelGridSelectionModule.js";
+
     static final String DOM_STUB = """
             var __focused = null;
             function makeStyle() {
@@ -152,14 +156,15 @@ final class RelGridTestDom {
                 var mints = 0;
                 var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
                 var container = makeEl('div');
-                var arranged = [], moves = [], started = [], ended = [], resized = [];
+                var arranged = [], moves = [], started = [], ended = [], resized = [], selections = [];
                 var grid = new RelGrid({
                     container: container, branch: branch, relation: relation,
                     onArranged:      function (k) { arranged.push(k); },
                     onCursorMoved:   function (pk, col) { moves.push(pk + ' ' + col); },
                     onEditStarted:   function (pk, col) { started.push(pk + ' ' + col); },
                     onEditEnded:     function (pk, col) { ended.push(pk + ' ' + col); },
-                    onColumnResized: function (col, px) { resized.push(col + ' ' + px); }
+                    onColumnResized: function (col, px) { resized.push(col + ' ' + px); },
+                    onSelectionChanged: function (rects) { selections.push(rects.length); }
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 function table() { return container.children[0]; }
@@ -173,10 +178,32 @@ final class RelGridTestDom {
                     var at = grid.viewMaps().locate(pk, col);
                     return at ? td(at.i, at.j).children[0] : null;
                 }
-                function key(k, mods) { mods = mods || {}; table().dispatch('keydown', { key: k, altKey: !!mods.alt }); }
+                function key(k, mods) {
+                    mods = mods || {};
+                    table().dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
+                }
+                function click(i, j, mods) {
+                    mods = mods || {};
+                    td(i, j).dispatch('click', { shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
+                }
+                // What the layout has actually painted, as 'i,j' in row-major order.
+                // A class check rather than a regex: \b in a Java text block is a
+                // BACKSPACE, not a word boundary, and the difference is silent.
+                function painted() {
+                    var out = [];
+                    for (var a = 0; a < grid.viewMaps().rows(); a++) {
+                        for (var b = 0; b < grid.viewMaps().cols(); b++) {
+                            var parts = (td(a, b).className || '').split(' ');
+                            for (var q = 0; q < parts.length; q++)
+                                if (parts[q] === 'hrg-sel') { out.push(a + ',' + b); break; }
+                        }
+                    }
+                    return out.join(' ');
+                }
                 return { grid: grid, relation: relation, container: container, data: data,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
-                         td: td, cellEl: cellEl, key: key,
+                         td: td, cellEl: cellEl, key: key, click: click, painted: painted,
+                         selections: selections,
                          arranged: arranged, moves: moves, started: started, ended: ended, commits: commits, resized: resized,
                          mints: function () { return mints; }, asked: function () { return asked; } };
             }

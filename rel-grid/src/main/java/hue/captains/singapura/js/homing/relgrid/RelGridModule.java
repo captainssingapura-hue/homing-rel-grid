@@ -6,6 +6,8 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 
+import hue.captains.singapura.js.homing.relgrid.selection.RelGridSelectionModule;
+
 import java.util.List;
 
 /**
@@ -16,6 +18,11 @@ import java.util.List;
  *
  * <p>It does not import the stock cells. Cells are the domain's; a relation
  * imports what it builds its manager from.</p>
+ *
+ * <p>It does import the {@code RelGridSelection}, and it is the only thing
+ * that does. The selection imports nothing itself (map 5 law 215), so the
+ * dependency runs one way only: the facade knows about the list, and the list
+ * knows about nothing.</p>
  */
 public record RelGridModule() implements DomModule<RelGridModule> {
 
@@ -29,6 +36,7 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                 .add(new ModuleImports<>(List.of(new RelGridViewMapsModule.RelGridViewMaps()), RelGridViewMapsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLayoutModule.RelGridLayout()),     RelGridLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridCellsModule.RelGridCells()),       RelGridCellsModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridSelectionModule.RelGridSelection()), RelGridSelectionModule.INSTANCE))
                 .build();
     }
 

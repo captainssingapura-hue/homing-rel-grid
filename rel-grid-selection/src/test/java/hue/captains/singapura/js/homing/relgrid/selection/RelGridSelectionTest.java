@@ -140,6 +140,25 @@ class RelGridSelectionTest extends JsModuleTestBase {
     }
 
     @Test
+    void theFarCornerIsReadableBecauseExtensionHasToStepIt() {
+        assertTrue(evalBool("""
+                (() => {
+                    var s = new RelGridSelection();
+                    if (s.far() !== null) return false;                     // nothing to move yet
+                    s.add({ i: 3, j: 3 });
+                    var f0 = s.far();
+                    if (!(f0.i === 3 && f0.j === 3)) return false;
+                    s.extend({ i: 1, j: 5 });
+                    var f1 = s.far();
+                    if (!(f1.i === 1 && f1.j === 5)) return false;          // the far corner, not the anchor
+                    s.add({ i: 8, j: 8 });
+                    if (s.far().i !== 8) return false;                      // always the LAST range's
+                    f1.i = 99;                                              // a reader scribbles
+                    return s.far().i === 8;
+                })()"""), "far() reports the corner extension moves, copied — a range owns its corners");
+    }
+
+    @Test
     void theListIsHandedOutAsCopiesSoNoReaderCanEditIt() {
         assertTrue(evalBool("""
                 (() => {
