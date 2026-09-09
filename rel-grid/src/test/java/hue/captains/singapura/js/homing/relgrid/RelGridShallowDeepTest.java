@@ -45,6 +45,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                         && /hrg-cursor/.test(f.td(1, 0).className)        // painted on the SLOT
                         && !/hrg-cursor/.test(f.td(0, 0).className)
                         && f.td(1, 0).children[0].children.length === 0    // no input opened
+                        && !/hrg-text-ro/.test(f.td(1, 0).children[0].className)   // an editable cell is not marked
                         && !f.grid.isDeep() && f.started.length === 0;
                 })()"""), "a single click is shallow: the cursor moves, the cell is told, nothing opens");
     }
@@ -132,6 +133,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     return !f.grid.isDeep() && f.started.length === 0 && f.ended.length === 0
                         && f.td(0, 0).children[0].children.length === 0
                         && f.td(1, 1).children[0].children.length === 0
+                        && /hrg-text-ro/.test(f.td(0, 0).children[0].className)   // the cell named the property (law 116)
                         && f.grid.cursor().pk === 'coq';                   // the dblclick still moved the cursor
                 })()"""), "a cell without a commit target declines beginEdit; nothing changes hands");
     }

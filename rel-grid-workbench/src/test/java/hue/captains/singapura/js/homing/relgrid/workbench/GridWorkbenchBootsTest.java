@@ -24,5 +24,7 @@ class GridWorkbenchBootsTest {
     void theBenchListIsTheRegistration() {
         assertEquals("replicatingTables", GridWorkbenchStudio.landingKind());
         assertEquals(1, GridWorkbenchStudio.benches().size());
+        // Three editors with different rights and a follower — the bench's four specimens.
+        assertEquals(4, ReplicatingTablesSpec.INSTANCE.widgetEntries().size());
     }
 }

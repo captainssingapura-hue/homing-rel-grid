@@ -2,20 +2,22 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.Importable;
 import hue.captains.singapura.js.homing.core.ModuleImports;
-import hue.captains.singapura.js.homing.relgrid.workbench.WorkbenchStyles;
 import hue.captains.singapura.js.homing.relgrid.RelGridModule;
 
 import java.util.List;
 
 /**
- * The body shared by the Replicating Tables bench's two widgets: one
- * {@code RelGrid} over a {@code createDishRelation(dishStoreShared(), …)},
- * differing only in whether the relation is editable.
+ * The body shared by every Replicating Tables widget: one {@code RelGrid}
+ * over a {@code createDishRelation(dishStoreShared(), { role })}. The widgets
+ * differ only in the role, and the role decides which columns' cells are
+ * built with a commit target. The grid is constructed identically for all of
+ * them and cannot tell them apart.
  *
  * <p>Read the JS for what is <i>absent</i>. The grid is constructed with a
  * relation and never spoken to again: no subscribe, no updateCell, no
- * commit callback. Every follower on the page moves when the editor commits,
- * and the path is store → relation → cell. The grid is not on it.</p>
+ * commit callback, no list of editable columns. Every table on the page
+ * moves when any editor commits or the shop trades, and the path is
+ * store → relation → cell. The grid is not on it.</p>
  */
 final class ReplicaTable {
 
@@ -33,22 +35,16 @@ final class ReplicaTable {
                         WorkbenchStyles.INSTANCE));
     }
 
-    /**
-     * @param role     'editor' | 'follower' — the hint line, and whether cells commit
-     * @param editable whether this table's relation commits to the store
-     */
-    static List<String> bodyJs(String role, boolean editable) {
+    /** @param role 'chef' | 'nutritionist' | 'manager' | 'follower' — a DishRelation role */
+    static List<String> bodyJs(String role) {
         return List.of(
-                "    var owner = Object.freeze({ toString: function () { return 'replica-" + role + "'; } });",
-                "    var EDITABLE = " + editable + ";",
+                "    var ROLE = '" + role + "';",
+                "    var owner = Object.freeze({ toString: function () { return 'replica-' + ROLE; } });",
                 "",
                 "    var root = branch.createElement('root', 'div');",
                 "    css.addClass(root, wb_root);",
                 "    var hint = branch.createElement('hint', 'div');",
                 "    css.addClass(hint, wb_hint);",
-                "    hint.textContent = EDITABLE",
-                "        ? 'EDITOR \\u2014 click or arrow to a cell (shallow), then Enter or double-click to edit (deep). Enter commits to the store, Escape cancels; the store tells every relation; each relation updates its own cells. The grid is never told what happened.'",
-                "        : 'FOLLOWER \\u2014 read-only. It moves when the editor commits, and its grid was never spoken to after construction.';",
                 "    root.appendChild(hint);",
                 "    var bar = branch.createElement('bar', 'div');",
                 "    css.addClass(bar, wb_bar);",
@@ -63,25 +59,32 @@ final class ReplicaTable {
                 "    var cellsB = branch.createBranch('cells');",
                 "    cellsB.activate(owner);",
                 "",
-                "    // The domain: one shared, persisted store; a relation over it whose",
-                "    // cell manager owns the cells and keeps them current itself.",
+                "    // The domain: one shared, persisted store; a relation over it FOR A ROLE,",
+                "    // whose cell manager hands a commit target only to the cells this role",
+                "    // may write, and keeps every cell current itself.",
                 "    var store = dishStoreShared();",
-                "    var relation = createDishRelation(store, { editable: EDITABLE });",
+                "    var relation = createDishRelation(store, { role: ROLE });",
+                "    var EDITS = relation.editableColumns();",
                 "",
-                "    // The grid: given a relation, and never spoken to again.",
+                "    hint.textContent = EDITS.length",
+                "        ? ROLE.toUpperCase() + ' \u2014 edits ' + EDITS.join(' and ') + ' only. Click or arrow to a cell (shallow); Enter or double-click to edit (deep). On any other cell nothing opens: the grid asked, the cell declined, the grid stayed shallow. Enter commits to the store; the store tells every relation; each updates its own cells. The grid is never told what happened.'",
+                "        : 'FOLLOWER \u2014 read-only. It moves when any editor commits or the shop trades, and its grid was never spoken to after construction.';",
+                "",
+                "    // The grid: given a relation, and never spoken to again. It does not know",
+                "    // the role, and there is nothing in its construction that could carry it.",
                 "    var grid = new RelGrid({",
                 "        container: host,",
                 "        branch: cellsB,",
                 "        relation: relation,",
-                "        label: 'Dish list \\u2014 ' + (EDITABLE ? 'editor' : 'follower')",
+                "        label: 'Dish list \u2014 ' + ROLE",
                 "    });",
                 "",
-                "    // The readout is DOMAIN state: the store's revision, and the relation's",
-                "    // cell count. Nothing here reads the grid.",
+                "    // The readout is DOMAIN state: the store's revision, the relation's cell",
+                "    // count and what it may edit. Nothing here reads the grid.",
                 "    function report() {",
                 "        status.textContent = 'store revision ' + store.revision()",
                 "                           + '   |   cells owned by this relation ' + relation.cellCount()",
-                "                           + '   |   ' + (EDITABLE ? 'commits on Enter' : 'read-only');",
+                "                           + '   |   ' + (EDITS.length ? 'edits ' + EDITS.join(', ') : 'read-only');",
                 "    }",
                 "    var unsub = store.subscribe(function () { report(); });",
                 "    report();",
@@ -94,13 +97,12 @@ final class ReplicaTable {
                 "        x.addEventListener('click', function () { fn(); report(); });",
                 "        bar.appendChild(x);",
                 "    }",
-                "    if (EDITABLE) {",
+                "    if (ROLE === 'manager') {",
+                "        // The shop trades. Sales are the only thing that moves sold, and",
+                "        // popularity is re-derived from them for every dish — a domain push",
+                "        // that no editor could make by editing.",
+                "        btn('a day of trade (sales move popularity)', function () { store.trade(); });",
                 "        btn('reset store to seed', function () { store.reset(); });",
-                "        btn('bump every popularity (domain push)', function () {",
-                "            store.pks().forEach(function (pk) {",
-                "                store.commit(pk, 'popularity', (Number(store.get(pk, 'popularity')) || 0) + 1);",
-                "            });",
-                "        });",
                 "    }",
                 "    btn('re-arrange (grid.reapply)', function () { grid.reapply(); });",
                 "",

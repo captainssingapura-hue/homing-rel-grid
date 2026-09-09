@@ -25,7 +25,30 @@
 // No focused node is ever removed: ending an edit detaches the input's
 // listeners FIRST, then removes it, then repaints, then reports, then hands
 // control back — in that order, so nothing can re-enter.
+//
+// A cell that cannot edit marks its host hrg-text-ro — the predicate map 16
+// argues for (law 116): an uneditable cell has no resting affordance to be
+// missing, so the property has to be named. Whether it is painted is the
+// theme's business; the stock cell ships one muted rule as a default.
 // =============================================================================
+
+var _HRG_STOCK_STYLE_ID = "homing-rel-grid-stock-style";
+var _HRG_STOCK_STYLE_CSS = ".hrg-text-ro{color:var(--color-text-muted);}";
+
+function _hrgStockEnsureStyle() {
+    if (typeof document === "undefined" || !document.head) return;
+    if (document.getElementById(_HRG_STOCK_STYLE_ID)) return;
+    var s = document.createElement("style");
+    s.id = _HRG_STOCK_STYLE_ID;
+    s.textContent = _HRG_STOCK_STYLE_CSS;
+    document.head.appendChild(s);
+}
+
+function _hrgStockAddClass(el, name) {
+    var cur = el.className || "", parts = cur.split(/s+/);
+    for (var i = 0; i < parts.length; i++) if (parts[i] === name) return;
+    el.className = cur ? cur + " " + name : name;
+}
 
 class RelGridTextCell {
 
@@ -48,9 +71,13 @@ class RelGridTextCell {
         this._el.textContent = this._text();
     }
 
-    /** Mount once into the grid-minted host. Nothing is wired: the grid captures. */
+    /**
+     * Mount once into the grid-minted host. Nothing is wired: the grid
+     * captures. A cell with no commit target names itself read-only.
+     */
     render(host) {
         this._el = host;
+        if (!this._onCommit) { _hrgStockEnsureStyle(); _hrgStockAddClass(host, "hrg-text-ro"); }
         this._paint();
         return this;
     }

@@ -19,13 +19,18 @@ import java.util.Map;
  * Replicating Tables ({@code ws_kind=replicatingTables}): the first bench on
  * the Relation Grid, and the proof of its root principle.
  *
- * <p>One editor and any number of read-only followers, all over one persisted
- * store. An edit commits to the store; the store tells every relation; each
- * relation updates its own cells. Every follower on the page moves, and
- * <b>no grid was told</b> — the grid was handed a relation at construction
- * and never spoken to again. That is what "data agnostic" looks like from the
- * outside, and this bench exists so it can be watched rather than asserted.
- * How to use it is on the studio's home page.</p>
+ * <p>Three editors with different rights, and any number of read-only
+ * followers, all over one persisted store. The chef edits ingredient and
+ * style, the nutritionist calories, the shop manager price; nobody edits
+ * {@code sold}, which only sales move, or {@code popularity}, which is
+ * derived from it. An edit commits to the store; the store tells every
+ * relation; each relation updates its own cells. Every table on the page
+ * moves, and <b>no grid was told</b> — each grid was handed a relation at
+ * construction and never spoken to again, and the grid cannot tell the
+ * editors apart because nothing in its construction carries the role. That
+ * is what "data agnostic" looks like from the outside, and this bench exists
+ * so it can be watched rather than asserted. How to use it is on the studio's
+ * home page.</p>
  */
 public final class ReplicatingTablesSpec implements WorkspaceSpec {
 
@@ -44,18 +49,30 @@ public final class ReplicatingTablesSpec implements WorkspaceSpec {
     @Override
     public List<WidgetEntry> widgetEntries() {
         return List.of(
-                WidgetEntry.of(DishEditorWidget.class, WidgetLabel.of("Dish editor"))
-                        .withIcon(new WidgetIcon.Emoji("✏️"))
-                        .withGroup(WidgetGroup.of("Replicas"))
+                WidgetEntry.of(DishChefWidget.class, WidgetLabel.of("Chef"))
+                        .withIcon(new WidgetIcon.Emoji("🍳"))
+                        .withGroup(WidgetGroup.of("Editors"))
                         .withDescription(WidgetDescription.of(
-                                "The one table that edits. Click or arrow to a cell, then Enter or "
-                              + "double-click: the cell commits to the shared store. One instance.")),
-                WidgetEntry.of(DishFollowerWidget.class, WidgetLabel.of("Dish follower"))
+                                "Edits ingredient and style. Every other cell declines Enter: the grid "
+                              + "asked, the cell said no. One instance.")),
+                WidgetEntry.of(DishNutritionistWidget.class, WidgetLabel.of("Nutritionist"))
+                        .withIcon(new WidgetIcon.Emoji("🥗"))
+                        .withGroup(WidgetGroup.of("Editors"))
+                        .withDescription(WidgetDescription.of(
+                                "Edits calories only. Price is not theirs, and popularity is nobody's "
+                              + "— try Enter on either. One instance.")),
+                WidgetEntry.of(DishManagerWidget.class, WidgetLabel.of("Shop manager"))
+                        .withIcon(new WidgetIcon.Emoji("💰"))
+                        .withGroup(WidgetGroup.of("Editors"))
+                        .withDescription(WidgetDescription.of(
+                                "Edits price only, and runs a day of trade: sales are the one thing "
+                              + "that moves popularity, which is derived and nobody's to edit. One instance.")),
+                WidgetEntry.of(DishFollowerWidget.class, WidgetLabel.of("Follower"))
                         .withIcon(new WidgetIcon.Emoji("👥"))
                         .withGroup(WidgetGroup.of("Replicas"))
                         .withDescription(WidgetDescription.of(
                                 "A read-only replica over the same store. Dock several; every "
-                              + "one moves on every commit, and none of their grids is told."))
+                              + "one moves on every commit and every sale, and none of their grids is told."))
         );
     }
 

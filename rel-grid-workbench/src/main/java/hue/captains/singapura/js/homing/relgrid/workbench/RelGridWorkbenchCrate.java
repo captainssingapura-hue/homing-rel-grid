@@ -47,12 +47,14 @@ public final class RelGridWorkbenchCrate implements Crate {
     public List<CrateEntry> entries() {
         return List.of(
                 CrateEntry.of(WorkbenchStyles.INSTANCE),
-                // Replicating Tables: a persisted store, a relation with a cell
-                // manager, an editor and its followers. The grid is on none of
-                // the edit path.
+                // Replicating Tables: a persisted store, a relation with a role and
+                // a cell manager, three editors with different rights, and their
+                // followers. The grid is on none of the edit path.
                 CrateEntry.of(DishStore.INSTANCE),
                 CrateEntry.of(DishRelation.INSTANCE),
-                CrateEntry.of(DishEditorWidget.INSTANCE),
+                CrateEntry.of(DishChefWidget.INSTANCE),
+                CrateEntry.of(DishNutritionistWidget.INSTANCE),
+                CrateEntry.of(DishManagerWidget.INSTANCE),
                 CrateEntry.of(DishFollowerWidget.INSTANCE));
     }
 }
