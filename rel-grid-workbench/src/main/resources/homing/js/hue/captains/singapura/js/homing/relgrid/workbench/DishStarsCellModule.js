@@ -32,7 +32,13 @@ var _WB_STARS_STYLE_ID = "bench-stars-style";
 var _WB_STARS_CSS = [
     ".wb-stars{font:13px sans-serif;letter-spacing:2px;padding:0 6px;}",
     ".wb-stars-ro{opacity:0.55;}",
-    ".wb-stars select{width:100%;box-sizing:border-box;font:13px sans-serif;}"
+    // OVER the slot, not in it. A <select> is intrinsically about as wide as
+    // its longest option plus an arrow, and in an auto-layout table anything
+    // in flow sets the column width — so a dropdown in flow would push every
+    // other column aside for as long as it is open.
+    ".wb-stars select{position:absolute;top:0;right:0;bottom:0;left:0;",
+    "  box-sizing:border-box;width:100%;height:100%;font:13px sans-serif;",
+    "  background:var(--color-surface);color:var(--color-text-primary);}"
 ].join("\n");
 
 function _wbStarsEnsureStyle() {
@@ -129,7 +135,8 @@ class DishStarsCell {
             }
             sel.value = String(self._value == null ? _WB_STARS_MIN : self._value);
             self._select = sel;
-            self._el.textContent = "";
+            // The stars STAY, holding the slot open at its natural size; the
+            // dropdown covers them.
             self._el.appendChild(sel);
             // A dropdown commits when it CHANGES — there is no typing to finish,
             // and no Enter to wait for.

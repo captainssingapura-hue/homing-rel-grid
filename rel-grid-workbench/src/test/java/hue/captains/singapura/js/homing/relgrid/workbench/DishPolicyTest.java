@@ -242,6 +242,25 @@ class DishPolicyTest extends JsModuleTestBase {
     }
 
     @Test
+    void theDropdownIsLaidOverTheCellRatherThanInIt() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = createDishStore();
+                    var nut = createDishRelation(store, { role: 'nutritionist' });
+                    var cell = mount(nut, 'mapo', 'stars');
+                    var before = cell._el.textContent;
+                    cell.takeControl();
+                    // The stars stay underneath, holding the cell open at its own size;
+                    // the dropdown covers them. A <select> left IN flow would set the
+                    // column to its longest option plus an arrow and push every other
+                    // column aside while it was open.
+                    return cell._el.textContent === before
+                        && cell._el.children.length === 1
+                        && cell._el.children[0].tagName === 'select';
+                })()"""), "the dropdown overlays the cell and the cell keeps its own size");
+    }
+
+    @Test
     void escapingTheDropdownSettlesWithoutCommitting() {
         assertTrue(evalBool("""
                 (() => {

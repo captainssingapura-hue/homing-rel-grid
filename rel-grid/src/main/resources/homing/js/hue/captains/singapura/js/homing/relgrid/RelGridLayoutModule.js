@@ -46,7 +46,14 @@ var _HRG_STYLE_CSS = [
     ".hrg-resize-guide{position:fixed;top:var(--hrg-guide-top);height:var(--hrg-guide-h);",
     "  left:var(--hrg-guide-x);width:2px;background:var(--color-accent);z-index:99;",
     "  pointer-events:none;}",
-    ".hrg-td{padding:0;border-bottom:1px solid var(--color-border);",
+    // position:relative makes every slot a containing block, so a cell may
+    // lay an editor OVER it instead of IN it. That matters because the table
+    // is auto-layout: anything in flow contributes its intrinsic width to the
+    // column, and an <input> or a <select> is far wider than the text it
+    // replaces — so an editor in flow moves every column while it is open.
+    // Where the editor sits is the CELL's business; giving it something to sit
+    // against is geometry, and geometry is the grid's.
+    ".hrg-td{padding:0;position:relative;border-bottom:1px solid var(--color-border);",
     "  border-right:1px solid color-mix(in srgb, var(--color-border) 50%, transparent);",
     "  vertical-align:middle;overflow:hidden;}",
     // The selection: a wash on every slot the resolved list covers. A slot may

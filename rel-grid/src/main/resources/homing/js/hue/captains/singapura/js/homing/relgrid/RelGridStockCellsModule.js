@@ -42,7 +42,14 @@
 // =============================================================================
 
 var _HRG_STOCK_STYLE_ID = "homing-rel-grid-stock-style";
-var _HRG_STOCK_STYLE_CSS = ".hrg-text-ro{color:var(--color-text-muted);}";
+var _HRG_STOCK_STYLE_CSS = [
+    ".hrg-text-ro{color:var(--color-text-muted);}",
+    // OVER the slot, not in it: an editor in flow would widen its column to the
+    // input's intrinsic width and shuffle every other column while it is open.
+    ".hrg-text-edit{position:absolute;top:0;right:0;bottom:0;left:0;",
+    "  box-sizing:border-box;width:100%;height:100%;border:0;padding:0 6px;",
+    "  font:13px sans-serif;background:var(--color-surface);color:var(--color-text-primary);}"
+].join("\n");
 
 function _hrgStockEnsureStyle() {
     if (typeof document === "undefined" || !document.head) return;
@@ -127,8 +134,10 @@ class RelGridTextCell {
             self._done = resolve;
             var input = document.createElement("input");
             input.value = self._text();
+            input.className = "hrg-text-edit";
             self._input = input;
-            self._el.textContent = "";
+            // The text STAYS, holding the slot open at its natural size; the
+            // input covers it. Clearing it would collapse the row instead.
             self._el.appendChild(input);
             self._onKey = function (e) {
                 if (e.stopPropagation) e.stopPropagation();   // the keyboard is the cell's while deep

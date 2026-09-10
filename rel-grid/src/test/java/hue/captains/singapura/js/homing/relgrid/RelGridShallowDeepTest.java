@@ -98,6 +98,28 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     }
 
     @Test
+    void anEditorIsLaidOverTheSlotRatherThanInIt() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture({ editable: true });
+                    var host = f.td(0, 0).children[0];
+                    f.key('Enter');
+                    var input = host.children[0];
+                    // The class is what takes it out of flow. Without it the input's
+                    // intrinsic width would set the column and shuffle every other one
+                    // for as long as the editor is open — a layout the DOM stub cannot
+                    // measure, so this guards the MECHANISM instead of the pixels.
+                    if (!/hrg-text-edit/.test(input.className)) return false;
+                    // And the text stays underneath, holding the slot open at its own
+                    // size. Clearing it would collapse the row instead.
+                    if (host.textContent !== 'tofu') return false;
+                    if (!/hrg-td/.test(f.td(0, 0).className)) return false;
+                    input.dispatch('keydown', { key: 'Escape' });
+                    return host.children.length === 0;
+                })()"""), "the editor overlays the slot and the slot keeps its own size");
+    }
+
+    @Test
     void theCellSettlesOnceAndTheGridResumesWithoutLearningWhatHappened() {
         act("""
                 var F = fixture({ editable: true });
