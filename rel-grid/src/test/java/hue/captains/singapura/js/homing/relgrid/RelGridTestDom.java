@@ -129,6 +129,7 @@ final class RelGridTestDom {
                     fish: { ingredient: 'cod',     calories: 560 }
                 };
                 var cells = new Map(), asked = 0, commits = [];
+                var readOnly = opts.readOnly || null;   // the relation's COLUMN constraint
                 var relation = {
                     pks:     function () { return Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
@@ -149,6 +150,9 @@ final class RelGridTestDom {
                         }
                         return c;
                     },
+                    // The one optional declaration: columns the grid must never ask.
+                    // Read once, at construction, and only when a test asks for it.
+                    readOnlyColumns: readOnly ? function () { return readOnly.slice(); } : undefined,
                     cell: function (pk, col) { return cells.get(pk + ' ' + col) || null; },
                     // The DOMAIN changed something: it updates its own cell. Nobody tells the grid.
                     change: function (pk, col, v) {
@@ -165,8 +169,8 @@ final class RelGridTestDom {
                     container: container, branch: branch, relation: relation,
                     onArranged:      function (k) { arranged.push(k); },
                     onCursorMoved:   function (pk, col) { moves.push(pk + ' ' + col); },
-                    onEditStarted:   function (pk, col) { started.push(pk + ' ' + col); },
-                    onEditEnded:     function (pk, col) { ended.push(pk + ' ' + col); },
+                    onControlTaken:    function (pk, col) { started.push(pk + " " + col); },
+                    onControlReleased: function (pk, col) { ended.push(pk + " " + col); },
                     onColumnResized: function (col, px) { resized.push(col + ' ' + px); },
                     // THE CHANNEL. A notification arrives here; the fixture records it and,
                     // unless a test says otherwise, answers with a resolved promise — which

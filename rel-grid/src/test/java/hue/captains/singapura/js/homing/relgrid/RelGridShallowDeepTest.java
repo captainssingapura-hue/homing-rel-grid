@@ -7,15 +7,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * RFC 0050 · Episode 2, round 1 — the shallow/deep discipline, enforced by the
- * grid from the beginning.
+ * RFC 0050 · Episode 2 — the shallow/deep discipline, enforced by the grid.
  *
  * <p>A single click or an arrow key is shallow: it moves the cursor and the
  * cell is only told. Deep is entered only through the grid — Enter or a
- * double-click on the cursor's cell — which hands the cell control and goes
- * inert until the cell hands it back. The grid never learns what happened
- * inside. And no focused node is ever removed with a live listener on it.
- * Runs on {@link RelGridTestDom}, whose focus and blur behave like a browser's.</p>
+ * double-click on the cursor's cell — and offered in <b>two stages</b>: the
+ * column's declared constraint, then the cell's own judgement. The handover
+ * itself answers a promise, and the grid holds deep until it settles.</p>
+ *
+ * <p><b>Why some tests are split in two.</b> A promise settles on a microtask,
+ * and GraalVM drains those <i>between</i> evals rather than within one. So a
+ * test that must see the grid AFTER it resumed acts in one eval and asserts in
+ * the next — which is also a truer test, since it observes the resume the way a
+ * browser would rather than inside the call that caused it.</p>
  */
 class RelGridShallowDeepTest extends JsModuleTestBase {
 
@@ -30,6 +34,9 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     }
 
     private boolean evalBool(String expr) { return js.eval("js", expr).asBoolean(); }
+
+    /** Act. Anything the cell settled drains before the next eval begins. */
+    private void act(String script) { js.eval("js", script); }
 
     @Test
     void theCursorStartsOnTheFirstCellAndASingleClickOnlyMovesIt() {
@@ -91,24 +98,30 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     }
 
     @Test
-    void theCellReleasesOnceAndTheGridResumesWithoutLearningWhatHappened() {
+    void theCellSettlesOnceAndTheGridResumesWithoutLearningWhatHappened() {
+        act("""
+                var F = fixture({ editable: true });
+                F.key('Enter');
+                var HOST = F.td(0, 0).children[0];
+                var INPUT = HOST.children[0];
+                INPUT.value = 'TOFU-EDITED';
+                INPUT.dispatch('keydown', { key: 'Enter' });               // the CELL ends its own edit
+                """);
+        // The commit is synchronous — it is the cell's own business, done before
+        // it settles — but the RESUME waits for the microtask this eval boundary
+        // drains.
         assertTrue(evalBool("""
                 (() => {
-                    var f = fixture({ editable: true });
-                    f.key('Enter');
-                    var host = f.td(0, 0).children[0], input = host.children[0];
-                    input.value = 'TOFU-EDITED';
-                    input.dispatch('keydown', { key: 'Enter' });           // the CELL ends its edit
-                    return f.commits.join() === 'mapo ingredient TOFU-EDITED'
-                        && !f.grid.isDeep()                                // the grid resumed
-                        && f.ended.join() === 'mapo ingredient'            // told it ENDED, and once
-                        && document.activeElement === f.table()            // the keyboard host has focus again
-                        && f.relation.cell('mapo', 'ingredient').mode() === 'shallow'
-                        && host.children.length === 0                      // the input is gone, exactly once
-                        && host.textContent === 'TOFU-EDITED'              // shown because the OWNER set() it
-                        && !/hrg-deep/.test(f.table().className)
-                        && (f.key('ArrowDown'), f.grid.cursor().pk === 'coq');   // and the arrows are back
-                })()"""), "release hands control back once; the grid resumes and never learns commit from cancel");
+                    return F.commits.join() === 'mapo ingredient TOFU-EDITED'
+                        && !F.grid.isDeep()                                // the grid resumed
+                        && F.ended.join() === 'mapo ingredient'            // told it ENDED, and once
+                        && document.activeElement === F.table()            // the keyboard host has focus again
+                        && F.relation.cell('mapo', 'ingredient').mode() === 'shallow'
+                        && HOST.children.length === 0                      // the input is gone, exactly once
+                        && HOST.textContent === 'TOFU-EDITED'              // shown because the OWNER set() it
+                        && !/hrg-deep/.test(F.table().className)
+                        && (F.key('ArrowDown'), F.grid.cursor().pk === 'coq');   // and the arrows are back
+                })()"""), "the cell settles once; the grid resumes and never learns commit from cancel");
     }
 
     @Test
@@ -126,10 +139,11 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     }
 
     @Test
-    void aReadOnlyCellDeclinesAndTheGridStaysShallow() {
+    void aCellWithNowhereToCommitAnswersNoAndIsNeverOffered() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture();                                     // no onCommit anywhere
+                    if (f.grid.mayTakeControlAtCursor() !== false) return false;   // asked WITHOUT opening
                     f.key('Enter');
                     f.td(1, 1).dispatch('dblclick');
                     return !f.grid.isDeep() && f.started.length === 0 && f.ended.length === 0
@@ -137,46 +151,149 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                         && f.td(1, 1).children[0].children.length === 0
                         && /hrg-text-ro/.test(f.td(0, 0).children[0].className)   // the cell named the property (law 116)
                         && f.grid.cursor().pk === 'coq';                   // the dblclick still moved the cursor
-                })()"""), "a cell without a commit target declines beginEdit; nothing changes hands");
+                })()"""), "stage one answers no, so the handover is never offered and nothing changes hands");
     }
 
     @Test
-    void escapeAndLosingFocusCancelThroughTheCellAndReleaseTheGrid() {
+    void escapeCancelsInsideTheCellAndHandsControlBack() {
+        act("""
+                var F = fixture({ editable: true });
+                F.key('Enter');
+                var IN1 = F.td(0, 0).children[0].children[0];
+                IN1.value = 'never';
+                IN1.dispatch('keydown', { key: 'Escape' });
+                """);
         assertTrue(evalBool("""
                 (() => {
-                    var f = fixture({ editable: true });
-                    f.key('Enter');
-                    var input = f.td(0, 0).children[0].children[0];
-                    input.value = 'never';
-                    input.dispatch('keydown', { key: 'Escape' });
-                    var afterEscape = !f.grid.isDeep() && f.ended.length === 1
-                                   && f.td(0, 0).children[0].textContent === 'tofu';
-                    f.key('Enter');                                        // deep again
-                    var input2 = f.td(0, 0).children[0].children[0];
-                    input2.value = 'never either';
-                    f.table().focus();                                     // focus leaves the input — a click elsewhere
-                    return afterEscape
-                        && !f.grid.isDeep() && f.ended.length === 2
-                        && f.td(0, 0).children[0].textContent === 'tofu'
-                        && f.commits.length === 0;
-                })()"""), "Escape and blur both cancel inside the cell, and both hand control back");
+                    return !F.grid.isDeep() && F.ended.length === 1
+                        && F.td(0, 0).children[0].textContent === 'tofu'
+                        && F.commits.length === 0;
+                })()"""), "Escape cancels inside the cell, and the settle hands control back");
+    }
+
+    @Test
+    void losingFocusCancelsAndHandsControlBackToo() {
+        act("""
+                var G = fixture({ editable: true });
+                G.key('Enter');
+                G.td(0, 0).children[0].children[0].value = 'never either';
+                G.table().focus();                                          // focus leaves the input
+                """);
+        assertTrue(evalBool("""
+                (() => {
+                    return !G.grid.isDeep() && G.ended.length === 1
+                        && G.td(0, 0).children[0].textContent === 'tofu'
+                        && G.commits.length === 0;
+                })()"""), "a blur cancels inside the cell, and that settles the handover as well");
     }
 
     @Test
     void clickingAnotherCellWhileDeepEndsTheEditFirstThenMovesTheCursor() {
+        act("""
+                var H = fixture({ editable: true });
+                H.key('Enter');
+                // In a browser, mousedown on another slot moves focus to the table
+                // (the nearest focusable ancestor) BEFORE the click fires.
+                H.table().focus();
+                """);
+        // The blur settled the handover; the grid resumes across this boundary.
+        act("H.click(2, 0);");
+        assertTrue(evalBool("""
+                (() => {
+                    var c = H.grid.cursor();
+                    return !H.grid.isDeep() && H.ended.length === 1
+                        && c.pk === 'fish' && c.column === 'ingredient'
+                        && H.moves.join() === 'fish ingredient';
+                })()"""), "the cell ends on blur and settles; the click then lands as a shallow move");
+    }
+
+    @Test
+    void aConstrainedColumnsCellIsNeverAsked() {
+        assertTrue(evalBool("""
+                (() => {
+                    // The relation declares calories read-only. Its cells are perfectly
+                    // willing — same stock cells, same onCommit — and are never consulted.
+                    var f = fixture({ editable: true, readOnly: ['calories'] });
+                    var cell = f.relation.cell('mapo', 'calories');
+                    if (cell.mayTakeControl() !== true) return false;       // the CELL would say yes
+                    f.click(0, 1);                                          // cursor onto calories
+                    if (f.grid.mayTakeControlAtCursor() !== false) return false;   // structure says no first
+                    f.key('Enter');
+                    f.td(0, 1).dispatch('dblclick');
+                    if (f.grid.isDeep() || f.started.length !== 0) return false;
+                    // And the unconstrained column is unaffected.
+                    f.click(0, 0);
+                    return f.grid.mayTakeControlAtCursor() === true
+                        && f.grid.takeControlAtCursor() === true && f.grid.isDeep();
+                })()"""), "law 112: a constrained column's cell is never asked, and the constraint is the relation's");
+    }
+
+    @Test
+    void onlyAnExplicitYesOpensAndOnlyAThenableHoldsControl() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture({ editable: true });
-                    f.key('Enter');
-                    // In a browser, mousedown on another slot moves focus to the table
-                    // (the nearest focusable ancestor) BEFORE the click fires.
-                    f.table().focus();
-                    f.td(2, 0).dispatch('click');
-                    var c = f.grid.cursor();
-                    return !f.grid.isDeep() && f.ended.length === 1
-                        && c.pk === 'fish' && c.column === 'ingredient'
-                        && f.moves.join() === 'fish ingredient';
-                })()"""), "the cell ends on blur and releases; the click then lands as a shallow move");
+                    var cell = f.relation.cell('mapo', 'ingredient');
+
+                    // A cell that FORGETS to answer stage one declines — the safe direction.
+                    cell.mayTakeControl = function () { return undefined; };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+
+                    // One that says yes but answers the handover with nothing breaks the
+                    // contract. Recorded and refused: waiting for a settle that cannot come
+                    // would leave the grid inert with nothing to show for it.
+                    cell.mayTakeControl = function () { return true; };
+                    cell.takeControl = function () { return undefined; };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+
+                    // One that throws in either stage is refused, not fatal.
+                    cell.mayTakeControl = function () { throw new Error('nope'); };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+                    cell.mayTakeControl = function () { return true; };
+                    cell.takeControl = function () { throw new Error('nope'); };
+                    return f.grid.takeControlAtCursor() === false && !f.grid.isDeep()
+                        && f.started.length === 0 && f.ended.length === 0;
+                })()"""), "stage one needs an explicit true; stage two needs a thenable; anything else fails safe");
+    }
+
+    @Test
+    void aRejectedHandoverStillResumesTheGrid() {
+        act("""
+                var R = fixture({ editable: true });
+                var RCELL = R.relation.cell('mapo', 'ingredient');
+                RCELL.mayTakeControl = function () { return true; };
+                RCELL.takeControl = function () { return Promise.reject(new Error('the edit blew up')); };
+                R.took = R.grid.takeControlAtCursor();
+                R.deepAtOnce = R.grid.isDeep();
+                """);
+        assertTrue(evalBool("""
+                (() => {
+                    return R.took === true && R.deepAtOnce === true         // control WAS taken
+                        && !R.grid.isDeep()                                 // and given back by the rejection
+                        && R.ended.join() === 'mapo ingredient'
+                        && R.relation.cell('mapo', 'ingredient').mode() === 'shallow';
+                })()"""), "an edit that blew up still ended: a rejection resumes the grid exactly as a resolve does");
+    }
+
+    @Test
+    void aSettleAfterDestroyDoesNotResurrectTheGrid() {
+        act("""
+                var D = fixture({ editable: true });
+                var DCELL = D.relation.cell('mapo', 'ingredient');
+                var SETTLE;
+                DCELL.mayTakeControl = function () { return true; };
+                DCELL.takeControl = function () { return new Promise(function (r) { SETTLE = r; }); };
+                D.grid.takeControlAtCursor();
+                D.grid.destroy();
+                SETTLE();
+                """);
+        assertTrue(evalBool("""
+                (() => {
+                    // The settle arrived after the grid was gone. It must report nothing and
+                    // touch nothing — a late promise is exactly the case a handed-out
+                    // callback could not have guarded.
+                    return D.ended.length === 0;
+                })()"""), "a settle after destroy resumes nothing and reports nothing");
     }
 
     @Test

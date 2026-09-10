@@ -8,19 +8,28 @@
 // nothing after. There is no update(value) for the grid to call, because the
 // grid has no value to pass.
 //
-// THE CELL NEVER TAKES CONTROL. It has no click handler: a single click is a
-// shallow gesture and belongs to the grid. The cell goes deep only when the
-// grid asks — beginEdit(release) — and holds control until it calls release()
-// back, once, whatever happened inside. While deep it owns the keyboard: keys
-// inside its input do not reach the grid.
+// THE CELL NEVER TAKES CONTROL UNASKED. It has no click handler: a single
+// click is a shallow gesture and belongs to the grid. The grid offers control
+// in TWO STAGES, and the cell answers both:
+//
+//   mayTakeControl()   may I, right now? Situational and synchronous. Here:
+//                      only a cell with somewhere to commit, already mounted
+//                      and not already deep.
+//   takeControl()      the handover. Returns a PROMISE that settles when the
+//                      cell is finished — however it finished. The grid never
+//                      learns whether it committed or cancelled.
+//
+// The promise is the cell's own; the grid hands out no callback it could
+// store, fire twice, or fire after the grid is gone. While deep the cell owns
+// the keyboard: keys inside its input do not reach the grid.
 //
 //   new RelGridTextCell({ value?, onCommit? })
-//     · onCommit(text) — when present the cell is editable. beginEdit opens an
-//       input; Enter reports the text to the owner through onCommit; Escape,
-//       or losing focus, cancels. THE COMMIT IS THE OWNER'S — the owner decides
-//       (persist, replicate, refuse) and the cell shows whatever it then
-//       set()s. A cell without onCommit declines beginEdit, and the grid
-//       stays shallow.
+//     · onCommit(text) — when present the cell is editable. takeControl opens
+//       an input; Enter reports the text to the owner through onCommit;
+//       Escape, or losing focus, cancels. THE COMMIT IS THE OWNER'S — the
+//       owner decides (persist, replicate, refuse) and the cell shows whatever
+//       it then set()s. A cell without onCommit answers no to mayTakeControl,
+//       is never offered the handover, and the grid stays shallow.
 //
 // No focused node is ever removed: ending an edit detaches the input's
 // listeners FIRST, then removes it, then repaints, then reports, then hands
@@ -59,7 +68,7 @@ class RelGridTextCell {
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
         this._mode = "none";
         this._input = null;
-        this._release = null;
+        this._done = null;         // resolves the promise takeControl handed the grid
         this._onKey = null;
         this._onBlur = null;
     }
@@ -96,37 +105,50 @@ class RelGridTextCell {
     mode() { return this._mode; }
 
     /**
-     * The grid asks the cell to go deep, handing it release() to call when
-     * done. Returns false to decline — a read-only cell, or one already deep —
-     * and the grid stays shallow.
+     * STAGE 1 — may this cell take control right now? Situational and cheap:
+     * asked afresh on every gesture, answered without side effects. No
+     * somewhere to commit means no; not mounted means no; already deep means
+     * no.
      */
-    beginEdit(release) {
-        if (!this._onCommit || !this._el || this._input) return false;
+    mayTakeControl() {
+        return !!this._onCommit && !!this._el && !this._input;
+    }
+
+    /**
+     * STAGE 2 — the handover, offered only after a yes. Opens the editor and
+     * answers a promise the grid holds until this cell is FINISHED. What
+     * finished it — Enter, Escape, a lost focus, the owner disposing us — is
+     * not the grid's to know, so the promise resolves with nothing in every
+     * case.
+     */
+    takeControl() {
         var self = this;
-        this._release = (typeof release === "function") ? release : function () {};
-        var input = document.createElement("input");
-        input.value = this._text();
-        this._input = input;
-        this._el.textContent = "";
-        this._el.appendChild(input);
-        this._onKey = function (e) {
-            if (e.stopPropagation) e.stopPropagation();       // the keyboard is the cell's while deep
-            if (e.key === "Enter")       { if (e.preventDefault) e.preventDefault(); self._end(true); }
-            else if (e.key === "Escape") { if (e.preventDefault) e.preventDefault(); self._end(false); }
-        };
-        this._onBlur = function () { self._end(false); };
-        input.addEventListener("keydown", this._onKey);
-        input.addEventListener("blur", this._onBlur);
-        if (input.focus) input.focus();
-        if (input.select) input.select();
-        return true;
+        return new Promise(function (resolve) {
+            self._done = resolve;
+            var input = document.createElement("input");
+            input.value = self._text();
+            self._input = input;
+            self._el.textContent = "";
+            self._el.appendChild(input);
+            self._onKey = function (e) {
+                if (e.stopPropagation) e.stopPropagation();   // the keyboard is the cell's while deep
+                if (e.key === "Enter")       { if (e.preventDefault) e.preventDefault(); self._end(true); }
+                else if (e.key === "Escape") { if (e.preventDefault) e.preventDefault(); self._end(false); }
+            };
+            self._onBlur = function () { self._end(false); };
+            input.addEventListener("keydown", self._onKey);
+            input.addEventListener("blur", self._onBlur);
+            if (input.focus) input.focus();
+            if (input.select) input.select();
+        });
     }
 
     /**
      * End the edit. The ORDER is the whole safety argument: detach the
      * listeners first, so removing the input cannot re-enter here through its
      * own blur; then remove; then repaint; then report to the owner; then hand
-     * control back to the grid — exactly once.
+     * control back to the grid. Settling twice is impossible now — a promise
+     * settles once — so the order is all that is left to get right.
      */
     _end(accept) {
         var input = this._input;
@@ -145,9 +167,9 @@ class RelGridTextCell {
             try { this._onCommit(text); }
             catch (e) { console.error("[RelGridTextCell] onCommit threw:", e); }
         }
-        var release = this._release;
-        this._release = null;
-        if (release) release();
+        var done = this._done;
+        this._done = null;
+        if (done) done();
     }
 
     /** The OWNER's to call, when it decides the cell is done. Never the grid's. */

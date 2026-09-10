@@ -15,7 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>RFC 0050 · Episode 2, map 15 law 105 and map 16 law 113: a cell that
  * declines when asked is the situational "no", decided by the cell each time
- * and never declared to the grid.</p>
+ * and never declared to the grid. The relation's {@code readOnlyColumns()} is
+ * the other one — structural, declared once, and answered without consulting a
+ * cell at all. Both are exercised here, and neither substitutes for the
+ * other.</p>
  */
 class DishPolicyTest extends JsModuleTestBase {
 
@@ -68,11 +71,14 @@ class DishPolicyTest extends JsModuleTestBase {
     /** Owner-side helpers: mount a cell into a host, ask it to edit, type and commit. No grid. */
     private static final String HELPERS = """
             function mount(rel, pk, col) { var c = rel.cellFor(pk, col); if (!c._el) c.render(makeEl('div')); return c; }
-            function tryEdit(rel, pk, col) {
+            // The cell's own half of the two-stage handover. Stage one is the whole
+            // question here: may this cell be written at all? Nothing is opened.
+            function mayEdit(rel, pk, col) { return mount(rel, pk, col).mayTakeControl() === true; }
+            function openEdit(rel, pk, col) {
                 var c = mount(rel, pk, col);
-                var ok = c.beginEdit(function () {});
-                if (ok) c.dispose();                       // the owner ends what it started
-                return ok;
+                if (!c.mayTakeControl()) return null;
+                c.takeControl();                           // a promise the OWNER settles
+                return c;
             }
             function typeAndEnter(cell, text) {
                 var input = cell._el.children[0];
@@ -103,7 +109,7 @@ class DishPolicyTest extends JsModuleTestBase {
                         var rel = createDishRelation(store, { role: role });
                         cols.forEach(function (col) {
                             var may = roles[role].indexOf(col) >= 0;
-                            if (tryEdit(rel, 'mapo', col) !== may) ok = false;    // asked each time, answered each time
+                            if (mayEdit(rel, 'mapo', col) !== may) ok = false;    // asked each time, answered each time
                         });
                         if (rel.role() !== role || rel.editableColumns().join() !== roles[role].join()) ok = false;
                     });
@@ -114,7 +120,7 @@ class DishPolicyTest extends JsModuleTestBase {
                         && roles.follower.length === 0
                         && Object.keys(roles).every(function (r) {
                                return roles[r].indexOf('sold') < 0 && roles[r].indexOf('popularity') < 0; });
-                })()"""), "a role's cells accept beginEdit on exactly its columns; sold and popularity are nobody's");
+                })()"""), "a role's cells say yes on exactly its columns; sold and popularity are nobody's");
     }
 
     @Test
@@ -172,12 +178,10 @@ class DishPolicyTest extends JsModuleTestBase {
                     var fol = createDishRelation(store, { role: 'follower' });
                     var mCal = mount(mgr, 'mapo', 'calories'), fCal = mount(fol, 'mapo', 'calories');
                     var mPrice = mount(mgr, 'mapo', 'price');
-                    var cell = mount(nut, 'mapo', 'calories');
-                    var released = 0;
-                    if (!cell.beginEdit(function () { released++; })) return false;
+                    var cell = openEdit(nut, 'mapo', 'calories');
+                    if (!cell) return false;
                     typeAndEnter(cell, '500');
-                    return released === 1
-                        && store.get('mapo', 'calories') === 500                     // coerced by the relation's rule
+                    return store.get('mapo', 'calories') === 500                     // coerced by the relation's rule
                         && cell.value() === 500 && mCal.value() === 500 && fCal.value() === 500
                         && mPrice.value() === 9.5                                     // nothing else moved
                         && cell._el.children.length === 0;                           // the input is gone

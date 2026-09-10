@@ -59,6 +59,17 @@ function createDishRelation(store, opts) {
     return {
         pks:     function () { return store.pks(); },
         columns: function () { return store.columns(); },
+        // THE COLUMN CONSTRAINT (map 16, law 112). sold moves only by selling
+        // and popularity is derived from it, so no cell in either column is
+        // ever asked — the grid does not consult them, and they are not asked
+        // to refuse. That is the STRUCTURAL no, beside the situational one the
+        // roles make below; neither substitutes for the other (law 113).
+        readOnlyColumns: function () {
+            var out = [], all = store.columns(), may = store.writableColumns();
+            for (var k = 0; k < all.length; k++)
+                if (may.indexOf(all[k]) < 0) out.push(all[k]);
+            return out;
+        },
         cellFor: function (pk, col) {
             var k = pk + ' ' + col, c = cells.get(k);
             if (!c) {

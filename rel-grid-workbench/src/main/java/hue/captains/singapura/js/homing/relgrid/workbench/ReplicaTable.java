@@ -79,7 +79,7 @@ final class ReplicaTable {
                 "    var EDITS = relation.editableColumns();",
                 "",
                 "    hint.textContent = EDITS.length",
-                "        ? ROLE.toUpperCase() + ' \u2014 edits ' + EDITS.join(' and ') + ' only. Click or arrow to a cell (shallow); Enter or double-click to edit (deep). On any other cell nothing opens: the grid asked, the cell declined, the grid stayed shallow. Enter commits to the store; the store tells every relation; each updates its own cells. The grid is never told what happened.'",
+                "        ? ROLE.toUpperCase() + ' \u2014 edits ' + EDITS.join(' and ') + ' only. Click or arrow to a cell (shallow); Enter or double-click to edit (deep). Two ways nothing opens: on sold and popularity the grid never even asks, because the relation declared those columns read-only; everywhere else it asks and the cell for this role says no. Enter commits to the store; the store tells every relation; each updates its own cells. The grid is never told what happened.'",
                 "        : 'FOLLOWER \u2014 read-only. It moves when any editor commits or the shop trades, and its grid was never spoken to after construction.';",
                 "",
                 "    // THE CHANNEL, and its first customer. The grid asks; the domain answers",

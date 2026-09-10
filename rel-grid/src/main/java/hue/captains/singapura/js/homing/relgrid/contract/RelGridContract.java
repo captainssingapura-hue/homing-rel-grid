@@ -1,40 +1,73 @@
 package hue.captains.singapura.js.homing.relgrid.contract;
 
 /**
- * RFC 0050 · Episode 2 — the grid facade's surface for round 1: arrangement,
- * a cursor, the shallow/deep discipline, and column widths — and nothing that
- * is somebody else's.
+ * RFC 0050 · Episode 2 — the grid facade's surface: arrangement, a cursor, a
+ * selection, the shallow/deep discipline, column widths, and one channel to the
+ * domain — and nothing that is somebody else's.
  *
  * <pre>{@code
  *   new RelGrid({
- *       container,        // where the layout mounts
- *       branch,           // the CELLS branch (DomOpsParty) — hands out cell host elements
- *       relation,         // RootRelationContract shape: pks(), columns(), cellFor(pk, column)
- *       label?,           // aria-label for the table
- *       header?,          // { show?: boolean, labels?: {column: text} } — display only
- *       onArranged?,      // (kind) — after every placement pass
- *       onCursorMoved?,   // (pk, column)
- *       onEditStarted?,   // (pk, column) — the grid went deep on this cell
- *       onEditEnded?,     // (pk, column) — the cell handed control back
- *       onColumnResized?  // (column, px) — a REPORT of what is now held
+ *       container,          // where the layout mounts
+ *       branch,             // the CELLS branch (DomOpsParty) — hands out cell host elements
+ *       relation,           // RootRelationContract shape: pks(), columns(), cellFor(pk, column)
+ *       label?,             // aria-label for the table
+ *       header?,            // { show?: boolean, labels?: {column: text} } — display only
+ *       ask?,               // (question) → thenable — THE CHANNEL (ext4, ext6)
+ *       onArranged?,        // (kind) — after every placement pass
+ *       onCursorMoved?,     // (pk, column)
+ *       onControlTaken?,    // (pk, column) — the cell took control of this one
+ *       onControlReleased?, // (pk, column) — and gave it back
+ *       onColumnResized?    // (column, px) — a REPORT of what is now held
  *   })
  * }</pre>
  *
- * <p><b>Shallow and deep are enforced here.</b> A single click or an arrow key
- * moves the cursor — an identity the grid holds — and the cell is only told.
- * Deep is entered only through the grid, by Enter or a double-click on the
- * cursor's cell: the grid calls {@code cell.beginEdit(release)}, and while the
- * cell holds control the grid's capture is inert. The cell calls
- * {@code release()} when done; the grid resumes and never learns what happened
+ * <h2>The channel</h2>
+ *
+ * <p>{@code ask} is the one seam to the domain: typed questions down, typed
+ * answers up, with the payloads generated from Java records so a shape cannot
+ * drift from its declaration (ext5). Its first customer is a <b>notification</b>
+ * — a question expecting no answer — so the grid hands it over, does not wait
+ * and does not mask, because nothing is pending on it (ext6, law 229). A
+ * rejected notification is still recorded: fire-and-forget is not
+ * fire-and-ignore. A host with no {@code ask} simply has no channel.</p>
+ *
+ * <h2>Shallow and deep are enforced here</h2>
+ *
+ * <p>A single click, a drag, or an arrow moves the cursor — an identity the
+ * grid holds — and the cell is only told. Deep is entered only through the
+ * grid, by Enter or a double-click on the cursor's cell, and the offer is made
+ * in <b>two stages</b>: the column's declared constraint, which is answered
+ * without touching the cell (map 16, law 112), and then the cell's own
+ * {@code mayTakeControl()}, asked afresh every time (law 113). Only then
+ * {@code takeControl()}, which must answer a thenable; the grid holds deep
+ * until it settles, resolved or rejected alike, and never learns what happened
  * inside.</p>
  *
- * <p><b>Widths are geometry, the grid's alone</b> (Map 7, laws 53–60): held by
- * column identity, applied by position, in place — no arrangement runs. A
- * request is bounded to {@code [40, 2000]} at normalisation and the bounded
- * request is what is held. {@code columnWidths()} returns what is held, never
- * what was measured; {@code setColumnWidths(snapshot)} drops unknown columns as
- * drift and is idempotent. The grid persists nothing — {@code onColumnResized}
- * is a report, and keeping it is the host's (Map 9).</p>
+ * <p>{@code mayTakeControlAtCursor()} is public because a feature must be able
+ * to ask whether a cell is writable <b>without opening it</b> — which is what
+ * bulk edit and paste are written against (map 18, law 115).</p>
+ *
+ * <h2>The selection</h2>
+ *
+ * <p>An ordered list of position rectangles, never merged and never reordered
+ * (map 5). Shift extends the last range's far corner without moving the cursor;
+ * ctrl appends a 1×1 and moves there; {@code Ctrl+A} takes the presented space;
+ * a bare move clears; every arrangement clears, because a range is positions
+ * and those are not the same positions. {@code selectedRanges()} answers the
+ * <b>resolved</b> list, so an empty one reads as the cursor's own 1×1 and no
+ * caller needs a case for "nothing selected" (law 40).</p>
+ *
+ * <p>Nothing consumes a selection yet. Copy, clear and bulk are later rounds,
+ * and there is deliberately no verb here that reads one.</p>
+ *
+ * <h2>Widths are geometry, the grid's alone</h2>
+ *
+ * <p>Map 7, laws 53–60: held by column identity, applied by position, in place —
+ * no arrangement runs. A request is bounded to {@code [40, 2000]} at
+ * normalisation and the bounded request is what is held. {@code columnWidths()}
+ * returns what is held, never what was measured; {@code setColumnWidths(snapshot)}
+ * drops unknown columns as drift and is idempotent. The grid persists nothing —
+ * {@code onColumnResized} is a report, and keeping it is the host's (map 9).</p>
  *
  * <p>There is no {@code updateCell}, {@code flushNow}, {@code sortBy},
  * {@code filterRows}, {@code commitEdit} or {@code cancelEdit}. The first two
@@ -43,21 +76,34 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  */
 public interface RelGridContract {
     void    reapply();                              // arrange again; carries nothing
-    boolean selectCell(String pk, String column);   // programmatic shallow cursor; ignored while deep
+    boolean selectCell(String pk, String column);   // programmatic shallow cursor; a BARE move, so it clears
     Object  cursor();                               // { pk, column } or null — never a position
-    boolean beginEditAtCursor();                    // ask the cursor's cell to go deep; false if it declines
     boolean isDeep();                               // the one fact the grid holds about editing
     void    focus();                                // the keyboard host
-    // ─── widths (Map 7) ──────────────────────────────────────────────────
+    // ─── the handover, in two stages (maps 15, 16) ───────────────────────
+    boolean mayTakeControlAtCursor();               // ask WITHOUT opening: constraint, then the cell
+    boolean takeControlAtCursor();                  // offer control; false if either stage refuses
+    // ─── the selection (map 5) ───────────────────────────────────────────
+    boolean extendSelection(String pk, String column);  // shift: move the last range's far corner
+    boolean addToSelection(String pk, String column);   // ctrl: append a 1x1 and go there
+    boolean selectAll();                                // one range over the presented space
+    void    clearSelection();
+    Object  selectedRanges();                       // the RESOLVED list of { i0, j0, i1, j1 }
+    int     selectionCount();                       // how many ranges were MADE; zero is the cursor's own
+    // ─── widths (map 7) ──────────────────────────────────────────────────
     boolean setColumnWidth(String column, double px);   // bounded, held by identity, applied in place; false for drift
     Object  columnWidth(String column);                 // what is held, or null
     Object  columnWidths();                             // the snapshot — a plain object the host may keep
     void    setColumnWidths(Object snapshot);           // restore; unknown columns dropped; idempotent
     // ─── seams + lifecycle ───────────────────────────────────────────────
     Object  viewMaps();                             // the identity/position seam (RelGridViewMaps)
+    Object  cells();                                // the cell registry, for a host that must reach one
     Object  el();                                   // the table element
     void    destroy();                              // detaches every cell and removes the table; DISPOSES NOTHING
 
     String   JS_CLASS_NAME = "RelGrid";
-    String[] CALLBACK_OPTION_NAMES = { "onArranged", "onCursorMoved", "onEditStarted", "onEditEnded", "onColumnResized" };
+    String[] CALLBACK_OPTION_NAMES = {
+            "onArranged", "onCursorMoved", "onControlTaken", "onControlReleased", "onColumnResized" };
+    /** The channel is not a callback: it is asked, and it answers. */
+    String   CHANNEL_OPTION_NAME = "ask";
 }

@@ -13,8 +13,8 @@
 //       header?,          // { show?, labels? } — display only
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
-//       onEditStarted?,   // (pk, column) — the grid went deep on this cell
-//       onEditEnded?,     // (pk, column) — the cell handed control back
+//       onControlTaken?,  // (pk, column) — the cell took control of this one
+//       onControlReleased?, // (pk, column) — and gave it back
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
 //       ask?              // (question) — THE CHANNEL. See below.
 //   });
@@ -43,13 +43,23 @@
 //   · A single click or an arrow key is a SHALLOW gesture — it moves the
 //     cursor, an identity the grid holds. The cell is only told.
 //   · Deep is entered ONLY through the grid — Enter or a double-click on the
-//     cursor's cell. The grid calls cell.beginEdit(release), marks itself
-//     deep, and its capture goes INERT: clicks and keys do nothing, because
-//     the keyboard is the cell's now.
-//   · The cell hands control back by calling release(). The grid never learns
-//     what happened inside — it resumes: shallow, focus on the table, the
-//     cursor repainted. Edit, commit and update are the domain's operations
-//     and never change an arrangement.
+//     cursor's cell — and the offer is made in TWO STAGES:
+//        1. the column's constraint, declared once by the relation. A
+//           constrained column's cell is NEVER ASKED (map 16, law 112).
+//        2. cell.mayTakeControl(), asked afresh every time. Only an explicit
+//           true is a yes.
+//     Then, and only then, cell.takeControl() — which MUST answer a thenable.
+//     Structure refuses always; a cell refuses sometimes; neither substitutes
+//     for the other (law 113). Two stages rather than one because bulk edit
+//     and paste must ask whether a cell is writable WITHOUT opening it, and a
+//     single take-it-or-leave-it call cannot serve them.
+//   · The grid then goes deep and its capture is INERT: clicks and keys do
+//     nothing, because the keyboard is the cell's now.
+//   · The cell hands control back by SETTLING the thenable, resolved or
+//     rejected — an edit that blew up still ended. The grid never learns what
+//     happened inside; it resumes: shallow, focus on the table, the cursor
+//     repainted. Edit, commit and update are the domain’s operations and never
+//     change an arrangement.
 //
 // THE SELECTION IS ASKED, NEVER OBEYED (map 5): the facade holds a
 // RelGridSelection — an ordered list of position rectangles that knows nothing
@@ -96,8 +106,8 @@ class RelGrid {
         this._cellFor = function (pk, col) { return r.cellFor(pk, col); };
         this._cbArranged    = opts.onArranged || null;
         this._cbCursor      = opts.onCursorMoved || null;
-        this._cbEditStarted = opts.onEditStarted || null;
-        this._cbEditEnded   = opts.onEditEnded || null;
+        this._cbTaken       = opts.onControlTaken || null;
+        this._cbReleased    = opts.onControlReleased || null;
         this._cbResized     = opts.onColumnResized || null;
         this._ask = (typeof opts.ask === "function") ? opts.ask : null;
 
@@ -113,6 +123,14 @@ class RelGrid {
         this._cursor = null;       // { pk, column } | null
         this._cursorPos = null;    // { i, j } | null
         this._deep = false;        // the one fact the grid holds about editing
+        this._destroyed = false;
+        // The column constraint: read ONCE, here, because it is structure and
+        // not a question about a moment. Absent means no constraint.
+        this._readOnly = new Set();
+        if (typeof r.readOnlyColumns === "function") {
+            var declared = r.readOnlyColumns() || [];
+            for (var d = 0; d < declared.length; d++) this._readOnly.add(declared[d]);
+        }
         this._widths = new Map();  // column → px, identity-keyed; positional only at the layout
         // The selection: POSITIONS, and it holds nothing else. The facade is
         // the only thing that knows both it and the cursor.
@@ -420,7 +438,7 @@ class RelGrid {
         // A bare move like any other. In a browser the click that precedes has
         // already cleared, but the double-click must not depend on that.
         this._bareMove(function () { this._setCursor(i, j); });
-        this.beginEditAtCursor();
+        this.takeControlAtCursor();
     }
 
     _onKey(e) {
@@ -454,7 +472,7 @@ class RelGrid {
                 else                           self._move(0, 1);
             });
         }
-        else if (key === "Enter")      this.beginEditAtCursor();
+        else if (key === "Enter")      this.takeControlAtCursor();
         else return;                           // not ours; let it bubble
         if (e.preventDefault) e.preventDefault();
     }
@@ -462,49 +480,84 @@ class RelGrid {
     // ── deep: the grid hands control to the cell, and takes it back ────────
 
     /**
-     * Ask the cursor's cell to go deep. The cell may decline (a read-only cell
-     * answers false, or has no beginEdit at all) and the grid stays shallow.
-     * Otherwise the grid is deep until the cell calls release() — once.
+     * May the cursor's cell take control right now? The two refusals, in
+     * order: the column's declared constraint, answered without touching the
+     * cell at all, and then the cell's own judgement. Public, because a
+     * feature must be able to ask WITHOUT opening anything.
      */
-    beginEditAtCursor() {
-        if (this._deep || !this._cursor) return false;
-        var id = this._cursor;
+    mayTakeControlAtCursor() {
+        if (!this._cursor) return false;
+        return this._mayTakeControl(this._cursor);
+    }
+
+    _mayTakeControl(id) {
+        if (this._readOnly.has(id.column)) return false;   // structural: never asked
         var entry = this._cells.get(id.pk, id.column);
         var cell = entry && entry.cell;
-        if (!cell || typeof cell.beginEdit !== "function") return false;
-        var self = this, released = false;
-        var release = function () {
-            if (released) return;
-            released = true;
-            self._resume(id);
-        };
-        this._deep = true;
-        this._layout.setDeep(true);
-        var ok;
-        try { ok = cell.beginEdit(release); }
-        catch (e) { console.error("[RelGrid] cell.beginEdit threw:", e); ok = false; }
-        if (ok === false) {                    // declined: nothing changed hands
-            this._deep = false;
-            this._layout.setDeep(false);
+        if (!cell) return false;
+        // Both halves or neither: a cell offering one is offered nothing.
+        if (typeof cell.mayTakeControl !== "function" || typeof cell.takeControl !== "function") return false;
+        var may;
+        try { may = cell.mayTakeControl(); }
+        catch (e) { console.error("[RelGrid] cell.mayTakeControl threw:", e); return false; }
+        return may === true;                               // only an explicit yes
+    }
+
+    /**
+     * Offer the cursor's cell control. Both stages must pass, and the cell
+     * must answer the second with a thenable; the grid is deep until that
+     * thenable SETTLES, resolved or rejected alike, because an edit that blew
+     * up still ended.
+     *
+     * Nothing is marked deep until the cell has answered, so there is no
+     * optimistic state to roll back — and a settle cannot arrive before the
+     * bookkeeping below is done, because a thenable's callbacks never run in
+     * the task that created it.
+     */
+    takeControlAtCursor() {
+        if (this._deep || !this._cursor) return false;
+        var id = this._cursor;
+        if (!this._mayTakeControl(id)) return false;
+        var cell = this._cells.get(id.pk, id.column).cell;
+        var out;
+        try { out = cell.takeControl(); }
+        catch (e) { console.error("[RelGrid] cell.takeControl threw:", e); return false; }
+        if (!out || typeof out.then !== "function") {
+            // A contract violation, not a decline: it already said it may.
+            // Recorded and refused, because waiting for a settle that cannot
+            // come would leave the grid inert with nothing to show for it.
+            console.error("[RelGrid] cell.takeControl must answer a thenable; got:", out);
             return false;
         }
+        this._deep = true;
+        this._layout.setDeep(true);
         this._tell(id, "deep");
-        if (this._cbEditStarted) {
-            try { this._cbEditStarted(id.pk, id.column); }
-            catch (e) { console.error("[RelGrid] onEditStarted threw:", e); }
+        if (this._cbTaken) {
+            try { this._cbTaken(id.pk, id.column); }
+            catch (e) { console.error("[RelGrid] onControlTaken threw:", e); }
         }
+        var self = this;
+        out.then(function () { self._resume(id); },
+                 function (e) {
+                     console.error("[RelGrid] the cell's control ended in a rejection:", e);
+                     self._resume(id);
+                 });
         return true;
     }
 
     /** The cell handed control back. What happened inside is not the grid's. */
     _resume(id) {
+        // A settle can arrive after the grid is gone, or after something else
+        // has already resumed it. Neither may resurrect a dead grid or fire a
+        // second report.
+        if (this._destroyed || !this._deep) return;
         this._deep = false;
         this._layout.setDeep(false);
         this._tell(id, "shallow");
         this._layout.focus();                  // the keyboard host takes the keys again
-        if (this._cbEditEnded) {
-            try { this._cbEditEnded(id.pk, id.column); }
-            catch (e) { console.error("[RelGrid] onEditEnded threw:", e); }
+        if (this._cbReleased) {
+            try { this._cbReleased(id.pk, id.column); }
+            catch (e) { console.error("[RelGrid] onControlReleased threw:", e); }
         }
     }
 
@@ -576,6 +629,7 @@ class RelGrid {
     /** Detaches every cell and removes the table. Disposes nothing: the cells
      *  are the domain's, and the next grid over this relation may find them. */
     destroy() {
+        this._destroyed = true;                // a late settle must not resume a dead grid
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._cells.destroy();
         this._layout.destroy();
