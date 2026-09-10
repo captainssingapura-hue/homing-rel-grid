@@ -80,11 +80,11 @@ class DishPolicyTest extends JsModuleTestBase {
                 c.takeControl();                           // a promise the OWNER settles
                 return c;
             }
-            function chooseAndChange(cell, n) {
-                var sel = cell._el.children[0];
-                sel.value = String(n);
-                sel.dispatch('change', {});
-            }
+            // Drive the rating panel the way a person does: arrows to change,
+            // Enter to commit. The panel is the last child of whatever host it
+            // was given.
+            function panelOf(cell) { return cell._host ? cell._host.children[0] : null; }
+            function press(cell, key) { panelOf(cell).dispatch('keydown', { key: key }); }
             function typeAndEnter(cell, text) {
                 var input = cell._el.children[0];
                 input.value = text;
@@ -209,7 +209,7 @@ class DishPolicyTest extends JsModuleTestBase {
     }
 
     @Test
-    void theRatingIsADropdownAndTheContractDoesNotNotice() {
+    void theRatingIsACustomControlAndTheContractDoesNotNotice() {
         assertTrue(evalBool("""
                 (() => {
                     var store = createDishStore();
@@ -222,65 +222,85 @@ class DishPolicyTest extends JsModuleTestBase {
                     if (nut.cellFor('mapo', 'calories') instanceof DishStarsCell) return false;
                     if (cell.value() !== 4 || cell._el.textContent !== '\u2605\u2605\u2605\u2605\u2606') return false;
 
-                    // Stage one, then stage two: a dropdown of the five ratings.
+                    // Stage one, then stage two. What comes back is a PANEL, not a form
+                    // element — five stars and a hint — and the contract does not care.
                     if (cell.mayTakeControl() !== true) return false;
-                    var out = cell.takeControl();
+                    var host = makeEl('div');
+                    var out = cell.takeControl(host);
                     if (!out || typeof out.then !== 'function') return false;   // a THENABLE, as the contract demands
                     if (cell.mayTakeControl() !== false) return false;          // already open: no
-                    var sel = cell._el.children[0];
-                    if (sel.tagName !== 'select' || sel.children.length !== 5) return false;
-                    if (sel.value !== '4') return false;                        // opens on what it shows
+                    var panel = host.children[0];
+                    if (!/wb-stars-panel/.test(panel.className)) return false;
+                    if (panel.children[0].children.length !== 5) return false;  // five stars
+                    if (cell.draft() !== 4) return false;                       // opens on what it shows
+                    if (cell._el.children.length !== 0) return false;           // NOT in the cell
 
-                    // It commits on CHANGE, not on Enter — and the owner coerces to a number.
-                    chooseAndChange(cell, 2);
+                    // It OWNS the arrows: right adds a star, left takes one away, and
+                    // both clamp. Nothing is committed until Enter.
+                    press(cell, 'ArrowRight');
+                    if (cell.draft() !== 5) return false;
+                    press(cell, 'ArrowRight');
+                    if (cell.draft() !== 5) return false;                       // clamped at five
+                    press(cell, 'ArrowLeft'); press(cell, 'ArrowLeft'); press(cell, 'ArrowLeft');
+                    if (cell.draft() !== 2) return false;
+                    if (store.get('mapo', 'stars') !== 4) return false;         // still nothing committed
+
+                    // Up and down are dead on purpose — a rating has one axis.
+                    press(cell, 'ArrowUp'); press(cell, 'ArrowDown');
+                    if (cell.draft() !== 2) return false;
+
+                    press(cell, 'Enter');
                     if (store.get('mapo', 'stars') !== 2) return false;
-                    if (cell._el.children.length !== 0) return false;           // the select is gone
+                    if (host.children.length !== 0) return false;               // the panel is gone
                     if (cell._el.textContent !== '\u2605\u2605\u2606\u2606\u2606') return false;
                     // And the follower's own stars cell followed, through the store.
                     return mount(fol, 'mapo', 'stars').value() === 2;
-                })()"""), "a rating is a dropdown; it answers the same two-stage contract as a text cell");
+                })()"""), "a rating is a custom control that owns the arrows, on the same two-stage contract");
     }
 
     @Test
-    void theDropdownIsLaidOverTheCellRatherThanInIt() {
+    void theEditorGoesIntoTheHostAndNeverIntoTheCell() {
         assertTrue(evalBool("""
                 (() => {
                     var store = createDishStore();
                     var nut = createDishRelation(store, { role: 'nutritionist' });
                     var cell = mount(nut, 'mapo', 'stars');
                     var before = cell._el.textContent;
-                    cell.takeControl();
-                    // The stars stay underneath, holding the cell open at its own size;
-                    // the dropdown covers them. A <select> left IN flow would set the
-                    // column to its longest option plus an arrow and push every other
-                    // column aside while it was open.
+                    var host = makeEl('div');
+                    cell.takeControl(host);
+                    // Everything the editor is goes into the host the grid minted. The
+                    // cell's own element is untouched — still showing exactly what it
+                    // showed — which is why a panel far larger than the cell costs the
+                    // table nothing at all.
                     return cell._el.textContent === before
-                        && cell._el.children.length === 1
-                        && cell._el.children[0].tagName === 'select';
-                })()"""), "the dropdown overlays the cell and the cell keeps its own size");
+                        && cell._el.children.length === 0
+                        && host.children.length === 1
+                        && /wb-stars-panel/.test(host.children[0].className);
+                })()"""), "the editor is built in the host, and the cell is left exactly as it was");
     }
 
     @Test
-    void escapingTheDropdownSettlesWithoutCommitting() {
+    void escapingTheRatingPanelSettlesWithoutCommitting() {
         assertTrue(evalBool("""
                 (() => {
                     var store = createDishStore();
                     var nut = createDishRelation(store, { role: 'nutritionist' });
                     var cell = mount(nut, 'mapo', 'stars');
-                    var settled = 0;
-                    cell.takeControl().then(function () { settled++; });
-                    var sel = cell._el.children[0];
-                    sel.value = '1';
-                    sel.dispatch('keydown', { key: 'Escape' });
-                    if (store.get('mapo', 'stars') !== 4) return false;         // nothing committed
-                    if (cell.value() !== 4 || cell._el.children.length !== 0) return false;
+                    var h1 = makeEl('div');
+                    cell.takeControl(h1);
+                    press(cell, 'ArrowLeft'); press(cell, 'ArrowLeft'); press(cell, 'ArrowLeft');
+                    if (cell.draft() !== 1) return false;                        // chosen, not committed
+                    press(cell, 'Escape');
+                    if (store.get('mapo', 'stars') !== 4) return false;          // nothing committed
+                    if (cell.value() !== 4 || h1.children.length !== 0) return false;
 
                     // A blur cancels too, and neither may leave the cell open.
-                    cell.takeControl();
-                    cell._el.children[0].dispatch('blur', {});
-                    return store.get('mapo', 'stars') === 4 && cell._el.children.length === 0
+                    var h2 = makeEl('div');
+                    cell.takeControl(h2);
+                    h2.children[0].dispatch('blur', {});
+                    return store.get('mapo', 'stars') === 4 && h2.children.length === 0
                         && cell.mayTakeControl() === true;                       // ready to be asked again
-                })()"""), "Escape and blur end the dropdown without committing, and settle the handover");
+                })()"""), "Escape and blur end the panel without committing, and settle the handover");
     }
 
     @Test

@@ -43,11 +43,17 @@ only ever been proved against the one thing it was written for.
   cursor. Press **Enter** or double-click to go **deep**: the grid hands the cell control. Type,
   then **Enter** to commit or **Escape** to cancel; the cell hands control back. Every other
   table updates.
-- In the same table, open a **stars** cell. A dropdown appears instead of a text box, and
-  choosing a rating commits immediately — there is no Enter to press, because a dropdown has
-  nothing to finish typing. Escape closes it and commits nothing. Watch the other tables: they
-  are text-cell tables, and the rating still moves in all of them, because what travels is the
-  store's value and not the editor.
+- In the same table, open a **stars** cell. What appears is not a text box, and not a form
+  element at all: a **panel three times wider and four times taller than the cell**, hung off it.
+  Press **→** for one more star and **←** for one fewer; **↑** and **↓** are dead on purpose,
+  because a rating has one axis. **Enter** commits, **Escape** cancels, and clicking a star does
+  both at once. Nothing is written until you commit.
+- While that panel is open, look at what did *not* happen: no column moved, no row grew, and the
+  cursor stayed where it was. The editor is not in the table at all — the grid mints an anchor
+  over the cell, outside the table, and the cell hangs whatever it likes off it. That is why a
+  panel this size costs the arrangement nothing, and why those arrow keys never reach the grid.
+  Watch the other tables as well: they are text-cell tables, and the rating still moves in all of
+  them, because what travels is the store's value and not the editor.
 - Now do the same on a *price* cell in the Nutritionist. Nothing opens — the grid asked the cell,
   the cell said no, the grid stayed shallow. Do it in the **Shop manager** and it opens.
 - Try it on *sold* or *popularity* in any table. Nothing opens there either, but for the other

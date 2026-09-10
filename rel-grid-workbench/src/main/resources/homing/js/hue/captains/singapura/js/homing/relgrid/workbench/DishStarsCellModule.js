@@ -1,29 +1,39 @@
 // =============================================================================
-// DishStarsCell — a health rating, 1 to 5, edited with a DROPDOWN. DOMAIN CODE,
-// written by the bench rather than shipped with the grid, and that is the point
-// of it: until now the stock text cell was the only implementation of the cell
-// contract, so the contract was only ever proved against the one thing it was
-// written for.
+// DishStarsCell — a health rating, 1 to 5, edited with a CUSTOM CONTROL. DOMAIN
+// CODE, written by the bench rather than shipped with the grid, and that is the
+// point of it: until it existed the stock text cell was the only implementation
+// of the cell contract, so the contract had only ever been proved against the
+// one thing it was written for.
 //
-// This is a cell that is not text (map 17). It shows stars, not a string; it
-// edits with a <select>, not an <input>; it commits on CHANGE rather than on
-// Enter; and the grid cannot tell the difference, because everything the grid
-// knows about a cell is on the contract:
+// This is a cell that is not text (map 17), and its editor is not a form
+// element either. It shows stars; it edits with a PANEL far larger than the
+// cell in both directions, hung off the anchor the grid minted; and while it
+// holds control it owns the keyboard outright:
+//
+//   →  one more star        ←  one fewer        (clamped at 5 and at 1)
+//   ↑  ↓  nothing           deliberately dead, and swallowed rather than passed
+//   Enter  commit           Escape / blur  cancel
+//   a click on a star       choose it and commit
+//
+// Nothing of that reaches the grid. The editor lives OUTSIDE the table, so its
+// keydowns bubble to the wrapper and never past the table the grid listens on
+// — the isolation is structural rather than something this cell has to arrange,
+// though it stops propagation anyway to say so out loud.
+//
+// The contract is answered exactly as the stock cell answers it:
 //
 //   render(host)        mount once into the element the grid minted
 //   set(v)              the OWNER changed it; repaint unless an edit is open
 //   onSelect(mode)      'none' | 'shallow' | 'deep' — pure lifecycle
 //   mayTakeControl()    stage one: nowhere to commit, not mounted, or already
 //                       open all mean no
-//   takeControl()       stage two: open the dropdown and answer a PROMISE that
-//                       settles when this cell is finished
+//   takeControl(host)   stage two: build the panel in the host and answer a
+//                       PROMISE that settles when this cell is finished
 //   dispose()           the owner's, never the grid's
 //
 // The same teardown discipline as the stock cell, for the same reason: detach
-// the listeners FIRST, so removing a focused <select> cannot re-enter through
-// its own blur; then remove; then repaint; then report to the owner; then
-// settle. A promise settles once, so the order is all that is left to get
-// right.
+// the listeners FIRST, so removing a focused panel cannot re-enter through its
+// own blur; then remove; then repaint; then report to the owner; then settle.
 //
 //   new DishStarsCell({ value?, onCommit? })
 // =============================================================================
@@ -32,12 +42,19 @@ var _WB_STARS_STYLE_ID = "bench-stars-style";
 var _WB_STARS_CSS = [
     ".wb-stars{font:13px sans-serif;letter-spacing:2px;padding:0 6px;}",
     ".wb-stars-ro{opacity:0.55;}",
-    // Fills the host the grid minted, which is laid over the slot but OUTSIDE
-    // the table. A dropdown is intrinsically about as wide as its longest
-    // option plus an arrow, and out there that costs the table nothing — it
-    // may even be wider than the cell it edits.
-    ".hrg-edit select{box-sizing:border-box;width:100%;height:100%;",
-    "  font:13px sans-serif;background:transparent;color:var(--color-text-primary);}"
+    // The PANEL. Hung off the anchor the grid minted — which is exactly the
+    // cell — so it is free to be much larger in both directions. Out of the
+    // table it costs the table nothing: no column widens, no row grows.
+    ".wb-stars-panel{position:absolute;top:100%;left:0;min-width:250px;",
+    "  padding:12px 14px;box-sizing:border-box;",
+    "  background:var(--color-surface-raised);color:var(--color-text-primary);",
+    "  border:1px solid var(--color-border);border-radius:6px;",
+    "  box-shadow:0 8px 24px rgba(0,0,0,0.28);outline:none;}",
+    ".wb-stars-row{display:flex;gap:8px;font-size:30px;line-height:1;cursor:pointer;}",
+    ".wb-star{user-select:none;-webkit-user-select:none;color:var(--color-text-muted);opacity:0.45;}",
+    ".wb-star-on{color:var(--color-accent);opacity:1;}",
+    ".wb-stars-hint{margin-top:10px;font:11px sans-serif;color:var(--color-text-muted);",
+    "  white-space:nowrap;}"
 ].join("\n");
 
 function _wbStarsEnsureStyle() {
@@ -65,12 +82,13 @@ class DishStarsCell {
         this._value = this._clamp(opts.value);
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
         this._mode = "none";
-        this._select = null;
-        this._host = null;
-        this._done = null;
+        this._panel = null;        // the editor, while one is open
+        this._stars = null;        // its five star elements
+        this._draft = null;        // the rating being chosen, committed only on accept
+        this._host = null;         // the anchor the grid minted for this session
+        this._done = null;         // resolves the promise takeControl handed the grid
         this._onKey = null;
         this._onBlur = null;
-        this._onChange = null;
     }
 
     /** A rating is an integer in [1, 5], or nothing at all. */
@@ -80,16 +98,17 @@ class DishStarsCell {
         return Math.max(_WB_STARS_MIN, Math.min(_WB_STARS_MAX, n));
     }
 
-    _stars() {
-        if (this._value == null) return "—";
+    _starsFor(n) {
         var out = "";
-        for (var k = _WB_STARS_MIN; k <= _WB_STARS_MAX; k++) out += (k <= this._value) ? "★" : "☆";
+        for (var k = _WB_STARS_MIN; k <= _WB_STARS_MAX; k++) out += (k <= n) ? "★" : "☆";
         return out;
     }
 
+    _text() { return (this._value == null) ? "—" : this._starsFor(this._value); }
+
     _paint() {
-        if (!this._el || this._select) return;
-        this._el.textContent = this._stars();
+        if (!this._el || this._panel) return;
+        this._el.textContent = this._text();
     }
 
     render(host) {
@@ -108,76 +127,116 @@ class DishStarsCell {
     }
 
     value() { return this._value; }
+    draft() { return this._draft; }
 
     onSelect(mode) { this._mode = mode; }
     mode() { return this._mode; }
 
     /** Stage one. Situational, synchronous, and free of side effects. */
     mayTakeControl() {
-        return !!this._onCommit && !!this._el && !this._select;
+        return !!this._onCommit && !!this._el && !this._panel;
     }
 
     /**
-     * Stage two. Opens a dropdown of the five ratings and answers a promise
-     * that settles when this cell is finished — chosen, cancelled, or blurred
-     * away. The grid learns which of those it was: not at all.
+     * Stage two. Builds the panel in the host the grid minted and answers a
+     * promise that settles when this cell is finished — committed, cancelled,
+     * or blurred away. The grid learns which of those it was: not at all.
      */
     takeControl(host) {
         var self = this;
         return new Promise(function (resolve) {
             self._done = resolve;
-            var sel = document.createElement("select");
-            for (var k = _WB_STARS_MIN; k <= _WB_STARS_MAX; k++) {
-                var opt = document.createElement("option");
-                opt.value = String(k);
-                opt.textContent = k + "  " + self._starsFor(k);
-                sel.appendChild(opt);
-            }
-            sel.value = String(self._value == null ? _WB_STARS_MIN : self._value);
-            self._select = sel;
-            // Into the HOST the grid minted, not into the cell. The stars stay
-            // exactly as they were, underneath.
             self._host = host || self._el;
-            self._host.appendChild(sel);
-            // A dropdown commits when it CHANGES — there is no typing to finish,
-            // and no Enter to wait for.
-            self._onChange = function () { self._end(true); };
+            self._draft = (self._value == null) ? _WB_STARS_MIN : self._value;
+
+            var panel = document.createElement("div");
+            panel.className = "wb-stars-panel";
+            panel.tabIndex = 0;                       // a property, so no attribute is needed
+
+            var row = document.createElement("div");
+            row.className = "wb-stars-row";
+            self._stars = [];
+            for (var k = _WB_STARS_MIN; k <= _WB_STARS_MAX; k++) {
+                var star = document.createElement("span");
+                star.className = "wb-star";
+                star.textContent = "★";
+                // Keep the focus on the panel: a press inside must not blur it,
+                // because a blur is a cancel.
+                star.addEventListener("mousedown", function (e) {
+                    if (e.preventDefault) e.preventDefault();
+                });
+                star.addEventListener("click", (function (n) {
+                    return function () { self._draft = n; self._repaintStars(); self._end(true); };
+                })(k));
+                row.appendChild(star);
+                self._stars.push(star);
+            }
+            panel.appendChild(row);
+
+            var hint = document.createElement("div");
+            hint.className = "wb-stars-hint";
+            hint.textContent = "← → to change   ·   Enter to commit   ·   Esc to cancel";
+            panel.appendChild(hint);
+
+            self._panel = panel;
+            self._host.appendChild(panel);
+            self._repaintStars();
+
             self._onKey = function (e) {
-                if (e.stopPropagation) e.stopPropagation();   // the keyboard is the cell's while deep
-                if (e.key === "Escape")     { if (e.preventDefault) e.preventDefault(); self._end(false); }
-                else if (e.key === "Enter") { if (e.preventDefault) e.preventDefault(); self._end(true); }
+                // The keyboard is this cell's while it holds control. Nothing
+                // here reaches the grid — the panel is outside the table — and
+                // stopping propagation says so rather than relying on it.
+                if (e.stopPropagation) e.stopPropagation();
+                var key = e.key;
+                if (key === "ArrowRight" || key === "ArrowLeft") {
+                    if (e.preventDefault) e.preventDefault();
+                    var step = (key === "ArrowRight") ? 1 : -1;
+                    self._draft = Math.max(_WB_STARS_MIN, Math.min(_WB_STARS_MAX, self._draft + step));
+                    self._repaintStars();
+                } else if (key === "ArrowUp" || key === "ArrowDown") {
+                    // Deliberately dead, and SWALLOWED: a rating has one axis,
+                    // and letting these through would move the grid's cursor out
+                    // from under an open editor.
+                    if (e.preventDefault) e.preventDefault();
+                } else if (key === "Enter") {
+                    if (e.preventDefault) e.preventDefault();
+                    self._end(true);
+                } else if (key === "Escape") {
+                    if (e.preventDefault) e.preventDefault();
+                    self._end(false);
+                }
             };
             self._onBlur = function () { self._end(false); };
-            sel.addEventListener("change", self._onChange);
-            sel.addEventListener("keydown", self._onKey);
-            sel.addEventListener("blur", self._onBlur);
-            if (sel.focus) sel.focus();
+            panel.addEventListener("keydown", self._onKey);
+            panel.addEventListener("blur", self._onBlur);
+            if (panel.focus) panel.focus();
         });
     }
 
-    _starsFor(n) {
-        var out = "";
-        for (var k = _WB_STARS_MIN; k <= _WB_STARS_MAX; k++) out += (k <= n) ? "★" : "☆";
-        return out;
+    _repaintStars() {
+        if (!this._stars) return;
+        for (var k = 0; k < this._stars.length; k++) {
+            var on = (k + 1) <= this._draft;
+            this._stars[k].className = on ? "wb-star wb-star-on" : "wb-star";
+            this._stars[k].textContent = on ? "★" : "☆";
+        }
     }
 
     /**
-     * Finish. Listeners off first, so removing a focused <select> cannot
-     * re-enter here through its own blur; then remove; then repaint; then tell
-     * the owner; then settle.
+     * Finish. Listeners off first, so removing a focused panel cannot re-enter
+     * here through its own blur; then remove; then repaint; then tell the
+     * owner; then settle.
      */
     _end(accept) {
-        var sel = this._select;
-        if (!sel) return;
-        var chosen = sel.value;
-        sel.removeEventListener("change", this._onChange);
-        sel.removeEventListener("keydown", this._onKey);
-        sel.removeEventListener("blur", this._onBlur);
-        this._onChange = null; this._onKey = null; this._onBlur = null;
-        this._select = null;
-        this._host = null;
-        if (sel.parentNode) {
-            try { sel.parentNode.removeChild(sel); }
+        var panel = this._panel;
+        if (!panel) return;
+        var chosen = this._draft;
+        panel.removeEventListener("keydown", this._onKey);
+        panel.removeEventListener("blur", this._onBlur);
+        this._onKey = null; this._onBlur = null;
+        this._panel = null; this._stars = null; this._draft = null; this._host = null;
+        if (panel.parentNode) {
+            try { panel.parentNode.removeChild(panel); }
             catch (e) { /* already gone — the grid took its host down */ }
         }
         this._paint();
@@ -192,7 +251,7 @@ class DishStarsCell {
 
     /** The OWNER's to call. Never the grid's. */
     dispose() {
-        if (this._select) this._end(false);
+        if (this._panel) this._end(false);
         this._el = null;
     }
 }
