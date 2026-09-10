@@ -32,13 +32,12 @@ var _WB_STARS_STYLE_ID = "bench-stars-style";
 var _WB_STARS_CSS = [
     ".wb-stars{font:13px sans-serif;letter-spacing:2px;padding:0 6px;}",
     ".wb-stars-ro{opacity:0.55;}",
-    // OVER the slot, not in it. A <select> is intrinsically about as wide as
-    // its longest option plus an arrow, and in an auto-layout table anything
-    // in flow sets the column width — so a dropdown in flow would push every
-    // other column aside for as long as it is open.
-    ".wb-stars select{position:absolute;top:0;right:0;bottom:0;left:0;",
-    "  box-sizing:border-box;width:100%;height:100%;font:13px sans-serif;",
-    "  background:var(--color-surface);color:var(--color-text-primary);}"
+    // Fills the host the grid minted, which is laid over the slot but OUTSIDE
+    // the table. A dropdown is intrinsically about as wide as its longest
+    // option plus an arrow, and out there that costs the table nothing — it
+    // may even be wider than the cell it edits.
+    ".hrg-edit select{box-sizing:border-box;width:100%;height:100%;",
+    "  font:13px sans-serif;background:transparent;color:var(--color-text-primary);}"
 ].join("\n");
 
 function _wbStarsEnsureStyle() {
@@ -67,6 +66,7 @@ class DishStarsCell {
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
         this._mode = "none";
         this._select = null;
+        this._host = null;
         this._done = null;
         this._onKey = null;
         this._onBlur = null;
@@ -122,7 +122,7 @@ class DishStarsCell {
      * that settles when this cell is finished — chosen, cancelled, or blurred
      * away. The grid learns which of those it was: not at all.
      */
-    takeControl() {
+    takeControl(host) {
         var self = this;
         return new Promise(function (resolve) {
             self._done = resolve;
@@ -135,9 +135,10 @@ class DishStarsCell {
             }
             sel.value = String(self._value == null ? _WB_STARS_MIN : self._value);
             self._select = sel;
-            // The stars STAY, holding the slot open at its natural size; the
-            // dropdown covers them.
-            self._el.appendChild(sel);
+            // Into the HOST the grid minted, not into the cell. The stars stay
+            // exactly as they were, underneath.
+            self._host = host || self._el;
+            self._host.appendChild(sel);
             // A dropdown commits when it CHANGES — there is no typing to finish,
             // and no Enter to wait for.
             self._onChange = function () { self._end(true); };
@@ -174,9 +175,10 @@ class DishStarsCell {
         sel.removeEventListener("blur", this._onBlur);
         this._onChange = null; this._onKey = null; this._onBlur = null;
         this._select = null;
+        this._host = null;
         if (sel.parentNode) {
             try { sel.parentNode.removeChild(sel); }
-            catch (e) { /* already detached — nothing left to do */ }
+            catch (e) { /* already gone — the grid took its host down */ }
         }
         this._paint();
         if (accept && this._onCommit) {

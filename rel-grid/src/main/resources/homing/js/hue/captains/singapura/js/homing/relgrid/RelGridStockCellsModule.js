@@ -44,11 +44,11 @@
 var _HRG_STOCK_STYLE_ID = "homing-rel-grid-stock-style";
 var _HRG_STOCK_STYLE_CSS = [
     ".hrg-text-ro{color:var(--color-text-muted);}",
-    // OVER the slot, not in it: an editor in flow would widen its column to the
-    // input's intrinsic width and shuffle every other column while it is open.
-    ".hrg-text-edit{position:absolute;top:0;right:0;bottom:0;left:0;",
-    "  box-sizing:border-box;width:100%;height:100%;border:0;padding:0 6px;",
-    "  font:13px sans-serif;background:var(--color-surface);color:var(--color-text-primary);}"
+    // Fills the host the grid minted, which is already laid over the slot and
+    // OUTSIDE the table — so this cell has nothing to say about layout at all.
+    ".hrg-text-edit{box-sizing:border-box;width:100%;height:100%;border:0;",
+    "  padding:0 6px;font:13px sans-serif;background:transparent;",
+    "  color:var(--color-text-primary);}"
 ].join("\n");
 
 function _hrgStockEnsureStyle() {
@@ -75,6 +75,7 @@ class RelGridTextCell {
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
         this._mode = "none";
         this._input = null;
+        this._host = null;         // the overlay the grid minted for this session
         this._done = null;         // resolves the promise takeControl handed the grid
         this._onKey = null;
         this._onBlur = null;
@@ -128,7 +129,7 @@ class RelGridTextCell {
      * not the grid's to know, so the promise resolves with nothing in every
      * case.
      */
-    takeControl() {
+    takeControl(host) {
         var self = this;
         return new Promise(function (resolve) {
             self._done = resolve;
@@ -136,9 +137,11 @@ class RelGridTextCell {
             input.value = self._text();
             input.className = "hrg-text-edit";
             self._input = input;
-            // The text STAYS, holding the slot open at its natural size; the
-            // input covers it. Clearing it would collapse the row instead.
-            self._el.appendChild(input);
+            // Into the HOST the grid minted — laid over the slot but outside
+            // the table — and never into the cell's own element, which is left
+            // exactly as it was showing.
+            self._host = host || self._el;
+            self._host.appendChild(input);
             self._onKey = function (e) {
                 if (e.stopPropagation) e.stopPropagation();   // the keyboard is the cell's while deep
                 if (e.key === "Enter")       { if (e.preventDefault) e.preventDefault(); self._end(true); }
@@ -167,9 +170,10 @@ class RelGridTextCell {
         input.removeEventListener("blur", this._onBlur);
         this._onKey = null; this._onBlur = null;
         this._input = null;
+        this._host = null;
         if (input.parentNode) {
             try { input.parentNode.removeChild(input); }
-            catch (e) { /* already detached — nothing left to do */ }
+            catch (e) { /* already gone — the grid took its host down */ }
         }
         this._paint();
         if (accept && this._onCommit) {

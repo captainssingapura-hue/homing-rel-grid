@@ -20,12 +20,44 @@
 // release. The layout decides nothing about what a drag MEANS; it does not
 // even know there is a selection.
 //
-//   new RelGridLayout({ container, label?, showHeader?, onCellClick?, onCellDblClick?,
-//                       onCellDown?, onCellDragTo?, onDragEnd?, onColResize? })
+// The table sits in a WRAPPER the layout owns. Two things need somewhere to
+// live that is not a table cell: an editor, which must be free to be larger
+// than the cell it edits, and (later) a mask. Both are positioned in the
+// wrapper's own coordinates, so they scroll with the table for free and no
+// scroll listener is needed anywhere.
+//
+//   new RelGridLayout({ container, label?, showHeader?, overflow?, onCellClick?,
+//                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
+//                       onColResize? })
 // =============================================================================
 
 var _HRG_STYLE_ID = "homing-rel-grid-style";
 var _HRG_STYLE_CSS = [
+    // The positioned parent for anything that is not a cell.
+    ".hrg-wrap{position:relative;}",
+    // An editor lives HERE, not in its slot: out of the table it cannot widen a
+    // column, cannot stretch a row, and is not clipped by the slot — so a cell
+    // may open something LARGER than itself. The grid places it over the slot
+    // and sizes it to at least the slot; how much more it takes is the cell's.
+    ".hrg-edit{position:absolute;z-index:50;box-sizing:border-box;",
+    "  background:var(--color-surface);color:var(--color-text-primary);",
+    "  outline:2px solid var(--color-accent);outline-offset:-2px;}",
+    // What a slot does with content too wide for it. The grid decides, because
+    // it is the slot's box.
+    //
+    // Ellipsis by default, because the alternative — wrapping, which is what
+    // plain CSS does — makes one row six lines tall while its neighbours stay
+    // at one, and a grid whose rows disagree about their height reads as
+    // broken.
+    //
+    // What this does NOT do on its own is truncate. In an auto-layout table
+    // nowrap moves the give from the row to the COLUMN: the column widens to
+    // the unbroken string and the table scrolls sideways instead. The ellipsis
+    // engages only once a column has a definite width — after a resize, or
+    // under hrg-fixed. That is the honest bound of this option, and the reason
+    // a declared per-column width is the other half of the story.
+    ".hrg-ov-ellipsis .hrg-td > *{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}",
+    ".hrg-ov-clip .hrg-td > *{overflow:hidden;white-space:nowrap;}",
     ".hrg-table{border-collapse:collapse;width:100%;",
     "  background:var(--color-surface);color:var(--color-text-primary);",
     "  font:13px sans-serif;user-select:none;-webkit-user-select:none;}",
@@ -92,6 +124,13 @@ function _hrgRemoveClass(el, c) {
     el.className = kept.join(" ");
 }
 
+/** wrap | clip | ellipsis — ellipsis unless the host says otherwise. */
+function _hrgOverflowClass(choice) {
+    if (choice === "wrap") return "hrg-ov-wrap";
+    if (choice === "clip") return "hrg-ov-clip";
+    return "hrg-ov-ellipsis";
+}
+
 function _hrgHasClass(el, c) {
     if (!el.className) return false;
     var parts = el.className.split(" ");
@@ -133,7 +172,14 @@ class RelGridLayout {
         }
         this._tbody = document.createElement("tbody");
         this._table.appendChild(this._tbody);
-        this._container.appendChild(this._table);
+        // container > wrapper > table, so an overlay can be a sibling of the
+        // table in the wrapper's coordinates.
+        this._wrap = document.createElement("div");
+        this._wrap.className = "hrg-wrap";
+        this._wrap.appendChild(this._table);
+        this._container.appendChild(this._wrap);
+        this._overlay = null;
+        _hrgAddClass(this._table, _hrgOverflowClass(opts.overflow));
         this._slots = [];        // [i][j] → td
         this._cursorTd = null;   // the slot currently painted as the cursor
         this._selTds = [];       // the slots currently painted as selected
@@ -275,6 +321,49 @@ class RelGridLayout {
         return this;
     }
 
+    /**
+     * Mint a host laid OVER a slot, in the wrapper's coordinates, and return
+     * it. The subtraction of two viewport rects cancels the scroll offset, so
+     * what comes out is a content coordinate that scrolls with the table.
+     *
+     * <p>Sized to EXACTLY the slot, and it is an anchor: a cell that wants to
+     * look in-cell fills it, and one that wants a picker or a panel hangs that
+     * off it as its own positioned child. Either way the table below is
+     * untouched, which is the whole reason the editor left it.</p>
+     */
+    openOverlay(i, j) {
+        this.closeOverlay();
+        var td = this.slotAt(i, j);
+        if (!td) return null;
+        var a = td.getBoundingClientRect(), w = this._wrap.getBoundingClientRect();
+        var el = document.createElement("div");
+        el.className = "hrg-edit";
+        var st = el.style;
+        if (st && st.setProperty) {
+            st.setProperty("left", (a.left - w.left) + "px");
+            st.setProperty("top", (a.top - w.top) + "px");
+            // EXACTLY the slot, so the overlay is an anchor rather than a thing
+            // with a size of its own. A cell that wants more room hangs it off
+            // this box as its own positioned child — which keeps the geometry
+            // the grid states exact, and leaves the cell free.
+            st.setProperty("width", a.width + "px");
+            st.setProperty("height", a.height + "px");
+        }
+        this._wrap.appendChild(el);
+        this._overlay = el;
+        return el;
+    }
+
+    /** Take it down. Whatever the cell put in it goes with it. */
+    closeOverlay() {
+        if (this._overlay && this._overlay.parentNode)
+            this._overlay.parentNode.removeChild(this._overlay);
+        this._overlay = null;
+        return this;
+    }
+
+    overlay() { return this._overlay; }
+
     /** The table wears the deep state, so CSS and tests can see the handover. */
     setDeep(on) {
         if (on) _hrgAddClass(this._table, "hrg-deep"); else _hrgRemoveClass(this._table, "hrg-deep");
@@ -296,7 +385,8 @@ class RelGridLayout {
 
     destroy() {
         document.removeEventListener("mouseup", this._mouseup);
-        if (this._table.parentNode) this._table.parentNode.removeChild(this._table);
+        this.closeOverlay();
+        if (this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
         this._slots = [];
         this._cursorTd = null;
         this._selTds = [];

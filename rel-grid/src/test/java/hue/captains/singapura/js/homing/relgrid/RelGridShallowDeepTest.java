@@ -83,8 +83,9 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     var f = fixture({ editable: true });
                     f.key('Enter');                                        // ONLY the grid opens deep
                     var cell = f.relation.cell('mapo', 'ingredient');
-                    var input = f.td(0, 0).children[0].children[0];
+                    var input = f.overlay().children[0];
                     if (!(f.grid.isDeep() && input && input.tagName === 'input')) return false;
+                    if (f.td(0, 0).children[0].children.length !== 0) return false;   // NOT in the slot
                     if (document.activeElement !== input) return false;     // the cell took the keyboard
                     if (cell.mode() !== 'deep') return false;
                     if (!/hrg-deep/.test(f.table().className)) return false;
@@ -98,25 +99,45 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     }
 
     @Test
-    void anEditorIsLaidOverTheSlotRatherThanInIt() {
+    void theEditorLivesOutsideTheTableEntirely() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture({ editable: true });
-                    var host = f.td(0, 0).children[0];
+                    var slot = f.td(0, 0), host = slot.children[0];
+                    if (f.overlay() !== null) return false;
                     f.key('Enter');
-                    var input = host.children[0];
-                    // The class is what takes it out of flow. Without it the input's
-                    // intrinsic width would set the column and shuffle every other one
-                    // for as long as the editor is open — a layout the DOM stub cannot
-                    // measure, so this guards the MECHANISM instead of the pixels.
-                    if (!/hrg-text-edit/.test(input.className)) return false;
-                    // And the text stays underneath, holding the slot open at its own
-                    // size. Clearing it would collapse the row instead.
-                    if (host.textContent !== 'tofu') return false;
-                    if (!/hrg-td/.test(f.td(0, 0).className)) return false;
-                    input.dispatch('keydown', { key: 'Escape' });
-                    return host.children.length === 0;
-                })()"""), "the editor overlays the slot and the slot keeps its own size");
+                    var ov = f.overlay();
+                    // A sibling of the TABLE, in the wrapper — not a descendant of the
+                    // slot. Out there it cannot widen a column, stretch a row, or be
+                    // clipped by the cell, and it may be larger than the cell it edits.
+                    if (!ov || !/hrg-edit/.test(ov.className)) return false;
+                    if (ov.parentNode !== f.wrap()) return false;
+                    if (f.wrap().children[0] !== f.table()) return false;
+                    if (ov.children[0].tagName !== 'input') return false;
+                    // Placed at the slot and sized to at least it.
+                    if (ov.style.getPropertyValue('left') === '') return false;
+                    if (ov.style.getPropertyValue('width') === '') return false;
+                    // The cell's own element is untouched — still showing what it showed.
+                    if (host.children.length !== 0 || host.textContent !== 'tofu') return false;
+                    // And a resize cannot move the column out from under it.
+                    if (f.grid.setColumnWidth('ingredient', 300) !== false) return false;
+                    return true;
+                })()"""), "the editor is minted outside the table, over the slot, and the slot is untouched");
+    }
+
+    @Test
+    void theOverlayComesDownWithTheSession() {
+        act("""
+                var E = fixture({ editable: true });
+                E.key('Enter');
+                E.overlay().children[0].dispatch('keydown', { key: 'Escape' });
+                """);
+        assertTrue(evalBool("""
+                (() => {
+                    return E.overlay() === null && !E.grid.isDeep()
+                        && E.td(0, 0).children[0].textContent === 'tofu'
+                        && E.wrap().children.length === 1;          // just the table again
+                })()"""), "when the cell settles the grid takes its overlay down");
     }
 
     @Test
@@ -125,7 +146,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                 var F = fixture({ editable: true });
                 F.key('Enter');
                 var HOST = F.td(0, 0).children[0];
-                var INPUT = HOST.children[0];
+                var INPUT = F.overlay().children[0];
                 INPUT.value = 'TOFU-EDITED';
                 INPUT.dispatch('keydown', { key: 'Enter' });               // the CELL ends its own edit
                 """);
@@ -156,7 +177,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     var c = f.grid.cursor();
                     return c.pk === 'fish' && c.column === 'calories' && f.grid.isDeep()
                         && f.started.join() === 'fish calories'
-                        && f.td(2, 1).children[0].children[0].tagName === 'input';
+                        && f.overlay().children[0].tagName === 'input'
                 })()"""), "a double-click is the pointer's way into deep, on the cell it landed on");
     }
 
@@ -169,6 +190,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     f.key('Enter');
                     f.td(1, 1).dispatch('dblclick');
                     return !f.grid.isDeep() && f.started.length === 0 && f.ended.length === 0
+                        && f.overlay() === null                        // nothing was even minted
                         && f.td(0, 0).children[0].children.length === 0
                         && f.td(1, 1).children[0].children.length === 0
                         && /hrg-text-ro/.test(f.td(0, 0).children[0].className)   // the cell named the property (law 116)
@@ -181,7 +203,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
         act("""
                 var F = fixture({ editable: true });
                 F.key('Enter');
-                var IN1 = F.td(0, 0).children[0].children[0];
+                var IN1 = F.overlay().children[0];
                 IN1.value = 'never';
                 IN1.dispatch('keydown', { key: 'Escape' });
                 """);
@@ -198,7 +220,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
         act("""
                 var G = fixture({ editable: true });
                 G.key('Enter');
-                G.td(0, 0).children[0].children[0].value = 'never either';
+                G.overlay().children[0].value = 'never either';
                 G.table().focus();                                          // focus leaves the input
                 """);
         assertTrue(evalBool("""

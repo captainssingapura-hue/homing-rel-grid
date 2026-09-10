@@ -181,7 +181,11 @@ final class RelGridTestDom {
                     }
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
-                function table() { return container.children[0]; }
+                // container > WRAPPER > table. The wrapper is the grid's own, and is
+                // where an editor overlay lives while a cell holds control.
+                function wrap()    { return container.children[0]; }
+                function table()   { return wrap().children[0]; }
+                function overlay() { return wrap().children[1] || null; }
                 function part(tag) { var t = table(); for (var k = 0; k < t.children.length; k++) if (t.children[k].tagName === tag) return t.children[k]; return null; }
                 function tbody() { return part('tbody'); }
                 function headerRow() { return part('thead').children[0]; }
@@ -238,6 +242,7 @@ final class RelGridTestDom {
                 return { grid: grid, relation: relation, container: container, data: data,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
+                         wrap: wrap, overlay: overlay,
                          sent: sent,
                          // The ranges of the last selection notification, as 'i0,j0..i1,j1'.
                          told: function () {

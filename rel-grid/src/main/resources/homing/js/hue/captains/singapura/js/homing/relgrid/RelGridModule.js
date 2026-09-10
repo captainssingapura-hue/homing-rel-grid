@@ -11,6 +11,8 @@
 //       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
+//       overflow?,        // wrap | clip | ellipsis — what a slot does with content
+//                         // too wide for it. Default ellipsis.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -48,7 +50,11 @@
 //           constrained column's cell is NEVER ASKED (map 16, law 112).
 //        2. cell.mayTakeControl(), asked afresh every time. Only an explicit
 //           true is a yes.
-//     Then, and only then, cell.takeControl() — which MUST answer a thenable.
+//     Then, and only then, cell.takeControl(host) — which MUST answer a thenable.
+//     The HOST is minted over the slot but OUTSIDE the table, so an editor
+//     cannot widen a column, stretch a row, or be clipped by its own cell —
+//     and a cell may open something larger than itself. Where it sits is the
+//     grid's; what goes in it is the cell's, exactly as with render(host).
 //     Structure refuses always; a cell refuses sometimes; neither substitutes
 //     for the other (law 113). Two stages rather than one because bulk edit
 //     and paste must ask whether a cell is writable WITHOUT opening it, and a
@@ -145,6 +151,7 @@ class RelGrid {
             container: opts.container,
             label: opts.label || null,
             showHeader: this._showHead,
+            overflow: opts.overflow || null,
             onCellClick:    function (i, j, mods) { self._onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._onDblClick(i, j); },
             onCellDown:     function (i, j, mods) { self._onDown(i, j, mods); },
@@ -220,6 +227,11 @@ class RelGrid {
      * is refused (drift). Applied in place — no arrangement runs.
      */
     setColumnWidth(column, px) {
+        // Geometry is the grid's, but not while a cell holds control: the
+        // editor is laid over a slot at a fixed position, and moving the column
+        // under it would leave the two disagreeing. The keyboard path was
+        // already inert while deep; a header drag was not.
+        if (this._deep) return false;
         if (this._maps.baseColumns().indexOf(column) < 0) return false;
         var n = Number(px);
         if (!isFinite(n)) return false;
@@ -519,14 +531,22 @@ class RelGrid {
         var id = this._cursor;
         if (!this._mayTakeControl(id)) return false;
         var cell = this._cells.get(id.pk, id.column).cell;
+        var at = this._cursorPos;
+        var host = at ? this._layout.openOverlay(at.i, at.j) : null;
+        if (!host) return false;
         var out;
-        try { out = cell.takeControl(); }
-        catch (e) { console.error("[RelGrid] cell.takeControl threw:", e); return false; }
+        try { out = cell.takeControl(host); }
+        catch (e) {
+            console.error("[RelGrid] cell.takeControl threw:", e);
+            this._layout.closeOverlay();
+            return false;
+        }
         if (!out || typeof out.then !== "function") {
             // A contract violation, not a decline: it already said it may.
             // Recorded and refused, because waiting for a settle that cannot
             // come would leave the grid inert with nothing to show for it.
             console.error("[RelGrid] cell.takeControl must answer a thenable; got:", out);
+            this._layout.closeOverlay();
             return false;
         }
         this._deep = true;
@@ -552,6 +572,7 @@ class RelGrid {
         // second report.
         if (this._destroyed || !this._deep) return;
         this._deep = false;
+        this._layout.closeOverlay();           // the editor goes with the session
         this._layout.setDeep(false);
         this._tell(id, "shallow");
         this._layout.focus();                  // the keyboard host takes the keys again
