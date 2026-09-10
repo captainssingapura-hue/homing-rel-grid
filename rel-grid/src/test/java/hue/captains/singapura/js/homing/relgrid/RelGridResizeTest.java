@@ -21,6 +21,7 @@ class RelGridResizeTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
         loadModule(RelGridTestDom.SELECTION);
+        loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
         js.eval("js", RelGridTestDom.FIXTURE);
     }

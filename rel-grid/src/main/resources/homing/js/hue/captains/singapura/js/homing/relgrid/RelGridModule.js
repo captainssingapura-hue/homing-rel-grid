@@ -16,8 +16,24 @@
 //       onEditStarted?,   // (pk, column) — the grid went deep on this cell
 //       onEditEnded?,     // (pk, column) — the cell handed control back
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
-//       onSelectionChanged? // (rects) — the RESOLVED selection, in the presented space
+//       ask?              // (question) — THE CHANNEL. See below.
 //   });
+//
+// THE ASK CHANNEL (ext4, ext6): one function, typed questions down, typed
+// answers up. Its first customer is a NOTIFICATION — a question with no answer
+// — and notifications are where the channel is cheapest to prove: the grid
+// hands one over, does not wait, does not mask, and learns nothing.
+//
+//   ask(new RelGridSelectionChanged([ RelGridRange, ... ]))
+//
+// The payload is a value object GENERATED from a Java record, so its shape
+// cannot drift from the declaration. The grid mints it and never reads it
+// back. What it must not do is lose a failure, so a returned thenable that
+// rejects is recorded — the diligence rule, which is why fire-and-forget is
+// not the same as fire-and-ignore.
+//
+// A host with no ask gets no channel and nothing changes; the callbacks that
+// remain are reports the channel has not claimed yet.
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
@@ -83,7 +99,7 @@ class RelGrid {
         this._cbEditStarted = opts.onEditStarted || null;
         this._cbEditEnded   = opts.onEditEnded || null;
         this._cbResized     = opts.onColumnResized || null;
-        this._cbSelection   = opts.onSelectionChanged || null;
+        this._ask = (typeof opts.ask === "function") ? opts.ask : null;
 
         var head = opts.header || {};
         this._showHead = head.show !== false;
@@ -280,14 +296,32 @@ class RelGrid {
 
     // ── the selection: routed here, held next door, painted by the layout ──
 
-    /** Ask what is selected, and paint it. The only reader of the list there is. */
+    /**
+     * A NOTIFICATION: a question the domain is not expected to answer. The grid
+     * does not wait for it and does not mask for it, because nothing is pending
+     * on it (ext6 law 229). It may still FAIL, though, and a lost failure is
+     * worse than a slow one — so a thenable that rejects is recorded.
+     */
+    _notify(question) {
+        if (!this._ask) return;
+        var out;
+        try { out = this._ask(question); }
+        catch (e) { console.error("[RelGrid] ask threw:", e); return; }
+        if (out && typeof out.then === "function")
+            out.then(null, function (e) { console.error("[RelGrid] ask rejected:", e); });
+    }
+
+    /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
     _afterSelection() {
         var rects = this._selection.resolve(this._cursorPos);
         this._layout.paintSelection(rects);
-        if (this._cbSelection) {
-            try { this._cbSelection(rects); }
-            catch (e) { console.error("[RelGrid] onSelectionChanged threw:", e); }
+        if (!this._ask) return;                // nothing to tell, and nothing to build
+        var ranges = [];
+        for (var k = 0; k < rects.length; k++) {
+            var r = rects[k];
+            ranges.push(new RelGridRange(r.i0, r.j0, r.i1, r.j1));
         }
+        this._notify(new RelGridSelectionChanged(ranges));
     }
 
     /** A bare move: the gesture means START OVER, so the list goes (law 40). */

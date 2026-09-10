@@ -21,6 +21,10 @@ final class RelGridTestDom {
 
     static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
 
+    /** The protocol's classes are generated, and live in their own jar. */
+    static final String PROTOCOL =
+            "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
+
     static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
             "RelGridStockCellsModule.js", "RelGridModule.js" };
@@ -156,7 +160,7 @@ final class RelGridTestDom {
                 var mints = 0;
                 var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
                 var container = makeEl('div');
-                var arranged = [], moves = [], started = [], ended = [], resized = [], selections = [];
+                var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
                 var grid = new RelGrid({
                     container: container, branch: branch, relation: relation,
                     onArranged:      function (k) { arranged.push(k); },
@@ -164,7 +168,13 @@ final class RelGridTestDom {
                     onEditStarted:   function (pk, col) { started.push(pk + ' ' + col); },
                     onEditEnded:     function (pk, col) { ended.push(pk + ' ' + col); },
                     onColumnResized: function (col, px) { resized.push(col + ' ' + px); },
-                    onSelectionChanged: function (rects) { selections.push(rects.length); }
+                    // THE CHANNEL. A notification arrives here; the fixture records it and,
+                    // unless a test says otherwise, answers with a resolved promise — which
+                    // the grid must not wait for.
+                    ask: opts.noAsk ? undefined : function (q) {
+                        sent.push(q);
+                        return opts.ask ? opts.ask(q) : Promise.resolve();
+                    }
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 function table() { return container.children[0]; }
@@ -224,7 +234,22 @@ final class RelGridTestDom {
                 return { grid: grid, relation: relation, container: container, data: data,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
-                         selections: selections,
+                         sent: sent,
+                         // The ranges of the last selection notification, as 'i0,j0..i1,j1'.
+                         told: function () {
+                             for (var k = sent.length - 1; k >= 0; k--) {
+                                 var q = sent[k];
+                                 if (q instanceof RelGridSelectionChanged) {
+                                     var out = [];
+                                     for (var m = 0; m < q.ranges.length; m++) {
+                                         var r = q.ranges[m];
+                                         out.push(r.i0 + ',' + r.j0 + '..' + r.i1 + ',' + r.j1);
+                                     }
+                                     return out.join(' ');
+                                 }
+                             }
+                             return null;
+                         },
                          arranged: arranged, moves: moves, started: started, ended: ended, commits: commits, resized: resized,
                          mints: function () { return mints; }, asked: function () { return asked; } };
             }

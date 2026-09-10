@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>VOID-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-grid-protocol</artifactId>
+
+    <description>
+        The Relation Grid's ask protocol (RFC 0050 · Episode 2, ext4 and ext5).
+        Every question the grid asks and every answer it accepts is declared
+        ONCE, as a Java record, and its JS class is GENERATED from that record
+        at build time. Nothing about a payload's shape is written twice.
+
+        Per the Generated and Hand-Written Live Apart doctrine this module's
+        src/main/resources is empty: the served JS is produced by
+        RelGridProtocolGen.main() into target/classes during process-classes,
+        under the filename the DomModule's simple name requires.
+
+        Data only — no DOM, no grid. Domain code depends on this to answer
+        without depending on the grid, which is ext4's law 202.
+
+        Round one carries the first kind: a selection notification, which
+        expects no answer. Codecs are not generated, because nothing serialises
+        one yet (law 214).
+    </description>
+
+    <properties>
+        <!-- Where the generated JS lands: the classpath layout the module
+             resolver uses to serve a body. -->
+        <protocol.output.dir>${project.build.outputDirectory}/homing/js/hue/captains/singapura/js/homing/relgrid/protocol</protocol.output.dir>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <!-- The codec ontology: ObjectDefinition and DefinitionCodeGen. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-codec</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ssjs-test-fixtures</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- process-classes, not generate-resources: the generator is
+                 itself compiled from this module, so it cannot run before
+                 compile. The output is in target/classes by packaging time. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-rel-grid-protocol</id>
+                        <phase>process-classes</phase>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolGen</mainClass>
+                            <arguments>
+                                <argument>${protocol.output.dir}</argument>
+                            </arguments>
+                            <classpathScope>compile</classpathScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

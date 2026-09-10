@@ -16,6 +16,9 @@
         every cell for its whole life, and edit, commit and update are the
         domain's operations that never change an arrangement.
 
+        rel-grid-protocol is the ask protocol: every question and answer
+        declared once as a Java record, its JS class generated at build time.
+
         rel-grid-selection is the selection: an ordered list of ranges over
         positions, in a module that imports nothing at all.
 
@@ -26,6 +29,7 @@
     </description>
 
     <modules>
+        <module>rel-grid-protocol</module>
         <module>rel-grid</module>
         <module>rel-grid-selection</module>
         <module>rel-grid-workbench</module>

@@ -27,6 +27,7 @@ class RelGridSelectionWiringTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
         loadModule(RelGridTestDom.SELECTION);
+        loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
         js.eval("js", RelGridTestDom.FIXTURE);
     }
@@ -317,23 +318,77 @@ class RelGridSelectionWiringTest extends JsModuleTestBase {
     }
 
     @Test
-    void theSelectionIsReportedAndNothingConsumesIt() {
+    void theSelectionIsToldThroughTheChannelAndNothingConsumesIt() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture();
-                    var seen = f.selections.length;                          // the first arrangement reported
-                    if (seen === 0) return false;
+                    if (f.sent.length === 0) return false;                  // the first arrangement told
+                    if (!(f.sent[0] instanceof RelGridSelectionChanged)) return false;
+                    if (f.told() !== '0,0..0,0') return false;               // the cursor's own 1x1
                     f.click(0, 0); f.click(2, 1, { shift: true });
-                    if (f.selections[f.selections.length - 1] !== 1) return false;
+                    if (f.told() !== '0,0..2,1') return false;
                     f.click(0, 1, { ctrl: true });
-                    if (f.selections[f.selections.length - 1] !== 2) return false;
+                    if (f.told() !== '0,0..2,1 0,1..0,1') return false;      // both, in creation order
                     f.grid.clearSelection();
-                    if (f.selections[f.selections.length - 1] !== 1) return false;   // the cursor's own
+                    if (f.told() !== '0,1..0,1') return false;               // back to the cursor's own
                     // THE BOUNDARY OF THIS ROUND: the grid has no verb that reads a selection.
                     // Copy, clear and bulk arrive later; their absence is deliberate.
                     var verbs = ['copy', 'copySelection', 'clearCells', 'deleteRows', 'bulkEdit', 'fill'];
                     for (var k = 0; k < verbs.length; k++) if (typeof f.grid[verbs[k]] === 'function') return false;
                     return true;
-                })()"""), "the resolved selection is reported; no verb on the grid consumes one yet");
+                })()"""), "the resolved selection is told through the channel; no verb on the grid consumes one");
+    }
+
+    @Test
+    void whatTravelsIsAGeneratedValueObjectTheGridCannotTakeBack() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture();
+                    f.click(0, 0); f.click(1, 1, { shift: true });
+                    var q = f.sent[f.sent.length - 1];
+                    if (!(q instanceof RelGridSelectionChanged)) return false;
+                    if (!(q.ranges[0] instanceof RelGridRange)) return false;
+                    // Deeply frozen, so the domain cannot be handed something that changes
+                    // under it, and cannot change what the grid still holds.
+                    if (!Object.isFrozen(q) || !Object.isFrozen(q.ranges) || !Object.isFrozen(q.ranges[0])) return false;
+                    try { q.ranges[0].i1 = 99; } catch (e) {}
+                    return q.ranges[0].i1 === 1 && q.ranges.length === 1;
+                })()"""), "the payload is a frozen value object, generated from the Java record");
+    }
+
+    @Test
+    void theGridNeitherWaitsForANotificationNorLosesItsFailure() {
+        assertTrue(evalBool("""
+                (() => {
+                    var settled = [];
+                    // A domain that answers LATE, and one that fails. Neither may stop the grid,
+                    // and neither may make it wait: the paint below happens before either runs.
+                    var f = fixture({ ask: function () {
+                        return new Promise(function (res) { settled.push('later'); res(); });
+                    } });
+                    f.click(1, 1);
+                    if (f.painted() !== '1,1') return false;                 // painted, not pending
+                    if (f.grid.isDeep()) return false;
+
+                    var g = fixture({ ask: function () { return Promise.reject(new Error('domain said no')); } });
+                    g.click(0, 1);                                            // a rejected notification
+                    if (g.painted() !== '0,1') return false;                  // the grid carried on
+
+                    var h = fixture({ ask: function () { throw new Error('domain threw'); } });
+                    h.click(1, 0);                                            // and a thrown one
+                    return h.painted() === '1,0' && h.grid.cursor().pk === 'coq';
+                })()"""), "a notification is fire-and-forget: not waited on, and never able to stop the grid");
+    }
+
+    @Test
+    void aHostWithNoChannelIsUnchanged() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture({ noAsk: true });
+                    f.click(0, 0); f.click(2, 1, { shift: true });
+                    // Everything still works; there is simply nobody to tell.
+                    return f.sent.length === 0 && f.painted() === '0,0 0,1 1,0 1,1 2,0 2,1'
+                        && f.grid.selectionCount() === 1;
+                })()"""), "the channel is optional: without an ask the grid behaves exactly as before");
     }
 }

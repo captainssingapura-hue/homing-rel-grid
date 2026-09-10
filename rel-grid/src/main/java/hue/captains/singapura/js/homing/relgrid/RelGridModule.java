@@ -6,6 +6,7 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 
+import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 import hue.captains.singapura.js.homing.relgrid.selection.RelGridSelectionModule;
 
 import java.util.List;
@@ -37,6 +38,10 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                 .add(new ModuleImports<>(List.of(new RelGridLayoutModule.RelGridLayout()),     RelGridLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridCellsModule.RelGridCells()),       RelGridCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridSelectionModule.RelGridSelection()), RelGridSelectionModule.INSTANCE))
+                .add(new ModuleImports<>(
+                        List.of(new RelGridProtocolModule.RelGridRange(),
+                                new RelGridProtocolModule.RelGridSelectionChanged()),
+                        RelGridProtocolModule.INSTANCE))
                 .build();
     }
 
