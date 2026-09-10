@@ -9,6 +9,10 @@
 //
 //   store.pks() / columns() / get(pk, col)
 //   store.writableColumns()      what ANY editor may write — the store's rule
+//
+// `stars` is a HEALTH RATING, 1 to 5, and the nutritionist's to set. It is
+// writable like any other column; what makes it interesting is that its cell
+// is not a text cell — see DishStarsCellModule.
 //   store.commit(pk, col, v)     write + persist + notify — the EDIT SEAM;
 //                                refuses a column nobody may write
 //   store.sell(pk, n)            n more sold — the only thing that moves popularity
@@ -29,16 +33,16 @@
 // =============================================================================
 
 function createDishStore() {
-    var KEY = 'bench.replicatingTables.dishes.v2';
-    var COLS = ['ingredient', 'style', 'calories', 'price', 'sold', 'popularity'];
-    var WRITABLE = ['ingredient', 'style', 'calories', 'price'];
+    var KEY = 'bench.replicatingTables.dishes.v3';
+    var COLS = ['ingredient', 'style', 'calories', 'stars', 'price', 'sold', 'popularity'];
+    var WRITABLE = ['ingredient', 'style', 'calories', 'stars', 'price'];
     var SEED = {
-        mapo:   { ingredient: 'tofu',    style: 'Chinese', calories: 480, price: 9.5,  sold: 71 },
-        coq:    { ingredient: 'chicken', style: 'French',  calories: 610, price: 18,   sold: 64 },
-        fish:   { ingredient: 'cod',     style: 'English', calories: 560, price: 12,   sold: 58 },
-        sauer:  { ingredient: 'pork',    style: 'German',  calories: 650, price: 14,   sold: 49 },
-        burger: { ingredient: 'beef',    style: 'USA',     calories: 780, price: 11,   sold: 88 },
-        carbo:  { ingredient: 'pasta',   style: 'Italian', calories: 720, price: 13,   sold: 77 }
+        mapo:   { ingredient: 'tofu',    style: 'Chinese', calories: 480, stars: 4, price: 9.5,  sold: 71 },
+        coq:    { ingredient: 'chicken', style: 'French',  calories: 610, stars: 2, price: 18,   sold: 64 },
+        fish:   { ingredient: 'cod',     style: 'English', calories: 560, stars: 5, price: 12,   sold: 58 },
+        sauer:  { ingredient: 'pork',    style: 'German',  calories: 650, stars: 2, price: 14,   sold: 49 },
+        burger: { ingredient: 'beef',    style: 'USA',     calories: 780, stars: 1, price: 11,   sold: 88 },
+        carbo:  { ingredient: 'pasta',   style: 'Italian', calories: 720, stars: 3, price: 13,   sold: 77 }
     };
     function copy(o) { return JSON.parse(JSON.stringify(o)); }
     /** What was persisted must have every seeded dish with a numeric `sold`; anything else is ignored. */

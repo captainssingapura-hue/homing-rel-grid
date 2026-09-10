@@ -6,7 +6,10 @@
 //   createDishRelation(store, { role })     role: chef | nutritionist | manager | follower
 //   dishRoles()                             the policy: which columns each role may edit
 //
-//   · cellFor(pk, col) builds a RelGridTextCell ONCE per identity and keeps it.
+//   · cellFor(pk, col) builds a cell ONCE per identity and keeps it — a
+//     DishStarsCell for the rating column, a RelGridTextCell for the rest.
+//     Which kind a column gets is the domain's business; the grid asks every
+//     cell the same two questions and cannot tell them apart.
 //   · WHO MAY EDIT is decided here, per cell, at the moment the cell is built:
 //     a cell gets a commit target only if this relation's role may write its
 //     column AND the store lets anybody write it. A cell without one declines
@@ -24,7 +27,7 @@
 
 var DISH_ROLES = {
     chef:         ['ingredient', 'style'],
-    nutritionist: ['calories'],
+    nutritionist: ['calories', 'stars'],
     manager:      ['price'],
     follower:     []
 };
@@ -39,7 +42,7 @@ function createDishRelation(store, opts) {
     // The role says who; the store says what may be written at all. Both must agree.
     var writable = store.writableColumns();
     var editable = DISH_ROLES[role].filter(function (c) { return writable.indexOf(c) >= 0; });
-    var NUMERIC = { calories: true, price: true };
+    var NUMERIC = { calories: true, price: true, stars: true };
     var cells = new Map();
 
     function mayEdit(col) { return editable.indexOf(col) >= 0; }
@@ -73,12 +76,15 @@ function createDishRelation(store, opts) {
         cellFor: function (pk, col) {
             var k = pk + ' ' + col, c = cells.get(k);
             if (!c) {
-                c = new RelGridTextCell({
-                    value: store.get(pk, col),
-                    onCommit: mayEdit(col)
-                        ? function (text) { store.commit(pk, col, coerce(col, text)); }
-                        : undefined
-                });
+                // The cell KIND is the domain's choice, made per column and
+                // invisible to the grid: a rating gets a dropdown, everything
+                // else gets text, and the grid asks both the same two questions.
+                var commit = mayEdit(col)
+                    ? function (text) { store.commit(pk, col, coerce(col, text)); }
+                    : undefined;
+                c = (col === 'stars')
+                    ? new DishStarsCell({ value: store.get(pk, col), onCommit: commit })
+                    : new RelGridTextCell({ value: store.get(pk, col), onCommit: commit });
                 cells.set(k, c);
             }
             return c;

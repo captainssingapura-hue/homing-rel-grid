@@ -80,6 +80,11 @@ class DishPolicyTest extends JsModuleTestBase {
                 c.takeControl();                           // a promise the OWNER settles
                 return c;
             }
+            function chooseAndChange(cell, n) {
+                var sel = cell._el.children[0];
+                sel.value = String(n);
+                sel.dispatch('change', {});
+            }
             function typeAndEnter(cell, text) {
                 var input = cell._el.children[0];
                 input.value = text;
@@ -92,6 +97,7 @@ class DishPolicyTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", DOM_STUB);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
+        loadModule(BENCH_DIR + "DishStarsCellModule.js");
         loadModule(BENCH_DIR + "DishStore.js");
         loadModule(BENCH_DIR + "DishRelation.js");
         js.eval("js", HELPERS);
@@ -115,7 +121,7 @@ class DishPolicyTest extends JsModuleTestBase {
                     });
                     return ok
                         && roles.chef.join() === 'ingredient,style'
-                        && roles.nutritionist.join() === 'calories'
+                        && roles.nutritionist.join() === 'calories,stars'
                         && roles.manager.join() === 'price'
                         && roles.follower.length === 0
                         && Object.keys(roles).every(function (r) {
@@ -137,7 +143,7 @@ class DishPolicyTest extends JsModuleTestBase {
                     return a === false && b === false && c === false
                         && store.get('mapo', 'popularity') === pop && store.get('mapo', 'sold') === sold
                         && store.revision() === rev
-                        && store.writableColumns().join() === 'ingredient,style,calories,price'
+                        && store.writableColumns().join() === 'ingredient,style,calories,stars,price'
                         && threw;
                 })()"""), "the store refuses a commit to sold or popularity, and an unknown role at construction");
     }
@@ -195,11 +201,67 @@ class DishPolicyTest extends JsModuleTestBase {
                     var a = createDishStore();
                     a.sell('fish', 100);                                              // 158 — fish is the best seller
                     var b = createDishStore();                                        // loads what a persisted
-                    var raw = JSON.parse(localStorage.getItem('bench.replicatingTables.dishes.v2'));
+                    var raw = JSON.parse(localStorage.getItem('bench.replicatingTables.dishes.v3'));
                     return b.get('fish', 'sold') === 158 && b.get('fish', 'popularity') === 100
                         && b.get('burger', 'popularity') === Math.round(100 * 88 / 158)
                         && raw.fish.sold === 158 && raw.fish.popularity === undefined;   // derived is never persisted
                 })()"""), "sold is persisted and popularity is derived again on load");
+    }
+
+    @Test
+    void theRatingIsADropdownAndTheContractDoesNotNotice() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = createDishStore();
+                    var nut = createDishRelation(store, { role: 'nutritionist' });
+                    var fol = createDishRelation(store, { role: 'follower' });
+                    var cell = mount(nut, 'mapo', 'stars');
+
+                    // A DIFFERENT KIND of cell, answering the same contract.
+                    if (!(cell instanceof DishStarsCell)) return false;
+                    if (nut.cellFor('mapo', 'calories') instanceof DishStarsCell) return false;
+                    if (cell.value() !== 4 || cell._el.textContent !== '\u2605\u2605\u2605\u2605\u2606') return false;
+
+                    // Stage one, then stage two: a dropdown of the five ratings.
+                    if (cell.mayTakeControl() !== true) return false;
+                    var out = cell.takeControl();
+                    if (!out || typeof out.then !== 'function') return false;   // a THENABLE, as the contract demands
+                    if (cell.mayTakeControl() !== false) return false;          // already open: no
+                    var sel = cell._el.children[0];
+                    if (sel.tagName !== 'select' || sel.children.length !== 5) return false;
+                    if (sel.value !== '4') return false;                        // opens on what it shows
+
+                    // It commits on CHANGE, not on Enter — and the owner coerces to a number.
+                    chooseAndChange(cell, 2);
+                    if (store.get('mapo', 'stars') !== 2) return false;
+                    if (cell._el.children.length !== 0) return false;           // the select is gone
+                    if (cell._el.textContent !== '\u2605\u2605\u2606\u2606\u2606') return false;
+                    // And the follower's own stars cell followed, through the store.
+                    return mount(fol, 'mapo', 'stars').value() === 2;
+                })()"""), "a rating is a dropdown; it answers the same two-stage contract as a text cell");
+    }
+
+    @Test
+    void escapingTheDropdownSettlesWithoutCommitting() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = createDishStore();
+                    var nut = createDishRelation(store, { role: 'nutritionist' });
+                    var cell = mount(nut, 'mapo', 'stars');
+                    var settled = 0;
+                    cell.takeControl().then(function () { settled++; });
+                    var sel = cell._el.children[0];
+                    sel.value = '1';
+                    sel.dispatch('keydown', { key: 'Escape' });
+                    if (store.get('mapo', 'stars') !== 4) return false;         // nothing committed
+                    if (cell.value() !== 4 || cell._el.children.length !== 0) return false;
+
+                    // A blur cancels too, and neither may leave the cell open.
+                    cell.takeControl();
+                    cell._el.children[0].dispatch('blur', {});
+                    return store.get('mapo', 'stars') === 4 && cell._el.children.length === 0
+                        && cell.mayTakeControl() === true;                       // ready to be asked again
+                })()"""), "Escape and blur end the dropdown without committing, and settle the handover");
     }
 
     @Test

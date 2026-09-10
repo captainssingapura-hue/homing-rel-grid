@@ -33,9 +33,12 @@ public record DishRelation() implements DomModule<DishRelation> {
 
     @Override
     public ImportsFor<DishRelation> imports() {
-        // The relation builds its manager from the stock cell — domain-side code.
+        // The relation builds its manager from two cells — both domain-side.
+        // One ships with the grid; one is the bench's own, and the grid cannot
+        // tell which is which.
         return ImportsFor.<DishRelation>builder()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new DishStarsCellModule.DishStarsCell()), DishStarsCellModule.INSTANCE))
                 .build();
     }
 

@@ -26,10 +26,16 @@ is the same grid, constructed the same way, over the same persisted store. What 
 | table | may edit | because |
 |---|---|---|
 | Chef | ingredient, style | the kitchen's to say |
-| Nutritionist | calories | only a nutritionist may say |
+| Nutritionist | calories, **stars** | only a nutritionist may say |
 | Shop manager | price | only the shop may say |
 | Follower | nothing | a replica |
 | *anyone* | never `sold`, never `popularity` | `sold` moves only by selling; `popularity` is **derived** from it |
+
+**`stars` is a health rating, 1 to 5, and it is not a text cell.** It shows ★★★★☆ and edits
+with a **dropdown**, committing when the selection *changes* rather than on Enter. It is the
+bench's own cell — written against the cell contract, shipped with nothing — and it is here
+because until it existed the stock text cell was the only implementation, so the contract had
+only ever been proved against the one thing it was written for.
 
 ### What to try
 
@@ -37,6 +43,11 @@ is the same grid, constructed the same way, over the same persisted store. What 
   cursor. Press **Enter** or double-click to go **deep**: the grid hands the cell control. Type,
   then **Enter** to commit or **Escape** to cancel; the cell hands control back. Every other
   table updates.
+- In the same table, open a **stars** cell. A dropdown appears instead of a text box, and
+  choosing a rating commits immediately — there is no Enter to press, because a dropdown has
+  nothing to finish typing. Escape closes it and commits nothing. Watch the other tables: they
+  are text-cell tables, and the rating still moves in all of them, because what travels is the
+  store's value and not the editor.
 - Now do the same on a *price* cell in the Nutritionist. Nothing opens — the grid asked the cell,
   the cell said no, the grid stayed shallow. Do it in the **Shop manager** and it opens.
 - Try it on *sold* or *popularity* in any table. Nothing opens there either, but for the other

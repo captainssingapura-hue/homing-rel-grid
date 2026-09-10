@@ -54,6 +54,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 // a cell manager, three editors with different rights, and their
                 // followers. The grid is on none of the edit path.
                 CrateEntry.of(DishStore.INSTANCE),
+                CrateEntry.of(DishStarsCellModule.INSTANCE),
                 CrateEntry.of(DishRelation.INSTANCE),
                 CrateEntry.of(DishChefWidget.INSTANCE),
                 CrateEntry.of(DishNutritionistWidget.INSTANCE),
