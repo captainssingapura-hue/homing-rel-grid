@@ -9,6 +9,17 @@
 // anything. The glyph is sized from the square too (container units), so it
 // scales with it.
 //
+// PUNCTUATION shares a square: a slot may hold two marks, and a lone mark
+// takes the left half. Each mark is drawn in a half-width box with the
+// font's half-width alternates (halt) asked for, which is what makes 。，
+// sit in half an em in a font that has them. In a font that does not — and
+// the one this machine renders with does not — the box CLIPS the full-width
+// mark to its half, and which half survives is chosen by where the ink is:
+// a mainland-style font keeps 。，、：；！？ in the left of the em and the
+// opening brackets 「『（《〈【〔 in the right, so those are aligned right and
+// everything else left. Measured, not assumed: a pair of halves left at
+// their min-content width grew to a full em each and overflowed the square.
+//
 // The contract, answered as the stock cell answers it:
 //
 //   render(host)        mount once into the element the grid minted
@@ -20,9 +31,10 @@
 //   dispose()           the owner's
 //
 // The editor is an <input> because an <input> is what an IME composes into.
-// Enter commits whatever is in it — one character REPLACES the glyph, several
-// INSERT, none DELETES it — which is the whole editing model of this
-// iteration and enough to write a poem with. Enter DURING a composition is
+// Enter commits whatever is in it — what the square held is replaced by what
+// was typed, be that one character, a pair of marks, several characters, or
+// nothing — which is the whole editing model of this iteration and enough
+// to write a poem with. Enter DURING a composition is
 // the IME's, not ours: a Chinese input method uses Enter to take the
 // candidate, and a cell that committed on that keystroke would commit the
 // pinyin. Escape and blur cancel.
@@ -39,12 +51,22 @@ var _HAN_CSS = [
     "  display:grid;place-items:center;overflow:hidden;}",
     ".han-ink{font:68cqw/1 'Noto Serif CJK SC','Source Han Serif SC','Songti SC','SimSun','PMingLiU',serif;",
     "  color:var(--color-text-primary);user-select:none;-webkit-user-select:none;}",
+    // Two marks in one square: each in its half, half-width alternates on.
+    // min-width:0 on the flex row too: as a grid item its automatic minimum is its
+    // content's — two full-width marks — and it would widen past the square.
+    ".han-ink.han-punct{display:flex;width:100%;height:100%;min-width:0;align-items:center;}",
+    ".han-half{flex:0 0 50%;width:50%;min-width:0;overflow:hidden;text-align:left;white-space:nowrap;",
+    "  font-feature-settings:'halt' 1;}",
+    ".han-half.han-open{text-align:right;}",
     // Editing: the same square, now an input, in the anchor the grid minted.
     ".han-editing{background:var(--color-surface-raised);}",
     ".han-input{width:100%;height:100%;border:0;padding:0;margin:0;box-sizing:border-box;",
     "  text-align:center;background:transparent;outline:none;color:var(--color-text-primary);",
     "  font:68cqw/1 'Noto Serif CJK SC','Source Han Serif SC','Songti SC','SimSun','PMingLiU',serif;}"
 ].join("\n");
+
+// Opening brackets: the marks whose ink a mainland-style font keeps in the RIGHT half of the em.
+var _HAN_OPENERS = "「『（《〈【〔";
 
 function _hanEnsureStyle() {
     if (typeof document === "undefined" || !document.head) return;
@@ -59,6 +81,12 @@ function _hanAddClass(el, name) {
     var cur = el.className || "", parts = cur.split(/\s+/);
     for (var i = 0; i < parts.length; i++) if (parts[i] === name) return;
     el.className = cur ? cur + " " + name : name;
+}
+
+function _hanSetClass(el, name, on) {
+    var parts = (el.className || "").split(/\s+/).filter(function (p) { return p && p !== name; });
+    if (on) parts.push(name);
+    el.className = parts.join(" ");
 }
 
 class HanCell {
@@ -78,9 +106,32 @@ class HanCell {
         this._onKey = null; this._onBlur = null; this._onCompStart = null; this._onCompEnd = null;
     }
 
+    /**
+     * A character is the square's text. A mark, or a pair of marks, is one
+     * half-width box each, side by side; a lone mark leaves its right half
+     * empty. Ink is rebuilt rather than patched, because a slot changes kind
+     * as the article moves under it.
+     */
     _paint() {
         if (!this._ink || this._input) return;
-        this._ink.textContent = (this._glyph == null) ? "" : this._glyph;
+        var ink = this._ink;
+        while (ink.children.length) ink.removeChild(ink.children[0]);
+        var g = this._glyph;
+        if (g == null) { ink.textContent = ""; _hanSetClass(ink, "han-punct", false); return; }
+        var marks = Array.from(g);
+        if (marks.length === 1 && !hanIsPunct(marks[0])) {
+            ink.textContent = g;
+            _hanSetClass(ink, "han-punct", false);
+            return;
+        }
+        ink.textContent = "";
+        _hanSetClass(ink, "han-punct", true);
+        for (var k = 0; k < marks.length; k++) {
+            var half = document.createElement("span");
+            half.className = _HAN_OPENERS.indexOf(marks[k]) >= 0 ? "han-half han-open" : "han-half";
+            half.textContent = marks[k];
+            ink.appendChild(half);
+        }
     }
 
     render(host) {

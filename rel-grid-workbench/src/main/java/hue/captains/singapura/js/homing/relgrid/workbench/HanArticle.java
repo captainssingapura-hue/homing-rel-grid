@@ -72,7 +72,7 @@ final class HanArticle {
                 "    var relation = createHanRelation(store, { cols: COLS, editable: EDITABLE, capacity: 200 });",
                 "",
                 "    hint.textContent = EDITABLE",
-                "        ? 'EDITOR \\u2014 nine squares to a row, one glyph each. Click or arrow to a square (shallow); Enter to edit (deep). Type one character to replace the glyph, several to insert, none to delete; Enter commits, Escape cancels. A Chinese input method composes in the square, and its own Enter is left to it. The display follows through the store.'",
+                "        ? 'EDITOR \\u2014 nine squares to a row, one glyph each, two punctuation marks to a square. Click or arrow to a square (shallow); Enter to edit (deep). What the square holds is replaced by what you type: one character, a pair of marks, several characters, or nothing; Enter commits, Escape cancels. A Chinese input method composes in the square, and its own Enter is left to it. The display follows through the store.'",
                 "        : 'DISPLAY \\u2014 the same article, read-only, over the same store. It moves when the editor commits, and its grid was never told.';",
                 "",
                 "    var grid = new RelGrid({",

@@ -21,8 +21,19 @@ class HanArticleTest extends JsModuleTestBase {
             // A row as a string: glyphs, and '·' for an empty slot.
             function rowStr(row) { return row.map(function (s) { return s.glyph === null ? '·' : s.glyph; }).join(''); }
             function rowsStr(lay) { return lay.rows.map(rowStr).join('|'); }
+            // A row with its slots bracketed, so a pair of marks reads as one slot: [月][落][」，]
+            function slotsStr(lay) {
+                return lay.rows.map(function (row) {
+                    return row.map(function (s) { return s.glyph === null ? '·' : '[' + s.glyph + ']'; }).join('');
+                }).join('|');
+            }
             function mount(rel, pk, col) { var c = rel.cellFor(pk, col); if (!c._el) c.render(makeEl('div')); return c; }
-            function shown(rel, pk, col) { var c = mount(rel, pk, col); return c._ink.textContent; }
+            // What a square shows: its text, or its half-boxes' texts joined.
+            function inkOf(c) {
+                var ink = c._ink;
+                return ink.children.length ? ink.children.map(function (h) { return h.textContent; }).join('') : ink.textContent;
+            }
+            function shown(rel, pk, col) { return inkOf(mount(rel, pk, col)); }
             // Edit a slot the way a person does: Enter opens the square, typing fills it, Enter commits.
             function edit(rel, pk, col, text) {
                 var c = mount(rel, pk, col);
@@ -88,6 +99,76 @@ class HanArticleTest extends JsModuleTestBase {
                     var sup = hanLayout('𠀋乙', 9);
                     return sup.glyphs === 2 && sup.rows[0][0].glyph === '𠀋' && sup.rows[0][1].at === 1;
                 })()"""), "wrap at nine, newline ends a row, a wrap's newline adds nothing, always a slot to type in");
+    }
+
+    @Test
+    void twoPunctuationMarksShareASquare() {
+        assertTrue(evalBool("""
+                (() => {
+                    // What a mark is: CJK marks, fullwidth ASCII marks, dashes and the ellipsis,
+                    // the middle dot — and not a character, a digit, or the ideographic space.
+                    var marks = ['，', '。', '、', '；', '：', '？', '！', '「', '」', '『', '』', '（', '）', '《', '》', '…', '—', '·', '．'];
+                    for (var i = 0; i < marks.length; i++) if (!hanIsPunct(marks[i])) return false;
+                    var not = ['月', 'a', '1', '\\u3000', ' ', '\\n', ''];
+                    for (var j = 0; j < not.length; j++) if (hanIsPunct(not[j])) return false;
+
+                    // A mark that follows a lone mark joins it; a third starts a new slot.
+                    var lay = hanLayout('「月落」，。乙', 9);
+                    if (slotsStr(lay) !== '[「][月][落][」，][。][乙]···') return false;
+                    var pair = lay.rows[0][3];
+                    if (pair.kind !== 'punct' || pair.len !== 2 || pair.at !== 3 || pair.glyph !== '」，') return false;
+                    if (lay.rows[0][0].kind !== 'punct' || lay.rows[0][0].len !== 1) return false;
+                    if (lay.rows[0][1].kind !== 'han' || lay.rows[0][8].kind !== 'empty') return false;
+                    if (lay.glyphs !== 7) return false;                          // marks count as glyphs
+
+                    // A pair does not widen a row: eight characters and a pair of marks is
+                    // nine slots, and a mark that joins a slot costs no slot.
+                    var nine = hanLayout('一二三四五六七八，。', 9);
+                    if (nine.rows[0].length !== 9 || nine.rows[0][8].glyph !== '，。' || nine.rows.length !== 2) return false;
+
+                    // Only within a row: a mark that lands at the start of a row starts a slot
+                    // there, like anything else — the end-of-line rule is the NEXT iteration.
+                    var split = hanLayout('一二三四五六七八九，', 9);
+                    if (slotsStr(split) !== '[一][二][三][四][五][六][七][八][九]|[，]········') return false;
+
+                    // The poem is unchanged: every line's mark is alone, so it keeps its square.
+                    var poem = hanLayout(POEM, 9);
+                    return poem.rows.length === 4 && poem.rows[0][7].glyph === '，' && poem.rows[0][7].len === 1
+                        && poem.rows[0][7].kind === 'punct';
+                })()"""), "a mark joins a lone mark in the same row; a pair costs one slot; nothing else changes");
+    }
+
+    @Test
+    void aSquareDrawsAPairAsTwoHalvesAndACharacterAsItself() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = createHanStore('甲，。乙。');
+                    var rel = createHanRelation(store, { cols: 9, editable: true });
+                    // A character: the square's own text, no halves.
+                    var han = mount(rel, 'r0', 'c0');
+                    if (han._ink.textContent !== '甲' || han._ink.children.length !== 0) return false;
+                    if (/han-punct/.test(han._ink.className)) return false;
+                    // A pair: two half-boxes, one mark each, and the square marked as punctuation.
+                    var pair = mount(rel, 'r0', 'c1');
+                    if (!/han-punct/.test(pair._ink.className) || pair._ink.children.length !== 2) return false;
+                    if (pair._ink.children[0].textContent !== '，' || pair._ink.children[1].textContent !== '。') return false;
+                    if (!/han-half/.test(pair._ink.children[0].className)) return false;
+                    // A lone mark: one half-box, the other half left empty.
+                    var lone = mount(rel, 'r0', 'c3');
+                    if (!/han-punct/.test(lone._ink.className) || lone._ink.children.length !== 1) return false;
+                    // Editing the pair replaces BOTH marks (len 2): the square held two, and
+                    // what it held is replaced by what was typed.
+                    if (!edit(rel, 'r0', 'c1', '！')) return false;
+                    if (store.text() !== '甲！乙。') return false;
+                    if (inkOf(pair) !== '！' || pair._ink.children.length !== 1) return false;
+                    // And a square changes KIND as the article moves under it: replace the
+                    // character with a mark, and its ink is rebuilt as halves.
+                    if (!edit(rel, 'r0', 'c0', '、')) return false;
+                    if (store.text() !== '、！乙。') return false;
+                    // 、 and ！ are now adjacent marks, so they PAIR: one square, two halves.
+                    if (inkOf(han) !== '、！' || han._ink.children.length !== 2) return false;
+                    return shown(rel, 'r0', 'c1') === '乙';
+                })()"""), "the square draws a pair as halves, a character as text, and rebuilds when its kind changes");
     }
 
     @Test
