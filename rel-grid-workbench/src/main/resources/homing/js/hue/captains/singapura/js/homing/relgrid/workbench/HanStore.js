@@ -3,21 +3,15 @@
 // saved to localStorage on every change and telling its subscribers when it
 // changed. DOMAIN CODE; nothing here knows a grid exists.
 //
-//   hanStoreShared()          the page's one article — editor and displays share it
+//   hanStoreShared()          the page's one article — the editor and every display share it
 //   createHanStore(seed?)     a fresh store (tests, or a second article)
 //
 //   store.text()              the article, as it is
-//   store.chars()             the article as CODE POINTS — what `at` indexes
-//   store.splice(at, len, s)  replace `len` code points at `at` with `s` — the
-//                             EDIT SEAM: one glyph replaced (len 1), text
-//                             inserted (len 0), a glyph deleted (s '')
-//   store.set(text)           the whole article
+//   store.set(text)           the whole article — the EDIT SEAM, which is the
+//                             text editor's, and only its
 //   store.reset()             back to the seed
 //   store.subscribe(fn)       fn(text); returns the unsubscribe
 //   store.revision()          how many changes so far
-//
-// Indexes are in code points, not UTF-16 units, to agree with HanLayout: a
-// glyph is one slot there and one unit here.
 // =============================================================================
 
 var HAN_SEED = "月落乌啼霜满天，\n江枫渔火对愁眠。\n姑苏城外寒山寺，\n夜半钟声到客船。";
@@ -56,15 +50,6 @@ function createHanStore(seed) {
 
     return {
         text:     function () { return text; },
-        chars:    function () { return Array.from(text); },
-        splice:   function (at, len, s) {
-            var cs = Array.from(text);
-            at = Math.max(0, Math.min(cs.length, at | 0));
-            len = Math.max(0, Math.min(cs.length - at, len | 0));
-            var ins = Array.from(String(s == null ? "" : s));
-            Array.prototype.splice.apply(cs, [at, len].concat(ins));
-            return change(cs.join(""));
-        },
         set:      function (t) { return change(String(t == null ? "" : t)); },
         reset:    function () { return change(SEED); },
         subscribe: function (fn) {

@@ -7,7 +7,7 @@ import hue.captains.singapura.js.homing.workspace.WorkspaceWidget;
 
 import java.util.List;
 
-/** The editor: every square commits to the shared article. One instance. */
+/** The editor: the article as plain text, and its rendering beneath. One instance. */
 public final class HanEditorWidget extends WorkspaceWidget<WorkspaceWidget._None, HanEditorWidget> {
 
     public static final HanEditorWidget INSTANCE = new HanEditorWidget();

@@ -208,13 +208,16 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
 
 ### What it is
 
+- **Edited as text, rendered as squares.** The editor pane is a plain textarea over the
+  article, with the rendering beneath it; every keystroke writes the store, and every display on
+  the page re-flows. The squares themselves do not edit — a square is a display cell that offers
+  neither half of the handover, so Enter on one does nothing and the grid never asks.
 - **One glyph, one square — and two marks to a square.** The rendering engine (`hanLayout`)
-  turns the text into rows of nine slots: one character a slot, a newline ends the row, a full
-  last row gets an empty one after it so there is always somewhere to type. A punctuation mark
-  that follows a lone mark **joins it** — `。」` is one square — and a mark that lands at the
-  start of a row starts a square there like anything else, because the end-of-line rule is the
-  next iteration. Every slot knows where in the text a commit to it goes, and how many code points
-  it stands for: one for a character, two for a pair, none for an empty square.
+  turns the text into rows of nine slots: one character a slot, a newline ends the row. A
+  punctuation mark that follows a lone mark **joins it** — `。」` is one square, even when the
+  first mark took the ninth square and closed the row — and nothing joins across a line. A mark
+  that lands at the start of a row starts a square there like anything else, because the
+  end-of-line rule is the next iteration.
 - **Identity is the square, not the character.** The relation's rows are `r0`…, its columns
   `c0`…`c8`, and a glyph is what a square currently shows. On every change the relation re-lays
   the article out and sets its own cells; the squares stay put and the ink moves. That is the
@@ -232,21 +235,21 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
 
 ### What to try
 
-- Click or arrow to a square, **Enter** to edit. Type **one** character and Enter: the glyph is
-  replaced. Type **several**: they are inserted, and the line wraps — the tenth character lands
-  on a new row, every later row moves down one, and both tables move. Type **nothing** and Enter:
-  the glyph is deleted and the article closes up.
-- Use a **Chinese input method** in the square. Its Enter takes the candidate and is left to it;
-  the cell commits only on an Enter outside a composition, because a cell that committed on the
-  IME's Enter would commit the pinyin.
-- Watch the cursor across a re-flow. It stays on its **square** (`r2`, `c0`) while the character
-  under it changes, because the cursor is an identity and the identity here is positional.
-- Type `。」` into a square, or `！` after a `，`: the two marks share the square, each in its
-  half. Edit that square and both are what you replace. Look at how the halves are drawn — the
-  font's half-width alternates are asked for, and where a font has none (this machine's does not)
-  each full-width mark is **clipped to the half where its ink is**: left for `。，、：；！？`,
-  right for the opening brackets. Measured, not assumed; a first cut let the halves grow to a
-  full em each and the pair spilled out of the square.
+- Type in the editor's text. Change a character and both renderings change it; add two
+  characters to a line and it wraps — the tenth lands on a new row, every later row moves down
+  one, and the cells that moved are the same cells with new ink. Delete them and the article
+  closes up. Enter starts a line; the shell owns Enter for its panes, so the editor inserts the
+  newline itself.
+- Use a **Chinese input method**. While it composes, the store is not written — its intermediate
+  text is not the article — and it is written once when the composition ends.
+- Put the grid's cursor on a square in either rendering and edit the text: the cursor stays on
+  its **square** (`r2`, `c0`) while the character under it changes, because the cursor is an
+  identity and the identity here is positional.
+- Type `。」`, or `！` after a `，`: the two marks share a square, each in its half. Look at
+  how the halves are drawn — the font's half-width alternates are asked for, and where a font
+  has none (this machine's does not) each full-width mark is **clipped to the half where its ink
+  is**: left for `。，、：；！？`, right for the opening brackets. Measured, not assumed; a first
+  cut let the halves grow to a full em each and the pair spilled out of the square.
 
 ### Later — punctuation, and two columns the grid does not have
 

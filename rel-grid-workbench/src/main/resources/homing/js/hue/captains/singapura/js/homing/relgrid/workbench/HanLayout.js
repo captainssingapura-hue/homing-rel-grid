@@ -8,45 +8,40 @@
 //   hanIsPunct(ch)        → is this one character a punctuation mark?
 //
 //     rows     an array of rows; every row is EXACTLY `cols` slots long
-//     a slot   { glyph, at, len, kind }
+//     a slot   { glyph, kind }
 //              glyph  what the slot shows — one character, or TWO punctuation
 //                     marks — or null for an empty slot
-//              at     where in the text (in code points) a commit to this slot
-//                     goes: the first glyph's index, or the insertion point for
-//                     an empty slot
-//              len    how many code points a commit REPLACES: 1 for a
-//                     character, 2 for a pair of marks, 0 for an empty slot,
-//                     where a commit INSERTS
 //              kind   'han' | 'punct' | 'empty'
 //
 // The rules, small enough to state:
 //   · one character, one slot, left to right, `cols` to a row, then wrap;
 //   · TWO PUNCTUATION MARKS SHARE A SLOT: a mark that follows a slot holding
-//     one lone mark joins it, in the same row. That is the whole rule for
-//     now — a mark that falls at the start of a row starts a slot there like
+//     one lone mark joins it — even when that mark took the last square of
+//     a row and the row has already closed, since joining costs no slot —
+//     and nothing joins across a line. That is the whole rule for now: a
+//     mark that falls at the start of a row starts a slot there like
 //     anything else. Where a mark at the end of a line should go instead is
 //     the next iteration, and it is the grid's question, not this file's;
-//   · a newline ends the row where it stands, and the row is padded; the
-//     padding slots insert BEFORE the newline, so typing in the blank tail of
-//     a line extends that line rather than the next;
+//   · a newline ends the row where it stands, and the row is padded;
 //   · a newline right after a wrap is the wrap — it adds no blank row — but
 //     a second newline does, because that is a blank line;
-//   · there is always somewhere to type: if the last row is full, one empty
-//     row follows it, whose slots append at the end.
+//   · an empty text is one empty row, so there is always a square to show.
 //
 // Characters are CODE POINTS (Array.from), not UTF-16 units, so a glyph from
-// a supplementary plane is one slot and not two — and `at` is in the same
-// units, which is what the store splices by.
+// a supplementary plane is one slot and not two.
 //
-// Not yet here, deliberately: the squeezed leading and trailing punctuation
-// columns, and any notion of width other than "one square" — a pair of marks
-// shares a square; it does not narrow one. Those are the next iterations.
+// The article is edited as TEXT, elsewhere; this function only ever reads
+// it. Not yet here, deliberately: the squeezed leading and trailing
+// punctuation columns, and any notion of width other than "one square" — a
+// pair of marks shares a square; it does not narrow one.
 // =============================================================================
 
-// CJK punctuation and symbols (not the ideographic space, which is a square
-// of its own), fullwidth ASCII punctuation, general punctuation (dashes,
-// quotes, the ellipsis — not the spaces), and the middle dot of a name.
-var _HAN_PUNCT = /^[\u3001-\u303F\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\u2010-\u2027\u2030-\u205E\u00B7]$/;
+// CJK punctuation and symbols U+3001–303F (not U+3000, the ideographic space,
+// which is a square of its own); fullwidth ASCII punctuation U+FF01–FF0F,
+// FF1A–FF20, FF3B–FF40, FF5B–FF65; general punctuation U+2010–2027 and
+// 2030–205E (dashes, quotes, the ellipsis — not the spaces); and U+00B7, the
+// middle dot of a name. Written as the characters, so the ranges read.
+var _HAN_PUNCT = /^[、-〿！-／：-＠［-｀｛-･‐-‧‰-⁞·]$/;
 
 function hanIsPunct(ch) {
     return typeof ch === "string" && _HAN_PUNCT.test(ch);
@@ -58,8 +53,8 @@ function hanLayout(text, cols) {
     var rows = [], row = [], justWrapped = false, glyphs = 0;
     var lastSlot = null;                       // the slot placed last — a mark may join it
 
-    function pad(r, at) {
-        while (r.length < cols) r.push({ glyph: null, at: at, len: 0, kind: "empty" });
+    function pad(r) {
+        while (r.length < cols) r.push({ glyph: null, kind: "empty" });
         return r;
     }
 
@@ -67,35 +62,27 @@ function hanLayout(text, cols) {
         var ch = chars[i];
         if (ch === "\n") {
             if (row.length === 0 && justWrapped) { justWrapped = false; lastSlot = null; continue; }
-            rows.push(pad(row, i));            // the blank tail inserts before the break
+            rows.push(pad(row));
             row = [];
             justWrapped = false;
             lastSlot = null;                   // nothing joins across a line
             continue;
         }
         var punct = hanIsPunct(ch);
-        // A lone mark takes this one as its partner — even when it was the ninth
-        // square and the row has already closed, since joining costs no slot.
-        if (punct && lastSlot && lastSlot.kind === "punct" && lastSlot.len === 1) {
-            lastSlot.glyph += ch;
-            lastSlot.len = 2;
+        if (punct && lastSlot && lastSlot.kind === "punct" && Array.from(lastSlot.glyph).length === 1) {
+            lastSlot.glyph += ch;              // a lone mark takes this one as its partner
             glyphs++;
             continue;
         }
-        var slot = { glyph: ch, at: i, len: 1, kind: punct ? "punct" : "han" };
+        var slot = { glyph: ch, kind: punct ? "punct" : "han" };
         row.push(slot);
         lastSlot = slot;
         glyphs++;
         justWrapped = false;
         if (row.length === cols) { rows.push(row); row = []; justWrapped = true; }
     }
-    if (row.length > 0) rows.push(pad(row, chars.length));
-
-    // Always somewhere to type.
-    var last = rows.length ? rows[rows.length - 1] : null;
-    var full = !!last;
-    if (last) for (var k = 0; k < last.length; k++) if (last[k].glyph === null) { full = false; break; }
-    if (!last || full) rows.push(pad([], chars.length));
+    if (row.length > 0) rows.push(pad(row));
+    if (rows.length === 0) rows.push(pad([]));
 
     return { rows: rows, cols: cols, glyphs: glyphs, length: chars.length };
 }

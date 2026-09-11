@@ -20,13 +20,13 @@ import java.util.Map;
  * and displayed through the Relation Grid, every character in a strictly
  * square cell, nine to a row.
  *
- * <p>First iteration: one glyph, one square; a hard-coded poem as the seed;
- * an editor whose squares commit to the shared article — replace, insert,
- * delete — and displays that follow through the store. What this bench is
- * going to ask of the grid comes in the next iterations: punctuation that
- * shares a square, and the two half-width columns, leading and trailing, that
- * a mark at the end of a line is squeezed into rather than starting the next
- * line with it.</p>
+ * <p>The article is edited as plain text and rendered as squares: one glyph a
+ * square, two punctuation marks to a square, a hard-coded poem as the seed.
+ * The editor pane has the text above the rendering; displays show the
+ * rendering alone, and follow through the store. What this bench is going to
+ * ask of the grid comes next: the two half-width columns, leading and
+ * trailing, that a mark at the end of a line is squeezed into rather than
+ * starting the next line with it.</p>
  */
 public final class HanArticleSpec implements WorkspaceSpec {
 
@@ -49,8 +49,9 @@ public final class HanArticleSpec implements WorkspaceSpec {
                         .withIcon(new WidgetIcon.Emoji("✍️"))
                         .withGroup(WidgetGroup.of("Editors"))
                         .withDescription(WidgetDescription.of(
-                                "Nine squares to a row, one glyph each. Enter on a square to replace, "
-                              + "insert or delete; an input method composes in the square. One instance.")),
+                                "The article as plain text, and rendered beneath it: nine squares to a "
+                              + "row, one glyph each, two marks to a square. Type, and every display "
+                              + "re-flows. One instance.")),
                 WidgetEntry.of(HanDisplayWidget.class, WidgetLabel.of("Display"))
                         .withIcon(new WidgetIcon.Emoji("📜"))
                         .withGroup(WidgetGroup.of("Replicas"))

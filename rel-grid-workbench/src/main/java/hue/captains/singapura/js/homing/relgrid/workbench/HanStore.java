@@ -9,9 +9,8 @@ import java.util.List;
 
 /**
  * The Han Article bench's persisted store: one string, the article, saved on
- * every change and telling its subscribers when it changed. Edits arrive as a
- * splice in code points — replace one glyph, insert several, delete one —
- * which is the whole editing model of the first iteration.
+ * every change and telling its subscribers when it changed. Edits arrive as
+ * the whole text, from the editor's textarea, on every keystroke.
  */
 public record HanStore() implements DomModule<HanStore> {
 

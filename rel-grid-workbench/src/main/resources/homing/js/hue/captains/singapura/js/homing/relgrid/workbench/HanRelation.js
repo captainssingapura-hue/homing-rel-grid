@@ -3,7 +3,7 @@
 // HanLayout into rows of square slots, and a CELL MANAGER that owns one
 // HanCell per slot. DOMAIN CODE; the word "grid" does not appear in it.
 //
-//   createHanRelation(store, { cols?, editable?, capacity? })
+//   createHanRelation(store, { cols?, capacity? })
 //
 //   · pks() are ROWS — all of them, up to the CAPACITY, 'r0'…'r{capacity-1}';
 //     columns() are the slots across, 'c0'…'c{cols-1}'. Identity here is
@@ -15,24 +15,17 @@
 //     it, and stays; what an article does as it grows and shrinks is change
 //     which of those rows are SHOWN, and that is a view, not a new relation.
 //     The owner hands presented() to whoever arranges, as the row view.
-//   · cellFor(pk, col) builds a HanCell once per slot and keeps it. A cell
-//     in an editable relation gets a commit target that looks the slot up AT
-//     COMMIT TIME and splices the store there — replace, insert or delete
-//     according to HanLayout's `at` and `len` — so a slot whose meaning moved
-//     since it was built still commits to the right place.
+//   · cellFor(pk, col) builds a HanCell once per slot and keeps it. Display
+//     cells: the article is edited as text, and nothing here commits.
 //   · The relation subscribes to the store, re-lays the article out, and
 //     set()s every cell it owns to what its slot now shows. A row that
 //     disappeared leaves its cells alive with nothing in them; a row that
 //     appears is asked for when something wants it.
-//   · rows() is how many rows the layout has NOW. When that changes the
-//     arrangement changes — more identities, or fewer — and that is the one
-//     thing the owner has to tell whoever arranges: this relation cannot.
 // =============================================================================
 
 function createHanRelation(store, opts) {
     opts = opts || {};
     var cols = (opts.cols > 0) ? opts.cols : 9;
-    var editable = opts.editable === true;
     var capacity = (opts.capacity > 0) ? opts.capacity : 200;   // rows the article may grow to
     var cells = new Map();
     var layout = hanLayout(store.text(), cols);
@@ -70,14 +63,7 @@ function createHanRelation(store, opts) {
             var key = pk + " " + col, cell = cells.get(key);
             if (!cell) {
                 var s = slotOf(pk, col);
-                cell = new HanCell({
-                    glyph: s ? s.glyph : null,
-                    onCommit: editable ? function (text) {
-                        var now = slotOf(pk, col);
-                        if (!now) return;
-                        store.splice(now.at, now.len, text);
-                    } : undefined
-                });
+                cell = new HanCell({ glyph: s ? s.glyph : null });
                 cells.set(key, cell);
             }
             return cell;
@@ -87,7 +73,6 @@ function createHanRelation(store, opts) {
         capacity:  function () { return capacity; },
         glyphs:    function () { return layout.glyphs; },
         layout:    function () { return layout; },
-        editable:  function () { return editable; },
         cellCount: function () { return cells.size; },
         dispose: function () {
             unsubscribe();
