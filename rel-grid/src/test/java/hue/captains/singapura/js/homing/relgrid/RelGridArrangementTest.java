@@ -93,4 +93,52 @@ class RelGridArrangementTest extends JsModuleTestBase {
                         && f.grid.cells().size() === 0;
                 })()"""), "destroy is a detach, never a dispose: the cells outlive the grid");
     }
+
+    @Test
+    void aRelationMayDeclareMoreThanItPresentsAndTheGridArrangesOnlyThePresented() {
+        assertTrue(evalBool("""
+                (() => {
+                    // A relation with a CAPACITY: it declares more identities than it shows,
+                    // and the host presents a prefix at construction. The first arrangement
+                    // is the prefix — no cell beyond it is asked for, let alone minted.
+                    var asked = [];
+                    var relation = {
+                        pks:     function () { var o = []; for (var r = 0; r < 50; r++) o.push('r' + r); return o; },
+                        columns: function () { return ['a', 'b']; },
+                        cellFor: function (pk, col) { asked.push(pk + ' ' + col); return new RelGridTextCell({ value: pk + col }); }
+                    };
+                    var branch = { createElement: function (n, t) { return makeEl(t); } };
+                    var container = makeEl('div');
+                    var grid = new RelGrid({ container: container, branch: branch, relation: relation,
+                                             rowView: ['r0', 'r1', 'r2'] });
+                    if (grid.viewMaps().rows() !== 3 || grid.viewMaps().basePks().length !== 50) return false;
+                    if (asked.length !== 6) return false;                          // three rows, two columns
+                    // The article grows a row: the host presents one more, through the seam.
+                    grid.viewMaps().setRowView(['r0', 'r1', 'r2', 'r3']);
+                    if (grid.viewMaps().rows() !== 4 || asked.length !== 8) return false;
+                    // And shrinks: nothing is asked, nothing is disposed, the row is just not shown.
+                    grid.viewMaps().setRowView(['r0', 'r1']);
+                    if (grid.viewMaps().rows() !== 2 || asked.length !== 8) return false;
+                    // A view naming an identity the relation never declared is refused.
+                    var refused = false;
+                    try { new RelGrid({ container: makeEl('div'), branch: branch, relation: relation, rowView: ['r0', 'nope'] }); }
+                    catch (e) { refused = /unknown key/.test(String(e)); }
+                    if (!refused) return false;
+                    // And the same for columns: a relation may declare a column it shows only
+                    // sometimes — a half-square for a squeezed mark — and present it later.
+                    var narrow = new RelGrid({ container: makeEl('div'), branch: branch, relation: relation,
+                                               rowView: ['r0'], columnView: ['b'], minColumnWidth: 24 });
+                    if (narrow.viewMaps().cols() !== 1 || narrow.viewMaps().columnAt(0) !== 'b') return false;
+                    narrow.viewMaps().setColumnView(['a', 'b']);
+                    if (narrow.viewMaps().cols() !== 2) return false;
+                    // The width floor is the host's to lower, within reason: 24 is held as
+                    // 24 here, where the default grid would have held 40; 2 is still 8.
+                    if (!narrow.setColumnWidth('a', 24) || narrow.columnWidth('a') !== 24) return false;
+                    if (!narrow.setColumnWidth('b', 2) || narrow.columnWidth('b') !== 24) return false;
+                    var floorless = new RelGrid({ container: makeEl('div'), branch: branch, relation: relation,
+                                                  rowView: ['r0'], minColumnWidth: 2 });
+                    floorless.setColumnWidth('a', 2);
+                    return floorless.columnWidth('a') === 8;
+                })()"""), "rowView and columnView present part of a larger relation; a half-square column may be held");
+    }
 }

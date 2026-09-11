@@ -71,7 +71,9 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  *
  * <p>Map 7, laws 53–60: held by column identity, applied by position, in place —
  * no arrangement runs. A request is bounded to {@code [40, 2000]} at
- * normalisation and the bounded request is what is held. {@code columnWidths()}
+ * normalisation — the floor is the host's to lower, to no less than 8, for a
+ * geometry of its own such as a half-square column — and the bounded request
+ * is what is held. {@code columnWidths()}
  * returns what is held, never what was measured; {@code setColumnWidths(snapshot)}
  * drops unknown columns as drift and is idempotent. The grid persists nothing —
  * {@code onColumnResized} is a report, and keeping it is the host's (map 9).</p>

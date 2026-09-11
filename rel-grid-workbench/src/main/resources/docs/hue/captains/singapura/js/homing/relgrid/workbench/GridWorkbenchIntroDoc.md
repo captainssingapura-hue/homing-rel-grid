@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid.
+A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article**.
 
 ---
 
@@ -192,6 +192,114 @@ A workspace pane is **inert until you enter it**: click the pane, press **Enter*
 it, then click a cell. Without that first Enter the keystrokes stay with the workspace and the
 grid looks unresponsive, which is not a defect any bench is about. Double-click needs no pane
 Enter at all.
+
+## Han Article · 方格
+
+The second bench, and the first that is not a table of records: a **Chinese article**, edited and
+displayed through the grid, every character in a **strictly square** cell, nine to a row. It
+starts as 張繼's 楓橋夜泊 —
+
+> 月落乌啼霜满天，江枫渔火对愁眠。姑苏城外寒山寺，夜半钟声到客船。
+
+— and it exists to ask the grid a question the dish list never could: what happens when the cells
+are not values in columns but **ink in squares**, and the ink moves.
+
+Switch the workspace kind to **Han Article** and dock the **Editor** and a **Display** or two.
+
+### What it is
+
+- **Edited as text, rendered as squares.** The editor pane is a plain textarea over the
+  article, with the rendering beneath it; every keystroke writes the store, and every display on
+  the page re-flows. The squares themselves do not edit — a square is a display cell that offers
+  neither half of the handover, so Enter on one does nothing and the grid never asks.
+- **One glyph, one square — and two marks to a square.** The rendering engine (`hanLayout`)
+  turns the text into rows of nine slots: one character a slot, a newline ends the row. A
+  punctuation mark that follows a lone mark **joins it** — `。」` is one square, even when the
+  first mark took the ninth square and closed the row — and nothing joins across a line.
+- **Two half-square columns, shown only when used.** A closing mark may not start a line, so
+  when nine characters have filled a row and a `。` follows, it is **squeezed** into a
+  half-square after the ninth — the row's *trailing* column. An opening bracket may not end a
+  line, so when a `「` would take the ninth square the row closes with that square empty and
+  the bracket **leads** the next row from a half-square before the first — its *leading*
+  column. One mark fits a half-square; a second starts the next row after all, and pairing
+  comes first: a lone mark in the ninth square takes the next mark as its partner, and only a
+  third is squeezed. The relation declares both columns always; the host presents whichever the
+  layout has put a mark in, and hides them again when none does.
+- **Identity is the square, not the character.** The relation's rows are `r0`…, its columns
+  `c0`…`c8`, and a glyph is what a square currently shows. On every change the relation re-lays
+  the article out and sets its own cells; the squares stay put and the ink moves. That is the
+  right way round for a manuscript grid — and it is the same "the domain updates its own cells,
+  the grid is never told" as the dish list, over a very different domain.
+- **Strictly square by construction.** The grid sets nine columns to one width; the cell fills it
+  and makes itself exactly as tall as it is wide (`aspect-ratio: 1`), sizing its glyph from the
+  square with container units. There is one number in the whole geometry, and it is the column's.
+- **A capacity, and a view — in both axes.** A grid reads its relation's identities once, at
+  construction, and keeps them. An article grows, so the relation declares a **capacity** of two
+  hundred rows and the host presents the prefix in use — `rowView` at construction,
+  `viewMaps().setRowView(...)` when an edit changes the row count. The half-square columns are
+  the same story across: declared always, presented by `columnView` and
+  `viewMaps().setColumnView(...)` as rows use them. Only presented rows and columns are asked for
+  cells: thirty-six for the poem, not eighteen hundred. This is the seam sort and filter will
+  drive through the channel in a later round; today the host calls it.
+- **What the grid had to learn.** A half-square is 24px wide, and the grid bounded every width
+  request to no less than 40 — the narrowest a column stays grabbable at. The floor is now the
+  host's to lower (`minColumnWidth`, never below 8): a column narrower than the default is a
+  host's deliberate geometry, not something a drag should reach by accident, which is all the
+  default ever protected.
+- **Latin runs two letters to a square, in one cell.** A run of narrow characters — Latin,
+  digits, spaces, ASCII marks — is one slot reaching over `⌈length/2⌉` squares; the squares it
+  reaches over hold cells of their own that show nothing. A run moves whole to the next row when
+  it doesn't fit what is left and fits a row; longer than a row, it breaks at the row's end. The
+  run's cell answers `colSpan()` with its reach, and the grid — built with `mergedCells` —
+  lays a **host over the squares it reaches across** and places the cell there; the cell fills
+  it. The matrix stays whole: every square keeps its slot and its own cell, and the host
+  *mirrors* the squares beneath it — it wears the cursor when the cursor is on any of them and
+  the wash when any is selected — so the group reads as one cell while the tracker keeps the
+  exact square. It follows the squares' size: measured after every arrangement and resize, and
+  again through a `ResizeObserver` when a row grows for a reason the grid is never told. It takes
+  no pointer, so a click lands on the exact square beneath. The option is off by default, because
+  most relations have no merged cell and reading spans is not free.
+
+### What to try
+
+- Type in the editor's text. Change a character and both renderings change it; add two
+  characters to a line and it wraps — the tenth lands on a new row, every later row moves down
+  one, and the cells that moved are the same cells with new ink. Delete them and the article
+  closes up. Enter starts a line; the shell owns Enter for its panes, so the editor inserts the
+  newline itself.
+- Use a **Chinese input method**. While it composes, the store is not written — its intermediate
+  text is not the article — and it is written once when the composition ends.
+- Put the grid's cursor on a square in either rendering and edit the text: the cursor stays on
+  its **square** (`r2`, `c0`) while the character under it changes, because the cursor is an
+  identity and the identity here is positional.
+- Type `善哉what寒山` and walk the cursor through it. **Down** into `what` keeps your column —
+  the tracker is on the covered square, and the whole word wears the cursor. **Right** from
+  anywhere inside jumps to the square after the word; **left** from outside lands on its last
+  square, exactly, and left again jumps to the square before it. Hold **Shift**: a rectangle that
+  touches the word paints all of it but is never widened — `selectedRanges()` says which
+  squares, and it says the ones you reached. Press **Enter** on any square of the word and the
+  editor would open over the whole word, offered to the leading cell — the display cells decline,
+  so nothing opens here, but the offer went to the right cell.
+- Type `。」`, or `！` after a `，`: the two marks share a square, each in its half. Look at
+  how the halves are drawn — the font's half-width alternates are asked for, and where a font
+  has none (this machine's does not) each full-width mark is **clipped to the half where its ink
+  is**: left for `。，、：；！？`, right for the opening brackets. Measured, not assumed; a first
+  cut let the halves grow to a full em each and the pair spilled out of the square.
+
+### What it asked of the grid, and got
+
+The bench was built to ask for two columns the grid did not have: half a square wide, present in
+the relation, shown or hidden by view. It got them without a new mechanism — a column view is a
+view, a half-square is a width — and the one thing that had to change was the width floor, which
+had been a constant and is now the host's. What it also found on the way: a relation's identities
+are fixed at construction, so a growing article is a capacity and a view; and a grid's `focus()`
+must not scroll, or a table taller than its pane moves under the pointer on every resume.
+
+Not done, and not asked for yet: a second squeezed mark (it starts the next row), and the
+typographic refinements a real manuscript grid has — compressing a run of marks, hanging a mark
+into the margin rather than a column. And for merged cells, what a later case may ask: a merged
+cell whose contents want the pointer (today the host passes clicks through to the squares), and
+CSS anchor positioning in place of measuring, once every browser has it.
 
 ## Adding a bench
 

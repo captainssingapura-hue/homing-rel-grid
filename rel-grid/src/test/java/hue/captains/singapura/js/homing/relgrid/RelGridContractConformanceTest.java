@@ -66,11 +66,12 @@ class RelGridContractConformanceTest extends JsModuleTestBase {
     @Test
     void theStockCellAnswersTheWholeCellContract() {
         var contract = declared(RelGridCellContract.class);
+        contract.removeAll(Arrays.asList(RelGridCellContract.OPTIONAL_METHODS));   // absent means the default
         var actual = prototypeMethods("RelGridTextCell");
         var missing = new ArrayList<String>();
         for (String m : contract) if (!actual.contains(m)) missing.add(m);
         assertEquals(List.of(), missing,
-                "the stock cell must answer every method RelGridCellContract declares");
+                "the stock cell must answer every method RelGridCellContract declares, the optional ones aside");
     }
 
     @Test

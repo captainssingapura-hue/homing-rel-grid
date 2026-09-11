@@ -14,7 +14,12 @@
 // will drive from the relation's answers; nothing in this class reads a value
 // or decides an order.
 //
-//   new RelGridViewMaps({ pks, columns, onViewChanged? })
+//   new RelGridViewMaps({ pks, columns, rowView?, columnView?, onViewChanged? })
+//
+// An INITIAL view may be given, so a grid over a relation that declares more
+// identities than it presents — an article with a capacity of rows — arranges
+// only what is presented from its first pass, rather than everything and then
+// a remap. The same checks as a remap; no callback, since nothing is arranged yet.
 // =============================================================================
 
 class RelGridViewMaps {
@@ -25,8 +30,10 @@ class RelGridViewMaps {
         this._baseColumns = this._checkUnique(opts.columns || [], "columns");
         // onViewChanged(kind) — 'rows' | 'columns'. The facade re-arranges.
         this._onViewChanged = opts.onViewChanged || null;
-        this._rowView = this._basePks.slice();
-        this._colView = this._baseColumns.slice();
+        this._rowView = opts.rowView    ? this._checkSubset(opts.rowView,    this._basePks,     "rowView")
+                                        : this._basePks.slice();
+        this._colView = opts.columnView ? this._checkSubset(opts.columnView, this._baseColumns, "columnView")
+                                        : this._baseColumns.slice();
         this._rowIndex = null;
         this._colIndex = null;
     }

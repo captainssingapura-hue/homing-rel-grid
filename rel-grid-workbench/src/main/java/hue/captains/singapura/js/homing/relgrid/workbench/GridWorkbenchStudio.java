@@ -36,7 +36,11 @@ public record GridWorkbenchStudio() implements Studio<GridWorkbenchHome> {
     private static final List<WorkspaceSpec> BENCHES = List.of(
             // Replicating tables: the proof that a grid holding no value needs
             // no telling — one editor, any followers, one persisted store.
-            ReplicatingTablesSpec.INSTANCE
+            ReplicatingTablesSpec.INSTANCE,
+            // Han Article: a WYSIWYG Chinese article in strictly square cells,
+            // nine to a row — the bench that will ask the grid for half-width
+            // punctuation columns.
+            HanArticleSpec.INSTANCE
     );
 
     public static final GridWorkbenchStudio INSTANCE = new GridWorkbenchStudio();

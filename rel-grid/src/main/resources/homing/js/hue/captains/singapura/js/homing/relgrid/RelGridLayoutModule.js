@@ -38,6 +38,18 @@
 //                       onColResize? })
 //   openOverlay(i, j) / closeOverlay()        the editor's anchor, over a slot
 //   openMask() / openPanel() / closeMask()    the mask, and the canvas in it
+//   openGroup(i, j, n) / placeGroups()        a merged cell's host, over n slots
+//
+// A MERGED CELL is the layout's third overlay: a host laid over n slots of a
+// row, in the wrapper, that the leading cell is placed into instead of its
+// own slot. The n slots stay — the matrix is whole, and a covered slot is a
+// slot — and the overlay mirrors their state: it wears the cursor when the
+// cursor is on any of them and the selection when any of them is selected,
+// so the whole group reads as one cell while the tracker keeps the exact
+// square. It follows their size: measured after every arrangement and every
+// resize, and again whenever the table changes size for a reason the grid is
+// not told about, through a ResizeObserver. It takes no pointer, so a click
+// lands on the exact slot beneath.
 // =============================================================================
 
 var _HRG_STYLE_ID = "homing-rel-grid-style";
@@ -144,6 +156,23 @@ var _HRG_STYLE_CSS = [
     ".hrg-td{padding:0;position:relative;border-bottom:1px solid var(--color-border);",
     "  border-right:1px solid color-mix(in srgb, var(--color-border) 50%, transparent);",
     "  vertical-align:middle;overflow:hidden;}",
+    // A MERGED CELL: the leading cell's host, laid over the n slots it reaches
+    // across — opaque, so the slots beneath and the lines between them are
+    // covered; no pointer, so a click lands on the exact slot beneath; and
+    // wearing the group's state, mirrored from the slots: the cursor when the
+    // cursor is on any of them, the wash when any is selected, dashed while
+    // deep, dimmed while the grid does not hold the focus — the slot's own
+    // rules, one level up. The slot marks stay, for a host that wants them.
+    ".hrg-merge{position:absolute;z-index:30;box-sizing:border-box;overflow:hidden;pointer-events:none;",
+    "  background:var(--color-surface);color:var(--color-text-primary);",
+    "  transition:outline-color .18s ease;}",
+    ".hrg-merge.hrg-sel{background:color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));}",
+    ".hrg-merge.hrg-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));outline-offset:-2px;}",
+    ".hrg-wrap:focus-within .hrg-merge.hrg-cursor{outline-color:var(--color-accent);}",
+    ".hrg-wrap.hrg-deep .hrg-merge.hrg-cursor{outline-style:dashed;}",
+    ".hrg-td.hrg-lead{border-right-color:transparent;}",
+    ".hrg-td.hrg-covered{border-right-color:transparent;}",
+    ".hrg-td.hrg-covered.hrg-group-end{border-right-color:color-mix(in srgb, var(--color-border) 50%, transparent);}",
     // The selection: a wash on every slot the resolved list covers. A slot may
     // wear this and the cursor at once — with an empty list the selection IS
     // the cursor's 1x1, so the cursor's slot is always one of them.
@@ -295,6 +324,15 @@ class RelGridLayout {
         this._overlay = null;
         this._mask = null;       // the mask, while a question is pending
         this._panel = null;      // the domain's canvas inside it, once asked for
+        this._groups = [];       // the merged cells' hosts: { i, j, n, el }
+        // The one change the grid is never told about is a row growing because
+        // some cell's content did; the observer catches it and re-measures.
+        this._ro = null;
+        if (typeof ResizeObserver === "function") {
+            var lay = this;
+            this._ro = new ResizeObserver(function () { lay.placeGroups(); });
+            this._ro.observe(this._table);
+        }
         _hrgAddClass(this._table, _hrgOverflowClass(opts.overflow));
         this._slots = [];        // [i][j] → td
         this._cursorTd = null;   // the slot currently painted as the cursor
@@ -320,6 +358,7 @@ class RelGridLayout {
     render(shape) {
         var headers = (shape && shape.headers) || [];
         var rows = (shape && shape.rows) || 0;
+        this.closeGroups();                                   // the slots they sat over are going
 
         while (this._colgroup.firstChild) this._colgroup.removeChild(this._colgroup.firstChild);
         if (this._headerRow)
@@ -400,16 +439,24 @@ class RelGridLayout {
         }
         if (any) _hrgAddClass(this._table, "hrg-fixed");
         else _hrgRemoveClass(this._table, "hrg-fixed");
+        this.placeGroups();                                   // the slots moved; the hosts follow
         return this;
     }
 
     /** Paint the cursor on one slot ({ i, j }) or on none (null). A diff, not a sweep. */
     paintCursor(ij) {
         var td = ij ? this.slotAt(ij.i, ij.j) : null;
-        if (this._cursorTd === td) return this;
-        if (this._cursorTd) _hrgRemoveClass(this._cursorTd, "hrg-cursor");
-        if (td) _hrgAddClass(td, "hrg-cursor");
-        this._cursorTd = td;
+        if (this._cursorTd !== td) {
+            if (this._cursorTd) _hrgRemoveClass(this._cursorTd, "hrg-cursor");
+            if (td) _hrgAddClass(td, "hrg-cursor");
+            this._cursorTd = td;
+        }
+        // The merged cells mirror: a group wears the cursor when it is on any of its slots.
+        for (var g = 0; g < this._groups.length; g++) {
+            var grp = this._groups[g];
+            var on = !!ij && ij.i === grp.i && ij.j >= grp.j && ij.j < grp.j + grp.n;
+            if (on) _hrgAddClass(grp.el, "hrg-cursor"); else _hrgRemoveClass(grp.el, "hrg-cursor");
+        }
         return this;
     }
 
@@ -434,8 +481,82 @@ class RelGridLayout {
                 }
             }
         }
+        // The merged cells mirror: a group is selected when any of its slots is.
+        for (var g = 0; g < this._groups.length; g++) {
+            var grp = this._groups[g], on = false;
+            for (var q = 0; q < list.length && !on; q++) {
+                var b = list[q];
+                on = b.i0 <= grp.i && grp.i <= b.i1 && b.j0 <= grp.j + grp.n - 1 && b.j1 >= grp.j;
+            }
+            if (on) _hrgAddClass(grp.el, "hrg-sel"); else _hrgRemoveClass(grp.el, "hrg-sel");
+        }
         return this;
     }
+
+    /**
+     * Mint a merged cell's host over the n slots from (i, j), mark those slots,
+     * and return the host. The leading cell is placed into it by the facade.
+     * Measured later, by placeGroups(), once every cell of the pass is in.
+     */
+    openGroup(i, j, n) {
+        var lead = this.slotAt(i, j);
+        if (!lead) return null;
+        _hrgAddClass(lead, "hrg-lead");
+        if (lead.style && lead.style.setProperty) lead.style.setProperty("--hrg-span", String(n));
+        for (var k = 1; k < n; k++) {
+            var td = this.slotAt(i, j + k);
+            if (!td) break;
+            _hrgAddClass(td, "hrg-covered");
+            if (k === n - 1) _hrgAddClass(td, "hrg-group-end");
+        }
+        var el = document.createElement("div");
+        el.className = "hrg-merge";
+        this._wrap.appendChild(el);
+        this._groups.push({ i: i, j: j, n: n, el: el });
+        return el;
+    }
+
+    /** The group a position is in, or null. */
+    groupAt(i, j) {
+        for (var g = 0; g < this._groups.length; g++) {
+            var grp = this._groups[g];
+            if (grp.i === i && j >= grp.j && j < grp.j + grp.n) return grp;
+        }
+        return null;
+    }
+
+    /** The union of n slots from (i, j), in the wrapper's coordinates. */
+    _unionRect(i, j, n) {
+        var a = this.slotAt(i, j), b = this.slotAt(i, j + n - 1) || a;
+        if (!a) return null;
+        var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), w = this._wrap.getBoundingClientRect();
+        return { left: ra.left - w.left, top: ra.top - w.top, width: rb.right - ra.left, height: ra.height };
+    }
+
+    /** Size and place every merged cell's host over its slots, as they are now. */
+    placeGroups() {
+        for (var g = 0; g < this._groups.length; g++) {
+            var grp = this._groups[g], r = this._unionRect(grp.i, grp.j, grp.n), st = grp.el.style;
+            if (!r || !st || !st.setProperty) continue;
+            st.setProperty("left",   r.left + "px");
+            st.setProperty("top",    r.top + "px");
+            st.setProperty("width",  r.width + "px");
+            st.setProperty("height", r.height + "px");
+        }
+        return this;
+    }
+
+    /** Take every merged cell's host down. Whatever cell was in it is detached with it. */
+    closeGroups() {
+        for (var g = 0; g < this._groups.length; g++) {
+            var el = this._groups[g].el;
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }
+        this._groups = [];
+        return this;
+    }
+
+    groups() { return this._groups.slice(); }
 
     /**
      * Mint a host laid OVER a slot, in the wrapper's coordinates, and return
@@ -451,19 +572,26 @@ class RelGridLayout {
         this.closeOverlay();
         var td = this.slotAt(i, j);
         if (!td) return null;
-        var a = td.getBoundingClientRect(), w = this._wrap.getBoundingClientRect();
+        // A position inside a merged cell edits the merged cell: the anchor is
+        // the whole group's box.
+        var grp = this.groupAt(i, j);
+        var r = grp ? this._unionRect(grp.i, grp.j, grp.n) : null;
+        if (!r) {
+            var a = td.getBoundingClientRect(), w = this._wrap.getBoundingClientRect();
+            r = { left: a.left - w.left, top: a.top - w.top, width: a.width, height: a.height };
+        }
         var el = document.createElement("div");
         el.className = "hrg-edit";
         var st = el.style;
         if (st && st.setProperty) {
-            st.setProperty("left", (a.left - w.left) + "px");
-            st.setProperty("top", (a.top - w.top) + "px");
+            st.setProperty("left", r.left + "px");
+            st.setProperty("top", r.top + "px");
             // EXACTLY the slot, so the overlay is an anchor rather than a thing
             // with a size of its own. A cell that wants more room hangs it off
             // this box as its own positioned child — which keeps the geometry
             // the grid states exact, and leaves the cell free.
-            st.setProperty("width", a.width + "px");
-            st.setProperty("height", a.height + "px");
+            st.setProperty("width", r.width + "px");
+            st.setProperty("height", r.height + "px");
         }
         this._wrap.appendChild(el);
         this._overlay = el;
@@ -545,7 +673,8 @@ class RelGridLayout {
 
     /** The table wears the deep state, so CSS and tests can see the handover. */
     setDeep(on) {
-        if (on) _hrgAddClass(this._table, "hrg-deep"); else _hrgRemoveClass(this._table, "hrg-deep");
+        if (on) { _hrgAddClass(this._table, "hrg-deep"); _hrgAddClass(this._wrap, "hrg-deep"); }
+        else    { _hrgRemoveClass(this._table, "hrg-deep"); _hrgRemoveClass(this._wrap, "hrg-deep"); }
         return this;
     }
 
@@ -555,7 +684,9 @@ class RelGridLayout {
         return this;
     }
 
-    focus() { if (this._table.focus) this._table.focus(); return this; }
+    /** The keyboard host takes the keys. Without scrolling: a table taller than its pane
+     *  would otherwise be pulled into view on every resume, moving the rows under the pointer. */
+    focus() { if (this._table.focus) this._table.focus({ preventScroll: true }); return this; }
 
     el() { return this._table; }
 
@@ -570,8 +701,10 @@ class RelGridLayout {
 
     destroy() {
         document.removeEventListener("mouseup", this._mouseup);
+        if (this._ro) { this._ro.disconnect(); this._ro = null; }
         this.closeOverlay();
         this.closeMask();
+        this.closeGroups();
         if (this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
         this._slots = [];
         this._cursorTd = null;

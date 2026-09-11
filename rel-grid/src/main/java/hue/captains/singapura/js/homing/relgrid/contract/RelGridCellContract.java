@@ -55,6 +55,14 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  *       manager's, when the domain decides the cell is done (Map 17, law 120).</li>
  * </ul>
  *
+ * <p><b>{@code colSpan()}</b> is optional, and only read when the grid was
+ * built with {@code mergedCells}: how many columns this cell reaches over,
+ * counting its own. A cell answering more than one is a <i>leading</i> cell;
+ * the grid unclips its slot and drops the grid lines it reaches across, and
+ * the cell draws itself that wide. Read on every arrangement, so a span that
+ * moves is an arrangement the host asks for. Nothing about the slots it
+ * reaches over changes: they keep their identities and their own cells.</p>
+ *
  * <p>Not here, on purpose: {@code update(value)}, {@code getValue()},
  * {@code commitEdit()}, {@code cancelEdit()}, {@code effectiveType()},
  * {@code preview()}. Edit, commit and update are domain operations; they never
@@ -73,9 +81,12 @@ public interface RelGridCellContract {
     boolean mayTakeControl();          // stage 1: situational, synchronous; only true is yes
     Object  takeControl();             // stage 2: MUST answer a thenable; settling means finished
     void    dispose();                 // the domain's to call, never the grid's
+    int     colSpan();                 // OPTIONAL: columns this cell reaches over; only with mergedCells
 
     String[] REQUIRED_METHODS = { "render" };
+    /** A cell may leave these out entirely; absent means the default. */
+    String[] OPTIONAL_METHODS = { "colSpan" };
     /** Both or neither: a cell offering one half of the handover is offered nothing. */
     String[] CONTROL_METHODS  = { "mayTakeControl", "takeControl" };
-    String[] ALL_METHODS      = { "render", "onSelect", "mayTakeControl", "takeControl", "dispose" };
+    String[] ALL_METHODS      = { "render", "onSelect", "mayTakeControl", "takeControl", "dispose", "colSpan" };
 }
