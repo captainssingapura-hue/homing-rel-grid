@@ -44,6 +44,41 @@ var _HRG_STYLE_ID = "homing-rel-grid-style";
 var _HRG_STYLE_CSS = [
     // The positioned parent for anything that is not a cell.
     ".hrg-wrap{position:relative;}",
+    // LIT, NOT LIFTED. The grid that holds the focus is visibly the grid that
+    // holds the focus, and it says so with light: a frame that catches it, and
+    // a cursor at full strength only then. Nothing moves — no elevation, no
+    // offset shadow, no transform — because a table that rises when clicked
+    // reads as a card. The frame is a layer OVER the table, drawn INSET,
+    // because a host that mounts the grid in a scrollport clips anything
+    // outside the box; it takes no pointer and sits under the editor (50) and
+    // the mask (60). Focus is :focus-within — the browser's own fact — so the
+    // editor's overlay and the mask's panel count as the grid holding it, and
+    // the grid keeps no fact of its own.
+    //
+    // A hint of morphism, over the semantic tokens only, so it follows any
+    // palette: an accent-tinted hairline, a catch of light on the inner
+    // top-left edge (white mixed into the raised surface, so a dark theme gets
+    // a dim catch), and a soft inner glow.
+    //
+    // LATER — themed lighting. A theme with an idiom of its own (a hard
+    // brutalist ring, a Material outline, a neumorphic relief) should be able
+    // to say so, and the way to do that in the typed CSS substrate is a grid
+    // vocabulary of tokens (--hrg-frame-rest, --hrg-frame-focus, --hrg-cursor-
+    // rest, --hrg-cursor-focus, --hrg-focus-transition) that every registered
+    // theme provides, with these values as the fallbacks. Not done here: the
+    // substrate's vocabulary is the studio's alone today (StudioVars, with
+    // every ThemeVariables in studio-base providing exactly it), so a component
+    // cannot yet contribute tokens without either a per-deployment registry
+    // wrapper or a fork of every theme. It waits on the theme design system
+    // growing a way for a component to declare a vocabulary of its own.
+    ".hrg-wrap::after{content:\"\";position:absolute;left:0;top:0;right:0;bottom:0;",
+    "  pointer-events:none;z-index:40;",
+    "  box-shadow:inset 0 0 0 1px var(--color-border);",
+    "  transition:box-shadow .18s ease;}",
+    ".hrg-wrap:focus-within::after{",
+    "  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 60%, var(--color-border)),",
+    "    inset 1px 1px 0 1px color-mix(in srgb, white 35%, var(--color-surface-raised)),",
+    "    inset 0 0 14px color-mix(in srgb, var(--color-accent) 18%, transparent);}",
     // An editor lives HERE, not in its slot: out of the table it cannot widen a
     // column, cannot stretch a row, and is not clipped by the slot — so a cell
     // may open something LARGER than itself. The grid places it over the slot
@@ -114,8 +149,12 @@ var _HRG_STYLE_CSS = [
     // the cursor's 1x1, so the cursor's slot is always one of them.
     ".hrg-td.hrg-sel{background:color-mix(in srgb, var(--color-accent) 12%, transparent);}",
     // The cursor: painted on the slot, never on the cell. Solid while shallow;
-    // dashed while the cell is deep, so the handover is visible.
-    ".hrg-td.hrg-cursor{outline:2px solid var(--color-accent);outline-offset:-2px;}",
+    // dashed while the cell is deep, so the handover is visible. Full accent
+    // only while the grid holds the focus; dimmed towards the border otherwise,
+    // so a cursor in a table that is NOT listening does not look like one that is.
+    ".hrg-td.hrg-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));",
+    "  outline-offset:-2px;transition:outline-color .18s ease;}",
+    ".hrg-wrap:focus-within .hrg-td.hrg-cursor{outline-color:var(--color-accent);}",
     ".hrg-table.hrg-deep .hrg-td.hrg-cursor{outline-style:dashed;}"
 ].join("\n");
 

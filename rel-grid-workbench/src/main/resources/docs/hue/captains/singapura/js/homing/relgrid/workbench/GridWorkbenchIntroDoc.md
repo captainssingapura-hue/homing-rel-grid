@@ -92,6 +92,12 @@ only ever been proved against the one thing it was written for.
   the domain's half.
 - Press **re-arrange** on any table: the slots are rebuilt and the same cells are placed again.
   Nothing is re-created.
+- **Watch the light.** Dock two tables and click into one: its frame catches the light — an
+  accent hairline, a bright catch on the inner top-left edge, a soft inner glow — and its
+  cursor comes to full strength, while the other table's cursor dims towards the border. Nothing
+  rises, nothing casts a shadow outward, nothing moves: **lit, not lifted**. Open an editor or
+  the copy panel and the light stays on, because the editor and the panel are the grid holding
+  the focus. This is the browser's own `:focus-within`, not a fact the grid keeps.
 
 ### Two ways to say no, and both are here
 
@@ -161,6 +167,24 @@ centred, with a floor so a small table still gets a panel that can hold somethin
 ceiling so a vast one does not get a page. The seen area is the host's box, clipped to the
 window; a table three rows tall in a host with room below gets its panel in the middle of the
 host, not overflowing the table.
+
+### Later — themed lighting
+
+The focus hint is a slight hint of morphism, written over the studio's semantic tokens
+(`--color-accent`, `--color-border`, `--color-surface-raised`) so it follows any palette, light
+or dark. It is **not yet themeable in its own right**: a theme with an idiom of its own — a hard
+brutalist ring, a Material outline, a neumorphic relief — cannot say so today.
+
+The design for that is clear and small: a grid vocabulary of typed tokens
+(`--hrg-frame-rest`, `--hrg-frame-focus`, `--hrg-cursor-rest`, `--hrg-cursor-focus`,
+`--hrg-focus-transition`) that every registered theme provides, with today's values as the
+`var()` fallbacks, and a rule that a theme's frame values stay inset and cast nothing outward.
+**It waits on the theme design system**: the typed CSS substrate's vocabulary is the studio's
+alone today (`StudioVars`, with every `ThemeVariables` in studio-base providing exactly that
+set), so a component cannot contribute tokens without either a per-deployment `ThemeRegistry`
+wrapper or a fork of every shipped theme. Neither is the proper shape. When the substrate lets a
+component declare a vocabulary of its own and themes fill it, the grid's five tokens are the
+first customer.
 
 ### Entering a pane
 
