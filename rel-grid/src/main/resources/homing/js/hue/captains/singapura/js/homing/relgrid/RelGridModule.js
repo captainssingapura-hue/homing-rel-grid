@@ -131,17 +131,27 @@
 // Copy is the first thing that CONSUMES a selection, and it reads the list in
 // one place — copy() — and resolves it there. Clear and bulk are later rounds.
 //
-// MERGED CELLS, FIRST PHASE — a LOGICAL overlay on a matrix that stays whole.
+// MERGED CELLS — a matrix that stays whole, and a cell laid over part of it.
 // Every position keeps its slot and its own cell; nothing is skipped and
 // nothing is asked differently. A cell that answers colSpan() > 1 is a
-// LEADING cell, and the one thing the grid does for it is let its slot
-// OVERFLOW: the slot is unclipped, the grid lines between it and the n−1
-// slots it reaches over are dropped, and the cell — which knows its own span
-// — draws itself as wide as it likes. The cursor, the selection, copy and
-// every other function are exactly as they were: a covered slot is a slot,
-// with its own identity and its own cell. Read on every arrangement, so a
-// span that moves is an arrangement the host asks for. Behind mergedCells,
-// because most relations have no merged cell and the check is not free.
+// LEADING cell: the layout mints a host over the n slots it reaches across
+// and the cell is placed THERE instead of in its own slot, which stays,
+// empty. The host is opaque, takes no pointer, and mirrors the state of the
+// slots beneath — so the whole group reads as one cell while the tracker
+// keeps the exact square:
+//
+//   · a vertical move passes through: the column is kept, covered or not;
+//   · a horizontal move jumps OUT of the group — right lands on the slot
+//     after it, left on the slot before — and a move that lands inside
+//     another group lands on the exact slot reached;
+//   · a selection is the rectangle it is, never widened; the group is painted
+//     when any of its slots is in one;
+//   · Enter anywhere in a group offers control to the LEADING cell, over the
+//     group's whole box.
+//
+// Spans are read on every arrangement, so a span that moves is an
+// arrangement the host asks for. Behind mergedCells, because most relations
+// have no merged cell and the check is not free.
 //
 // WIDTHS ARE GEOMETRY, THE GRID'S ALONE (map 7): held by column IDENTITY,
 // applied by POSITION, in place — no arrangement runs, because no identity
@@ -349,9 +359,10 @@ class RelGrid {
                 var id = maps.resolve(i, j);
                 this._cells.ensure(id.pk, id.column, this._cellFor);
                 this._cells.place(id.pk, id.column, this._layout.slotAt(i, j));
-                if (this._merge) this._markSpan(i, j, this._cells.get(id.pk, id.column).cell);
+                if (this._merge) this._markSpan(i, j, id);
             }
         }
+        if (this._merge) this._layout.placeGroups();          // every cell is in; measure the hosts
         // Whatever the view no longer shows leaves the tree alive.
         this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });
 
@@ -376,13 +387,44 @@ class RelGrid {
      * answers nonsense is a plain cell. The layout marks the slots; the cell
      * draws itself.
      */
-    _markSpan(i, j, cell) {
+    _markSpan(i, j, id) {
+        var entry = this._cells.get(id.pk, id.column), cell = entry && entry.cell;
         if (!cell || typeof cell.colSpan !== "function") return;
+        if (this._layout.groupAt(i, j)) return;               // inside an earlier group: a plain cell
         var n;
         try { n = Number(cell.colSpan()); } catch (e) { console.error("[RelGrid] cell.colSpan threw:", e); return; }
         if (!isFinite(n) || n <= 1) return;
         n = Math.min(Math.floor(n), this._maps.cols() - j);
-        if (n > 1) this._layout.markSpan(i, j, n);
+        if (n <= 1) return;
+        var host = this._layout.openGroup(i, j, n);
+        if (host) this._cells.place(id.pk, id.column, host);  // the leading cell lives in the host
+    }
+
+    /** The merged cell a position is in, or null: { i, j, n }. */
+    _groupAt(i, j) { return this._merge ? this._layout.groupAt(i, j) : null; }
+
+    /**
+     * One horizontal step from a position: out of a merged cell entirely, if
+     * the position is in one, and one slot otherwise. Landing inside another
+     * group lands on the exact slot reached.
+     */
+    _stepJ(i, j, dj) {
+        var grp = this._groupAt(i, j);
+        if (!grp) return j + dj;
+        return dj > 0 ? grp.j + grp.n : grp.j - 1;
+    }
+
+    /**
+     * Where deep goes from the cursor: the cursor's own identity, or — inside
+     * a merged cell — the LEADING cell's, since that is the cell with anything
+     * in it, and the editor opens over the whole group.
+     */
+    _deepAt() {
+        if (!this._cursor || !this._cursorPos) return null;
+        var at = this._cursorPos, grp = this._groupAt(at.i, at.j);
+        if (!grp) return { id: this._cursor, i: at.i, j: at.j };
+        var id = this._maps.resolve(grp.i, grp.j);
+        return id ? { id: id, i: grp.i, j: grp.j } : null;
     }
 
     /** Arrange again. The domain calls this after changing something the grid
@@ -497,7 +539,8 @@ class RelGrid {
 
     _move(di, dj) {
         if (!this._cursorPos) return;
-        this._setCursor(this._clampI(this._cursorPos.i + di), this._clampJ(this._cursorPos.j + dj));
+        var p = this._cursorPos;
+        this._setCursor(this._clampI(p.i + di), this._clampJ(dj ? this._stepJ(p.i, p.j, dj) : p.j));
     }
 
     _clampI(i) { return Math.max(0, Math.min(this._maps.rows() - 1, i)); }
@@ -690,7 +733,7 @@ class RelGrid {
         var from = this._selection.far() || this._cursorPos;
         var di = (key === "ArrowUp") ? -1 : (key === "ArrowDown") ? 1 : 0;
         var dj = (key === "ArrowLeft") ? -1 : (key === "ArrowRight") ? 1 : 0;
-        this._extendTo(from.i + di, from.j + dj);
+        this._extendTo(from.i + di, dj ? this._stepJ(from.i, from.j, dj) : from.j);
     }
 
     /**
@@ -815,8 +858,8 @@ class RelGrid {
      * feature must be able to ask WITHOUT opening anything.
      */
     mayTakeControlAtCursor() {
-        if (!this._cursor) return false;
-        return this._mayTakeControl(this._cursor);
+        var at = this._deepAt();
+        return at ? this._mayTakeControl(at.id) : false;
     }
 
     _mayTakeControl(id) {
@@ -845,11 +888,12 @@ class RelGrid {
      */
     takeControlAtCursor() {
         if (this._locked() || !this._cursor) return false;
-        var id = this._cursor;
+        var at = this._deepAt();
+        if (!at) return false;
+        var id = at.id;
         if (!this._mayTakeControl(id)) return false;
         var cell = this._cells.get(id.pk, id.column).cell;
-        var at = this._cursorPos;
-        var host = at ? this._layout.openOverlay(at.i, at.j) : null;
+        var host = this._layout.openOverlay(at.i, at.j);
         if (!host) return false;
         var out;
         try { out = cell.takeControl(host); }

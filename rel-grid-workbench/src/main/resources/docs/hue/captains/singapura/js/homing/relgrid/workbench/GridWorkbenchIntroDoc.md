@@ -250,12 +250,15 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
   digits, spaces, ASCII marks — is one slot reaching over `⌈length/2⌉` squares; the squares it
   reaches over hold cells of their own that show nothing. A run moves whole to the next row when
   it doesn't fit what is left and fits a row; longer than a row, it breaks at the row's end. The
-  run's cell answers `colSpan()` with its reach, and the grid — built with `mergedCells` — does
-  exactly one thing for it: **unclips its slot and drops the grid lines it reaches across**, so
-  the cell draws itself that wide. That is the first phase of merged cells, and it is a *logical*
-  overlay on a matrix that stays whole: every square keeps its slot and its cell, and the cursor,
-  the selection and copy are exactly as they were — a covered square is a square. The option is
-  off by default, because most relations have no merged cell and reading spans is not free.
+  run's cell answers `colSpan()` with its reach, and the grid — built with `mergedCells` —
+  lays a **host over the squares it reaches across** and places the cell there; the cell fills
+  it. The matrix stays whole: every square keeps its slot and its own cell, and the host
+  *mirrors* the squares beneath it — it wears the cursor when the cursor is on any of them and
+  the wash when any is selected — so the group reads as one cell while the tracker keeps the
+  exact square. It follows the squares' size: measured after every arrangement and resize, and
+  again through a `ResizeObserver` when a row grows for a reason the grid is never told. It takes
+  no pointer, so a click lands on the exact square beneath. The option is off by default, because
+  most relations have no merged cell and reading spans is not free.
 
 ### What to try
 
@@ -269,6 +272,14 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
 - Put the grid's cursor on a square in either rendering and edit the text: the cursor stays on
   its **square** (`r2`, `c0`) while the character under it changes, because the cursor is an
   identity and the identity here is positional.
+- Type `善哉what寒山` and walk the cursor through it. **Down** into `what` keeps your column —
+  the tracker is on the covered square, and the whole word wears the cursor. **Right** from
+  anywhere inside jumps to the square after the word; **left** from outside lands on its last
+  square, exactly, and left again jumps to the square before it. Hold **Shift**: a rectangle that
+  touches the word paints all of it but is never widened — `selectedRanges()` says which
+  squares, and it says the ones you reached. Press **Enter** on any square of the word and the
+  editor would open over the whole word, offered to the leading cell — the display cells decline,
+  so nothing opens here, but the offer went to the right cell.
 - Type `。」`, or `！` after a `，`: the two marks share a square, each in its half. Look at
   how the halves are drawn — the font's half-width alternates are asked for, and where a font
   has none (this machine's does not) each full-width mark is **clipped to the half where its ink
@@ -286,9 +297,9 @@ must not scroll, or a table taller than its pane moves under the pointer on ever
 
 Not done, and not asked for yet: a second squeezed mark (it starts the next row), and the
 typographic refinements a real manuscript grid has — compressing a run of marks, hanging a mark
-into the margin rather than a column. And the second phase of merged cells: a physical overlay
-that highlights the whole group, with the cursor passing through vertically and jumping out of
-the group horizontally while the tracker keeps the exact square — decided, and on the list.
+into the margin rather than a column. And for merged cells, what a later case may ask: a merged
+cell whose contents want the pointer (today the host passes clicks through to the squares), and
+CSS anchor positioning in place of measuring, once every browser has it.
 
 ## Adding a bench
 

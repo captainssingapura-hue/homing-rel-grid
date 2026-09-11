@@ -36,9 +36,9 @@
 //
 // A RUN of narrow characters — Latin, digits — is one cell reaching over
 // several squares, two characters a square. It answers colSpan() with its
-// reach, and the grid, built with mergedCells, unclips its slot and drops the
-// grid lines it reaches across; the cell draws itself that wide, and the
-// squares it covers hold cells of their own that show nothing. The run's
+// reach, and the grid, built with mergedCells, lays a host over the squares
+// it reaches across and places the cell there; the cell fills that host, and
+// the squares it covers hold cells of their own that show nothing. The run's
 // letters are sized so two of them sit in a square.
 //
 // No mayTakeControl and no takeControl, on purpose: a cell offering neither
@@ -69,11 +69,10 @@ var _HAN_CSS = [
     ".han-glyph.han-narrow{aspect-ratio:1/2;}",
     ".han-narrow .han-ink{font-size:136cqw;}",
     ".han-narrow .han-half{flex-basis:100%;width:100%;}",
-    // A run: as wide as the squares it reaches over — n squares and the n−1
-    // grid lines between them — and as tall as one. Its letters are sized
-    // against the run's own box: 68% of a square is 68/n of the run.
-    ".han-glyph.han-run{width:calc(var(--han-span) * 100% + (var(--han-span) - 1) * 1px);",
-    "  aspect-ratio:var(--han-span) / 1;position:relative;background:var(--color-surface);}",
+    // A run: it fills the host the grid laid over its squares — n of them
+    // wide, one tall — so it sizes itself to nothing. Its letters are sized
+    // against that box: 68% of a square is 68/n of the run.
+    ".han-glyph.han-run{width:100%;height:100%;aspect-ratio:auto;}",
     ".han-run .han-ink{font:calc(68cqw / var(--han-span)) / 1 'Noto Serif','Georgia','Times New Roman',serif;",
     "  letter-spacing:0.02em;white-space:pre;}"
 ].join("\n");
