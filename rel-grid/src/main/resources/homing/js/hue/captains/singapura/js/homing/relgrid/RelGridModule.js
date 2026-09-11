@@ -18,7 +18,9 @@
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
 //       onControlReleased?, // (pk, column) — and gave it back
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
-//       ask?              // (question) — THE CHANNEL. See below.
+//       onCopied?,        // (content) — a REPORT: this was written to the clipboard
+//       ask?,             // (question, mask) — THE CHANNEL. See below.
+//       clipboard?        // { write(content) → thenable } — the writer; navigator.clipboard by default
 //   });
 //
 // THE ASK CHANNEL (ext4, ext6): one function, typed questions down, typed
@@ -36,6 +38,41 @@
 //
 // A host with no ask gets no channel and nothing changes; the callbacks that
 // remain are reports the channel has not claimed yet.
+//
+// THE PENDING ANSWER (ext6): the second customer is a QUESTION — the grid
+// waits for the answer, and the interval is dangerous, because an answer
+// describes the state it was asked about and the person must not be allowed
+// to change that state underneath it. So while a question is pending:
+//
+//   · the grid is LOCKED: every intent is refused, not deferred (law 221) —
+//     keys, clicks, drags, the handover, a resize, and the programmatic
+//     twins of each;
+//   · the grid is MASKED: a wash over the table that reads as unavailable,
+//     holding the focus so no key reaches the table (law 220). Delayed, so a
+//     fast answer shows none, and held briefly once up, so it never strobes
+//     (law 224);
+//   · the domain may draw on it. The second argument to ask is the MASK
+//     HANDLE, and mask.panel() mints the panel — a golden rectangle at the
+//     golden section of what is seen of the host's box — and hands it over
+//     as a slot is handed to a cell. Asking for it mounts the mask at once;
+//     not asking leaves a bare wash, because the grid invents no progress
+//     (law 225).
+//
+// The answer is applied when it comes; absence applies nothing; a rejection
+// is recorded and the grid resumes. One question at a time, because the only
+// party that can raise one while the grid is locked is the host, and a host
+// that asks twice is told no.
+//
+// COPY (map 6) is that question. Ctrl+C, or copy(), resolves the selection to
+// IDENTITIES — one block per range, pks down and columns across, in view
+// order — and asks what they are worth. The domain answers with finished
+// content, or with nothing, and the grid WRITES what it was given (law 50):
+// it is the party inside the person's gesture, so it is the party that
+// writes, and it reads nothing of what it writes. The clipboard is reached
+// under that gesture's activation — the async Clipboard API, or the copy
+// command where a page is denied it — which is why copy is no longer the
+// channel's synchronous exception: nothing here needs the browser's copy
+// event to arrive, and everything here needs a panel.
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
@@ -81,9 +118,8 @@
 // selection's business. The two meet in exactly two lines — a bare move
 // clears, and an empty list resolves to the cursor's own 1x1.
 //
-// Nothing yet CONSUMES a selection. Copy, clear and bulk are later rounds, and
-// their absence here is the point: the list is built and painted, and no verb
-// reads it.
+// Copy is the first thing that CONSUMES a selection, and it reads the list in
+// one place — copy() — and resolves it there. Clear and bulk are later rounds.
 //
 // WIDTHS ARE GEOMETRY, THE GRID'S ALONE (map 7): held by column IDENTITY,
 // applied by POSITION, in place — no arrangement runs, because no identity
@@ -96,6 +132,98 @@
 var _HRG_MIN_W = 40, _HRG_MAX_W = 2000;   // the legal range — normalisation's bound
 var _HRG_DEFAULT_W = 120;                 // what a keyboard resize starts from when nothing is held
 var _HRG_KEY_STEP = 10;                   // one Alt+arrow
+var _HRG_MASK_DELAY = 200;                // a question answered sooner shows no mask
+var _HRG_MASK_HOLD = 250;                 // and one that showed stays at least this long
+
+function _hrgLater(fn, ms)  { return setTimeout(fn, ms); }
+function _hrgCancel(handle) { clearTimeout(handle); }
+function _hrgNow()          { return Date.now(); }
+
+/**
+ * The stock clipboard writer. Two roads to the same clipboard, both open only
+ * while the person's activation is fresh — and it is, because the answer was
+ * produced by their click on the domain's panel:
+ *
+ *   1. the async Clipboard API. Rich content goes as one item carrying both
+ *      forms, so a spreadsheet takes the table and an editor takes the text;
+ *      without an html, or without ClipboardItem, the plain form alone.
+ *   2. the copy COMMAND, when the first is absent or refused. An insecure
+ *      origin has no navigator.clipboard at all, and an embedded page can be
+ *      denied it by policy while the command — gated on activation, not on
+ *      policy — still works. Both forms ride the copy event's clipboardData.
+ *
+ * Neither road is a silence: a write that fails on both is a rejection, which
+ * the grid records.
+ */
+function _hrgStockClipboard(env) {
+    env = env || {
+        navigator:     (typeof navigator !== "undefined") ? navigator : null,
+        ClipboardItem: (typeof ClipboardItem !== "undefined") ? ClipboardItem : null,
+        Blob:          (typeof Blob !== "undefined") ? Blob : null,
+        document:      (typeof document !== "undefined") ? document : null
+    };
+    function modern(content) {
+        var cb = env.navigator ? env.navigator.clipboard : null;
+        if (!cb) return Promise.reject(new Error("navigator.clipboard is absent (not a secure context?)"));
+        if (content.html != null && typeof env.ClipboardItem === "function" && typeof env.Blob === "function"
+                && typeof cb.write === "function") {
+            var item = new env.ClipboardItem({
+                "text/plain": new env.Blob([content.text], { type: "text/plain" }),
+                "text/html":  new env.Blob([content.html], { type: "text/html" })
+            });
+            return cb.write([item]);
+        }
+        if (typeof cb.writeText !== "function") return Promise.reject(new Error("navigator.clipboard cannot write"));
+        return cb.writeText(content.text);
+    }
+    function command(content) {
+        var doc = env.document;
+        if (!doc || typeof doc.execCommand !== "function" || !doc.body) return false;
+        var took = false;
+        // The command fires a copy event; answering it is how both forms are
+        // set. Captured, so nothing on the page sees a copy it did not make.
+        var onCopy = function (e) {
+            var data = e.clipboardData;
+            if (!data || typeof data.setData !== "function") return;
+            data.setData("text/plain", content.text);
+            if (content.html != null) data.setData("text/html", content.html);
+            if (e.preventDefault) e.preventDefault();
+            took = true;
+        };
+        // The command needs a selection to act on; a textarea off-screen is one.
+        var ta = doc.createElement("textarea");
+        ta.textContent = content.text;
+        ta.setAttribute("aria-hidden", "true");
+        if (ta.style && ta.style.setProperty) {
+            ta.style.setProperty("position", "fixed");
+            ta.style.setProperty("left", "-9999px");
+            ta.style.setProperty("top", "0");
+        }
+        // Selecting the textarea takes the focus, and this runs AFTER the grid
+        // has already handed the focus back to the table — so what was focused
+        // is put back, or the person is left typing into nothing.
+        var prev = doc.activeElement || null;
+        doc.addEventListener("copy", onCopy, true);
+        doc.body.appendChild(ta);
+        var ran = false;
+        try { ta.select(); ran = doc.execCommand("copy"); }
+        catch (e) { ran = false; }
+        doc.body.removeChild(ta);
+        doc.removeEventListener("copy", onCopy, true);
+        if (prev && prev.focus) {
+            try { prev.focus({ preventScroll: true }); } catch (e) { /* gone; nothing to restore */ }
+        }
+        return ran && took;
+    }
+    return {
+        write: function (content) {
+            return modern(content).then(null, function (why) {
+                if (command(content)) return;
+                throw new Error("the clipboard refused both roads — " + (why && why.message ? why.message : why));
+            });
+        }
+    };
+}
 
 class RelGrid {
 
@@ -115,7 +243,9 @@ class RelGrid {
         this._cbTaken       = opts.onControlTaken || null;
         this._cbReleased    = opts.onControlReleased || null;
         this._cbResized     = opts.onColumnResized || null;
+        this._cbCopied      = opts.onCopied || null;
         this._ask = (typeof opts.ask === "function") ? opts.ask : null;
+        this._clipboard = opts.clipboard || _hrgStockClipboard();
 
         var head = opts.header || {};
         this._showHead = head.show !== false;
@@ -129,6 +259,7 @@ class RelGrid {
         this._cursor = null;       // { pk, column } | null
         this._cursorPos = null;    // { i, j } | null
         this._deep = false;        // the one fact the grid holds about editing
+        this._pending = null;      // and the second, about waiting: the question outstanding
         this._destroyed = false;
         // The column constraint: read ONCE, here, because it is structure and
         // not a question about a moment. Absent means no constraint.
@@ -231,7 +362,7 @@ class RelGrid {
         // editor is laid over a slot at a fixed position, and moving the column
         // under it would leave the two disagreeing. The keyboard path was
         // already inert while deep; a header drag was not.
-        if (this._deep) return false;
+        if (this._locked()) return false;
         if (this._maps.baseColumns().indexOf(column) < 0) return false;
         var n = Number(px);
         if (!isFinite(n)) return false;
@@ -341,6 +472,138 @@ class RelGrid {
             out.then(null, function (e) { console.error("[RelGrid] ask rejected:", e); });
     }
 
+    /**
+     * A QUESTION: the grid waits, and the person is stopped until it is
+     * answered (ext6). The mask handle is the domain's way to draw while it
+     * thinks; the delay timer is the grid's way to mask anyway if it does
+     * not. apply(answer) runs when the answer comes — before the mask comes
+     * down, because what it does may not wait on a hold.
+     *
+     * One at a time. The person cannot raise a second while locked, and a
+     * host that does is refused, so no generation stamp is needed yet.
+     */
+    _askPending(question, apply) {
+        if (!this._ask || this._pending) return false;
+        var self = this;
+        var session = { question: question, mounted: false, shownAt: 0, timer: null };
+        this._pending = session;
+        var handle = {
+            /** The domain's canvas, minted on first call; null once the session is over. */
+            panel: function () {
+                if (self._pending !== session) return null;
+                self._mount(session);
+                return self._layout.openPanel();
+            }
+        };
+        var out;
+        try { out = this._ask(question, handle); }
+        catch (e) {
+            console.error("[RelGrid] ask threw:", e);
+            this._settle(session, undefined, apply);
+            return true;                       // the gesture was taken; the domain failed it
+        }
+        var p = (out && typeof out.then === "function") ? out : Promise.resolve(out);
+        if (!session.mounted)
+            session.timer = _hrgLater(function () {
+                session.timer = null;
+                if (self._pending === session) self._mount(session);
+            }, _HRG_MASK_DELAY);
+        p.then(function (answer) { self._settle(session, answer, apply); },
+               function (e) {
+                   console.error("[RelGrid] ask rejected:", e);
+                   self._settle(session, undefined, apply);
+               });
+        return true;
+    }
+
+    /** The mask goes up: once per session, whether the domain asked or the clock did. */
+    _mount(session) {
+        if (session.mounted) return;
+        session.mounted = true;
+        session.shownAt = _hrgNow();
+        if (session.timer) { _hrgCancel(session.timer); session.timer = null; }
+        this._layout.openMask();
+        this._layout.setMasked(true);
+    }
+
+    /**
+     * The answer came — or did not. Apply first; then the mask, at once if it
+     * has been up long enough and after the rest of the hold otherwise. A
+     * settle after destroy, or for a session that is not the current one,
+     * does nothing.
+     */
+    _settle(session, answer, apply) {
+        if (this._destroyed || this._pending !== session) return;
+        this._pending = null;
+        if (session.timer) { _hrgCancel(session.timer); session.timer = null; }
+        if (apply) {
+            try { apply.call(this, answer); }
+            catch (e) { console.error("[RelGrid] applying an answer threw:", e); }
+        }
+        if (!session.mounted) return;          // nothing to take down
+        var self = this, up = _hrgNow() - session.shownAt;
+        if (up >= _HRG_MASK_HOLD) this._unmask();
+        else _hrgLater(function () { self._unmask(); }, _HRG_MASK_HOLD - up);
+    }
+
+    /** Down, unless a new question has taken the mask over in the meantime. */
+    _unmask() {
+        if (this._destroyed || this._pending) return;
+        this._layout.closeMask();
+        this._layout.setMasked(false);
+        this._layout.focus();                  // the keyboard host takes the keys again
+    }
+
+    /** Locked while a cell is deep OR a question is pending — the two are exclusive (law 228). */
+    _locked() { return this._deep || !!this._pending; }
+
+    // ── copy: the selection, resolved, asked about, and the answer written ──
+
+    /**
+     * What is selected, as IDENTITIES: one block per range, in the order the
+     * ranges were made, each the pks down its rows and the columns across it
+     * in view order. Faithful — no bounding box, no merge, no refusal here.
+     */
+    _blocks() {
+        var rects = this._selection.resolve(this._cursorPos), maps = this._maps, out = [];
+        for (var k = 0; k < rects.length; k++) {
+            var r = rects[k], pks = [], cols = [];
+            for (var i = r.i0; i <= r.i1; i++) pks.push(maps.pkAt(i));
+            for (var j = r.j0; j <= r.j1; j++) cols.push(maps.columnAt(j));
+            out.push(new RelGridBlock(pks, cols));
+        }
+        return out;
+    }
+
+    /**
+     * Ask what the selection is worth on a clipboard, and write the answer.
+     * False when there is no channel, nothing presented, or the grid is
+     * locked; true when the question was asked, whatever comes of it.
+     */
+    copy() {
+        if (this._locked() || !this._ask || !this._cursorPos) return false;
+        return this._askPending(new RelGridCopyRequested(this._blocks()), this._applyCopy);
+    }
+
+    /** The answer to a copy: content is written and reported; absence writes nothing (law 49). */
+    _applyCopy(answer) {
+        if (answer == null) return;
+        if (!(answer instanceof RelGridClipboardContent)) {
+            console.error("[RelGrid] a copy was answered with something that is not clipboard content:", answer);
+            return;
+        }
+        var self = this, out;
+        try { out = this._clipboard.write(answer); }
+        catch (e) { console.error("[RelGrid] the clipboard write threw:", e); return; }
+        var p = (out && typeof out.then === "function") ? out : Promise.resolve();
+        p.then(function () {
+            if (self._cbCopied) {
+                try { self._cbCopied(answer); }
+                catch (e) { console.error("[RelGrid] onCopied threw:", e); }
+            }
+        }, function (e) { console.error("[RelGrid] the clipboard write failed:", e); });
+    }
+
     /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
     _afterSelection() {
         var rects = this._selection.resolve(this._cursorPos);
@@ -403,6 +666,7 @@ class RelGrid {
     /** A button went down on a slot. Nothing happens yet — a press that never
      *  travels is a click, and the click handler owns it. */
     _onDown(i, j, mods) {
+        if (this._locked()) return;
         this._swallowClick = false;            // a fresh gesture; whatever the last one left, drop it
         this._pressAt = { i: i, j: j, mods: mods || {} };
         this._dragged = false;
@@ -415,7 +679,7 @@ class RelGrid {
      * gesture.
      */
     _onDragTo(i, j) {
-        if (this._deep || !this._pressAt) return;
+        if (this._locked() || !this._pressAt) return;
         if (!this._dragged) {
             this._dragged = true;
             this._press(this._pressAt.i, this._pressAt.j, this._pressAt.mods);
@@ -437,7 +701,7 @@ class RelGrid {
 
     _onClick(i, j, mods) {
         if (this._swallowClick) { this._swallowClick = false; return; }
-        if (this._deep) return;                // the cell has the pointer and the keyboard
+        if (this._locked()) return;            // the cell has the pointer and the keyboard, or an answer is owed
         mods = mods || {};
         // A shift-click is an extension TO where it landed; the other two mean
         // at the slot itself, which is exactly the press action.
@@ -446,7 +710,7 @@ class RelGrid {
     }
 
     _onDblClick(i, j) {
-        if (this._deep) return;
+        if (this._locked()) return;
         // A bare move like any other. In a browser the click that precedes has
         // already cleared, but the double-click must not depend on that.
         this._bareMove(function () { this._setCursor(i, j); });
@@ -454,7 +718,7 @@ class RelGrid {
     }
 
     _onKey(e) {
-        if (this._deep) return;                // the keyboard is the cell's
+        if (this._locked()) return;            // the keyboard is the cell's, or an answer is owed
         var key = e.key;
         // Alt+Left/Right: the pointer-free resize of the CURSOR's column. The
         // cursor does not move.
@@ -472,6 +736,11 @@ class RelGrid {
         if ((e.ctrlKey || e.metaKey) && (key === "a" || key === "A")) {
             this._selection.all(this._maps.rows(), this._maps.cols());
             this._afterSelection();
+        }
+        // Ctrl+C: the question. Consumed only when it was actually asked, so
+        // a grid with no channel leaves the browser's own copy alone.
+        else if ((e.ctrlKey || e.metaKey) && (key === "c" || key === "C")) {
+            if (!this.copy()) return;
         }
         // Shift+arrow: extension. The cursor stays here too (law 39).
         else if (e.shiftKey && arrow) this._extendBy(key);
@@ -527,7 +796,7 @@ class RelGrid {
      * the task that created it.
      */
     takeControlAtCursor() {
-        if (this._deep || !this._cursor) return false;
+        if (this._locked() || !this._cursor) return false;
         var id = this._cursor;
         if (!this._mayTakeControl(id)) return false;
         var cell = this._cells.get(id.pk, id.column).cell;
@@ -587,7 +856,7 @@ class RelGrid {
     /** Programmatic shallow cursor; a position not presented is ignored. A
      *  BARE move, so it clears the list exactly as a click without a modifier does. */
     selectCell(pk, column) {
-        if (this._deep) return false;
+        if (this._locked()) return false;
         var at = this._maps.locate(pk, column);
         if (!at) return false;
         var moved = false, self = this;
@@ -599,14 +868,14 @@ class RelGrid {
 
     /** Extend to an identity — the shift gesture. The cursor does not move. */
     extendSelection(pk, column) {
-        if (this._deep) return false;
+        if (this._locked()) return false;
         var at = this._maps.locate(pk, column);
         return at ? this._extendTo(at.i, at.j) : false;
     }
 
     /** Add a 1x1 at an identity and go there — the ctrl gesture. */
     addToSelection(pk, column) {
-        if (this._deep) return false;
+        if (this._locked()) return false;
         var at = this._maps.locate(pk, column);
         if (!at) return false;
         this._selection.add({ i: at.i, j: at.j });
@@ -617,7 +886,7 @@ class RelGrid {
 
     /** The whole presented space, in one range. */
     selectAll() {
-        if (this._deep) return false;
+        if (this._locked()) return false;
         this._selection.all(this._maps.rows(), this._maps.cols());
         this._afterSelection();
         return true;
@@ -642,6 +911,7 @@ class RelGrid {
 
     cursor()   { return this._cursor ? { pk: this._cursor.pk, column: this._cursor.column } : null; }
     isDeep()   { return this._deep; }
+    isPending() { return !!this._pending; }
     focus()    { this._layout.focus(); return this; }
     viewMaps() { return this._maps; }
     el()       { return this._layout.el(); }
@@ -651,6 +921,8 @@ class RelGrid {
      *  are the domain's, and the next grid over this relation may find them. */
     destroy() {
         this._destroyed = true;                // a late settle must not resume a dead grid
+        if (this._pending && this._pending.timer) _hrgCancel(this._pending.timer);
+        this._pending = null;
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._cells.destroy();
         this._layout.destroy();

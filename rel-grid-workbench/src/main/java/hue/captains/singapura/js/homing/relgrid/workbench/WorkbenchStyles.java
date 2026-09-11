@@ -25,11 +25,16 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
         }
     }
 
-    /** The scrollport — flex:1 + min-height:0 so it takes the pane's leftover height and scrolls. */
+    /**
+     * The scrollport — flex:1 so it takes the pane's leftover height and scrolls.
+     * A floor, because the grid's copy panel is centred on what this shows of
+     * the table and clipped by it: below about 240px a panel that can hold
+     * anything no longer fits, which is the host's geometry and not the grid's.
+     */
     public record wb_host() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
                 flex: 1;
-                min-height: 0;
+                min-height: 240px;
                 overflow: auto;
                 border: 1px solid var(--color-border);
                 border-radius: 6px;

@@ -57,8 +57,15 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * <b>resolved</b> list, so an empty one reads as the cursor's own 1×1 and no
  * caller needs a case for "nothing selected" (law 40).</p>
  *
- * <p>Nothing consumes a selection yet. Copy, clear and bulk are later rounds,
- * and there is deliberately no verb here that reads one.</p>
+ * <h2>Copy is a question the grid waits for</h2>
+ *
+ * <p>Map 6 and ext6: {@code copy()} — Ctrl+C's twin — resolves the selection
+ * to identities, one block per range, and asks the channel what they are
+ * worth. While the answer is outstanding {@code isPending()} is true and the
+ * grid is <b>locked</b>: every intent above, and its programmatic twin here,
+ * is refused rather than deferred. The answer is finished content, which the
+ * grid writes through {@link #CLIPBOARD_OPTION_NAME} and reports through
+ * {@code onCopied}; absence writes nothing. Clear and bulk are later rounds.</p>
  *
  * <h2>Widths are geometry, the grid's alone</h2>
  *
@@ -79,6 +86,7 @@ public interface RelGridContract {
     boolean selectCell(String pk, String column);   // programmatic shallow cursor; a BARE move, so it clears
     Object  cursor();                               // { pk, column } or null — never a position
     boolean isDeep();                               // the one fact the grid holds about editing
+    boolean isPending();                            // the second: a question is outstanding, and the grid is locked
     void    focus();                                // the keyboard host
     // ─── the handover, in two stages (maps 15, 16) ───────────────────────
     boolean mayTakeControlAtCursor();               // ask WITHOUT opening: constraint, then the cell
@@ -90,6 +98,8 @@ public interface RelGridContract {
     void    clearSelection();
     Object  selectedRanges();                       // the RESOLVED list of { i0, j0, i1, j1 }
     int     selectionCount();                       // how many ranges were MADE; zero is the cursor's own
+    // ─── copy (map 6, ext6) ──────────────────────────────────────────────
+    boolean copy();                                 // ask what the selection is worth; write the answer. False when locked or channel-less
     // ─── widths (map 7) ──────────────────────────────────────────────────
     boolean setColumnWidth(String column, double px);   // bounded, held by identity, applied in place; false for drift
     Object  columnWidth(String column);                 // what is held, or null
@@ -103,7 +113,9 @@ public interface RelGridContract {
 
     String   JS_CLASS_NAME = "RelGrid";
     String[] CALLBACK_OPTION_NAMES = {
-            "onArranged", "onCursorMoved", "onControlTaken", "onControlReleased", "onColumnResized" };
+            "onArranged", "onCursorMoved", "onControlTaken", "onControlReleased", "onColumnResized", "onCopied" };
     /** The channel is not a callback: it is asked, and it answers. */
     String   CHANNEL_OPTION_NAME = "ask";
+    /** The clipboard writer: {@code { write(content) → thenable }}. The async Clipboard API unless the host says otherwise. */
+    String   CLIPBOARD_OPTION_NAME = "clipboard";
 }

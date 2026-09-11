@@ -56,6 +56,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(DishStore.INSTANCE),
                 CrateEntry.of(DishStarsCellModule.INSTANCE),
                 CrateEntry.of(DishRelation.INSTANCE),
+                CrateEntry.of(DishClipboard.INSTANCE),
                 CrateEntry.of(DishChefWidget.INSTANCE),
                 CrateEntry.of(DishNutritionistWidget.INSTANCE),
                 CrateEntry.of(DishManagerWidget.INSTANCE),

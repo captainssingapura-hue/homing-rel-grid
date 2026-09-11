@@ -70,13 +70,34 @@ only ever been proved against the one thing it was written for.
   takes the whole table. A bare click or arrow starts over. Watch the cursor while you extend:
   it does not move, because a selection reaches further and the cursor is not what reaches.
   With nothing selected the selection *is* the cursor's own cell, which is why one cell is
-  always tinted. Nothing consumes a selection yet — copy and bulk editing are later rounds, and
-  the list is built and shown on its own for now.
+  always tinted. Copy is the one thing that consumes it so far; bulk editing is a later round.
+- **Copy it.** Press **Ctrl+C** in any table — the Follower too, since reading is not editing.
+  The table dims and a **panel** appears over it: three formats, a header toggle, a live
+  preview, and Cancel. **T**, **C** or **H** choose; **← →** move between them; **Enter**
+  takes the one shown; **Esc** cancels. While the panel is up, try an arrow key or a click on
+  the table: nothing. The grid has asked a question and is **waiting on the answer**, and
+  until it has one the person is stopped — not slowed, not queued — because an answer
+  describes the state it was asked about, and a cursor that moved in the meantime would be
+  answered about the wrong cells. Choose **HTML** and paste into a spreadsheet or a mail: the
+  rating arrives as **stars**, because that is what you saw. Choose **TSV** and it arrives as
+  a number, because that is what a spreadsheet can add up.
+- Look at what the panel is. Its **box** is the grid's — a golden rectangle, sized to what you
+  can see of the table's host and centred on it — and its **content** is the bench's, drawn
+  by the same relation that owns the cells. The grid handed over identities (which dishes,
+  which columns) and got back finished text; it composed nothing, read nothing, and wrote
+  what it was given. The readout under the table says what was chosen and how much was
+  written; the first half is the bench remembering, the second half is the grid reporting.
 - Drag a header's right edge, or press **Alt+←/→** on a column. Widths are the grid's own
   geometry — held by column, applied in place — and are not remembered, because remembering is
   the domain's half.
 - Press **re-arrange** on any table: the slots are rebuilt and the same cells are placed again.
   Nothing is re-created.
+- **Watch the light.** Dock two tables and click into one: its frame catches the light — an
+  accent hairline, a bright catch on the inner top-left edge, a soft inner glow — and its
+  cursor comes to full strength, while the other table's cursor dims towards the border. Nothing
+  rises, nothing casts a shadow outward, nothing moves: **lit, not lifted**. Open an editor or
+  the copy panel and the light stays on, because the editor and the panel are the grid holding
+  the focus. This is the browser's own `:focus-within`, not a fact the grid keeps.
 
 ### Two ways to say no, and both are here
 
@@ -123,6 +144,47 @@ any of its modules so much as mentions a value.
 
 The readout under each table is **domain state** — the store's revision, the relation's cell
 count and what it may edit. It reads nothing from the grid either.
+
+### The first question the grid waits for
+
+Selection notifications were the channel's first customer, and they were the cheap kind: the
+grid told the domain and did not wait. Copy is the other kind. The grid asks
+`RelGridCopyRequested` — the selection resolved to identities, one block per range — and it
+**owes the person nothing until the domain answers**, so it masks the table and refuses every
+intent in the meantime (ext6, laws 220–221). The domain may ask the grid for the mask's
+**panel** and draw on it; here it draws the three formats. The answer is a
+`RelGridClipboardContent` — text, and an html when there is one — or nothing, for Cancel.
+
+The grid writes the answer through the async Clipboard API under the activation the person's
+click gave it, and when a page is denied that API by policy — an embedded page, say — through
+the copy command instead, which is gated on activation rather than policy. Both roads carry
+both forms. That is why copy is no longer the channel's synchronous exception: nothing here
+needs the browser's copy event, and everything here needs a panel.
+
+The panel's **geometry** is a rule, not a guess: a golden rectangle — width φ times height —
+no wider than the seen area over φ and no taller than its height over φ, whichever binds,
+centred, with a floor so a small table still gets a panel that can hold something and a
+ceiling so a vast one does not get a page. The seen area is the host's box, clipped to the
+window; a table three rows tall in a host with room below gets its panel in the middle of the
+host, not overflowing the table.
+
+### Later — themed lighting
+
+The focus hint is a slight hint of morphism, written over the studio's semantic tokens
+(`--color-accent`, `--color-border`, `--color-surface-raised`) so it follows any palette, light
+or dark. It is **not yet themeable in its own right**: a theme with an idiom of its own — a hard
+brutalist ring, a Material outline, a neumorphic relief — cannot say so today.
+
+The design for that is clear and small: a grid vocabulary of typed tokens
+(`--hrg-frame-rest`, `--hrg-frame-focus`, `--hrg-cursor-rest`, `--hrg-cursor-focus`,
+`--hrg-focus-transition`) that every registered theme provides, with today's values as the
+`var()` fallbacks, and a rule that a theme's frame values stay inset and cast nothing outward.
+**It waits on the theme design system**: the typed CSS substrate's vocabulary is the studio's
+alone today (`StudioVars`, with every `ThemeVariables` in studio-base providing exactly that
+set), so a component cannot contribute tokens without either a per-deployment `ThemeRegistry`
+wrapper or a fork of every shipped theme. Neither is the proper shape. When the substrate lets a
+component declare a vocabulary of its own and themes fill it, the grid's five tokens are the
+first customer.
 
 ### Entering a pane
 

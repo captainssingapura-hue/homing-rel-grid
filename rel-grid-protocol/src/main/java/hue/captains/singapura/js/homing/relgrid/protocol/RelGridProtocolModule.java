@@ -24,12 +24,17 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
 
     public record RelGridRange()            implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridSelectionChanged() implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelGridBlock()            implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelGridCopyRequested()    implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelGridClipboardContent() implements Exportable._Class<RelGridProtocolModule> {}
 
     public static final RelGridProtocolModule INSTANCE = new RelGridProtocolModule();
 
     @Override public ImportsFor<RelGridProtocolModule> imports() { return ImportsFor.noImports(); }
 
     @Override public ExportsOf<RelGridProtocolModule> exports() {
-        return new ExportsOf<>(INSTANCE, List.of(new RelGridRange(), new RelGridSelectionChanged()));
+        return new ExportsOf<>(INSTANCE, List.of(
+                new RelGridRange(), new RelGridSelectionChanged(),
+                new RelGridBlock(), new RelGridCopyRequested(), new RelGridClipboardContent()));
     }
 }

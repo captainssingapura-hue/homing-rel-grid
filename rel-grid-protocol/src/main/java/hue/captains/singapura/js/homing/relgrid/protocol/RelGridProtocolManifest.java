@@ -25,5 +25,11 @@ public final class RelGridProtocolManifest {
             ObjectDefinition.of(RelGridRange.class),
             // The first kind, and a notification: it carries ranges, so it
             // comes after them.
-            ObjectDefinition.of(RelGridSelectionChanged.class));
+            ObjectDefinition.of(RelGridSelectionChanged.class),
+            // A range resolved to identities: depends on nothing.
+            ObjectDefinition.of(RelGridBlock.class),
+            // The first question the grid waits for — it carries blocks.
+            ObjectDefinition.of(RelGridCopyRequested.class),
+            // Its answer: finished content, and no dependencies.
+            ObjectDefinition.of(RelGridClipboardContent.class));
 }

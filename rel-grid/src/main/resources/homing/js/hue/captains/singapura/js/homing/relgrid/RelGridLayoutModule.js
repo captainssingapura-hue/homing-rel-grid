@@ -22,19 +22,63 @@
 //
 // The table sits in a WRAPPER the layout owns. Two things need somewhere to
 // live that is not a table cell: an editor, which must be free to be larger
-// than the cell it edits, and (later) a mask. Both are positioned in the
-// wrapper's own coordinates, so they scroll with the table for free and no
-// scroll listener is needed anywhere.
+// than the cell it edits, and a MASK, which must cover the whole table. Both
+// are positioned in the wrapper's own coordinates, so they scroll with the
+// table for free and no scroll listener is needed anywhere.
+//
+// THE MASK (ext6) is the layout's second overlay. It dims the table so what is
+// under it reads as unavailable, and it takes the focus so no key reaches the
+// table beneath. Inside it the layout mints a PANEL on request — a golden
+// rectangle at the golden section of what the person sees of the host's box —
+// and hands it over as it hands a slot to a cell: the box is the grid's, what goes in it is the
+// domain's, and the layout never reads what was drawn.
 //
 //   new RelGridLayout({ container, label?, showHeader?, overflow?, onCellClick?,
 //                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize? })
+//   openOverlay(i, j) / closeOverlay()        the editor's anchor, over a slot
+//   openMask() / openPanel() / closeMask()    the mask, and the canvas in it
 // =============================================================================
 
 var _HRG_STYLE_ID = "homing-rel-grid-style";
 var _HRG_STYLE_CSS = [
     // The positioned parent for anything that is not a cell.
     ".hrg-wrap{position:relative;}",
+    // LIT, NOT LIFTED. The grid that holds the focus is visibly the grid that
+    // holds the focus, and it says so with light: a frame that catches it, and
+    // a cursor at full strength only then. Nothing moves — no elevation, no
+    // offset shadow, no transform — because a table that rises when clicked
+    // reads as a card. The frame is a layer OVER the table, drawn INSET,
+    // because a host that mounts the grid in a scrollport clips anything
+    // outside the box; it takes no pointer and sits under the editor (50) and
+    // the mask (60). Focus is :focus-within — the browser's own fact — so the
+    // editor's overlay and the mask's panel count as the grid holding it, and
+    // the grid keeps no fact of its own.
+    //
+    // A hint of morphism, over the semantic tokens only, so it follows any
+    // palette: an accent-tinted hairline, a catch of light on the inner
+    // top-left edge (white mixed into the raised surface, so a dark theme gets
+    // a dim catch), and a soft inner glow.
+    //
+    // LATER — themed lighting. A theme with an idiom of its own (a hard
+    // brutalist ring, a Material outline, a neumorphic relief) should be able
+    // to say so, and the way to do that in the typed CSS substrate is a grid
+    // vocabulary of tokens (--hrg-frame-rest, --hrg-frame-focus, --hrg-cursor-
+    // rest, --hrg-cursor-focus, --hrg-focus-transition) that every registered
+    // theme provides, with these values as the fallbacks. Not done here: the
+    // substrate's vocabulary is the studio's alone today (StudioVars, with
+    // every ThemeVariables in studio-base providing exactly it), so a component
+    // cannot yet contribute tokens without either a per-deployment registry
+    // wrapper or a fork of every theme. It waits on the theme design system
+    // growing a way for a component to declare a vocabulary of its own.
+    ".hrg-wrap::after{content:\"\";position:absolute;left:0;top:0;right:0;bottom:0;",
+    "  pointer-events:none;z-index:40;",
+    "  box-shadow:inset 0 0 0 1px var(--color-border);",
+    "  transition:box-shadow .18s ease;}",
+    ".hrg-wrap:focus-within::after{",
+    "  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 60%, var(--color-border)),",
+    "    inset 1px 1px 0 1px color-mix(in srgb, white 35%, var(--color-surface-raised)),",
+    "    inset 0 0 14px color-mix(in srgb, var(--color-accent) 18%, transparent);}",
     // An editor lives HERE, not in its slot: out of the table it cannot widen a
     // column, cannot stretch a row, and is not clipped by the slot — so a cell
     // may open something LARGER than itself. The grid places it over the slot
@@ -42,6 +86,18 @@ var _HRG_STYLE_CSS = [
     ".hrg-edit{position:absolute;z-index:50;box-sizing:border-box;",
     "  background:var(--color-surface);color:var(--color-text-primary);",
     "  outline:2px solid var(--color-accent);outline-offset:-2px;}",
+    // THE MASK. Over the whole table, in the wrapper: a wash heavy enough that
+    // the rows beneath read as unavailable rather than current, and focusable
+    // so the keys stop here. It dims rather than replaces — the context stays,
+    // nothing jumps — which ext6 argued for and this is.
+    ".hrg-mask{position:absolute;left:0;top:0;right:0;bottom:0;z-index:60;outline:none;",
+    "  background:color-mix(in srgb, var(--color-surface) 64%, transparent);}",
+    // THE PANEL: the domain's canvas, sized by the grid. Raised, bordered,
+    // and scrolling inside itself if the domain draws more than fits.
+    ".hrg-panel{position:absolute;box-sizing:border-box;overflow:auto;outline:none;",
+    "  background:var(--color-surface-raised);color:var(--color-text-primary);",
+    "  border:1px solid var(--color-border);border-radius:8px;",
+    "  box-shadow:0 12px 36px rgba(0,0,0,0.32);}",
     // What a slot does with content too wide for it. The grid decides, because
     // it is the slot's box.
     //
@@ -93,8 +149,12 @@ var _HRG_STYLE_CSS = [
     // the cursor's 1x1, so the cursor's slot is always one of them.
     ".hrg-td.hrg-sel{background:color-mix(in srgb, var(--color-accent) 12%, transparent);}",
     // The cursor: painted on the slot, never on the cell. Solid while shallow;
-    // dashed while the cell is deep, so the handover is visible.
-    ".hrg-td.hrg-cursor{outline:2px solid var(--color-accent);outline-offset:-2px;}",
+    // dashed while the cell is deep, so the handover is visible. Full accent
+    // only while the grid holds the focus; dimmed towards the border otherwise,
+    // so a cursor in a table that is NOT listening does not look like one that is.
+    ".hrg-td.hrg-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));",
+    "  outline-offset:-2px;transition:outline-color .18s ease;}",
+    ".hrg-wrap:focus-within .hrg-td.hrg-cursor{outline-color:var(--color-accent);}",
     ".hrg-table.hrg-deep .hrg-td.hrg-cursor{outline-style:dashed;}"
 ].join("\n");
 
@@ -138,6 +198,60 @@ function _hrgHasClass(el, c) {
     return false;
 }
 
+var _HRG_PHI = (1 + Math.sqrt(5)) / 2;          // φ ≈ 1.618
+var _HRG_PANEL_MIN_W = 320, _HRG_PANEL_MAX_W = 720;
+
+/**
+ * The panel's box inside a visible area of W×H: the largest GOLDEN RECTANGLE
+ * that sits at the golden section of the area in BOTH dimensions.
+ *
+ * The panel is itself golden — its width is φ times its height — and it
+ * takes at most the larger part of the golden cut of each dimension: no
+ * wider than W/φ, no taller than H/φ, whichever binds. So over a wide, short
+ * table it is the height that decides, and over a tall, narrow one the
+ * width. It is centred. Two bounds keep it usable rather than merely
+ * proportional: a floor, so a small table still mints a panel that can hold
+ * something, and a ceiling, so a vast one does not mint a page. Under the
+ * floor the panel may overflow a small area; that is the floor doing its job,
+ * and it is the host's geometry that decides whether the overflow is seen.
+ *
+ * Whole pixels, so the edges are crisp.
+ */
+function _hrgGoldenBox(W, H) {
+    // h ≤ H/φ with h = w/φ means w ≤ H; and w ≤ W/φ. The tighter one wins.
+    var w = Math.min(W / _HRG_PHI, H);
+    w = Math.max(_HRG_PANEL_MIN_W, Math.min(_HRG_PANEL_MAX_W, w));
+    var h = w / _HRG_PHI;
+    return {
+        left:   Math.round((W - w) / 2),
+        top:    Math.round((H - h) / 2),
+        width:  Math.round(w),
+        height: Math.round(h)
+    };
+}
+
+/**
+ * The area the panel is centred on, in the wrapper's own coordinates: the
+ * CONTAINER the host gave the grid, clipped to the viewport.
+ *
+ * Not the table. The mask dims the table, but the panel is for the person,
+ * and what the person sees is the host's box: a scrollport shows part of a
+ * tall table and all of a short one with room to spare, and in both cases the
+ * panel belongs in the middle of that box — not in the middle of a table
+ * whose middle may be off-screen, or whose height is a third of the panel's.
+ * The viewport clip is for a container taller than the window, so the panel
+ * lands on the screen rather than on the page.
+ */
+function _hrgVisibleBox(wrap, container, viewport) {
+    var a = container;
+    if (viewport) {
+        var l = Math.max(a.left, viewport.left), t = Math.max(a.top, viewport.top);
+        var r = Math.min(a.right, viewport.right), b = Math.min(a.bottom, viewport.bottom);
+        if (r > l && b > t) a = { left: l, top: t, width: r - l, height: b - t };
+    }
+    return { left: a.left - wrap.left, top: a.top - wrap.top, width: a.width, height: a.height };
+}
+
 class RelGridLayout {
 
     constructor(opts) {
@@ -179,6 +293,8 @@ class RelGridLayout {
         this._wrap.appendChild(this._table);
         this._container.appendChild(this._wrap);
         this._overlay = null;
+        this._mask = null;       // the mask, while a question is pending
+        this._panel = null;      // the domain's canvas inside it, once asked for
         _hrgAddClass(this._table, _hrgOverflowClass(opts.overflow));
         this._slots = [];        // [i][j] → td
         this._cursorTd = null;   // the slot currently painted as the cursor
@@ -364,9 +480,78 @@ class RelGridLayout {
 
     overlay() { return this._overlay; }
 
+    /**
+     * Mount the mask over the table, and give it the focus so the keys stop
+     * here. Idempotent: a second call while one is up is the same mask. What
+     * it says is nothing until the domain asks for the panel — the grid
+     * invents no progress (ext6 law 225).
+     */
+    openMask() {
+        if (this._mask) return this._mask;
+        var el = document.createElement("div");
+        el.className = "hrg-mask";
+        el.setAttribute("tabindex", "-1");         // focusable, and not in the tab order
+        this._wrap.appendChild(el);
+        this._mask = el;
+        this._panel = null;
+        if (el.focus) el.focus({ preventScroll: true });   // it is already in view; a scroll would move the table
+        return el;
+    }
+
+    /**
+     * Mint the panel — the domain's canvas — inside the mask, mounting the
+     * mask first if it is not up. Sized by the golden rule over the wrapper's
+     * box as it is NOW, and centred on it; minted once per mask, so a second
+     * call answers the same element. The focus moves into it, and the domain
+     * may move it further in.
+     */
+    openPanel() {
+        var mask = this.openMask();
+        if (this._panel) return this._panel;
+        // Centred on what the person can SEE of the host's box, sized by the
+        // golden rule over that, and placed in the wrapper's coordinates so it
+        // scrolls with the table like everything else the wrapper holds.
+        var vp = (typeof window !== "undefined" && window.innerWidth)
+               ? { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight } : null;
+        var seen = _hrgVisibleBox(this._wrap.getBoundingClientRect(), this._container.getBoundingClientRect(), vp);
+        var box = _hrgGoldenBox(seen.width, seen.height);
+        var el = document.createElement("div");
+        el.className = "hrg-panel";
+        el.setAttribute("tabindex", "-1");
+        var st = el.style;
+        if (st && st.setProperty) {
+            st.setProperty("left",   (seen.left + box.left) + "px");
+            st.setProperty("top",    (seen.top + box.top) + "px");
+            st.setProperty("width",  box.width + "px");
+            st.setProperty("height", box.height + "px");
+        }
+        mask.appendChild(el);
+        this._panel = el;
+        if (el.focus) el.focus({ preventScroll: true });   // it is already in view; a scroll would move the table
+        return el;
+    }
+
+    /** Take the mask down, panel and all. Whatever the domain drew goes with it. */
+    closeMask() {
+        if (this._mask && this._mask.parentNode)
+            this._mask.parentNode.removeChild(this._mask);
+        this._mask = null;
+        this._panel = null;
+        return this;
+    }
+
+    mask()  { return this._mask; }
+    panel() { return this._panel; }
+
     /** The table wears the deep state, so CSS and tests can see the handover. */
     setDeep(on) {
         if (on) _hrgAddClass(this._table, "hrg-deep"); else _hrgRemoveClass(this._table, "hrg-deep");
+        return this;
+    }
+
+    /** And the masked state, for the same reason. */
+    setMasked(on) {
+        if (on) _hrgAddClass(this._table, "hrg-masked"); else _hrgRemoveClass(this._table, "hrg-masked");
         return this;
     }
 
@@ -386,6 +571,7 @@ class RelGridLayout {
     destroy() {
         document.removeEventListener("mouseup", this._mouseup);
         this.closeOverlay();
+        this.closeMask();
         if (this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
         this._slots = [];
         this._cursorTd = null;

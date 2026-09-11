@@ -13,7 +13,9 @@ package hue.captains.singapura.js.homing.relgrid;
  * carry a {@code style} with custom-property support and a
  * {@code getBoundingClientRect} fed by {@code _rl / _rr} so a header drag can
  * be driven headlessly; {@code document} takes listeners of its own, which is
- * where a drag listens for the pointer.</p>
+ * where a drag listens for the pointer. Timers are <b>fake</b>: {@code setTimeout}
+ * arms, nothing fires until a test calls {@code runTimers()}, so the mask's
+ * delay and hold are driven rather than waited for.</p>
  */
 final class RelGridTestDom {
 
@@ -117,6 +119,20 @@ final class RelGridTestDom {
                 parentNode: null
             });
             var console = console || { error: function () {} };
+            // Fake timers. Armed here, fired by the test, in the order they were
+            // due: the grid's mask delay and hold are driven, never waited for.
+            var __timers = [], __tid = 0;
+            function setTimeout(fn, ms) { __timers.push({ id: ++__tid, fn: fn, ms: ms || 0 }); return __tid; }
+            function clearTimeout(id) {
+                for (var k = 0; k < __timers.length; k++) if (__timers[k].id === id) { __timers.splice(k, 1); return; }
+            }
+            function runTimers() {
+                var due = __timers.slice().sort(function (a, b) { return a.ms - b.ms || a.id - b.id; });
+                __timers = [];
+                for (var k = 0; k < due.length; k++) due[k].fn();
+                return due.length;
+            }
+            function pendingTimers() { return __timers.length; }
             """;
 
     /** A relation with NO get: identities, columns, and a manager that owns its cells. */
@@ -165,6 +181,7 @@ final class RelGridTestDom {
                 var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
                 var container = makeEl('div');
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
+                var written = [], copied = [], handles = [];
                 var grid = new RelGrid({
                     container: container, branch: branch, relation: relation,
                     onArranged:      function (k) { arranged.push(k); },
@@ -172,13 +189,17 @@ final class RelGridTestDom {
                     onControlTaken:    function (pk, col) { started.push(pk + " " + col); },
                     onControlReleased: function (pk, col) { ended.push(pk + " " + col); },
                     onColumnResized: function (col, px) { resized.push(col + ' ' + px); },
-                    // THE CHANNEL. A notification arrives here; the fixture records it and,
-                    // unless a test says otherwise, answers with a resolved promise — which
-                    // the grid must not wait for.
-                    ask: opts.noAsk ? undefined : function (q) {
-                        sent.push(q);
-                        return opts.ask ? opts.ask(q) : Promise.resolve();
-                    }
+                    onCopied: function (c) { copied.push(c); },
+                    // THE CHANNEL. Every question arrives here with the mask handle; the
+                    // fixture records both and, unless a test says otherwise, answers with
+                    // a resolved promise — nothing for a notification, and nothing (absence)
+                    // for a question.
+                    ask: opts.noAsk ? undefined : function (q, mask) {
+                        sent.push(q); handles.push(mask);
+                        return opts.ask ? opts.ask(q, mask) : Promise.resolve();
+                    },
+                    // The clipboard is a recorder: what the grid would have written.
+                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } }
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 // container > WRAPPER > table. The wrapper is the grid's own, and is
@@ -186,6 +207,14 @@ final class RelGridTestDom {
                 function wrap()    { return container.children[0]; }
                 function table()   { return wrap().children[0]; }
                 function overlay() { return wrap().children[1] || null; }
+                // The mask is whichever wrapper child wears hrg-mask; the panel is its child.
+                function mask() {
+                    var w = wrap();
+                    for (var k = 0; k < w.children.length; k++)
+                        if ((w.children[k].className || '').split(' ').indexOf('hrg-mask') >= 0) return w.children[k];
+                    return null;
+                }
+                function panel() { var m = mask(); return (m && m.children[0]) || null; }
                 function part(tag) { var t = table(); for (var k = 0; k < t.children.length; k++) if (t.children[k].tagName === tag) return t.children[k]; return null; }
                 function tbody() { return part('tbody'); }
                 function headerRow() { return part('thead').children[0]; }
@@ -242,8 +271,14 @@ final class RelGridTestDom {
                 return { grid: grid, relation: relation, container: container, data: data,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
-                         wrap: wrap, overlay: overlay,
-                         sent: sent,
+                         wrap: wrap, overlay: overlay, mask: mask, panel: panel,
+                         sent: sent, handles: handles, written: written, copied: copied,
+                         // The last COPY question, or null. (asked() is the cellFor count.)
+                         copyAsked: function () {
+                             for (var k = sent.length - 1; k >= 0; k--)
+                                 if (sent[k] instanceof RelGridCopyRequested) return sent[k];
+                             return null;
+                         },
                          // The ranges of the last selection notification, as 'i0,j0..i1,j1'.
                          told: function () {
                              for (var k = sent.length - 1; k >= 0; k--) {
