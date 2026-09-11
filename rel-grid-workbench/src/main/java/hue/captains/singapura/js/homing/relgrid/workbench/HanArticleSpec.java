@@ -1,0 +1,70 @@
+package hue.captains.singapura.js.homing.relgrid.workbench;
+
+import hue.captains.singapura.js.homing.workspace.shell.ActionDispatch;
+import hue.captains.singapura.js.homing.workspace.shell.PartyDecl;
+import hue.captains.singapura.js.homing.workspace.RibbonItem;
+import hue.captains.singapura.js.homing.workspace.shell.WidgetCodecRef;
+import hue.captains.singapura.js.homing.workspace.WidgetDescription;
+import hue.captains.singapura.js.homing.workspace.WidgetEntry;
+import hue.captains.singapura.js.homing.workspace.WidgetGroup;
+import hue.captains.singapura.js.homing.workspace.WidgetIcon;
+import hue.captains.singapura.js.homing.workspace.WidgetLabel;
+import hue.captains.singapura.js.homing.workspace.shell.WorkspaceSpec;
+import hue.captains.singapura.js.homing.workspace.shell.WorkspaceSpecRegistry;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Han Article ({@code ws_kind=hanArticle}): a WYSIWYG Chinese article, edited
+ * and displayed through the Relation Grid, every character in a strictly
+ * square cell, nine to a row.
+ *
+ * <p>First iteration: one glyph, one square; a hard-coded poem as the seed;
+ * an editor whose squares commit to the shared article — replace, insert,
+ * delete — and displays that follow through the store. What this bench is
+ * going to ask of the grid comes in the next iterations: punctuation that
+ * shares a square, and the two half-width columns, leading and trailing, that
+ * a mark at the end of a line is squeezed into rather than starting the next
+ * line with it.</p>
+ */
+public final class HanArticleSpec implements WorkspaceSpec {
+
+    public static final HanArticleSpec INSTANCE;
+
+    static {
+        INSTANCE = new HanArticleSpec();
+        WorkspaceSpecRegistry.INSTANCE.register(INSTANCE);
+    }
+
+    private HanArticleSpec() {}
+
+    @Override public String kind()  { return "hanArticle"; }
+    @Override public String title() { return "Han Article · 方格"; }
+
+    @Override
+    public List<WidgetEntry> widgetEntries() {
+        return List.of(
+                WidgetEntry.of(HanEditorWidget.class, WidgetLabel.of("Editor"))
+                        .withIcon(new WidgetIcon.Emoji("✍️"))
+                        .withGroup(WidgetGroup.of("Editors"))
+                        .withDescription(WidgetDescription.of(
+                                "Nine squares to a row, one glyph each. Enter on a square to replace, "
+                              + "insert or delete; an input method composes in the square. One instance.")),
+                WidgetEntry.of(HanDisplayWidget.class, WidgetLabel.of("Display"))
+                        .withIcon(new WidgetIcon.Emoji("📜"))
+                        .withGroup(WidgetGroup.of("Replicas"))
+                        .withDescription(WidgetDescription.of(
+                                "The same article, read-only, over the same store. Dock several; "
+                              + "every one moves on every commit, and none of their grids is told."))
+        );
+    }
+
+    @Override public List<RibbonItem> ribbonItems() { return List.of(); }
+    @Override public List<PartyDecl> parties() { return List.of(); }
+    @Override public Map<String, ActionDispatch> actionDispatch() { return Map.of(); }
+    @Override public List<WidgetCodecRef> widgetCodecs() { return List.of(); }
+
+    /** Nothing pinned — displays must stay spawnable many times. */
+    @Override public List<String> pinnedSpawns() { return List.of(); }
+}

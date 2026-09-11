@@ -23,8 +23,11 @@ class GridWorkbenchBootsTest {
     @Test
     void theBenchListIsTheRegistration() {
         assertEquals("replicatingTables", GridWorkbenchStudio.landingKind());
-        assertEquals(1, GridWorkbenchStudio.benches().size());
+        assertEquals(2, GridWorkbenchStudio.benches().size());
         // Three editors with different rights and a follower — the bench's four specimens.
         assertEquals(4, ReplicatingTablesSpec.INSTANCE.widgetEntries().size());
+        // An editor and a display — the Han Article bench's two specimens.
+        assertEquals("hanArticle", HanArticleSpec.INSTANCE.kind());
+        assertEquals(2, HanArticleSpec.INSTANCE.widgetEntries().size());
     }
 }

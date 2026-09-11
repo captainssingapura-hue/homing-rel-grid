@@ -60,6 +60,14 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(DishChefWidget.INSTANCE),
                 CrateEntry.of(DishNutritionistWidget.INSTANCE),
                 CrateEntry.of(DishManagerWidget.INSTANCE),
-                CrateEntry.of(DishFollowerWidget.INSTANCE));
+                CrateEntry.of(DishFollowerWidget.INSTANCE),
+                // Han Article: an article as rows of square slots, a cell per
+                // square, an editor and its displays over one persisted string.
+                CrateEntry.of(HanLayout.INSTANCE),
+                CrateEntry.of(HanStore.INSTANCE),
+                CrateEntry.of(HanCellModule.INSTANCE),
+                CrateEntry.of(HanRelation.INSTANCE),
+                CrateEntry.of(HanEditorWidget.INSTANCE),
+                CrateEntry.of(HanDisplayWidget.INSTANCE));
     }
 }

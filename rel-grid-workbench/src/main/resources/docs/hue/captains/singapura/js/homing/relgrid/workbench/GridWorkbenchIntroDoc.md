@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid.
+A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article**.
 
 ---
 
@@ -192,6 +192,61 @@ A workspace pane is **inert until you enter it**: click the pane, press **Enter*
 it, then click a cell. Without that first Enter the keystrokes stay with the workspace and the
 grid looks unresponsive, which is not a defect any bench is about. Double-click needs no pane
 Enter at all.
+
+## Han Article · 方格
+
+The second bench, and the first that is not a table of records: a **Chinese article**, edited and
+displayed through the grid, every character in a **strictly square** cell, nine to a row. It
+starts as 張繼's 楓橋夜泊 —
+
+> 月落乌啼霜满天，江枫渔火对愁眠。姑苏城外寒山寺，夜半钟声到客船。
+
+— and it exists to ask the grid a question the dish list never could: what happens when the cells
+are not values in columns but **ink in squares**, and the ink moves.
+
+Switch the workspace kind to **Han Article** and dock the **Editor** and a **Display** or two.
+
+### What it is
+
+- **One glyph, one square.** The rendering engine (`hanLayout`) turns the text into rows of nine
+  slots: one character a slot, a newline ends the row, a full last row gets an empty one after it
+  so there is always somewhere to type. Every slot knows where in the text a commit to it goes.
+- **Identity is the square, not the character.** The relation's rows are `r0`…, its columns
+  `c0`…`c8`, and a glyph is what a square currently shows. On every change the relation re-lays
+  the article out and sets its own cells; the squares stay put and the ink moves. That is the
+  right way round for a manuscript grid — and it is the same "the domain updates its own cells,
+  the grid is never told" as the dish list, over a very different domain.
+- **Strictly square by construction.** The grid sets nine columns to one width; the cell fills it
+  and makes itself exactly as tall as it is wide (`aspect-ratio: 1`), sizing its glyph from the
+  square with container units. There is one number in the whole geometry, and it is the column's.
+- **A capacity, and a view.** A grid reads its relation's identities once, at construction, and
+  keeps them. An article grows, so the relation declares a **capacity** of two hundred rows and
+  the host presents the prefix in use — `rowView` at construction, `viewMaps().setRowView(...)`
+  when a commit changes the row count. Only presented rows are asked for cells: thirty-six for the
+  poem, not eighteen hundred. This is the seam sort and filter will drive through the channel in
+  a later round; today the host calls it.
+
+### What to try
+
+- Click or arrow to a square, **Enter** to edit. Type **one** character and Enter: the glyph is
+  replaced. Type **several**: they are inserted, and the line wraps — the tenth character lands
+  on a new row, every later row moves down one, and both tables move. Type **nothing** and Enter:
+  the glyph is deleted and the article closes up.
+- Use a **Chinese input method** in the square. Its Enter takes the candidate and is left to it;
+  the cell commits only on an Enter outside a composition, because a cell that committed on the
+  IME's Enter would commit the pinyin.
+- Watch the cursor across a re-flow. It stays on its **square** (`r2`, `c0`) while the character
+  under it changes, because the cursor is an identity and the identity here is positional.
+
+### Later — punctuation, and two columns the grid does not have
+
+The next iterations are the point of the bench. In a manuscript grid two punctuation marks
+share one square, and a mark that falls at the **end of a line** may not start the next one, so
+it is **squeezed** into a half-width column past the ninth square — and, symmetrically, a
+half-width column before the first. Those two columns are hidden until needed, and they are the
+grid's business: a column with a declared width of half a square, present in the relation and
+shown or hidden by view, is something the grid must be able to arrange. That is where this bench
+starts asking.
 
 ## Adding a bench
 

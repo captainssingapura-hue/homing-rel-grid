@@ -13,6 +13,9 @@
 //       header?,          // { show?, labels? } — display only
 //       overflow?,        // wrap | clip | ellipsis — what a slot does with content
 //                         // too wide for it. Default ellipsis.
+//       rowView?,         // the identities to PRESENT at first, in order — a subset of
+//                         // relation.pks(). Default: all of them. For a relation that
+//                         // declares more than it shows; later remaps go through viewMaps().
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -276,6 +279,7 @@ class RelGrid {
         this._maps = new RelGridViewMaps({
             pks: r.pks(),
             columns: r.columns(),
+            rowView: opts.rowView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({

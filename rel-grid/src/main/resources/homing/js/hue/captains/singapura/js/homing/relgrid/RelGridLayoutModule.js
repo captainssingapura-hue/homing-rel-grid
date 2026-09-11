@@ -555,7 +555,9 @@ class RelGridLayout {
         return this;
     }
 
-    focus() { if (this._table.focus) this._table.focus(); return this; }
+    /** The keyboard host takes the keys. Without scrolling: a table taller than its pane
+     *  would otherwise be pulled into view on every resume, moving the rows under the pointer. */
+    focus() { if (this._table.focus) this._table.focus({ preventScroll: true }); return this; }
 
     el() { return this._table; }
 
