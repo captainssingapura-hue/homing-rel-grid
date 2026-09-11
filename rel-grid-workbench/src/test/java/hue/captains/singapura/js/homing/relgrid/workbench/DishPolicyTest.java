@@ -26,7 +26,7 @@ class DishPolicyTest extends JsModuleTestBase {
     private static final String BENCH_DIR = GRID_DIR + "workbench/";
 
     /** Enough DOM for a stock cell to open and close an input, and a localStorage the store can persist to. */
-    private static final String DOM_STUB = """
+    static final String DOM_STUB = """
             var __focused = null;
             function makeEl(tag) {
                 var el = { tagName: tag, id: '', className: '', textContent: '', value: '', children: [], parentNode: null, _l: {},

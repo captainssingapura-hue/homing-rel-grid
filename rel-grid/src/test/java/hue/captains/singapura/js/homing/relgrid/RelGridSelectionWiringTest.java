@@ -318,7 +318,7 @@ class RelGridSelectionWiringTest extends JsModuleTestBase {
     }
 
     @Test
-    void theSelectionIsToldThroughTheChannelAndNothingConsumesIt() {
+    void theSelectionIsToldThroughTheChannelAndOnlyCopyConsumesIt() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture();
@@ -331,12 +331,13 @@ class RelGridSelectionWiringTest extends JsModuleTestBase {
                     if (f.told() !== '0,0..2,1 0,1..0,1') return false;      // both, in creation order
                     f.grid.clearSelection();
                     if (f.told() !== '0,1..0,1') return false;               // back to the cursor's own
-                    // THE BOUNDARY OF THIS ROUND: the grid has no verb that reads a selection.
-                    // Copy, clear and bulk arrive later; their absence is deliberate.
-                    var verbs = ['copy', 'copySelection', 'clearCells', 'deleteRows', 'bulkEdit', 'fill'];
+                    // THE BOUNDARY OF THIS ROUND: copy is the ONE verb that reads a selection.
+                    // Clear and bulk arrive later; their absence is deliberate.
+                    if (typeof f.grid.copy !== 'function') return false;
+                    var verbs = ['copySelection', 'clearCells', 'deleteRows', 'bulkEdit', 'fill'];
                     for (var k = 0; k < verbs.length; k++) if (typeof f.grid[verbs[k]] === 'function') return false;
                     return true;
-                })()"""), "the resolved selection is told through the channel; no verb on the grid consumes one");
+                })()"""), "the resolved selection is told through the channel; copy is the one verb that reads it");
     }
 
     @Test

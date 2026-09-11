@@ -129,6 +129,19 @@ class DishStarsCell {
     value() { return this._value; }
     draft() { return this._draft; }
 
+    /**
+     * What this cell is worth on a clipboard that takes HTML: the stars a
+     * person SAW, not the number underneath. A literal colour rather than a
+     * theme token, because the clipboard leaves the page and a token means
+     * nothing in a spreadsheet. Not on the cell contract — the grid never
+     * asks it; the domain's copier does (map 6 law 48).
+     */
+    clipboardHtml() {
+        if (this._value == null) return "—";
+        return '<span style="color:#e0a300;letter-spacing:2px" title="' + this._value + ' of 5">'
+             + this._starsFor(this._value) + "</span>";
+    }
+
     onSelect(mode) { this._mode = mode; }
     mode() { return this._mode; }
 

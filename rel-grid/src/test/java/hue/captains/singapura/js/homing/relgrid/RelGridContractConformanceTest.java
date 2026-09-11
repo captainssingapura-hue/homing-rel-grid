@@ -109,6 +109,8 @@ class RelGridContractConformanceTest extends JsModuleTestBase {
             if (!src.contains("opts." + opt)) unread.add(opt);
         if (!src.contains("opts." + RelGridContract.CHANNEL_OPTION_NAME))
             unread.add(RelGridContract.CHANNEL_OPTION_NAME);
+        if (!src.contains("opts." + RelGridContract.CLIPBOARD_OPTION_NAME))
+            unread.add(RelGridContract.CLIPBOARD_OPTION_NAME);
         assertEquals(List.of(), unread,
                 "a declared option nobody reads is a promise the grid does not keep");
     }
