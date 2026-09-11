@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+    <artifactId>homing-rel-grid</artifactId>
+    <version>VOID-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <description>
+        The Relation Grid (RFC 0050 · Episode 2), as its own project. A grid
+        that captures intents and ARRANGES cells, and holds no value: a
+        relation is identities, columns and a cell manager, the domain owns
+        every cell for its whole life, and edit, commit and update are the
+        domain's operations that never change an arrangement.
+
+        rel-grid-protocol is the ask protocol: every question and answer
+        declared once as a Java record, its JS class generated at build time.
+
+        rel-grid-selection is the selection: an ordered list of ranges over
+        positions, in a module that imports nothing at all.
+
+        rel-grid is the primitive — plain JS classes with no runtime
+        dependency on anything, packaged as homing DomModules for this stack.
+        rel-grid-workbench is the solo studio of benches that try to make it
+        fail, on the workspace shell.
+    </description>
+
+    <modules>
+        <module>rel-grid-protocol</module>
+        <module>rel-grid</module>
+        <module>rel-grid-selection</module>
+        <module>rel-grid-workbench</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- The homing core RELEASE this builds against, so a clean machine
+             builds it without installing core first. Override for local
+             core work: mvn -Dhoming.core.version=LOCAL-SNAPSHOT ... -->
+        <homing.core.version>0.8.1</homing.core.version>
+        <junit.version>5.11.3</junit.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

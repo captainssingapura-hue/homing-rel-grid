@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>VOID-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-grid</artifactId>
+
+    <description>
+        The Relation Grid primitive (RFC 0050 · Episode 2). The root principle
+        is the whole contract: the grid captures intents and arranges cells;
+        it holds, fetches, pushes and writes NO VALUE. A relation is
+        identities, columns and a CELL MANAGER (cellFor) — the grid asks for a
+        cell once per identity and places it; the domain owns the cell for its
+        whole life and updates it directly.
+
+        What is here: arrangement over an immutable root relation; a cursor
+        that is an identity with a position as its fallback; the shallow/deep
+        discipline (single click and arrows are the grid's; Enter or a
+        double-click hands the cell control until it releases); column widths
+        held by identity, applied by position, in place. What is not: sort,
+        filter, selection ranges — the relation's and later rounds'.
+
+        Value-freedom is enforced mechanically — a test scans every grid
+        module for the value verbs and fails the build on the first one. The
+        JS has no runtime dependency on homing; the Java side is packaging.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-selection</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-protocol</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- One dependency = a working JS test runtime (GraalVM polyglot
+             rides along from the fixtures module). -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ssjs-test-fixtures</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

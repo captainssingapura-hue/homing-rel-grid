@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>VOID-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-grid-selection</artifactId>
+
+    <description>
+        The Relation Grid's selection (RFC 0050 · Episode 2, map 5), and
+        nothing else. A selection is an ORDERED LIST OF RANGES, each a
+        rectangle of positions owning both its corners, the smallest 1x1,
+        never merged and never reordered. The module manages that list and
+        answers what is selected when something else is triggered; it never
+        initiates anything.
+
+        A module of its own because the guarantee is worth making structural:
+        this one imports NOTHING. Not the view maps, not the layout, not the
+        cells, not the cursor — the two operations that need any of those take
+        them as arguments (the cursor's position for the implicit 1x1, the
+        extents for select-all). No DOM. Positions in, positions out, which is
+        why its whole test suite runs on a bare JS context with no stub.
+
+        What is deliberately NOT here: the cursor, which is identity-first,
+        tells its cell and paints, so it stays with the grid; clamping, which
+        belongs to whoever knows the presented space; and the paint, which is
+        the layout's. See map 5 laws 215-218.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- One dependency = a working JS test runtime (GraalVM polyglot
+             rides along from the fixtures module). -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ssjs-test-fixtures</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
