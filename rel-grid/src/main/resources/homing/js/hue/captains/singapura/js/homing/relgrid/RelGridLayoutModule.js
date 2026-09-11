@@ -144,6 +144,16 @@ var _HRG_STYLE_CSS = [
     ".hrg-td{padding:0;position:relative;border-bottom:1px solid var(--color-border);",
     "  border-right:1px solid color-mix(in srgb, var(--color-border) 50%, transparent);",
     "  vertical-align:middle;overflow:hidden;}",
+    // A MERGED CELL, first phase: the leading slot is unclipped so its cell may
+    // draw itself over the n−1 slots after it, and the grid lines between them
+    // are dropped — the leading slot's right edge and each covered slot's but
+    // the last. Nothing else changes: the covered slots are slots, and paint
+    // their own cursor and selection over what reaches across them. The slot
+    // carries the span for the cell that wants it.
+    ".hrg-td.hrg-lead{overflow:visible;border-right-color:transparent;}",
+    ".hrg-ov-ellipsis .hrg-td.hrg-lead > *,.hrg-ov-clip .hrg-td.hrg-lead > *{overflow:visible;text-overflow:clip;}",
+    ".hrg-td.hrg-covered{border-right-color:transparent;}",
+    ".hrg-td.hrg-covered.hrg-group-end{border-right-color:color-mix(in srgb, var(--color-border) 50%, transparent);}",
     // The selection: a wash on every slot the resolved list covers. A slot may
     // wear this and the cursor at once — with an empty list the selection IS
     // the cursor's 1x1, so the cursor's slot is always one of them.
@@ -560,6 +570,25 @@ class RelGridLayout {
     focus() { if (this._table.focus) this._table.focus({ preventScroll: true }); return this; }
 
     el() { return this._table; }
+
+    /**
+     * Mark a leading slot's reach: the slot itself, the n−1 it reaches over,
+     * and the last of those, whose right edge is the group's. Slots are minted
+     * fresh on every render, so marks never need clearing.
+     */
+    markSpan(i, j, n) {
+        var lead = this.slotAt(i, j);
+        if (!lead) return this;
+        _hrgAddClass(lead, "hrg-lead");
+        if (lead.style && lead.style.setProperty) lead.style.setProperty("--hrg-span", String(n));
+        for (var k = 1; k < n; k++) {
+            var td = this.slotAt(i, j + k);
+            if (!td) break;
+            _hrgAddClass(td, "hrg-covered");
+            if (k === n - 1) _hrgAddClass(td, "hrg-group-end");
+        }
+        return this;
+    }
 
     /** The slot at a position, or null. */
     slotAt(i, j) {

@@ -38,6 +38,14 @@ class HanArticleTest extends JsModuleTestBase {
                 return ink.children.length ? ink.children.map(function (h) { return h.textContent; }).join('') : ink.textContent;
             }
             function shown(rel, pk, col) { return inkOf(mount(rel, pk, col)); }
+            // The policy stub's elements have no style; a run's cell sets a custom property on its.
+            var _mk = makeEl;
+            makeEl = function (t) {
+                var el = _mk(t), props = {};
+                el.style = { setProperty: function (k, v) { props[k] = v; }, removeProperty: function (k) { delete props[k]; },
+                             getPropertyValue: function (k) { return props[k] || ''; } };
+                return el;
+            };
             """;
 
     @BeforeEach
@@ -263,6 +271,78 @@ class HanArticleTest extends JsModuleTestBase {
                     var l = mount(rel, 'r1', 'lead');
                     return inkOf(l) === '「' && /han-open/.test(l._ink.children[0].className);
                 })()"""), "the half-square columns come and go with use; their cells are narrow and show the squeezed mark");
+    }
+
+    @Test
+    void aRunOfNarrowCharactersIsOneSlotTwoToASquare() {
+        assertTrue(evalBool("""
+                (() => {
+                    // What is narrow: Latin, digits, spaces, ASCII marks. What is not: a
+                    // character, kana, hangul, a fullwidth letter, the ideographic space, a mark.
+                    var narrow = ['w', 'A', '7', ' ', '.', '-', '?'];
+                    for (var i = 0; i < narrow.length; i++) if (!hanIsNarrow(narrow[i])) return false;
+                    var wide = ['月', 'あ', '한', 'Ａ', '\\u3000', '，', '「', '\\n', '𠀋'];
+                    for (var j = 0; j < wide.length; j++) if (hanIsNarrow(wide[j])) return false;
+
+                    // "what" is four narrow characters: one slot, two squares; the second is covered.
+                    var lay = hanLayout('善哉what也', 9);
+                    if (slotsStr(lay) !== '[善][哉][what]·[也]····') return false;
+                    var run = lay.rows[0].cells[2], cov = lay.rows[0].cells[3];
+                    if (run.kind !== 'latin' || run.span !== 2 || cov.kind !== 'covered' || cov.glyph !== null) return false;
+                    if (lay.glyphs !== 7) return false;                        // letters count
+                    // An odd run rounds up; a run with a space is one run; a single letter is one square.
+                    if (hanLayout('abc', 9).rows[0].cells[0].span !== 2) return false;
+                    if (slotsStr(hanLayout('a b', 9)) !== '[a b]········') return false;     // two squares: one covered, seven empty
+                    if (hanLayout('x', 9).rows[0].cells[0].span !== 1) return false;
+                    // The span key names the reach of every square, row by row.
+                    return lay.spanKey === '112111111';
+                })()"""), "a run of narrow characters is one slot reaching over ⌈n/2⌉ squares");
+    }
+
+    @Test
+    void aRunFitsWholeOrMovesWholeOrBreaksAtTheRowsEnd() {
+        assertTrue(evalBool("""
+                (() => {
+                    // Room for it: it stays. Eight characters, then "what" needs two squares
+                    // and one is left — it moves whole to the next row.
+                    if (slotsStr(hanLayout('一二三四五六七what', 9)) !== '[一][二][三][四][五][六][七][what]·') return false;
+                    if (slotsStr(hanLayout('一二三四五六七八what', 9)) !== '[一][二][三][四][五][六][七][八]·|[what]········') return false;
+                    // Longer than a row: broken at the row's end, two characters a square.
+                    var long = hanLayout('internationalization', 9);      // 20 letters: 18 fill a row, 2 remain
+                    if (slotsStr(long) !== '[internationalizati]········|[on]········') return false;
+                    if (long.rows[0].cells[0].span !== 9 || long.rows[1].cells[0].span !== 1) return false;
+                    // A run that fills the row wraps like anything else, and a closer that
+                    // follows is squeezed into the trailing half-square as usual — the
+                    // covered square reads as '·' here, since it holds nothing of its own.
+                    return slotsStr(hanLayout('一二三四五六七what。', 9)) === '[一][二][三][四][五][六][七][what]·{。}';
+                })()"""), "whole if it fits, whole on the next row if it fits one, else broken at the row's end");
+    }
+
+    @Test
+    void aRunCellReachesOverItsSquaresAndSaysSo() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = createHanStore('善哉what也');
+                    var rel = createHanRelation(store, { cols: 9 });
+                    var run = mount(rel, 'r0', 'c2');
+                    // The cell answers the reach the grid asks about, and draws itself that wide.
+                    if (run.colSpan() !== 2 || !/han-run/.test(run._el.className)) return false;
+                    if (run._el.style.getPropertyValue('--han-span') !== '2') return false;
+                    if (run._ink.textContent !== 'what' || run._ink.children.length !== 0) return false;
+                    // The covered square has a cell of its own, showing nothing, reaching over nothing.
+                    var cov = mount(rel, 'r0', 'c3');
+                    if (cov.colSpan() !== 1 || shown(rel, 'r0', 'c3') !== '' || /han-run/.test(cov._el.className)) return false;
+                    if (mount(rel, 'r0', 'c0').colSpan() !== 1) return false;
+                    // The run moves: the same cells, their reach re-said, and the span key changed.
+                    var before = rel.spanKey();
+                    store.set('善what哉也');
+                    if (rel.spanKey() === before) return false;
+                    // c2 is now the square the run reaches over; 哉 moved to c3.
+                    if (run.colSpan() !== 1 || shown(rel, 'r0', 'c2') !== '' || /han-run/.test(run._el.className)) return false;
+                    if (shown(rel, 'r0', 'c3') !== '哉') return false;
+                    var c1 = mount(rel, 'r0', 'c1');
+                    return c1.colSpan() === 2 && shown(rel, 'r0', 'c1') === 'what' && c1._el.style.getPropertyValue('--han-span') === '2';
+                })()"""), "a run's cell answers colSpan and draws itself wide; the squares it covers show nothing");
     }
 
     @Test

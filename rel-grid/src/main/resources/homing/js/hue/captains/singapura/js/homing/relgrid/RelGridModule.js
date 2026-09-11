@@ -21,6 +21,8 @@
 //       minColumnWidth?,  // the floor a width request is bounded to. Default 40, the
 //                         // narrowest a column stays grabbable at; never below 8. A host
 //                         // whose columns are half-squares says 24.
+//       mergedCells?,     // true to honour a cell's colSpan(). Off by default: most
+//                         // relations have no merged cells, and the feature is kept apart.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -128,6 +130,18 @@
 //
 // Copy is the first thing that CONSUMES a selection, and it reads the list in
 // one place — copy() — and resolves it there. Clear and bulk are later rounds.
+//
+// MERGED CELLS, FIRST PHASE — a LOGICAL overlay on a matrix that stays whole.
+// Every position keeps its slot and its own cell; nothing is skipped and
+// nothing is asked differently. A cell that answers colSpan() > 1 is a
+// LEADING cell, and the one thing the grid does for it is let its slot
+// OVERFLOW: the slot is unclipped, the grid lines between it and the n−1
+// slots it reaches over are dropped, and the cell — which knows its own span
+// — draws itself as wide as it likes. The cursor, the selection, copy and
+// every other function are exactly as they were: a covered slot is a slot,
+// with its own identity and its own cell. Read on every arrangement, so a
+// span that moves is an arrangement the host asks for. Behind mergedCells,
+// because most relations have no merged cell and the check is not free.
 //
 // WIDTHS ARE GEOMETRY, THE GRID'S ALONE (map 7): held by column IDENTITY,
 // applied by POSITION, in place — no arrangement runs, because no identity
@@ -284,6 +298,7 @@ class RelGrid {
         // be able to reach by accident, which is what the default protects.
         var minW = Number(opts.minColumnWidth);
         this._minW = isFinite(minW) ? Math.max(_HRG_MIN_W_FLOOR, Math.min(_HRG_MAX_W, minW)) : _HRG_MIN_W;
+        this._merge = opts.mergedCells === true;   // honour colSpan() at all
         // The selection: POSITIONS, and it holds nothing else. The facade is
         // the only thing that knows both it and the cursor.
         this._selection = new RelGridSelection();
@@ -334,6 +349,7 @@ class RelGrid {
                 var id = maps.resolve(i, j);
                 this._cells.ensure(id.pk, id.column, this._cellFor);
                 this._cells.place(id.pk, id.column, this._layout.slotAt(i, j));
+                if (this._merge) this._markSpan(i, j, this._cells.get(id.pk, id.column).cell);
             }
         }
         // Whatever the view no longer shows leaves the tree alive.
@@ -352,6 +368,21 @@ class RelGrid {
             try { this._cbArranged(kind); }
             catch (e) { console.error("[RelGrid] onArranged threw:", e); }
         }
+    }
+
+    /**
+     * A leading cell's reach, read afresh on every pass: only a finite span
+     * above one counts, clamped to the row's end, and a cell that throws or
+     * answers nonsense is a plain cell. The layout marks the slots; the cell
+     * draws itself.
+     */
+    _markSpan(i, j, cell) {
+        if (!cell || typeof cell.colSpan !== "function") return;
+        var n;
+        try { n = Number(cell.colSpan()); } catch (e) { console.error("[RelGrid] cell.colSpan threw:", e); return; }
+        if (!isFinite(n) || n <= 1) return;
+        n = Math.min(Math.floor(n), this._maps.cols() - j);
+        if (n > 1) this._layout.markSpan(i, j, n);
     }
 
     /** Arrange again. The domain calls this after changing something the grid

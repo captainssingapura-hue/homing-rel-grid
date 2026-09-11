@@ -246,6 +246,16 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
   host's to lower (`minColumnWidth`, never below 8): a column narrower than the default is a
   host's deliberate geometry, not something a drag should reach by accident, which is all the
   default ever protected.
+- **Latin runs two letters to a square, in one cell.** A run of narrow characters — Latin,
+  digits, spaces, ASCII marks — is one slot reaching over `⌈length/2⌉` squares; the squares it
+  reaches over hold cells of their own that show nothing. A run moves whole to the next row when
+  it doesn't fit what is left and fits a row; longer than a row, it breaks at the row's end. The
+  run's cell answers `colSpan()` with its reach, and the grid — built with `mergedCells` — does
+  exactly one thing for it: **unclips its slot and drops the grid lines it reaches across**, so
+  the cell draws itself that wide. That is the first phase of merged cells, and it is a *logical*
+  overlay on a matrix that stays whole: every square keeps its slot and its cell, and the cursor,
+  the selection and copy are exactly as they were — a covered square is a square. The option is
+  off by default, because most relations have no merged cell and reading spans is not free.
 
 ### What to try
 
@@ -276,7 +286,9 @@ must not scroll, or a table taller than its pane moves under the pointer on ever
 
 Not done, and not asked for yet: a second squeezed mark (it starts the next row), and the
 typographic refinements a real manuscript grid has — compressing a run of marks, hanging a mark
-into the margin rather than a column.
+into the margin rather than a column. And the second phase of merged cells: a physical overlay
+that highlights the whole group, with the cursor passing through vertically and jumping out of
+the group horizontally while the tracker keeps the exact square — decided, and on the list.
 
 ## Adding a bench
 

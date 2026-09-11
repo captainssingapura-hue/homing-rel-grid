@@ -20,7 +20,11 @@
 //     whoever arranges, as the row view and the column view.
 //   · narrowColumns() names the two, so the owner can give them their width.
 //   · cellFor(pk, col) builds a HanCell once per slot and keeps it. Display
-//     cells: the article is edited as text, and nothing here commits.
+//     cells: the article is edited as text, and nothing here commits. A run
+//     of narrow characters is one cell that answers colSpan() with its reach;
+//     the squares it reaches over have cells of their own, showing nothing.
+//   · spanKey() is the spans of every row as one string. When it changes,
+//     the arrangement has, and the owner tells whoever arranges to go again.
 //   · The relation subscribes to the store, re-lays the article out, and
 //     set()s every cell it owns to what its slot now shows. A row that
 //     disappeared leaves its cells alive with nothing in them; a row that
@@ -52,7 +56,7 @@ function createHanRelation(store, opts) {
         cells.forEach(function (cell, key) {
             var sp = key.indexOf(" ");
             var s = slotOf(key.slice(0, sp), key.slice(sp + 1));
-            cell.set(s ? s.glyph : null);
+            cell.set(s ? s.glyph : null, s ? s.span : 1);
         });
     });
 
@@ -79,12 +83,14 @@ function createHanRelation(store, opts) {
             var key = pk + " " + col, cell = cells.get(key);
             if (!cell) {
                 var s = slotOf(pk, col);
-                cell = new HanCell({ glyph: s ? s.glyph : null, narrow: col === "lead" || col === "trail" });
+                cell = new HanCell({ glyph: s ? s.glyph : null, span: s ? s.span : 1,
+                                     narrow: col === "lead" || col === "trail" });
                 cells.set(key, cell);
             }
             return cell;
         },
         rows:      function () { return layout.rows.length; },
+        spanKey:   function () { return layout.spanKey; },
         cols:      function () { return cols; },
         capacity:  function () { return capacity; },
         glyphs:    function () { return layout.glyphs; },

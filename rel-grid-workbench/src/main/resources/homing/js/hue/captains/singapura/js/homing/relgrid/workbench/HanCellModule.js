@@ -34,6 +34,13 @@
 // size the squares draw theirs. Which half of the em survives the clip is
 // decided as for a pair — an opener keeps its right, anything else its left.
 //
+// A RUN of narrow characters — Latin, digits — is one cell reaching over
+// several squares, two characters a square. It answers colSpan() with its
+// reach, and the grid, built with mergedCells, unclips its slot and drops the
+// grid lines it reaches across; the cell draws itself that wide, and the
+// squares it covers hold cells of their own that show nothing. The run's
+// letters are sized so two of them sit in a square.
+//
 // No mayTakeControl and no takeControl, on purpose: a cell offering neither
 // is never asked, so Enter on a square does nothing and the grid stays
 // shallow. Editing is the text editor's.
@@ -61,7 +68,14 @@ var _HAN_CSS = [
     // at the size a square draws — 68% of a square is 136% of a half-square.
     ".han-glyph.han-narrow{aspect-ratio:1/2;}",
     ".han-narrow .han-ink{font-size:136cqw;}",
-    ".han-narrow .han-half{flex-basis:100%;width:100%;}"
+    ".han-narrow .han-half{flex-basis:100%;width:100%;}",
+    // A run: as wide as the squares it reaches over — n squares and the n−1
+    // grid lines between them — and as tall as one. Its letters are sized
+    // against the run's own box: 68% of a square is 68/n of the run.
+    ".han-glyph.han-run{width:calc(var(--han-span) * 100% + (var(--han-span) - 1) * 1px);",
+    "  aspect-ratio:var(--han-span) / 1;position:relative;background:var(--color-surface);}",
+    ".han-run .han-ink{font:calc(68cqw / var(--han-span)) / 1 'Noto Serif','Georgia','Times New Roman',serif;",
+    "  letter-spacing:0.02em;white-space:pre;}"
 ].join("\n");
 
 function _hanEnsureStyle() {
@@ -93,8 +107,12 @@ class HanCell {
         this._ink = null;
         this._glyph = (typeof opts.glyph === "string" && opts.glyph.length) ? opts.glyph : null;
         this._narrow = opts.narrow === true;
+        this._span = (opts.span > 1) ? Math.floor(opts.span) : 1;
         this._mode = "none";
     }
+
+    /** How many squares this cell reaches over — read by a grid built with mergedCells. */
+    colSpan() { return this._span; }
 
     /**
      * A character is the square's text. A mark, or a pair of marks, is one
@@ -104,12 +122,18 @@ class HanCell {
      */
     _paint() {
         if (!this._ink) return;
-        var ink = this._ink;
+        var ink = this._ink, el = this._el;
         while (ink.children.length) ink.removeChild(ink.children[0]);
+        // The reach: a run's box is as wide as its squares; anything else is one.
+        _hanSetClass(el, "han-run", this._span > 1);
+        if (el.style && el.style.setProperty) {
+            if (this._span > 1) el.style.setProperty("--han-span", String(this._span));
+            else el.style.removeProperty("--han-span");
+        }
         var g = this._glyph;
         if (g == null) { ink.textContent = ""; _hanSetClass(ink, "han-punct", false); return; }
         var marks = Array.from(g);
-        if (marks.length === 1 && !hanIsPunct(marks[0])) {
+        if (this._span > 1 || (marks.length === 1 && !hanIsPunct(marks[0]))) {
             ink.textContent = g;
             _hanSetClass(ink, "han-punct", false);
             return;
@@ -137,8 +161,10 @@ class HanCell {
         return this;
     }
 
-    set(glyph) {
+    /** The owner changed it — and, for a run, how far it reaches. */
+    set(glyph, span) {
         this._glyph = (typeof glyph === "string" && glyph.length) ? glyph : null;
+        this._span = (span > 1) ? Math.floor(span) : 1;
         this._paint();
         return this;
     }
