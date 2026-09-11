@@ -8,8 +8,17 @@
 // the width the grid gives its column and is exactly as tall as it is wide
 // (aspect-ratio 1), so the column's width is the only geometry anyone sets
 // and the square follows it — through a resize, through a theme, through
-// anything. The glyph is sized from the square too (container units), so it
-// scales with it.
+// anything. The glyph is sized from the square's HEIGHT (container units),
+// which is the one measure every kind of slot shares: a half-square is half
+// as wide as a square but as tall, a run is n squares wide but one tall, and
+// all of them draw their ink at 68% of the row.
+//
+// A FIXED SIDE, when a host wants one: set `--han-side` on any ancestor and
+// the height is that instead of the width, for every slot, so the ROW NEVER
+// MOVES when a column does — a narrow column clips its glyph, a wide one has
+// slack, and the ink stays one size. The height being explicit, the aspect
+// ratio has nothing left to decide. A table whose columns resize wants this;
+// the article, whose nine columns are one width, does not.
 //
 // PUNCTUATION shares a square: a slot may hold two marks, and a lone mark
 // takes the left half. Each mark is drawn in a half-width box with the
@@ -50,12 +59,13 @@
 
 var _HAN_STYLE_ID = "bench-han-style";
 var _HAN_CSS = [
-    // The square. Width from the column; height from the width; the glyph
-    // measured against it. `container-type` is what makes cqw units below
-    // refer to THIS box.
-    ".han-glyph{width:100%;aspect-ratio:1/1;box-sizing:border-box;container-type:inline-size;",
+    // The square. Width from the column; height from the width — or from the
+    // host's --han-side, which then wins over the ratio; the glyph measured
+    // against the height. `container-type: size` is what makes cqh units
+    // below refer to THIS box.
+    ".han-glyph{width:100%;height:var(--han-side,auto);aspect-ratio:1/1;box-sizing:border-box;container-type:size;",
     "  display:grid;place-items:center;overflow:hidden;}",
-    ".han-ink{font:68cqw/1 'Noto Serif CJK SC','Source Han Serif SC','Songti SC','SimSun','PMingLiU',serif;",
+    ".han-ink{font:68cqh/1 'Noto Serif CJK SC','Source Han Serif SC','Songti SC','SimSun','PMingLiU',serif;",
     "  color:var(--color-text-primary);user-select:none;-webkit-user-select:none;}",
     // Two marks in one square: each in its half, half-width alternates on.
     // min-width:0 on the flex row too: as a grid item its automatic minimum is
@@ -64,16 +74,15 @@ var _HAN_CSS = [
     ".han-half{flex:0 0 50%;width:50%;min-width:0;overflow:hidden;text-align:left;white-space:nowrap;",
     "  font-feature-settings:'halt' 1;}",
     ".han-half.han-open{text-align:right;}",
-    // The half-square: half as wide as a square, as tall as one, its one mark
-    // at the size a square draws — 68% of a square is 136% of a half-square.
+    // The half-square: half as wide as a square, as tall as one; its mark is
+    // sized from the height like every other, so it is the size a square draws.
     ".han-glyph.han-narrow{aspect-ratio:1/2;}",
-    ".han-narrow .han-ink{font-size:136cqw;}",
     ".han-narrow .han-half{flex-basis:100%;width:100%;}",
     // A run: it fills the host the grid laid over its squares — n of them
-    // wide, one tall — so it sizes itself to nothing. Its letters are sized
-    // against that box: 68% of a square is 68/n of the run.
+    // wide, one tall — so it sizes itself to nothing, and its letters are
+    // sized against that box's height: one square's.
     ".han-glyph.han-run{width:100%;height:100%;aspect-ratio:auto;}",
-    ".han-run .han-ink{font:calc(68cqw / var(--han-span)) / 1 'Noto Serif','Georgia','Times New Roman',serif;",
+    ".han-run .han-ink{font:68cqh/1 'Noto Serif','Georgia','Times New Roman',serif;",
     "  letter-spacing:0.02em;white-space:pre;}"
 ].join("\n");
 
@@ -124,11 +133,9 @@ class HanCell {
         var ink = this._ink, el = this._el;
         while (ink.children.length) ink.removeChild(ink.children[0]);
         // The reach: a run's box is as wide as its squares; anything else is one.
+        // The number itself is the grid's business (colSpan); the class is enough
+        // for the drawing, which is sized from the height and not the reach.
         _hanSetClass(el, "han-run", this._span > 1);
-        if (el.style && el.style.setProperty) {
-            if (this._span > 1) el.style.setProperty("--han-span", String(this._span));
-            else el.style.removeProperty("--han-span");
-        }
         var g = this._glyph;
         if (g == null) { ink.textContent = ""; _hanSetClass(ink, "han-punct", false); return; }
         var marks = Array.from(g);

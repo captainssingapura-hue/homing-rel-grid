@@ -233,7 +233,8 @@ and **Stress**, when the question is the layout rather than the article.
   the grid is never told" as the dish list, over a very different domain.
 - **Strictly square by construction.** The grid sets nine columns to one width; the cell fills it
   and makes itself exactly as tall as it is wide (`aspect-ratio: 1`), sizing its glyph from the
-  square with container units. There is one number in the whole geometry, and it is the column's.
+  square's height with container units — the one measure a square, a half-square and a run all
+  share. There is one number in the whole geometry, and it is the column's.
 - **A capacity, and a view — in both axes.** A grid reads its relation's identities once, at
   construction, and keeps them. An article grows, so the relation declares a **capacity** of two
   hundred rows and the host presents the prefix in use — `rowView` at construction,
@@ -290,11 +291,12 @@ and **Stress**, when the question is the layout rather than the article.
   squeezes, a run longer than a row — with the header shown so every column **resizes**, down to
   12px. Drag a header's edge, or Alt+←/→ on the cursor's column; the buttons widen, narrow and
   randomise every width at once, and regenerate the text so the spans move under the same
-  widths. A square is as tall as its own column is wide, so uneven columns make uneven squares
-  and each row keeps its tallest — and the merged hosts and half-squares must follow. It checks
-  itself: after every change it measures every host against the slots beneath it and reports
-  the largest drift, in pixels, and whether the squares are still square. The claim the layout
-  makes is verified where it is made, not assumed.
+  widths. Here the side is a **number** the host sets (`--han-side`) rather than the column's
+  width, so a resize moves only the width and never a row: a narrow column clips its glyph, a
+  wide one has slack, the ink stays one size — and the merged hosts and half-squares must
+  follow. It checks itself: after every change it measures every host against the slots beneath
+  it and reports the largest drift, in pixels, and whether every row is still one side tall.
+  The claim the layout makes is verified where it is made, not assumed.
 
 ### What it asked of the grid, and got
 
@@ -314,6 +316,12 @@ answering the resize report is the common case, so the grid now measures the hos
 the report**, and the bench sizes its container before it asks for widths, so the first
 measurement is already of the final geometry. Widening had never shown it: a table wider than its
 container overflows to the columns' sum, and nothing spreads.
+
+And one thing the grid did not do, which is the point: when a column was dragged wide, every row
+grew with it. The grid never sizes a row — a row is as tall as its tallest cell, and the Han cell
+was the one saying "as tall as I am wide". The cell now takes a fixed side from its host when the
+host sets one, and sizes its ink from the height it ends up with either way; the grid was not
+touched, because the rows were never its.
 
 Not done, and not asked for yet: a second squeezed mark (it starts the next row), and the
 typographic refinements a real manuscript grid has — compressing a run of marks, hanging a mark

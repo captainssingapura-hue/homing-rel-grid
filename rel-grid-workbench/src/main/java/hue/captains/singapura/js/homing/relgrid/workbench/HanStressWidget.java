@@ -12,14 +12,16 @@ import java.util.List;
  * A stress specimen for the layout engine: the Han relation over hypothetical
  * text, with the header shown so every column can be <b>resized</b> — by
  * dragging a header's edge or with Alt+arrows — and a floor low enough to make
- * squares small. The content is nobody's; what is under test is that the merged
- * cells' hosts, the half-squares and the squares keep their places while the
- * geometry under them changes.
+ * squares small. The side is fixed ({@code --han-side}), so a column resizes
+ * only its width and the rows never move. The content is nobody's; what is
+ * under test is that the merged cells' hosts, the half-squares and the squares
+ * keep their places while the geometry under them changes.
  *
  * <p>It checks itself. After every change it measures every merged host
  * against the slots beneath it — the union of the first and the last must be
- * the host, to within a pixel — and reports the largest drift. That is the
- * layout's claim, verified where it is made rather than assumed.</p>
+ * the host, to within a pixel — and reports the largest drift; and it checks
+ * that every row is still one side tall. That is the layout's claim, verified
+ * where it is made rather than assumed.</p>
  */
 public final class HanStressWidget extends WorkspaceWidget<WorkspaceWidget._None, HanStressWidget> {
 
@@ -82,7 +84,7 @@ public final class HanStressWidget extends WorkspaceWidget<WorkspaceWidget._None
                 "    var cellsB = branch.createBranch('cells');",
                 "    cellsB.activate(owner);",
                 "",
-                "    hint.textContent = 'STRESS \\u2014 hypothetical text over the same engine, with the header shown so every column resizes: drag a header\\u2019s right edge, or Alt+\\u2190/\\u2192 on the cursor\\u2019s column, down to 12px. Squares stay square by their own width, so a narrow column makes short cells and the row keeps the tallest; merged cells and half-squares must follow. The readout below measures every merged host against the slots beneath it after each change and reports the largest drift.';",
+                "    hint.textContent = 'STRESS \\u2014 hypothetical text over the same engine, with the header shown so every column resizes: drag a header\\u2019s right edge, or Alt+\\u2190/\\u2192 on the cursor\\u2019s column, down to 12px. The side is fixed, so a column resizes only its width and no row moves: a narrow column clips its glyph, a wide one has slack, and the merged cells and half-squares must follow. The readout below measures every merged host against the slots beneath it after each change and reports the largest drift, and that every row is still one side tall.';",
                 "",
                 "    // Its own store, in memory: nobody\\u2019s article, and never the editor\\u2019s.",
                 "    var store = createHanStore(" + jsString(SEED) + ", { key: null });",
@@ -90,6 +92,10 @@ public final class HanStressWidget extends WorkspaceWidget<WorkspaceWidget._None
                 "    var labels = { lead: '\\u2039', trail: '\\u203a' };",
                 "    for (var k = 0; k < COLS; k++) labels['c' + k] = String(k + 1);",
                 "",
+                "    // The side is a number here, not the column's width: the rows hold still",
+                "    // while the columns move, which is what makes a resize a stress of the",
+                "    // layout and not of the reader.",
+                "    host.style.setProperty('--han-side', SIDE + 'px');",
                 "    var grid = new RelGrid({",
                 "        container: host,",
                 "        branch: cellsB,",
@@ -136,14 +142,15 @@ public final class HanStressWidget extends WorkspaceWidget<WorkspaceWidget._None
                 "            worst = Math.max(worst, d);",
                 "            if (d > 1) bad.push(h.textContent.trim() + ' off by ' + d.toFixed(1) + 'px');",
                 "        });",
-                "        var squaresOk = true, seenW = 0;",
-                "        table.querySelectorAll('td.hrg-td > .han-glyph:not(.han-run):not(.han-narrow)').forEach(function (g) {",
-                "            var b = g.getBoundingClientRect(); seenW = Math.max(seenW, b.width);",
-                "            if (Math.abs(b.width - b.height) > 0.6) squaresOk = false;",
+                "        // And the rows: one side tall, every one, whatever the columns did.",
+                "        var rowsOk = true, tallest = 0;",
+                "        table.querySelectorAll('td.hrg-td > .han-glyph').forEach(function (g) {",
+                "            var hgt = g.getBoundingClientRect().height; tallest = Math.max(tallest, hgt);",
+                "            if (Math.abs(hgt - SIDE) > 0.6) rowsOk = false;",
                 "        });",
                 "        check.textContent = 'hosts ' + n + '   |   largest drift ' + worst.toFixed(2) + 'px'",
                 "                          + (bad.length ? '   |   OFF: ' + bad.join(', ') : '   |   every host on its slots')",
-                "                          + '   |   squares ' + (squaresOk ? 'square' : 'NOT SQUARE');",
+                "                          + '   |   rows ' + (rowsOk ? 'one side tall' : 'NOT one side (tallest ' + tallest.toFixed(1) + 'px)');",
                 "    }",
                 "    function report() {",
                 "        var held = grid.columnWidths(), parts = [];",
