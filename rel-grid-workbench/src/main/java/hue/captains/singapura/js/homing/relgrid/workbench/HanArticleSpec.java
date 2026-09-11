@@ -1,6 +1,9 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.workspace.shell.ActionDispatch;
+import hue.captains.singapura.js.homing.workspace.shell.Arrangement;
+import hue.captains.singapura.js.homing.workspace.shell.PaneArrangements;
+import hue.captains.singapura.js.homing.workspace.shell.PaneArrangements.Columns;
 import hue.captains.singapura.js.homing.workspace.shell.PartyDecl;
 import hue.captains.singapura.js.homing.workspace.RibbonItem;
 import hue.captains.singapura.js.homing.workspace.shell.WidgetCodecRef;
@@ -73,6 +76,15 @@ public final class HanArticleSpec implements WorkspaceSpec {
     @Override public Map<String, ActionDispatch> actionDispatch() { return Map.of(); }
     @Override public List<WidgetCodecRef> widgetCodecs() { return List.of(); }
 
-    /** Nothing pinned — displays must stay spawnable many times. */
-    @Override public List<String> pinnedSpawns() { return List.of(); }
+    /**
+     * Opens as the intro says to dock it: the editor on the left, a display on
+     * the right. A seed for a workspace with no saved state, not a template —
+     * and it hides nothing from the picker, so a second display is still a click.
+     */
+    @Override public Arrangement arrangement() {
+        return PaneArrangements.COLUMNS.allocate()
+                .place(Columns.LEFT,  HanEditorWidget.class)
+                .place(Columns.RIGHT, HanDisplayWidget.class)
+                .build();
+    }
 }
