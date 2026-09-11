@@ -7,6 +7,9 @@ import hue.captains.singapura.js.homing.workspace.WidgetGroup;
 import hue.captains.singapura.js.homing.workspace.WidgetIcon;
 import hue.captains.singapura.js.homing.workspace.WidgetLabel;
 import hue.captains.singapura.js.homing.workspace.shell.ActionDispatch;
+import hue.captains.singapura.js.homing.workspace.shell.Arrangement;
+import hue.captains.singapura.js.homing.workspace.shell.PaneArrangements;
+import hue.captains.singapura.js.homing.workspace.shell.PaneArrangements.Columns;
 import hue.captains.singapura.js.homing.workspace.shell.PartyDecl;
 import hue.captains.singapura.js.homing.workspace.shell.WidgetCodecRef;
 import hue.captains.singapura.js.homing.workspace.shell.WorkspaceSpec;
@@ -81,6 +84,16 @@ public final class ReplicatingTablesSpec implements WorkspaceSpec {
     @Override public Map<String, ActionDispatch> actionDispatch() { return Map.of(); }
     @Override public List<WidgetCodecRef> widgetCodecs() { return List.of(); }
 
-    /** Nothing pinned — followers must stay spawnable many times. */
-    @Override public List<String> pinnedSpawns() { return List.of(); }
+    /**
+     * Opens as the intro says to dock it: the chef on the left, a follower on
+     * the right — the smallest pair that shows one store, two relations. A seed
+     * for a workspace with no saved state, not a template — and it hides nothing
+     * from the picker, so the other editors and more followers are a click.
+     */
+    @Override public Arrangement arrangement() {
+        return PaneArrangements.COLUMNS.allocate()
+                .place(Columns.LEFT,  DishChefWidget.class)
+                .place(Columns.RIGHT, DishFollowerWidget.class)
+                .build();
+    }
 }
