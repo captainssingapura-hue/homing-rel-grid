@@ -29,11 +29,16 @@
 //   onSelect(mode)      'none' | 'shallow' | 'deep' — pure lifecycle
 //   dispose()           the owner's, never the grid's
 //
+// A NARROW cell is a half-square: the leading or trailing column's, half as
+// wide as a square and as tall as one, holding one squeezed mark at the same
+// size the squares draw theirs. Which half of the em survives the clip is
+// decided as for a pair — an opener keeps its right, anything else its left.
+//
 // No mayTakeControl and no takeControl, on purpose: a cell offering neither
 // is never asked, so Enter on a square does nothing and the grid stays
 // shallow. Editing is the text editor's.
 //
-//   new HanCell({ glyph? })
+//   new HanCell({ glyph?, narrow? })
 // =============================================================================
 
 var _HAN_STYLE_ID = "bench-han-style";
@@ -51,11 +56,13 @@ var _HAN_CSS = [
     ".han-ink.han-punct{display:flex;width:100%;height:100%;min-width:0;align-items:center;}",
     ".han-half{flex:0 0 50%;width:50%;min-width:0;overflow:hidden;text-align:left;white-space:nowrap;",
     "  font-feature-settings:'halt' 1;}",
-    ".han-half.han-open{text-align:right;}"
+    ".han-half.han-open{text-align:right;}",
+    // The half-square: half as wide as a square, as tall as one, its one mark
+    // at the size a square draws — 68% of a square is 136% of a half-square.
+    ".han-glyph.han-narrow{aspect-ratio:1/2;}",
+    ".han-narrow .han-ink{font-size:136cqw;}",
+    ".han-narrow .han-half{flex-basis:100%;width:100%;}"
 ].join("\n");
-
-// Opening brackets: the marks whose ink a mainland-style font keeps in the RIGHT half of the em.
-var _HAN_OPENERS = "「『（《〈【〔";
 
 function _hanEnsureStyle() {
     if (typeof document === "undefined" || !document.head) return;
@@ -85,6 +92,7 @@ class HanCell {
         this._el = null;
         this._ink = null;
         this._glyph = (typeof opts.glyph === "string" && opts.glyph.length) ? opts.glyph : null;
+        this._narrow = opts.narrow === true;
         this._mode = "none";
     }
 
@@ -110,7 +118,7 @@ class HanCell {
         _hanSetClass(ink, "han-punct", true);
         for (var k = 0; k < marks.length; k++) {
             var half = document.createElement("span");
-            half.className = _HAN_OPENERS.indexOf(marks[k]) >= 0 ? "han-half han-open" : "han-half";
+            half.className = hanIsOpener(marks[k]) ? "han-half han-open" : "han-half";
             half.textContent = marks[k];
             ink.appendChild(half);
         }
@@ -120,6 +128,7 @@ class HanCell {
         this._el = host;
         _hanEnsureStyle();
         _hanAddClass(host, "han-glyph");
+        if (this._narrow) _hanAddClass(host, "han-narrow");
         var ink = document.createElement("span");
         ink.className = "han-ink";
         host.appendChild(ink);
@@ -134,7 +143,8 @@ class HanCell {
         return this;
     }
 
-    value() { return this._glyph; }
+    value()  { return this._glyph; }
+    narrow() { return this._narrow; }
 
     onSelect(mode) { this._mode = mode; }
     mode() { return this._mode; }

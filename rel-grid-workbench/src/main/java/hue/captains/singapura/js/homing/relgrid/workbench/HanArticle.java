@@ -9,7 +9,8 @@ import java.util.List;
 /**
  * The body shared by the Han Article widgets: one {@code RelGrid} over a
  * {@code createHanRelation(hanStoreShared(), { cols: 9 })}, with no header,
- * its nine columns set to one width so that every cell is a square. The
+ * its nine columns set to one width so that every cell is a square and its
+ * two half-square columns to half of it. The
  * editor has, above the grid, a plain <b>textarea</b> bound to the store;
  * the display has not. The grids are constructed identically and cannot tell
  * the two apart, and neither grid is ever told anything: the textarea writes
@@ -19,11 +20,13 @@ import java.util.List;
  * <b>row view</b>. A grid reads its relation's identities once, at
  * construction, and keeps them — so the relation declares a capacity of rows
  * and the host presents the prefix in use, through the view-maps seam, at
- * construction and again whenever an edit changes the row count. That is an
- * arrangement, and the one thing the relation cannot do for itself; an edit
- * that keeps the row count is a value change, and the relation's own cells
- * take it. (Sort and filter will drive the same seam through the channel in a
- * later round; today the host calls it.)</p>
+ * construction and again whenever an edit changes the row count — and the
+ * same for the <b>column view</b>: the half-square columns are shown when
+ * some row squeezes a mark into one and hidden when none does. Those are
+ * arrangements, and the one thing the relation cannot do for itself; an edit
+ * that keeps both is a value change, and the relation's own cells take it.
+ * The host's width follows the columns shown. (Sort and filter will drive the
+ * same seam through the channel in a later round; today the host calls it.)</p>
  */
 final class HanArticle {
 
@@ -83,7 +86,7 @@ final class HanArticle {
                 "    var relation = createHanRelation(store, { cols: COLS, capacity: 200 });",
                 "",
                 "    hint.textContent = EDITOR",
-                "        ? 'EDITOR \\u2014 the article as plain text above, and as it is rendered below: nine squares to a row, one character each, two punctuation marks to a square. Every keystroke re-flows every display on the page. The squares themselves do not edit; Enter on one does nothing, because the cell offers nothing to take.'",
+                "        ? 'EDITOR \\u2014 the article as plain text above, and as it is rendered below: nine squares to a row, one character each, two punctuation marks to a square. A closing mark that would start a line is squeezed into a half-square after the ninth; an opening bracket that would end a line leads the next from a half-square before the first. Those two columns appear only when a row uses them. Every keystroke re-flows every display on the page; the squares themselves do not edit.'",
                 "        : 'DISPLAY \\u2014 the same article, over the same store. It moves as the editor types, and its grid was never told.';",
                 "",
                 "    var grid = new RelGrid({",
@@ -94,13 +97,23 @@ final class HanArticle {
                 "        // Present the rows in use, not the capacity: the relation declares",
                 "        // two hundred rows so the article may grow, and shows a handful.",
                 "        rowView: relation.presented(),",
+                "        columnView: relation.presentedColumns(),",
+                "        minColumnWidth: SIDE / 2,          // the half-squares are half a square wide",
                 "        label: 'Han article \\u2014 ' + (EDITOR ? 'editor' : 'display')",
                 "    });",
-                "    // Squares: every column the same width. The cell makes itself as tall as",
-                "    // it is wide, so this one number is the whole geometry.",
+                "    // Squares: every column the same width, and the half-squares half of",
+                "    // it. The cell makes itself as tall as the square is wide, so this one",
+                "    // number is the whole geometry. The host is as wide as the columns shown.",
                 "    var widths = {};",
                 "    for (var k = 0; k < COLS; k++) widths['c' + k] = SIDE;",
+                "    relation.narrowColumns().forEach(function (c) { widths[c] = SIDE / 2; });",
                 "    grid.setColumnWidths(widths);",
+                "    function sizeHost() {",
+                "        var w = 0, shown = relation.presentedColumns();",
+                "        for (var k = 0; k < shown.length; k++) w += widths[shown[k]];",
+                "        host.style.width = (w + 2) + 'px';",
+                "    }",
+                "    sizeHost();",
                 "",
                 "    function report() {",
                 "        status.textContent = 'revision ' + store.revision()",
@@ -110,9 +123,11 @@ final class HanArticle {
                 "    // A row appearing or disappearing is an ARRANGEMENT; the relation cannot",
                 "    // tell the grid, so the host that owns both presents the new prefix.",
                 "    // Anything else is the relation's own cells moving.",
-                "    var rows = relation.rows();",
+                "    var rows = relation.rows(), shownCols = relation.presentedColumns().join();",
                 "    var unsub = store.subscribe(function (t) {",
                 "        if (relation.rows() !== rows) { rows = relation.rows(); grid.viewMaps().setRowView(relation.presented()); }",
+                "        var cols = relation.presentedColumns().join();",
+                "        if (cols !== shownCols) { shownCols = cols; grid.viewMaps().setColumnView(relation.presentedColumns()); sizeHost(); }",
                 "        if (text && text.value !== t) text.value = t;     // a reset, or another editor",
                 "        report();",
                 "    });",

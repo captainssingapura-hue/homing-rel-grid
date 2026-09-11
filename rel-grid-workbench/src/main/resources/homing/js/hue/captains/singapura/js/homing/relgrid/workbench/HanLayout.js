@@ -4,36 +4,47 @@
 // FUNCTION: it knows nothing of any grid, holds nothing, and can be run
 // headlessly on any string.
 //
-//   hanLayout(text, cols) → { rows, cols, glyphs, length }
+//   hanLayout(text, cols) → { rows, cols, glyphs, length, usesLead, usesTrail }
 //   hanIsPunct(ch)        → is this one character a punctuation mark?
+//   hanIsOpener(ch)       → is it an OPENING bracket — a mark that may not end a line?
 //
-//     rows     an array of rows; every row is EXACTLY `cols` slots long
+//     a row    { lead, cells, trail }
+//              cells  EXACTLY `cols` slots, the squares
+//              lead   a slot or null — the half-square BEFORE the first square
+//              trail  a slot or null — the half-square AFTER the last square
 //     a slot   { glyph, kind }
 //              glyph  what the slot shows — one character, or TWO punctuation
-//                     marks — or null for an empty slot
+//                     marks — or null for an empty square
 //              kind   'han' | 'punct' | 'empty'
+//     usesLead, usesTrail    whether any row has one — the columns to show
 //
 // The rules, small enough to state:
-//   · one character, one slot, left to right, `cols` to a row, then wrap;
-//   · TWO PUNCTUATION MARKS SHARE A SLOT: a mark that follows a slot holding
-//     one lone mark joins it — even when that mark took the last square of
-//     a row and the row has already closed, since joining costs no slot —
-//     and nothing joins across a line. That is the whole rule for now: a
-//     mark that falls at the start of a row starts a slot there like
-//     anything else. Where a mark at the end of a line should go instead is
-//     the next iteration, and it is the grid's question, not this file's;
+//   · one character, one square, left to right, `cols` to a row, then wrap;
+//   · TWO PUNCTUATION MARKS SHARE A SQUARE: a mark that follows a square
+//     holding one lone mark joins it — even when that mark took the last
+//     square of a row and the row has already closed, since joining costs
+//     no square — and nothing joins across a line;
+//   · A CLOSING MARK MAY NOT START A LINE. When a row is full and the next
+//     character is a mark that is not an opener, it is SQUEEZED into the
+//     row's trailing half-square rather than starting the next row. One
+//     mark fits there; a further mark starts the next row after all;
+//   · AN OPENING BRACKET MAY NOT END A LINE. When an opener would take the
+//     last square of a row, the row closes with that square empty and the
+//     opener goes into the NEXT row's leading half-square, ahead of its
+//     first square, so the line it opens still has all its squares;
 //   · a newline ends the row where it stands, and the row is padded;
 //   · a newline right after a wrap is the wrap — it adds no blank row — but
 //     a second newline does, because that is a blank line;
 //   · an empty text is one empty row, so there is always a square to show.
 //
-// Characters are CODE POINTS (Array.from), not UTF-16 units, so a glyph from
-// a supplementary plane is one slot and not two.
+// The two half-squares are what this bench asks of the grid: two columns a
+// relation declares and shows only when some row uses them, each half the
+// width of a square. Where they sit, and that a column may be that narrow,
+// is the grid's; what goes in them is decided here.
 //
-// The article is edited as TEXT, elsewhere; this function only ever reads
-// it. Not yet here, deliberately: the squeezed leading and trailing
-// punctuation columns, and any notion of width other than "one square" — a
-// pair of marks shares a square; it does not narrow one.
+// Characters are CODE POINTS (Array.from), not UTF-16 units, so a glyph from
+// a supplementary plane is one square and not two. The article is edited as
+// TEXT, elsewhere; this function only ever reads it.
 // =============================================================================
 
 // CJK punctuation and symbols U+3001–303F (not U+3000, the ideographic space,
@@ -43,27 +54,40 @@
 // middle dot of a name. Written as the characters, so the ranges read.
 var _HAN_PUNCT = /^[、-〿！-／：-＠［-｀｛-･‐-‧‰-⁞·]$/;
 
+// The opening brackets: a mainland-style font keeps their ink in the RIGHT
+// half of the em, and none of them may end a line.
+var _HAN_OPENERS = "「『（《〈【〔｛［";
+
 function hanIsPunct(ch) {
     return typeof ch === "string" && _HAN_PUNCT.test(ch);
+}
+
+function hanIsOpener(ch) {
+    return typeof ch === "string" && ch.length > 0 && _HAN_OPENERS.indexOf(ch) >= 0;
 }
 
 function hanLayout(text, cols) {
     cols = (cols > 0) ? cols : 9;
     var chars = Array.from(String(text == null ? "" : text).replace(/\r\n?/g, "\n"));
-    var rows = [], row = [], justWrapped = false, glyphs = 0;
-    var lastSlot = null;                       // the slot placed last — a mark may join it
+    var rows = [], glyphs = 0, usesLead = false, usesTrail = false;
+    var row = newRow();
+    var lastRow = null;                        // the row closed last — a closer may squeeze into it
+    var justWrapped = false;
+    var lastSlot = null;                       // the square placed last — a mark may join it
 
-    function pad(r) {
-        while (r.length < cols) r.push({ glyph: null, kind: "empty" });
-        return r;
+    function newRow() { return { lead: null, cells: [], trail: null }; }
+    function close(r) {
+        while (r.cells.length < cols) r.cells.push({ glyph: null, kind: "empty" });
+        rows.push(r);
+        lastRow = r;
     }
 
     for (var i = 0; i < chars.length; i++) {
         var ch = chars[i];
         if (ch === "\n") {
-            if (row.length === 0 && justWrapped) { justWrapped = false; lastSlot = null; continue; }
-            rows.push(pad(row));
-            row = [];
+            if (row.cells.length === 0 && row.lead === null && justWrapped) { justWrapped = false; lastSlot = null; continue; }
+            close(row);
+            row = newRow();
             justWrapped = false;
             lastSlot = null;                   // nothing joins across a line
             continue;
@@ -74,15 +98,37 @@ function hanLayout(text, cols) {
             glyphs++;
             continue;
         }
+        if (punct && !hanIsOpener(ch) && justWrapped && row.cells.length === 0 && row.lead === null
+                && lastRow && lastRow.trail === null) {
+            // A closer at the head of a line is squeezed back into the trailing
+            // half-square of the line it belongs to. Nothing joins it there.
+            lastRow.trail = { glyph: ch, kind: "punct" };
+            usesTrail = true;
+            glyphs++;
+            lastSlot = null;
+            continue;
+        }
+        if (hanIsOpener(ch) && row.cells.length === cols - 1) {
+            // An opener in the last square would end the line. The line closes
+            // with that square empty, and the opener leads the next line.
+            close(row);
+            row = newRow();
+            row.lead = { glyph: ch, kind: "punct" };
+            usesLead = true;
+            glyphs++;
+            justWrapped = false;
+            lastSlot = null;
+            continue;
+        }
         var slot = { glyph: ch, kind: punct ? "punct" : "han" };
-        row.push(slot);
+        row.cells.push(slot);
         lastSlot = slot;
         glyphs++;
         justWrapped = false;
-        if (row.length === cols) { rows.push(row); row = []; justWrapped = true; }
+        if (row.cells.length === cols) { close(row); row = newRow(); justWrapped = true; }
     }
-    if (row.length > 0) rows.push(pad(row));
-    if (rows.length === 0) rows.push(pad([]));
+    if (row.cells.length > 0 || row.lead !== null) close(row);
+    if (rows.length === 0) close(newRow());
 
-    return { rows: rows, cols: cols, glyphs: glyphs, length: chars.length };
+    return { rows: rows, cols: cols, glyphs: glyphs, length: chars.length, usesLead: usesLead, usesTrail: usesTrail };
 }

@@ -18,13 +18,17 @@ class HanArticleTest extends JsModuleTestBase {
 
     private static final String HELPERS = """
             var POEM = '月落乌啼霜满天，\\n江枫渔火对愁眠。\\n姑苏城外寒山寺，\\n夜半钟声到客船。';
-            // A row as a string: glyphs, and '·' for an empty slot.
-            function rowStr(row) { return row.map(function (s) { return s.glyph === null ? '·' : s.glyph; }).join(''); }
+            // A row as a string: its squares' glyphs, '·' for an empty square.
+            function rowStr(row) { return row.cells.map(function (s) { return s.glyph === null ? '·' : s.glyph; }).join(''); }
             function rowsStr(lay) { return lay.rows.map(rowStr).join('|'); }
-            // A row with its slots bracketed, so a pair of marks reads as one slot: [月][落][」，]
+            // A row with its squares bracketed, so a pair of marks reads as one square —
+            // [月][落][」，] — and its half-squares, when it has them, in braces on either
+            // side: {「}[月]…[天]{。}
             function slotsStr(lay) {
                 return lay.rows.map(function (row) {
-                    return row.map(function (s) { return s.glyph === null ? '·' : '[' + s.glyph + ']'; }).join('');
+                    return (row.lead ? '{' + row.lead.glyph + '}' : '')
+                         + row.cells.map(function (s) { return s.glyph === null ? '·' : '[' + s.glyph + ']'; }).join('')
+                         + (row.trail ? '{' + row.trail.glyph + '}' : '');
                 }).join('|');
             }
             function mount(rel, pk, col) { var c = rel.cellFor(pk, col); if (!c._el) c.render(makeEl('div')); return c; }
@@ -56,13 +60,15 @@ class HanArticleTest extends JsModuleTestBase {
                     var lay = hanLayout(POEM, 9);
                     if (lay.rows.length !== 4 || lay.cols !== 9 || lay.glyphs !== 32) return false;
                     if (rowsStr(lay) !== '月落乌啼霜满天，·|江枫渔火对愁眠。·|姑苏城外寒山寺，·|夜半钟声到客船。·') return false;
-                    // Every row is exactly nine slots, whatever the line held.
-                    for (var r = 0; r < 4; r++) if (lay.rows[r].length !== 9) return false;
-                    var s = lay.rows[1][2];
+                    // Every row is exactly nine squares, whatever the line held, and no
+                    // half-square is used: the poem squeezes nothing.
+                    for (var r = 0; r < 4; r++) if (lay.rows[r].cells.length !== 9 || lay.rows[r].lead || lay.rows[r].trail) return false;
+                    if (lay.usesLead || lay.usesTrail) return false;
+                    var s = lay.rows[1].cells[2];
                     if (s.glyph !== '渔' || s.kind !== 'han') return false;
                     // Each line's mark is alone, so it keeps its square — a lone mark.
-                    return lay.rows[0][7].glyph === '，' && lay.rows[0][7].kind === 'punct'
-                        && lay.rows[0][8].glyph === null && lay.rows[0][8].kind === 'empty';
+                    return lay.rows[0].cells[7].glyph === '，' && lay.rows[0].cells[7].kind === 'punct'
+                        && lay.rows[0].cells[8].glyph === null && lay.rows[0].cells[8].kind === 'empty';
                 })()"""), "the poem: four rows, one glyph a square, a blank square closing each line");
     }
 
@@ -84,7 +90,7 @@ class HanArticleTest extends JsModuleTestBase {
                     if (rowsStr(hanLayout('甲\\r\\n乙', 9)) !== '甲········|乙········') return false;
                     // Code points, not UTF-16 units: a supplementary-plane glyph is ONE square.
                     var sup = hanLayout('𠀋乙', 9);
-                    return sup.glyphs === 2 && sup.rows[0][0].glyph === '𠀋' && sup.rows[0][1].glyph === '乙';
+                    return sup.glyphs === 2 && sup.rows[0].cells[0].glyph === '𠀋' && sup.rows[0].cells[1].glyph === '乙';
                 })()"""), "wrap at nine, newline ends a row, a wrap's newline adds nothing");
     }
 
@@ -102,9 +108,9 @@ class HanArticleTest extends JsModuleTestBase {
                     // A mark that follows a lone mark joins it; a third starts a new slot.
                     var lay = hanLayout('「月落」，。乙', 9);
                     if (slotsStr(lay) !== '[「][月][落][」，][。][乙]···') return false;
-                    var pair = lay.rows[0][3];
+                    var pair = lay.rows[0].cells[3];
                     if (pair.kind !== 'punct' || pair.glyph !== '」，') return false;
-                    if (lay.rows[0][0].kind !== 'punct' || lay.rows[0][1].kind !== 'han' || lay.rows[0][8].kind !== 'empty') return false;
+                    if (lay.rows[0].cells[0].kind !== 'punct' || lay.rows[0].cells[1].kind !== 'han' || lay.rows[0].cells[8].kind !== 'empty') return false;
                     if (lay.glyphs !== 7) return false;                          // marks count as glyphs
 
                     // A pair does not widen a row, even across a closed one: eight characters
@@ -115,11 +121,53 @@ class HanArticleTest extends JsModuleTestBase {
                     // Only within a line: nothing joins across a newline.
                     if (slotsStr(hanLayout('甲，\\n。乙', 9)) !== '[甲][，]·······|[。][乙]·······') return false;
 
-                    // And a mark that lands at the start of a row starts a slot there, like
-                    // anything else — the end-of-line rule is the NEXT iteration.
-                    var split = hanLayout('一二三四五六七八九，', 9);
-                    return slotsStr(split) === '[一][二][三][四][五][六][七][八][九]|[，]········';
+                    return true;
                 })()"""), "a mark joins a lone mark; a pair costs one slot; nothing joins across a line");
+    }
+
+    @Test
+    void aClosingMarkAtTheHeadOfALineIsSqueezedIntoTheTrailingHalfSquare() {
+        assertTrue(evalBool("""
+                (() => {
+                    // The case from the bench: nine characters fill the row, and the mark that
+                    // follows may not start a line. It goes into the row's trailing half-square.
+                    var lay = hanLayout('一二三四五六七八九。乙', 9);
+                    if (slotsStr(lay) !== '[一][二][三][四][五][六][七][八][九]{。}|[乙]········') return false;
+                    if (!lay.usesTrail || lay.usesLead) return false;
+                    if (lay.rows[0].trail.kind !== 'punct' || lay.glyphs !== 11) return false;
+                    // One mark fits; a second starts the next line after all.
+                    if (slotsStr(hanLayout('一二三四五六七八九。」乙', 9)) !== '[一][二][三][四][五][六][七][八][九]{。}|[」][乙]·······') return false;
+                    // Pairing comes first: a lone mark in the ninth square takes the next mark
+                    // as its partner, and only a THIRD mark is squeezed.
+                    if (slotsStr(hanLayout('一二三四五六七八，。！乙', 9)) !== '[一][二][三][四][五][六][七][八][，。]{！}|[乙]········') return false;
+                    // Only after a WRAP. After a newline the mark starts the line the author
+                    // gave it, and after a newline nothing is squeezed backwards.
+                    if (slotsStr(hanLayout('一二三四五六七八九\\n。乙', 9)) !== '[一][二][三][四][五][六][七][八][九]|[。][乙]·······') return false;
+                    if (slotsStr(hanLayout('甲\\n。乙', 9)) !== '[甲]········|[。][乙]·······') return false;
+                    // An OPENER at the head of a line is not squeezed back — it opens what follows.
+                    var open = hanLayout('一二三四五六七八九「乙', 9);
+                    return slotsStr(open) === '[一][二][三][四][五][六][七][八][九]|[「][乙]·······' && !open.usesTrail;
+                })()"""), "a closer that would start a line hangs off the previous line's trailing half-square");
+    }
+
+    @Test
+    void anOpeningBracketThatWouldEndALineLeadsTheNextFromItsHalfSquare() {
+        assertTrue(evalBool("""
+                (() => {
+                    // The opener would take the ninth square and end the line. The line closes
+                    // with that square empty, and the opener leads the next line.
+                    var lay = hanLayout('一二三四五六七八「九十', 9);
+                    if (slotsStr(lay) !== '[一][二][三][四][五][六][七][八]·|{「}[九][十]·······') return false;
+                    if (!lay.usesLead || lay.usesTrail || lay.rows[1].lead.kind !== 'punct') return false;
+                    // The line it leads still has all nine squares, and may squeeze at its end too.
+                    var both = hanLayout('一二三四五六七八「九十一二三四五六七。八', 9);
+                    if (slotsStr(both) !== '[一][二][三][四][五][六][七][八]·|{「}[九][十][一][二][三][四][五][六][七]{。}|[八]········') return false;
+                    if (!both.usesLead || !both.usesTrail) return false;
+                    // An opener anywhere but the last square is just a square.
+                    if (slotsStr(hanLayout('一「二', 9)) !== '[一][「][二]······') return false;
+                    // A leading half-square alone is a row: the opener was the last thing typed.
+                    return slotsStr(hanLayout('一二三四五六七八「', 9)) === '[一][二][三][四][五][六][七][八]·|{「}·········';
+                })()"""), "an opener that would end a line leads the next line from its leading half-square");
     }
 
     @Test
@@ -148,7 +196,10 @@ class HanArticleTest extends JsModuleTestBase {
                     // Identities are the CAPACITY; what is presented is the prefix in use.
                     if (rel.pks().length !== 12 || rel.pks()[11] !== 'r11') return false;
                     if (rel.presented().join(',') !== 'r0,r1,r2,r3') return false;
-                    if (rel.columns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8') return false;
+                    // The two half-square columns are declared always and presented only in use.
+                    if (rel.columns().join(',') !== 'lead,c0,c1,c2,c3,c4,c5,c6,c7,c8,trail') return false;
+                    if (rel.presentedColumns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8') return false;
+                    if (rel.narrowColumns().join(',') !== 'lead,trail') return false;
                     if (shown(rel, 'r0', 'c0') !== '月' || shown(rel, 'r3', 'c7') !== '。') return false;
                     if (shown(rel, 'r0', 'c8') !== '') return false;                 // the blank square
                     // The same cell every time, and a square by class.
@@ -186,6 +237,32 @@ class HanArticleTest extends JsModuleTestBase {
                     return pair._ink.textContent === '甲' && pair._ink.children.length === 0
                         && !/han-punct/.test(pair._ink.className);
                 })()"""), "the square draws a pair as halves, a character as text, and rebuilds when its kind changes");
+    }
+
+    @Test
+    void theHalfSquareColumnsArePresentedWhenARowUsesThemAndTheirCellsAreNarrow() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = createHanStore('一二三四五六七八九。乙');
+                    var rel = createHanRelation(store, { cols: 9 });
+                    if (rel.presentedColumns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8,trail') return false;
+                    // The trailing cell: narrow, and showing the squeezed mark as one half-box.
+                    var t = mount(rel, 'r0', 'trail');
+                    if (!t.narrow() || !/han-narrow/.test(t._el.className)) return false;
+                    if (inkOf(t) !== '。' || t._ink.children.length !== 1) return false;
+                    // The squares are not narrow; a lead cell is, and is empty here.
+                    if (mount(rel, 'r0', 'c0').narrow() || !mount(rel, 'r0', 'lead').narrow()) return false;
+                    if (shown(rel, 'r0', 'lead') !== '') return false;
+                    // Edit the text so the mark is no longer squeezed: the trailing column
+                    // leaves the presentation and its cell shows nothing — alive, unshown.
+                    store.set('一二三四五六七八九乙。');
+                    if (rel.presentedColumns().indexOf('trail') >= 0 || inkOf(t) !== '') return false;
+                    // And the other way: an opener that would end a line presents the leading column.
+                    store.set('一二三四五六七八「九');
+                    if (rel.presentedColumns().join(',') !== 'lead,c0,c1,c2,c3,c4,c5,c6,c7,c8') return false;
+                    var l = mount(rel, 'r1', 'lead');
+                    return inkOf(l) === '「' && /han-open/.test(l._ink.children[0].className);
+                })()"""), "the half-square columns come and go with use; their cells are narrow and show the squeezed mark");
     }
 
     @Test

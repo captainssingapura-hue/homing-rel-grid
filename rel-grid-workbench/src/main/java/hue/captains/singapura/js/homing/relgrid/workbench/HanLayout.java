@@ -9,25 +9,28 @@ import java.util.List;
 
 /**
  * The Han Article bench's rendering engine: a pure function from text to rows
- * of square slots, a fixed number per row. One character, one slot; a newline
- * ends the row; <b>two punctuation marks share a slot</b> — a mark that follows
- * a lone mark joins it, even across a closed row, never across a line — and
- * that is the whole rule; where a mark at the end of a line should go instead
- * is the next iteration. {@code hanIsPunct} is the one definition of what a
- * mark is, and the cell imports it rather than deciding for itself.</p>
+ * of square slots, a fixed number per row, each row with a leading and a
+ * trailing <b>half-square</b>. One character, one square; a newline ends the
+ * row; two punctuation marks share a square; a closing mark that would start
+ * a line is squeezed into the previous row's trailing half-square; an opening
+ * bracket that would end a line leads the next row from its leading
+ * half-square. {@code hanIsPunct} and {@code hanIsOpener} are the one
+ * definition of what a mark is, and the cell imports them rather than
+ * deciding for itself.</p>
  *
  * <p>Imports nothing and holds nothing.</p>
  */
 public record HanLayout() implements DomModule<HanLayout> {
 
-    public record hanLayout()  implements Exportable._Constant<HanLayout> {}
-    public record hanIsPunct() implements Exportable._Constant<HanLayout> {}
+    public record hanLayout()   implements Exportable._Constant<HanLayout> {}
+    public record hanIsPunct()  implements Exportable._Constant<HanLayout> {}
+    public record hanIsOpener() implements Exportable._Constant<HanLayout> {}
 
     public static final HanLayout INSTANCE = new HanLayout();
 
     @Override public ImportsFor<HanLayout> imports() { return ImportsFor.noImports(); }
 
     @Override public ExportsOf<HanLayout> exports() {
-        return new ExportsOf<>(INSTANCE, List.of(new hanLayout(), new hanIsPunct()));
+        return new ExportsOf<>(INSTANCE, List.of(new hanLayout(), new hanIsPunct(), new hanIsOpener()));
     }
 }

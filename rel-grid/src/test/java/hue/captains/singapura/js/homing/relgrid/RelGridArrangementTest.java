@@ -123,7 +123,22 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     var refused = false;
                     try { new RelGrid({ container: makeEl('div'), branch: branch, relation: relation, rowView: ['r0', 'nope'] }); }
                     catch (e) { refused = /unknown key/.test(String(e)); }
-                    return refused;
-                })()"""), "rowView presents a prefix of a larger relation; growth goes through the seam");
+                    if (!refused) return false;
+                    // And the same for columns: a relation may declare a column it shows only
+                    // sometimes — a half-square for a squeezed mark — and present it later.
+                    var narrow = new RelGrid({ container: makeEl('div'), branch: branch, relation: relation,
+                                               rowView: ['r0'], columnView: ['b'], minColumnWidth: 24 });
+                    if (narrow.viewMaps().cols() !== 1 || narrow.viewMaps().columnAt(0) !== 'b') return false;
+                    narrow.viewMaps().setColumnView(['a', 'b']);
+                    if (narrow.viewMaps().cols() !== 2) return false;
+                    // The width floor is the host's to lower, within reason: 24 is held as
+                    // 24 here, where the default grid would have held 40; 2 is still 8.
+                    if (!narrow.setColumnWidth('a', 24) || narrow.columnWidth('a') !== 24) return false;
+                    if (!narrow.setColumnWidth('b', 2) || narrow.columnWidth('b') !== 24) return false;
+                    var floorless = new RelGrid({ container: makeEl('div'), branch: branch, relation: relation,
+                                                  rowView: ['r0'], minColumnWidth: 2 });
+                    floorless.setColumnWidth('a', 2);
+                    return floorless.columnWidth('a') === 8;
+                })()"""), "rowView and columnView present part of a larger relation; a half-square column may be held");
     }
 }

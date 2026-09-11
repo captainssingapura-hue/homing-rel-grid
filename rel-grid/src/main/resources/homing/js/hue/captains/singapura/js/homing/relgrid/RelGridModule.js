@@ -16,6 +16,11 @@
 //       rowView?,         // the identities to PRESENT at first, in order — a subset of
 //                         // relation.pks(). Default: all of them. For a relation that
 //                         // declares more than it shows; later remaps go through viewMaps().
+//       columnView?,      // the same for columns — a subset of relation.columns(). A
+//                         // relation may declare columns it shows only sometimes.
+//       minColumnWidth?,  // the floor a width request is bounded to. Default 40, the
+//                         // narrowest a column stays grabbable at; never below 8. A host
+//                         // whose columns are half-squares says 24.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -133,6 +138,7 @@
 // =============================================================================
 
 var _HRG_MIN_W = 40, _HRG_MAX_W = 2000;   // the legal range — normalisation's bound
+var _HRG_MIN_W_FLOOR = 8;                 // and the least a host may lower the floor to
 var _HRG_DEFAULT_W = 120;                 // what a keyboard resize starts from when nothing is held
 var _HRG_KEY_STEP = 10;                   // one Alt+arrow
 var _HRG_MASK_DELAY = 200;                // a question answered sooner shows no mask
@@ -272,6 +278,12 @@ class RelGrid {
             for (var d = 0; d < declared.length; d++) this._readOnly.add(declared[d]);
         }
         this._widths = new Map();  // column → px, identity-keyed; positional only at the layout
+        // The floor of the legal range: the host's, within reason. A column
+        // narrower than the default is a host's deliberate geometry — a
+        // half-square for a squeezed mark — and not something a drag should
+        // be able to reach by accident, which is what the default protects.
+        var minW = Number(opts.minColumnWidth);
+        this._minW = isFinite(minW) ? Math.max(_HRG_MIN_W_FLOOR, Math.min(_HRG_MAX_W, minW)) : _HRG_MIN_W;
         // The selection: POSITIONS, and it holds nothing else. The facade is
         // the only thing that knows both it and the cursor.
         this._selection = new RelGridSelection();
@@ -280,6 +292,7 @@ class RelGrid {
             pks: r.pks(),
             columns: r.columns(),
             rowView: opts.rowView || null,
+            columnView: opts.columnView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
@@ -370,7 +383,7 @@ class RelGrid {
         if (this._maps.baseColumns().indexOf(column) < 0) return false;
         var n = Number(px);
         if (!isFinite(n)) return false;
-        var bounded = Math.max(_HRG_MIN_W, Math.min(_HRG_MAX_W, n));
+        var bounded = Math.max(this._minW, Math.min(_HRG_MAX_W, n));
         if (this._widths.get(column) === bounded) return true;    // already held: nothing to do
         this._widths.set(column, bounded);
         this._layout.setColWidths(this._widthsPositional());

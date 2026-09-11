@@ -215,9 +215,16 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
 - **One glyph, one square — and two marks to a square.** The rendering engine (`hanLayout`)
   turns the text into rows of nine slots: one character a slot, a newline ends the row. A
   punctuation mark that follows a lone mark **joins it** — `。」` is one square, even when the
-  first mark took the ninth square and closed the row — and nothing joins across a line. A mark
-  that lands at the start of a row starts a square there like anything else, because the
-  end-of-line rule is the next iteration.
+  first mark took the ninth square and closed the row — and nothing joins across a line.
+- **Two half-square columns, shown only when used.** A closing mark may not start a line, so
+  when nine characters have filled a row and a `。` follows, it is **squeezed** into a
+  half-square after the ninth — the row's *trailing* column. An opening bracket may not end a
+  line, so when a `「` would take the ninth square the row closes with that square empty and
+  the bracket **leads** the next row from a half-square before the first — its *leading*
+  column. One mark fits a half-square; a second starts the next row after all, and pairing
+  comes first: a lone mark in the ninth square takes the next mark as its partner, and only a
+  third is squeezed. The relation declares both columns always; the host presents whichever the
+  layout has put a mark in, and hides them again when none does.
 - **Identity is the square, not the character.** The relation's rows are `r0`…, its columns
   `c0`…`c8`, and a glyph is what a square currently shows. On every change the relation re-lays
   the article out and sets its own cells; the squares stay put and the ink moves. That is the
@@ -226,12 +233,19 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
 - **Strictly square by construction.** The grid sets nine columns to one width; the cell fills it
   and makes itself exactly as tall as it is wide (`aspect-ratio: 1`), sizing its glyph from the
   square with container units. There is one number in the whole geometry, and it is the column's.
-- **A capacity, and a view.** A grid reads its relation's identities once, at construction, and
-  keeps them. An article grows, so the relation declares a **capacity** of two hundred rows and
-  the host presents the prefix in use — `rowView` at construction, `viewMaps().setRowView(...)`
-  when a commit changes the row count. Only presented rows are asked for cells: thirty-six for the
-  poem, not eighteen hundred. This is the seam sort and filter will drive through the channel in
-  a later round; today the host calls it.
+- **A capacity, and a view — in both axes.** A grid reads its relation's identities once, at
+  construction, and keeps them. An article grows, so the relation declares a **capacity** of two
+  hundred rows and the host presents the prefix in use — `rowView` at construction,
+  `viewMaps().setRowView(...)` when an edit changes the row count. The half-square columns are
+  the same story across: declared always, presented by `columnView` and
+  `viewMaps().setColumnView(...)` as rows use them. Only presented rows and columns are asked for
+  cells: thirty-six for the poem, not eighteen hundred. This is the seam sort and filter will
+  drive through the channel in a later round; today the host calls it.
+- **What the grid had to learn.** A half-square is 24px wide, and the grid bounded every width
+  request to no less than 40 — the narrowest a column stays grabbable at. The floor is now the
+  host's to lower (`minColumnWidth`, never below 8): a column narrower than the default is a
+  host's deliberate geometry, not something a drag should reach by accident, which is all the
+  default ever protected.
 
 ### What to try
 
@@ -251,15 +265,18 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
   is**: left for `。，、：；！？`, right for the opening brackets. Measured, not assumed; a first
   cut let the halves grow to a full em each and the pair spilled out of the square.
 
-### Later — punctuation, and two columns the grid does not have
+### What it asked of the grid, and got
 
-The next iteration is the point of the bench. Two marks already share a square; what is not yet
-here is the line end. A mark that falls at the **end of a line** may not start the next one, so
-it is **squeezed** into a half-width column past the ninth square — and, symmetrically, a
-half-width column before the first. Those two columns are hidden until needed, and they are the
-grid's business: a column with a declared width of half a square, present in the relation and
-shown or hidden by view, is something the grid must be able to arrange. That is where this bench
-starts asking.
+The bench was built to ask for two columns the grid did not have: half a square wide, present in
+the relation, shown or hidden by view. It got them without a new mechanism — a column view is a
+view, a half-square is a width — and the one thing that had to change was the width floor, which
+had been a constant and is now the host's. What it also found on the way: a relation's identities
+are fixed at construction, so a growing article is a capacity and a view; and a grid's `focus()`
+must not scroll, or a table taller than its pane moves under the pointer on every resume.
+
+Not done, and not asked for yet: a second squeezed mark (it starts the next row), and the
+typographic refinements a real manuscript grid has — compressing a run of marks, hanging a mark
+into the margin rather than a column.
 
 ## Adding a bench
 

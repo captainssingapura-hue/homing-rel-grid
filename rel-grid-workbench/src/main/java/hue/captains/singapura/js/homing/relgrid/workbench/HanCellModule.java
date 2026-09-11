@@ -15,7 +15,9 @@ import java.util.List;
  * the only geometry anybody sets. Two punctuation marks share a square, each
  * drawn in a half-width box with the font's half-width alternates asked for.
  * A display cell: it offers neither half of the handover, so the grid never
- * asks it, and the article is edited as text elsewhere.
+ * asks it, and the article is edited as text elsewhere. A <b>narrow</b> cell
+ * is the half-square of the leading or trailing column: half as wide, as
+ * tall, one squeezed mark at the size the squares draw theirs.
  */
 public record HanCellModule() implements DomModule<HanCellModule> {
 
@@ -27,7 +29,7 @@ public record HanCellModule() implements DomModule<HanCellModule> {
     public ImportsFor<HanCellModule> imports() {
         // What a mark is, is the engine's to say; the cell only draws it.
         return ImportsFor.<HanCellModule>builder()
-                .add(new ModuleImports<>(List.of(new HanLayout.hanIsPunct()), HanLayout.INSTANCE))
+                .add(new ModuleImports<>(List.of(new HanLayout.hanIsPunct(), new HanLayout.hanIsOpener()), HanLayout.INSTANCE))
                 .build();
     }
 

@@ -73,16 +73,17 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
     }
 
     /**
-     * The Han Article's host: as wide as nine squares and no wider, so the
-     * table's 100% is nine times the square's side and every column gets
-     * exactly that. Content-tall rather than a scrollport — an article grows
-     * downward, and the pane scrolls.
+     * The Han Article's host: exactly as wide as the columns shown — nine
+     * squares, and a half-square on either side when a row uses it — so the
+     * table's 100% is their sum and every column gets exactly its width. The
+     * width itself is set by the widget, which knows which columns are shown.
+     * Content-tall rather than a scrollport — an article grows downward, and
+     * the pane scrolls.
      */
     public record wb_han_host() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
                 flex: 0 0 auto;
                 align-self: flex-start;
-                width: 434px;
                 max-width: 100%;
                 overflow: auto;
                 border: 1px solid var(--color-border);
