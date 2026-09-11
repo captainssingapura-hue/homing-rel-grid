@@ -4,7 +4,8 @@
 // changed. DOMAIN CODE; nothing here knows a grid exists.
 //
 //   hanStoreShared()          the page's one article — the editor and every display share it
-//   createHanStore(seed?)     a fresh store (tests, or a second article)
+//   createHanStore(seed?, opts?)  a fresh store (tests, or a second article); opts.key names
+//                                 where it persists, and opts.key === null persists nowhere
 //
 //   store.text()              the article, as it is
 //   store.set(text)           the whole article — the EDIT SEAM, which is the
@@ -16,18 +17,21 @@
 
 var HAN_SEED = "月落乌啼霜满天，\n江枫渔火对愁眠。\n姑苏城外寒山寺，\n夜半钟声到客船。";
 
-function createHanStore(seed) {
-    var KEY = "bench.hanArticle.text.v1";
+function createHanStore(seed, opts) {
+    opts = opts || {};
+    var KEY = (opts.key === undefined) ? "bench.hanArticle.text.v1" : opts.key;   // null: in memory only
     var SEED = (typeof seed === "string") ? seed : HAN_SEED;
     var text, revision = 0, subs = [];
 
     function load() {
+        if (KEY === null) return null;
         try {
             var raw = (typeof localStorage !== "undefined") ? localStorage.getItem(KEY) : null;
             return (typeof raw === "string") ? raw : null;
         } catch (e) { return null; }
     }
     function save() {
+        if (KEY === null) return;
         try { if (typeof localStorage !== "undefined") localStorage.setItem(KEY, text); }
         catch (e) { /* a page without storage still edits; it just forgets */ }
     }
