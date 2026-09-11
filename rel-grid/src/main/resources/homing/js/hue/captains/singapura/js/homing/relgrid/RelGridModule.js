@@ -463,6 +463,10 @@ class RelGrid {
         if (this._cbResized) {
             try { this._cbResized(column, bounded); }
             catch (e) { console.error("[RelGrid] onColumnResized threw:", e); }
+            // A host may answer the report by changing the geometry the grid sits in
+            // — sizing its container to the widths now held is the common case — and
+            // the merged cells' hosts were measured before it did. Measure again.
+            if (this._merge) this._layout.placeGroups();
         }
         return true;
     }

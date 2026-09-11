@@ -180,6 +180,45 @@ class RelGridMergeTest extends JsModuleTestBase {
     }
 
     @Test
+    void aHostThatMovesTheSlotsInTheResizeReportIsMeasuredAgain() {
+        assertTrue(evalBool("""
+                (() => {
+                    // The stress table found this: a host that sizes its container to the
+                    // widths now held does so INSIDE onColumnResized, after the grid measured
+                    // the merged cells' hosts against the old geometry. So the grid measures
+                    // again once the report has been made.
+                    var f = spanning({ mergedCells: true });
+                    f.td(0, 1)._rl = 100; f.td(0, 1)._rr = 200;
+                    f.td(0, 3)._rl = 300; f.td(0, 3)._rr = 400;
+                    f.grid.setColumnWidth('a', 50);
+                    if (f.groups()[0].style.getPropertyValue('left') !== '100px') return false;
+                    // Now a host whose report moves everything 40px to the left.
+                    var g2 = spanning({ mergedCells: true });
+                    g2.grid.destroy();
+                    var moved = false;
+                    var relation = { pks: function () { return ['r0']; }, columns: function () { return ['a', 'b', 'c']; },
+                                     cellFor: function (pk, col) { return { render: function (h) { h.textContent = col; }, onSelect: function () {}, dispose: function () {},
+                                                                              colSpan: function () { return col === 'a' ? 2 : 1; } }; } };
+                    var container = makeEl('div');
+                    var grid = new RelGrid({ container: container, branch: { createElement: function (n, t) { return makeEl(t); } },
+                                             relation: relation, mergedCells: true,
+                                             onColumnResized: function () {
+                                                 // the container narrows; every slot shifts
+                                                 var t = container.children[0].children[0], tb = null;
+                                                 for (var k = 0; k < t.children.length; k++) if (t.children[k].tagName === 'tbody') tb = t.children[k];
+                                                 var tds = tb.children[0].children;
+                                                 tds[0]._rl = 60; tds[0]._rr = 110; tds[1]._rl = 110; tds[1]._rr = 160; moved = true;
+                                             } });
+                    var host = container.children[0].children[1];
+                    if (!/hrg-merge/.test(host.className)) return false;
+                    grid.setColumnWidth('c', 50);
+                    // Measured after the host moved the slots: left 60, width 100 — not the
+                    // stub's default 0 and 100 that stood before the report.
+                    return moved && host.style.getPropertyValue('left') === '60px' && host.style.getPropertyValue('width') === '100px';
+                })()"""), "the merged cells' hosts are measured again after the resize report, in case the host moved the slots");
+    }
+
+    @Test
     void groupsFollowEveryArrangementAndGoWithTheGrid() {
         assertTrue(evalBool("""
                 (() => {

@@ -327,7 +327,6 @@ class HanArticleTest extends JsModuleTestBase {
                     var run = mount(rel, 'r0', 'c2');
                     // The cell answers the reach the grid asks about, and draws itself that wide.
                     if (run.colSpan() !== 2 || !/han-run/.test(run._el.className)) return false;
-                    if (run._el.style.getPropertyValue('--han-span') !== '2') return false;
                     if (run._ink.textContent !== 'what' || run._ink.children.length !== 0) return false;
                     // The covered square has a cell of its own, showing nothing, reaching over nothing.
                     var cov = mount(rel, 'r0', 'c3');
@@ -341,7 +340,7 @@ class HanArticleTest extends JsModuleTestBase {
                     if (run.colSpan() !== 1 || shown(rel, 'r0', 'c2') !== '' || /han-run/.test(run._el.className)) return false;
                     if (shown(rel, 'r0', 'c3') !== '哉') return false;
                     var c1 = mount(rel, 'r0', 'c1');
-                    return c1.colSpan() === 2 && shown(rel, 'r0', 'c1') === 'what' && c1._el.style.getPropertyValue('--han-span') === '2';
+                    return c1.colSpan() === 2 && shown(rel, 'r0', 'c1') === 'what' && /han-run/.test(c1._el.className);
                 })()"""), "a run's cell answers colSpan and draws itself wide; the squares it covers show nothing");
     }
 

@@ -68,6 +68,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(HanCellModule.INSTANCE),
                 CrateEntry.of(HanRelation.INSTANCE),
                 CrateEntry.of(HanEditorWidget.INSTANCE),
-                CrateEntry.of(HanDisplayWidget.INSTANCE));
+                CrateEntry.of(HanDisplayWidget.INSTANCE),
+                CrateEntry.of(HanStressWidget.INSTANCE));
     }
 }

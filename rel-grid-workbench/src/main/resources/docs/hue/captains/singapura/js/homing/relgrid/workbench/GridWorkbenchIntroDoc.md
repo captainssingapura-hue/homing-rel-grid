@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article**.
+A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own.
 
 ---
 
@@ -204,7 +204,8 @@ starts as 張繼's 楓橋夜泊 —
 — and it exists to ask the grid a question the dish list never could: what happens when the cells
 are not values in columns but **ink in squares**, and the ink moves.
 
-Switch the workspace kind to **Han Article** and dock the **Editor** and a **Display** or two.
+Switch the workspace kind to **Han Article** and dock the **Editor** and a **Display** or two —
+and **Stress**, when the question is the layout rather than the article.
 
 ### What it is
 
@@ -232,7 +233,8 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
   the grid is never told" as the dish list, over a very different domain.
 - **Strictly square by construction.** The grid sets nine columns to one width; the cell fills it
   and makes itself exactly as tall as it is wide (`aspect-ratio: 1`), sizing its glyph from the
-  square with container units. There is one number in the whole geometry, and it is the column's.
+  square's height with container units — the one measure a square, a half-square and a run all
+  share. There is one number in the whole geometry, and it is the column's.
 - **A capacity, and a view — in both axes.** A grid reads its relation's identities once, at
   construction, and keeps them. An article grows, so the relation declares a **capacity** of two
   hundred rows and the host presents the prefix in use — `rowView` at construction,
@@ -285,6 +287,16 @@ Switch the workspace kind to **Han Article** and dock the **Editor** and a **Dis
   has none (this machine's does not) each full-width mark is **clipped to the half where its ink
   is**: left for `。，、：；！？`, right for the opening brackets. Measured, not assumed; a first
   cut let the halves grow to a full em each and the pair spilled out of the square.
+- Dock **Stress**: the same engine over hypothetical text — runs of every length, pairs,
+  squeezes, a run longer than a row — with the header shown so every column **resizes**, down to
+  12px. Drag a header's edge, or Alt+←/→ on the cursor's column; the buttons widen, narrow and
+  randomise every width at once, and regenerate the text so the spans move under the same
+  widths. Here the side is a **number** the host sets (`--han-side`) rather than the column's
+  width, so a resize moves only the width and never a row: a narrow column clips its glyph, a
+  wide one has slack, the ink stays one size — and the merged hosts and half-squares must
+  follow. It checks itself: after every change it measures every host against the slots beneath
+  it and reports the largest drift, in pixels, and whether every row is still one side tall.
+  The claim the layout makes is verified where it is made, not assumed.
 
 ### What it asked of the grid, and got
 
@@ -294,6 +306,22 @@ view, a half-square is a width — and the one thing that had to change was the 
 had been a constant and is now the host's. What it also found on the way: a relation's identities
 are fixed at construction, so a growing article is a capacity and a view; and a grid's `focus()`
 must not scroll, or a table taller than its pane moves under the pointer on every resume.
+
+The stress table found one more, in its first minute: narrowing every column at once put the
+merged hosts up to twenty pixels off, and further off with every row. The grid had measured the
+hosts, then reported the resize, and the bench answered the report by sizing the table's container
+to the widths now held — at which point a fixed-layout table spread the container's slack over its
+columns, the squares grew with them, and the hosts were left where the squares had been. A host
+answering the resize report is the common case, so the grid now measures the hosts **again after
+the report**, and the bench sizes its container before it asks for widths, so the first
+measurement is already of the final geometry. Widening had never shown it: a table wider than its
+container overflows to the columns' sum, and nothing spreads.
+
+And one thing the grid did not do, which is the point: when a column was dragged wide, every row
+grew with it. The grid never sizes a row — a row is as tall as its tallest cell, and the Han cell
+was the one saying "as tall as I am wide". The cell now takes a fixed side from its host when the
+host sets one, and sizes its ink from the height it ends up with either way; the grid was not
+touched, because the rows were never its.
 
 Not done, and not asked for yet: a second squeezed mark (it starts the next row), and the
 typographic refinements a real manuscript grid has — compressing a run of marks, hanging a mark

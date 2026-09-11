@@ -57,7 +57,14 @@ public final class HanArticleSpec implements WorkspaceSpec {
                         .withGroup(WidgetGroup.of("Replicas"))
                         .withDescription(WidgetDescription.of(
                                 "The same article, read-only, over the same store. Dock several; "
-                              + "every one moves on every commit, and none of their grids is told."))
+                              + "every one moves on every commit, and none of their grids is told.")),
+                WidgetEntry.of(HanStressWidget.class, WidgetLabel.of("Stress"))
+                        .withIcon(new WidgetIcon.Emoji("🧪"))
+                        .withGroup(WidgetGroup.of("Stress"))
+                        .withDescription(WidgetDescription.of(
+                                "Hypothetical text over the same engine, header shown, every column "
+                              + "resizable down to 12px. Measures every merged host against the slots "
+                              + "beneath it after each change and reports the drift."))
         );
     }
 
