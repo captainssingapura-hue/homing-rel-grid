@@ -391,8 +391,12 @@ agreeing through the surface every host already uses, and reaches into no member
 - **What is shared: column geometry**, the one thing separate tables cannot agree on by
   themselves. The group applies its widths to every member, hears any member's resize report,
   applies it to the siblings through their own `setColumnWidth`, and reports once. A sibling
-  that refused because a cell of its held control is levelled the moment it is free. One
-  header — the first member's — carries the handles; the rest are built with none.
+  that refused because a cell of its held control is levelled the moment it is free. **One
+  header, or one each**: with `header: 'group'` (the default) the group mints a table of its own
+  at the very top, above the first fence — a grid over the members' columns that presents nothing,
+  the illustration's trick — whose header band carries the labels and the resize handles and is
+  levelled with the rest, and every member is built with none; the members' columns must agree,
+  checked once. With `header: 'each'` the group adds no table and every member keeps its own.
 - **An illustration is a member with nothing to present**: a relation with an empty row view
   that keeps its identity and its fence. No special row, no special cell, nothing the table
   knows — which is what map 24 predicted, one abstraction lower than it expected.

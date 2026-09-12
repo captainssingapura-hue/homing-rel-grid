@@ -104,7 +104,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     members: specs,
                     fence: trailing,
                     columnWidths: opts.columnWidths,
-                    sharedHeader: opts.sharedHeader,
+                    header: opts.header,
                     folded: opts.folded,
                     onColumnResized: function (c, px) { reports.push(c + ' ' + px); },
                     onFolded: function (id, on) { folds.push(id + (on ? ' folded' : ' unfolded')); },
@@ -112,6 +112,9 @@ class RelGridGroupTest extends JsModuleTestBase {
                 });
                 function root() { return container.children[0]; }
                 function kinds() { return root().children.map(function (el) { return el.className.split(' ')[0]; }).join(' '); }
+                // The group's own header, when it has one: its box, and the table in it.
+                function headerBox() { var b = root().children[0]; return (b && b.className === 'hrg-group-header') ? b : null; }
+                function headerTable() { var b = headerBox(); return b ? b.children[0].children[0] : null; }
                 function has(el, c) { return (el.className || '').split(' ').indexOf(c) >= 0; }
                 // container > group > (fence | member)*; member > wrap > table
                 function tableOf(id) { var g = group.member(id); return g ? g.el() : null; }
@@ -126,6 +129,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     tableOf(id).dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
                 }
                 return { group: group, container: container, specs: specs, trailing: trailing, reports: reports, folds: folds,
+                         headerBox: headerBox, headerTable: headerTable,
                          boxOf: function (id) { return group.member(id).el().parentNode.parentNode; },
                          root: root, kinds: kinds, has: has, tableOf: tableOf, theadOf: theadOf, tdOf: tdOf, click: click, key: key,
                          spec: function (id) { for (var k = 0; k < specs.length; k++) if (specs[k].id === id) return specs[k]; return null; } };
@@ -153,8 +157,9 @@ class RelGridGroupTest extends JsModuleTestBase {
                 (() => {
                     var f = groupFixture();
                     if (f.group.members().join(',') !== 'a,b,c') return false;
-                    // fence a, member a, fence b, member b, fence c, member c, trailing fence.
-                    if (f.kinds() !== 'hrg-fence hrg-member hrg-fence hrg-member hrg-fence hrg-member hrg-fence') return false;
+                    // The group's header first, above everything; then fence a, member a, fence b,
+                    // member b, fence c, member c, and the trailing fence.
+                    if (f.kinds() !== 'hrg-group-header hrg-fence hrg-member hrg-fence hrg-member hrg-fence hrg-member hrg-fence') return false;
                     if (f.root().getAttribute('aria-label') !== 'a group') return false;
                     // Each fence was handed to its cell, and each member's box carries its id.
                     for (var k = 0; k < 3; k++) {
@@ -217,17 +222,65 @@ class RelGridGroupTest extends JsModuleTestBase {
     }
 
     @Test
-    void theHeaderIsTheFirstMembersAndTheRestShowNoneUnlessToldOtherwise() {
+    void oneHeaderIsTheGroupsOwnTableAboveEveryFenceAndEachIsEveryMembersOwn() {
         assertTrue(evalBool("""
                 (() => {
                     var f = groupFixture();
-                    if (f.theadOf('a') === null || f.theadOf('b') !== null || f.theadOf('c') !== null) return false;
-                    var g = groupFixture({ sharedHeader: false });
+                    // 'group' (the default): a header table of the group's own at the top, presenting
+                    // nothing, with the first member's labels; no member shows one.
+                    var ht = f.headerTable();
+                    if (!ht || ht.tagName !== 'table') return false;
+                    var thead = null, tbody = null;
+                    for (var k = 0; k < ht.children.length; k++) { if (ht.children[k].tagName === 'thead') thead = ht.children[k]; if (ht.children[k].tagName === 'tbody') tbody = ht.children[k]; }
+                    if (!thead || thead.children[0].children.length !== 2 || tbody.children.length !== 0) return false;
+                    if (thead.children[0].children[0].textContent !== 'ingredient') return false;
+                    if (f.theadOf('a') !== null || f.theadOf('b') !== null || f.theadOf('c') !== null) return false;
+                    // Labels come from the first member.
+                    var l = groupFixture({ specs: [memberSpec('a', [['mapo', 'tofu', 480]], { header: { labels: { ingredient: 'Dish' } } }), memberSpec('b', [['fish', 'cod', 560]])] });
+                    var lt = l.headerTable(), lthead = null;
+                    for (var q = 0; q < lt.children.length; q++) if (lt.children[q].tagName === 'thead') lthead = lt.children[q];
+                    if (lthead.children[0].children[0].textContent !== 'Dish') return false;
+                    // 'each': no table of the group's; every member keeps its own header option.
+                    var g = groupFixture({ header: 'each' });
+                    if (g.headerBox() !== null) return false;
                     if (g.theadOf('a') === null || g.theadOf('b') === null || g.theadOf('c') === null) return false;
-                    // A first member that hides its own header keeps it hidden: the group forces nothing on.
-                    var h = groupFixture({ specs: [memberSpec('a', [['mapo', 'tofu', 480]], { header: { show: false } }), memberSpec('b', [['fish', 'cod', 560]])] });
-                    return h.theadOf('a') === null && h.theadOf('b') === null;
-                })()"""), "one header: the first member's; sharedHeader:false leaves every member its own");
+                    var h = groupFixture({ header: 'each', specs: [memberSpec('a', [['mapo', 'tofu', 480]], { header: { show: false } }), memberSpec('b', [['fish', 'cod', 560]])] });
+                    if (h.theadOf('a') !== null || h.theadOf('b') === null) return false;
+                    // Anything else is a mistake.
+                    try { groupFixture({ header: 'first' }); return false; } catch (e) { return /'group' or 'each'/.test(String(e)); }
+                })()"""), "header:'group' is one table of the group's above every fence; header:'each' is every member's own");
+    }
+
+    @Test
+    void oneHeaderMeansOneColumnListAndADragOnItLevelsEveryMember() {
+        assertTrue(evalBool("""
+                (() => {
+                    // A member declaring other columns cannot sit under one header.
+                    var odd = memberSpec('z', []);
+                    odd.grid.relation.columns = function () { return ['ingredient', 'kcal']; };
+                    try { groupFixture({ specs: [memberSpec('a', [['mapo', 'tofu', 480]]), odd] }); return false; }
+                    catch (e) { if (!/one header means one column list/.test(String(e))) return false; }
+                    // Under 'each' it may: nothing is shared but widths, which drop what a member lacks.
+                    var ok = groupFixture({ header: 'each', specs: [memberSpec('a', [['mapo', 'tofu', 480]]), odd] });
+                    if (ok.group.members().join(',') !== 'a,z') return false;
+                    // A drag on the group's header is a resize of every member, reported once.
+                    var f = groupFixture({ columnWidths: { ingredient: 120, calories: 100 } });
+                    var ht = f.headerTable(), thead = null;
+                    for (var k = 0; k < ht.children.length; k++) if (ht.children[k].tagName === 'thead') thead = ht.children[k];
+                    var th = thead.children[0].children[1]; th._rl = 300; th._rr = 400;
+                    var handle = th.children[th.children.length - 1];
+                    if (handle.className !== 'hrg-resize-handle') return false;
+                    handle.dispatch('mousedown', { clientX: 398 });
+                    document.dispatch('mousemove', { clientX: 448 });                // +50 from the held 100
+                    document.dispatch('mouseup', {});
+                    var held = function (id) { return f.group.member(id).columnWidth('calories'); };
+                    if (held('a') !== 150 || held('b') !== 150 || held('c') !== 150) return false;
+                    if (f.reports.join('|') !== 'calories 150' || f.group.columnWidths().calories !== 150) return false;
+                    // And the other way: a member's resize levels the header too.
+                    f.group.member('c').setColumnWidth('ingredient', 90);
+                    var hcol = ht.children[0].children[0];                        // colgroup > col
+                    return hcol.style.getPropertyValue('--hrg-col-w') === '90px' && f.reports.length === 2;
+                })()"""), "the group's header shares the members' column list, and its drag is everyone's resize");
     }
 
     @Test

@@ -16,8 +16,9 @@
 //       }, ...],
 //       fence?,             // the cell for the trailing slot, below the last member
 //       columnWidths?,      // the widths every member starts at — the group's, not any member's
-//       sharedHeader?,      // true (default): the first member's header is the group's and the
-//                           // rest show none; false: every member keeps its own header option
+//       header?,            // 'group' (default): ONE header, the group's, at the top above every
+//                           // fence, and no member shows its own; 'each': every member keeps
+//                           // its own header option, and the group adds none
 //       folded?,            // the ids folded at first — [] by default
 //       onColumnResized?,   // (column, px) — ONE report per change, however many members moved
 //       onFolded?,          // (id, folded) — a REPORT: a member's box was folded or unfolded
@@ -62,10 +63,18 @@
 // the change to the siblings through setColumnWidth, and reports ONCE. A
 // sibling that refuses — locked, because a cell of its holds control or an
 // answer is owed — is brought level the moment it is free again, on its own
-// next report. The header is one: the first member's, with the resize
-// handles; the rest are built with none (sharedHeader). Every member's own
-// onColumnResized still fires — it is that member's truthful report of its
-// own geometry — and the group's fires once for all of them.
+// next report. Every member's own onColumnResized still fires — it is that
+// member's truthful report of its own geometry — and the group's fires once
+// for all of them.
+//
+// THE GROUP'S HEADER (header: 'group') is a table of its own at the very
+// top, above the first fence: a grid over the members' columns with nothing
+// to present — the illustration's trick again — whose header band is the
+// group's, resize handles and all, and whose widths are levelled with the
+// rest. Every member is then built with no header of its own. Its labels
+// are the first member's; its columns must be every member's, checked once
+// at construction. With header: 'each' the group adds no table and every
+// member keeps whatever header its own options say.
 //
 // WHAT THE TABLE GAINED FOR THIS: one option, resizeGuide — what a header
 // drag's guide line spans, which a host stacking tables wants to be each
@@ -77,6 +86,7 @@ var _HRGG_STYLE_ID = "homing-rel-grid-group-style";
 var _HRGG_STYLE_CSS = [
     ".hrg-group{display:flex;flex-direction:column;align-items:stretch;}",
     ".hrg-member{flex:0 0 auto;}",
+    ".hrg-group-header{flex:0 0 auto;}",
     ".hrg-fence{flex:0 0 auto;}",
     ".hrg-fence.hrg-fence-empty{display:none;}",
     // A folded member: its box hidden, its table inside untouched; the fence
@@ -122,7 +132,9 @@ class RelGridGroup {
         var self = this;
         this._cbResized = opts.onColumnResized || null;
         this._cbFolded = opts.onFolded || null;
-        this._sharedHeader = opts.sharedHeader !== false;
+        this._headerMode = (opts.header === "each") ? "each" : "group";
+        if (opts.header !== undefined && opts.header !== "each" && opts.header !== "group")
+            throw new Error("[RelGridGroup] header must be 'group' or 'each', not " + JSON.stringify(opts.header));
         this._folded = {};                                      // id → true while folded
         var f0 = opts.folded || [];
         for (var i = 0; i < f0.length; i++) this._folded[f0[i]] = true;
@@ -135,16 +147,22 @@ class RelGridGroup {
         if (opts.label) this._root.setAttribute("aria-label", opts.label);
         this._members = [];                                     // { id, box, grid, spec }, in order
         this._fences = [];                                      // N+1 of { id, host, cell }; the last id is null
-        this._boxes = [];                                       // the members' boxes, the list every member's guide spans
+        this._boxes = [];                                       // the boxes a drag's guide runs down: the header's, then every member's
+        this._header = null;                                    // { box, grid } — the group's own header, in 'group' mode
 
+        // The specs are checked whole before anything is minted: an id each, unique, and grid options.
         var seen = {};
+        for (var v = 0; v < opts.members.length; v++) {
+            var mv = opts.members[v] || {};
+            if (mv.id === undefined || mv.id === null || mv.id === "")
+                throw new Error("[RelGridGroup] member " + v + " has no id");
+            if (seen[mv.id]) throw new Error("[RelGridGroup] duplicate member id: " + mv.id);
+            seen[mv.id] = true;
+            if (!mv.grid) throw new Error("[RelGridGroup] member '" + mv.id + "' has no grid options");
+        }
+        if (this._headerMode === "group") this._header = this._mintHeader(opts.members);
         for (var k = 0; k < opts.members.length; k++) {
-            var m = opts.members[k] || {};
-            if (m.id === undefined || m.id === null || m.id === "")
-                throw new Error("[RelGridGroup] member " + k + " has no id");
-            if (seen[m.id]) throw new Error("[RelGridGroup] duplicate member id: " + m.id);
-            seen[m.id] = true;
-            if (!m.grid) throw new Error("[RelGridGroup] member '" + m.id + "' has no grid options");
+            var m = opts.members[k];
             this._fences.push(this._mintFence(m.id, m.fence || null));
             this._members.push(this._mintMember(m, k));
             if (this._folded[m.id]) this._paintFold(m.id, true);   // folded at first: the box hidden before it is seen
@@ -189,6 +207,48 @@ class RelGridGroup {
      * but for the container, the header when it is the group's, and the
      * reports the group listens to, which still reach the member's own host.
      */
+    /**
+     * The group's own header: a grid over the members' columns that presents
+     * nothing, built first so it sits above the first fence. Its header band
+     * carries the labels and the resize handles; a drag on it is a member's
+     * drag as far as the group is concerned — held, levelled, reported once.
+     * The columns are checked here: one header means one column list.
+     */
+    _mintHeader(specs) {
+        var self = this, first = specs[0] || {}, spec = first.grid || {};
+        var relation = spec.relation;
+        if (!relation || typeof relation.columns !== "function")
+            throw new Error("[RelGridGroup] member '" + first.id + "' has no relation to take the header's columns from");
+        var columns = relation.columns().slice();
+        for (var k = 1; k < specs.length; k++) {
+            var r = specs[k] && specs[k].grid && specs[k].grid.relation, cols = (r && typeof r.columns === "function") ? r.columns() : null;
+            if (!cols || cols.join("\u0000") !== columns.join("\u0000"))
+                throw new Error("[RelGridGroup] one header means one column list: member '" + (specs[k] && specs[k].id)
+                              + "' declares " + JSON.stringify(cols) + ", member '" + first.id + "' " + JSON.stringify(columns));
+        }
+        var box = document.createElement("div");
+        box.className = "hrg-group-header";
+        this._root.appendChild(box);
+        this._boxes.push(box);
+        var grid = new RelGrid({
+            container: box,
+            branch: spec.branch,                                // never asked for a cell: nothing is presented
+            relation: {
+                pks:     function () { return []; },
+                columns: function () { return columns.slice(); },
+                cellFor: function (pk, col) { throw new Error("[RelGridGroup] the header presents no cell (" + pk + ", " + col + ")"); }
+            },
+            header: { show: true, labels: (spec.header && spec.header.labels) || {} },
+            columnView: spec.columnView || null,
+            minColumnWidth: spec.minColumnWidth,
+            resizeGuide: this._boxes,
+            label: "header",
+            onColumnResized: function (column, px) { self._onMemberResized(null, column, px); },
+            onArranged: function () { self._level(null); }
+        });
+        return { box: box, grid: grid };
+    }
+
     _mintMember(m, k) {
         var self = this, id = m.id, spec = m.grid;
         var box = document.createElement("div");
@@ -198,8 +258,8 @@ class RelGridGroup {
         this._boxes.push(box);
         var g = _hrggCopy(spec);
         g.container = box;
-        if (this._sharedHeader && k > 0) g.header = { show: false };
-        g.resizeGuide = this._boxes;                            // a drag's guide: a segment down each member, none across a fence
+        if (this._headerMode === "group") g.header = { show: false };   // the header is the group's, above
+        g.resizeGuide = this._boxes;                            // a drag's guide: a segment down the header and each member, none across a fence
         g.onColumnResized = function (column, px) {
             self._onMemberResized(id, column, px);
             if (spec.onColumnResized) spec.onColumnResized(column, px);
@@ -221,12 +281,13 @@ class RelGridGroup {
 
     // ── the one shared thing: column geometry ──────────────────────────────
 
-    /** A member moved a column. Hold it, level the siblings, report once. */
+    /** A member — or the group's header, id null — moved a column. Hold it, level the rest, report once. */
     _onMemberResized(id, column, px) {
         if (this._broadcasting || this._destroyed) return;
         this._widths[column] = px;
         this._broadcasting = true;
         try {
+            if (this._header && id !== null) this._header.grid.setColumnWidth(column, px);
             for (var k = 0; k < this._members.length; k++)
                 if (this._members[k].id !== id) this._members[k].grid.setColumnWidth(column, px);
         } finally { this._broadcasting = false; }
@@ -236,11 +297,12 @@ class RelGridGroup {
         }
     }
 
-    /** Bring one member (or all) to the group's widths. Idempotent; silent while locked. */
+    /** Bring one member (or all, the header too) to the group's widths. Idempotent; silent while locked. */
     _level(id) {
         if (this._broadcasting || this._destroyed) return;
         this._broadcasting = true;
         try {
+            if (this._header && id === null) this._header.grid.setColumnWidths(this._widths);
             for (var k = 0; k < this._members.length; k++)
                 if (id === null || this._members[k].id === id) this._members[k].grid.setColumnWidths(this._widths);
         } finally { this._broadcasting = false; }
@@ -358,9 +420,10 @@ class RelGridGroup {
 
     el() { return this._root; }
 
-    /** Destroys every member's grid and removes the group. Disposes no fence cell: they are the domain's. */
+    /** Destroys every member's grid and the header's, and removes the group. Disposes no fence cell: they are the domain's. */
     destroy() {
         this._destroyed = true;
+        if (this._header) this._header.grid.destroy();
         for (var k = 0; k < this._members.length; k++) this._members[k].grid.destroy();
         if (this._root.parentNode) this._root.parentNode.removeChild(this._root);
     }

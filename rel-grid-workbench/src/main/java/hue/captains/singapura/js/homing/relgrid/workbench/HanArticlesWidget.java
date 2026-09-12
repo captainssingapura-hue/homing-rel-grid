@@ -125,6 +125,7 @@ public final class HanArticlesWidget extends WorkspaceWidget<WorkspaceWidget._No
                 "        members: members,",
                 "        fence: createHanColophonFence('\\u2014 \\u5510\\u8a69\\u4e8c\\u9996 \\u2014'),",
                 "        columnWidths: widths,",
+                "        header: 'each',                    // a manuscript has no column heads: every member says none",
                 "        label: 'Articles'",
                 "    });",
                 "    host.style.width = (COLS * SIDE + 2) + 'px';",
