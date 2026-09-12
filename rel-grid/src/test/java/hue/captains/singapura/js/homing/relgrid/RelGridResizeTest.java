@@ -124,7 +124,7 @@ class RelGridResizeTest extends JsModuleTestBase {
                 })()"""), "law 56/58/59/60: a snapshot is what is held; restore is drift-tolerant and idempotent; no cycle");
     }
     @Test
-    void aTableWhoseEveryColumnHoldsAWidthIsExactlyTheirSum() {
+    void aFullySizedTableIsAtLeastItsColumnsSumAndItsLastColumnIsElastic() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture(), g = f.grid, ts = f.table().style;
@@ -132,18 +132,21 @@ class RelGridResizeTest extends JsModuleTestBase {
                     if (ts.getPropertyValue('width') !== '') return false;
                     // One held, one free: still the box's width — the free column shares the remainder.
                     g.setColumnWidth('ingredient', 150);
-                    if (ts.getPropertyValue('width') !== '') return false;
-                    // Every column held: exactly their sum, so a fixed layout stretches nothing.
+                    if (ts.getPropertyValue('width') !== '' || f.colWidth(0) !== '150px') return false;
+                    // Every column held: at least their sum, and the LAST column takes what the box
+                    // has over — no property of its own, so a fixed layout gives it the remainder.
                     g.setColumnWidth('calories', 90);
-                    if (ts.getPropertyValue('width') !== '240px') return false;
+                    if (ts.getPropertyValue('width') !== 'max(100%, 240px)') return false;
+                    if (f.colWidth(0) !== '150px' || f.colWidth(1) !== '') return false;
+                    if (g.columnWidth('calories') !== 90) return false;                   // held all the same
                     g.setColumnWidth('calories', 60);
-                    if (ts.getPropertyValue('width') !== '210px') return false;
-                    // A column leaving the view leaves the sum: the one shown is the whole width.
+                    if (ts.getPropertyValue('width') !== 'max(100%, 210px)') return false;
+                    // The elastic one is whichever is presented last: hide calories and ingredient is.
                     g.viewMaps().setColumnView(['ingredient']);
-                    if (ts.getPropertyValue('width') !== '150px') return false;
-                    g.viewMaps().setColumnView(['ingredient', 'calories']);
-                    return ts.getPropertyValue('width') === '210px';
-                })()"""), "with every presented column sized the table is their sum; with any free it keeps the box");
+                    if (ts.getPropertyValue('width') !== 'max(100%, 150px)' || f.colWidth(0) !== '') return false;
+                    g.viewMaps().setColumnView(['calories', 'ingredient']);
+                    return ts.getPropertyValue('width') === 'max(100%, 210px)' && f.colWidth(0) === '60px' && f.colWidth(1) === '';
+                })()"""), "with every presented column sized the table is at least their sum and the last column stretches; with any free it keeps the box");
     }
 
     @Test

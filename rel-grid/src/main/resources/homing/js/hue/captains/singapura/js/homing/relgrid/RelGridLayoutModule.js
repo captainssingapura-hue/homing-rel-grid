@@ -446,14 +446,21 @@ class RelGridLayout {
         }
         if (any) _hrgAddClass(this._table, "hrg-fixed");
         else _hrgRemoveClass(this._table, "hrg-fixed");
-        // A table whose EVERY column holds a width is exactly their sum. Left at
-        // 100% of a wider box, a fixed layout would stretch every column past
-        // what it holds — widths nobody asked for, and a drag starting from
-        // what is seen would move the wrong way. With any column still free the
-        // table keeps the box's width and the free columns share the remainder.
+        // A table whose EVERY column holds a width is at least their sum, and
+        // its LAST presented column is elastic: it takes whatever the box has
+        // over, and never less than it holds. Left at 100% of a wider box a
+        // fixed layout would stretch every column past what it holds — widths
+        // nobody asked for — and left at exactly the sum the table would stop
+        // short of its box; one elastic column at the end is what a table in a
+        // wider box is expected to do. With any column still free the table
+        // keeps the box's width and the free columns share the remainder.
         var ts = this._table.style;
         if (ts && ts.setProperty) {
-            if (any && all && cols.length) ts.setProperty("width", sum + "px");
+            if (any && all && cols.length) {
+                ts.setProperty("width", "max(100%, " + sum + "px)");
+                var lastSt = cols[cols.length - 1].style;
+                if (lastSt && lastSt.removeProperty) lastSt.removeProperty("--hrg-col-w");
+            }
             else if (ts.removeProperty) ts.removeProperty("width");
         }
         this.placeGroups();                                   // the slots moved; the hosts follow
