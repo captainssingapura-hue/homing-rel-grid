@@ -112,6 +112,14 @@
 // what it holds with either question and the domain answers with its own
 // conditions applied as well.
 //
+// THE VIEWPORT FOLLOWS THE CURSOR. A keyboard move, an extension, and a
+// programmatic selectCell scroll the least amount that shows the slot the
+// person is now looking at — the cursor, or the range's far corner — in
+// every port that scrolls; a click, Ctrl+A and an arrangement move nothing,
+// because none of them is a place the person went. A grid the keyboard has
+// left does not move the page: the follow is gated on the grid holding the
+// focus, except for selectCell, which a host calls on purpose.
+//
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
 // there is no method on it that could carry one.
@@ -586,6 +594,13 @@ class RelGrid {
         if (!this._cursorPos) return;
         var p = this._cursorPos;
         this._setCursor(this._clampI(p.i + di), this._clampJ(dj ? this._stepJ(p.i, p.j, dj) : p.j));
+        this._follow(this._cursorPos);
+    }
+
+    /** The viewport follows a position the person went to — when the grid has the keyboard. */
+    _follow(pos, regardless) {
+        if (!pos) return;
+        if (regardless || this._layout.hasKeyboard()) this._layout.revealSlot(pos.i, pos.j);
     }
 
     _clampI(i) { return Math.max(0, Math.min(this._maps.rows() - 1, i)); }
@@ -807,6 +822,7 @@ class RelGrid {
         var di = (key === "ArrowUp") ? -1 : (key === "ArrowDown") ? 1 : 0;
         var dj = (key === "ArrowLeft") ? -1 : (key === "ArrowRight") ? 1 : 0;
         this._extendTo(from.i + di, dj ? this._stepJ(from.i, from.j, dj) : from.j);
+        this._follow(this._selection.far());               // the range's far corner is where the person went
     }
 
     /**
@@ -1047,6 +1063,7 @@ class RelGrid {
         if (!at) return false;
         var moved = false, self = this;
         this._bareMove(function () { moved = self._setCursor(at.i, at.j); });
+        this._follow(at, true);                             // a host asked for this cell: show it, keyboard or not
         return moved;
     }
 
