@@ -15,8 +15,10 @@
 // seen is what the browser made of it, and a fixed layout in a wider box
 // than its columns' sum gives every column more than it asked for, so a
 // drag that started from the seen width would move the wrong way. The guide
-// line spans the extent the host names, or the table: a host that stacks
-// several tables under one header wants the line down all of them.
+// line spans the extent the host names, or the table — and an extent may be
+// SEVERAL boxes, one segment of line each: a host that stacks tables under
+// one header wants the line down each table and not across what sits
+// between them.
 // =============================================================================
 
 /**
@@ -53,7 +55,7 @@ class RelGridHeaderDrag {
         this._table = opts.table;
         this._onColResize = opts.onColResize || null;
         this._heldWidth = opts.heldWidth || null;              // (j) → px | null: the width held, if any
-        this._extent = opts.extent || null;                    // what the guide spans; the table when absent
+        this._extent = opts.extent || null;                    // what the guide spans — an element or a list; the table when absent
     }
 
     /** Wire the resize handle onto a freshly minted header cell. */
@@ -74,31 +76,43 @@ class RelGridHeaderDrag {
         return this;
     }
 
+    /**
+     * The guide: one segment of line per box of the extent, each down what is
+     * SEEN of its box — not past the pane, and not across whatever sits
+     * between two boxes. Answers the list of segments; empty when headless.
+     */
     _makeGuide(atX) {
         var over = this._extent || this._table;
-        if (!document.body || !over.getBoundingClientRect) return null;
-        var span = _hrgSeenSpan(over);                       // down what is SEEN of it, not past the pane
-        var guide = document.createElement("div");
-        guide.className = "hrg-resize-guide";
-        guide.style.setProperty("--hrg-guide-top", span.top + "px");
-        guide.style.setProperty("--hrg-guide-h", span.height + "px");
-        guide.style.setProperty("--hrg-guide-x", atX + "px");
-        document.body.appendChild(guide);
-        return guide;
+        var boxes = Array.isArray(over) ? over : [over], out = [];
+        if (!document.body) return out;
+        for (var k = 0; k < boxes.length; k++) {
+            if (!boxes[k] || !boxes[k].getBoundingClientRect) continue;
+            var span = _hrgSeenSpan(boxes[k]);
+            if (span.height <= 0) continue;                    // out of view: no segment
+            var guide = document.createElement("div");
+            guide.className = "hrg-resize-guide";
+            guide.style.setProperty("--hrg-guide-top", span.top + "px");
+            guide.style.setProperty("--hrg-guide-h", span.height + "px");
+            guide.style.setProperty("--hrg-guide-x", atX + "px");
+            document.body.appendChild(guide);
+            out.push(guide);
+        }
+        return out;
     }
 
     _start(j, startW, startX) {
         var self = this, lastX = startX;
-        var guide = this._makeGuide(startX);
+        var guides = this._makeGuide(startX);
         function onMove(e) {
             lastX = e.clientX;
-            if (guide) guide.style.setProperty("--hrg-guide-x", lastX + "px");
+            for (var k = 0; k < guides.length; k++) guides[k].style.setProperty("--hrg-guide-x", lastX + "px");
         }
         function teardown() {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
             document.removeEventListener("keydown", onKey, true);
-            if (guide && guide.parentNode) guide.parentNode.removeChild(guide);
+            for (var k = 0; k < guides.length; k++)
+                if (guides[k].parentNode) guides[k].parentNode.removeChild(guides[k]);
         }
         // One request, on release. Whole pixels: a header's rect is fractional
         // and a request is something a host may keep — normalisation only

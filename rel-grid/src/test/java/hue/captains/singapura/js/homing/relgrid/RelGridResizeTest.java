@@ -200,6 +200,37 @@ class RelGridResizeTest extends JsModuleTestBase {
     }
 
     @Test
+    void anExtentOfSeveralBoxesIsASegmentOfLineEach() {
+        assertTrue(evalBool("""
+                (() => {
+                    // Three tables' boxes with captions between: 40..240, 300..500, 560..760.
+                    var boxes = [makeEl('div'), makeEl('div'), makeEl('div')];
+                    boxes[0]._rt = 40; boxes[0]._rb = 240; boxes[1]._rt = 300; boxes[1]._rb = 500; boxes[2]._rt = 560; boxes[2]._rb = 760;
+                    var f = fixture({ resizeGuide: boxes });
+                    var th = f.thAt(1); th._rl = 300; th._rr = 400;
+                    var handle = th.children[th.children.length - 1];
+                    var was = document.body.children.length;
+                    handle.dispatch('mousedown', { clientX: 398 });
+                    var made = document.body.children.slice(was);
+                    if (made.length !== 3) return false;
+                    var spans = made.map(function (g) { return g.style.getPropertyValue('--hrg-guide-top') + '+' + g.style.getPropertyValue('--hrg-guide-h'); });
+                    if (spans.join(' ') !== '40px+200px 300px+200px 560px+200px') return false;
+                    // Every segment follows the pointer, and every one goes on release.
+                    document.dispatch('mousemove', { clientX: 420 });
+                    if (made.some(function (g) { return g.style.getPropertyValue('--hrg-guide-x') !== '420px'; })) return false;
+                    document.dispatch('mouseup', {});
+                    if (document.body.children.length !== was) return false;
+                    // A box out of view draws no segment at all.
+                    boxes[1]._rt = -300; boxes[1]._rb = -100;
+                    if (typeof window === 'undefined') globalThis.window = { innerHeight: 1000 };
+                    handle.dispatch('mousedown', { clientX: 398 });
+                    var again = document.body.children.slice(was).length;
+                    document.dispatch('keydown', { key: 'Escape' });
+                    return again === 2;
+                })()"""), "a list of boxes is a segment of line each, none across what lies between them");
+    }
+
+    @Test
     void theGuideStopsWhereThePaneCutsTheExtentOff() {
         assertTrue(evalBool("""
                 (() => {

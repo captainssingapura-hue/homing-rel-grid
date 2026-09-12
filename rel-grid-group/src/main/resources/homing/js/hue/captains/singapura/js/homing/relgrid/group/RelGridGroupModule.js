@@ -52,8 +52,9 @@
 // own geometry — and the group's fires once for all of them.
 //
 // WHAT THE TABLE GAINED FOR THIS: one option, resizeGuide — what a header
-// drag's guide line spans, which a host stacking tables wants to be the
-// stack. Every verb here existed already.
+// drag's guide line spans, which a host stacking tables wants to be each
+// table's box, a segment apiece, so the line breaks at the fences. Every
+// verb here existed already.
 // =============================================================================
 
 var _HRGG_STYLE_ID = "homing-rel-grid-group-style";
@@ -101,6 +102,7 @@ class RelGridGroup {
         if (opts.label) this._root.setAttribute("aria-label", opts.label);
         this._members = [];                                     // { id, box, grid, spec }, in order
         this._fences = [];                                      // N+1 of { id, host, cell }; the last id is null
+        this._boxes = [];                                       // the members' boxes, the list every member's guide spans
 
         var seen = {};
         for (var k = 0; k < opts.members.length; k++) {
@@ -149,10 +151,11 @@ class RelGridGroup {
         box.className = "hrg-member";
         box.setAttribute("data-member", String(id));
         this._root.appendChild(box);
+        this._boxes.push(box);
         var g = _hrggCopy(spec);
         g.container = box;
         if (this._sharedHeader && k > 0) g.header = { show: false };
-        g.resizeGuide = this._root;                             // a drag's guide line runs down every member
+        g.resizeGuide = this._boxes;                            // a drag's guide: a segment down each member, none across a fence
         g.onColumnResized = function (column, px) {
             self._onMemberResized(id, column, px);
             if (spec.onColumnResized) spec.onColumnResized(column, px);

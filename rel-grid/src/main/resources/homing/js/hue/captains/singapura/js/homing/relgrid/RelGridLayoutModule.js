@@ -35,7 +35,7 @@
 //
 //   new RelGridLayout({ container, label?, showHeader?, overflow?, onCellClick?,
 //                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
-//                       onColResize?, resizeGuide? })
+//                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   openOverlay(i, j) / closeOverlay()        the editor's anchor, over a slot
 //   openMask() / openPanel() / closeMask()    the mask, and the canvas in it
 //   openGroup(i, j, n) / placeGroups()        a merged cell's host, over n slots

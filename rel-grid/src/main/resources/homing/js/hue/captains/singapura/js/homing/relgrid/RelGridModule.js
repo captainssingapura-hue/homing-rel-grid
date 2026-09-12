@@ -23,8 +23,10 @@
 //                         // whose columns are half-squares says 24.
 //       mergedCells?,     // true to honour a cell's colSpan(). Off by default: most
 //                         // relations have no merged cells, and the feature is kept apart.
-//       resizeGuide?,     // the element a header drag's guide line spans. Default the
-//                         // table; a host stacking several tables names their stack.
+//       resizeGuide?,     // what a header drag's guide line spans: an element, or a LIST
+//                         // of them for a segment each. Default the table; a host stacking
+//                         // several tables names each table's box, so the line breaks
+//                         // at whatever sits between them.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
