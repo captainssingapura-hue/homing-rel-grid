@@ -4,11 +4,12 @@
 // second question the grid waits for. DOMAIN CODE; the grid is not on the
 // path, and nothing here could put it there.
 //
-// The grid asked RelGridViewHandover { column } and lent the mask's panel.
-// What it wants back is a View — the store's pks, in order, possibly fewer —
-// and it will present exactly that. Everything between is here: a fixed set
-// of PROFILES, each a sort and a filter over the store's values; the panel a
-// person picks one on; and the memory of which one this table is under.
+// The grid asked RelGridViewHandover — a question about the table as a whole,
+// carrying nothing — and lent the mask's panel. What it wants back is a View:
+// the store's pks, in order, possibly fewer. It will present exactly that.
+// Everything between is here: a fixed set of PROFILES, each a sort and a
+// filter over the store's values; the panel a person picks one on; and the
+// memory of which one this table is under.
 //
 //   dishViewProfiles()                        the set, in the order the panel lists them
 //   createDishViews(store, { onChanged? })    one per table: what it is under, and its View
@@ -92,11 +93,6 @@ function _wbOrder(keys) {
         }
         return x.at - y.at;                        // base order, explicitly: stability is not assumed
     };
-}
-function _wbSay(keys) {
-    var parts = [];
-    for (var k = 0; k < keys.length; k++) parts.push(keys[k].column + (keys[k].direction === "desc" ? " ↓" : " ↑"));
-    return parts.join(", ");
 }
 
 var _WB_EUROPE = { French: true, English: true, German: true, Italian: true };
@@ -214,7 +210,7 @@ function dishViewPanel(views, question, host, opts) {
         title.textContent = "Arrange the dishes";
         var sub = document.createElement("span");
         sub.className = "wb-view-sub";
-        sub.textContent = "from the " + question.column + " header · the grid handed the order over and is waiting";
+        sub.textContent = "the grid handed the order of its rows over, and is waiting";
         head.appendChild(title); head.appendChild(sub);
         root.appendChild(head);
 

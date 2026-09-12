@@ -21,11 +21,13 @@ import java.util.List;
  * store → relation → cell. The grid is not on it.</p>
  *
  * <p>Two questions the grid does ask, through the one channel: what a
- * selection is worth (copy), and — from the header's menu — how the rows
- * should be arranged. The second is answered here by a profile picked from a
- * list, and it is this table's answer: every table on the page is arranged
- * on its own, over the same store, because a View is the grid's transient
- * state and not the store's.</p>
+ * selection is worth (copy), and — from this table's own <i>arrange</i>
+ * button, or Alt+Enter on the table — how the rows should be arranged. The
+ * second is answered here by a profile picked from a list, and it is this
+ * table's answer: every table on the page is arranged on its own, over the
+ * same store, because a View is the grid's transient state and not the
+ * store's. The control is the bench's, not the grid's: a domain's
+ * arrangement is not a property of any column.</p>
  */
 final class ReplicaTable {
 
@@ -105,7 +107,7 @@ final class ReplicaTable {
                 "",
                 "    hint.textContent = EDITS.length",
                 "        ? ROLE.toUpperCase() + ' \u2014 edits ' + EDITS.join(' and ') + ' only. Click or arrow to a cell (shallow); Enter or double-click to edit (deep). Two ways nothing opens: on sold and popularity the grid never even asks, because the relation declared those columns read-only; everywhere else it asks and the cell for this role says no. Enter commits to the store; the store tells every relation; each updates its own cells. The grid is never told what happened.'",
-                "        : 'FOLLOWER \u2014 read-only. It moves when any editor commits or the shop trades, and its grid was never spoken to after construction. Select and Ctrl+C to copy: the grid asks, this table draws the choice, the grid writes it. The \u25BE on a header (or Alt+Enter) hands the ORDER of the rows over: the grid asks, this table picks a profile, the grid presents what comes back and cannot say why.';",
+                "        : 'FOLLOWER \u2014 read-only. It moves when any editor commits or the shop trades, and its grid was never spoken to after construction. Select and Ctrl+C to copy: the grid asks, this table draws the choice, the grid writes it. The arrange button below (or Alt+Enter on the table) hands the ORDER of the rows over: the grid asks, this table picks a profile, the grid presents what comes back and cannot say why.';",
                 "",
                 "    // THE CHANNEL, and its two customers. The grid asks; the domain answers.",
                 "    //",
@@ -165,7 +167,6 @@ final class ReplicaTable {
                 "        branch: cellsB,",
                 "        relation: relation,",
                 "        ask: ask,",
-                "        columnOps: { handover: true },     // the \u25BE on every header: the order is the domain's to give",
                 "        // A REPORT: the grid wrote this. What it is was decided above.",
                 "        onCopied: function (content) {",
                 "            copyOut.textContent = 'clipboard \u2190 ' + lastCopy + ' \u00b7 ' + content.text.length + ' chars of text'",
@@ -186,7 +187,7 @@ final class ReplicaTable {
                 "    // now, so after an edit it may say 5 while the table still shows 6: a",
                 "    // View was a reading at the moment it was asked for.",
                 "    function showView() {",
-                "        viewOut.textContent = 'view \u2190 ' + views.describe() + '   |   \u25BE on a header, or Alt+Enter, to change';",
+                "        viewOut.textContent = 'view \u2190 ' + views.describe() + '   |   the arrange button, or Alt+Enter on the table, to change';",
                 "    }",
                 "    var unsub = store.subscribe(function () { report(); showView(); });",
                 "    report(); showView();",
@@ -207,6 +208,10 @@ final class ReplicaTable {
                 "        btn('reset store to seed', function () { store.reset(); });",
                 "    }",
                 "    btn('re-arrange (grid.reapply)', function () { grid.reapply(); });",
+                "    // THE BENCH'S OWN CONTROL for the domain's arrangement — not the grid's,",
+                "    // because a domain's arrangement is not a property of any column. It",
+                "    // calls the verb; the grid asks; this table answers on the panel.",
+                "    btn('arrange the rows\u2026 (grid.handoverView)', function () { grid.handoverView(); });",
                 "",
                 "    return { root: root, setActive: function (active) {} };"
         );

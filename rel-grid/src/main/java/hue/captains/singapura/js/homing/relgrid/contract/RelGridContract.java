@@ -70,17 +70,17 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * <h2>The rows' arrangement is a question too</h2>
  *
  * <p>A View is which of the root's identities are shown and in what order,
- * and it is the domain's to compute. {@code handoverView(column)} — the twin
- * of the header's menu (▾, behind {@code columnOps.handover}) and of
- * Alt+Enter — asks {@code RelGridViewHandover} with the mask handle and
+ * and it is the domain's to compute. {@code handoverView()} — the verb
+ * behind a control in the host's own chrome, and the twin of Alt+Enter on
+ * the table — asks {@code RelGridViewHandover} with the mask handle and
  * waits: the domain gathers its own conditions on the panel and answers a
  * {@code RelGridView}, which the grid presents exactly as given, or nothing.
  * The grid holds nothing about why the rows are in that order; that
- * explanation is the domain's. The option gates the affordance, the channel
- * gates the question: the verb works without the control. A column the
- * relation never declared throws. The other way rows come to be in an order
- * — a specification the grid gathers with its own caret and asks the
- * relation to apply — is a later round.</p>
+ * explanation is the domain's. The grid attaches no control of its own to
+ * the question, because a domain's arrangement is not a property of any
+ * column. The other way rows come to be in an order — a specification the
+ * grid gathers with its own caret and asks the relation to apply — is a
+ * later round.</p>
  *
  * <h2>Widths are geometry, the grid's alone</h2>
  *
@@ -119,7 +119,7 @@ public interface RelGridContract {
     // ─── copy (map 6, ext6) ──────────────────────────────────────────────
     boolean copy();                                 // ask what the selection is worth; write the answer. False when locked or channel-less
     // ─── the view handover ───────────────────────────────────────────────
-    boolean handoverView(String column);            // hand the rows' arrangement to the domain; present its View. False when locked or channel-less
+    boolean handoverView();                         // hand the rows' arrangement to the domain; present its View. False when locked or channel-less
     // ─── widths (map 7) ──────────────────────────────────────────────────
     boolean setColumnWidth(String column, double px);   // bounded, held by identity, applied in place; false for drift
     Object  columnWidth(String column);                 // what is held, or null

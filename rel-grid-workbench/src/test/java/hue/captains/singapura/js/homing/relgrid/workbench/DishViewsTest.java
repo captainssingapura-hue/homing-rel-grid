@@ -129,7 +129,7 @@ class DishViewsTest extends JsModuleTestBase {
         act("""
                 var store = createDishStore(), v = createDishViews(store);
                 var host = makeEl('div'), chosen = null, answer = 'unsettled';
-                var q = new RelGridViewHandover('price');
+                var q = new RelGridViewHandover();
                 dishViewPanel(v, q, host, { onChosen: function (k, n) { chosen = k + ':' + n; } })
                     .then(function (a) { answer = a; });
                 var root = host.children[0];
@@ -139,7 +139,7 @@ class DishViewsTest extends JsModuleTestBase {
                 (() => {
                     if (!root || !/wb-view/.test(root.className)) return false;
                     if (byClass(root, 'wb-view-title')[0].textContent !== 'Arrange the dishes') return false;
-                    if (byClass(root, 'wb-view-sub')[0].textContent.indexOf('price header') < 0) return false;
+                    if (byClass(root, 'wb-view-sub')[0].textContent.indexOf('is waiting') < 0) return false;
                     if (items.length !== 7) return false;
                     if (items.map(function (li) { return li.profile; }).join(',') !== 'base,cheapest,popular,rated,light,european,bestsellers') return false;
                     // The held profile is marked and has the focus; every row says how many dishes it shows now.
@@ -168,25 +168,25 @@ class DishViewsTest extends JsModuleTestBase {
         act("""
                 var S = createDishStore(), V = createDishViews(S);
                 var nHost = makeEl('div'), nAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover('stars'), nHost, {}).then(function (a) { nAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), nHost, {}).then(function (a) { nAnswer = a; });
                 nHost.children[0].dispatch('keydown', { key: '4' });
                 """);
         assertTrue(evalBool("nAnswer instanceof RelGridView && nAnswer.pks.join(',') === 'fish,mapo,carbo,sauer,coq,burger' && V.held() === 'rated'"),
                 "4 chooses the fourth profile");
         act("""
                 var cHost = makeEl('div'), cAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover('stars'), cHost, {}).then(function (a) { cAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), cHost, {}).then(function (a) { cAnswer = a; });
                 byClass(cHost, 'wb-view-item')[6].dispatch('click', {});
                 """);
         assertTrue(evalBool("cAnswer instanceof RelGridView && cAnswer.pks.join(',') === 'coq,carbo,burger,mapo' && V.held() === 'bestsellers'"),
                 "a click chooses, and the table now remembers that one");
         act("""
                 var eHost = makeEl('div'), eAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover('stars'), eHost, {}).then(function (a) { eAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), eHost, {}).then(function (a) { eAnswer = a; });
                 if (!/wb-view-held/.test(byClass(eHost, 'wb-view-item')[6].className)) throw new Error('the held profile is not marked');
                 eHost.children[0].dispatch('keydown', { key: 'Escape' });
                 var xHost = makeEl('div'), xAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover('stars'), xHost, {}).then(function (a) { xAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), xHost, {}).then(function (a) { xAnswer = a; });
                 byClass(xHost, 'wb-view-cancel')[0].dispatch('click', {});
                 """);
         assertTrue(evalBool("eAnswer === undefined && xAnswer === undefined && V.held() === 'bestsellers'"),

@@ -33,7 +33,7 @@ public final class RelGridProtocolManifest {
             // Its answer: finished content, and no dependencies.
             ObjectDefinition.of(RelGridClipboardContent.class),
             // The second question the grid waits for: the rows' arrangement,
-            // handed to the domain. A column name; no dependencies.
+            // handed to the domain. It carries nothing; no dependencies.
             ObjectDefinition.of(RelGridViewHandover.class),
             // Its answer: a View — the root's pks, in order. No dependencies.
             ObjectDefinition.of(RelGridView.class));

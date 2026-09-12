@@ -23,9 +23,6 @@
 //                         // whose columns are half-squares says 24.
 //       mergedCells?,     // true to honour a cell's colSpan(). Off by default: most
 //                         // relations have no merged cells, and the feature is kept apart.
-//       columnOps?,       // { handover? } — the header's controls. handover: true puts a
-//                         // menu (▾) on every header that hands the rows' arrangement to
-//                         // the domain; needs the channel. Off by default.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -91,18 +88,22 @@
 // of two ways rows come to be in an order. A View is which of the root's
 // identities are shown and in what order (E2), and it is the domain's to
 // compute; the grid's transient state is which View it is showing. In the
-// way built here the grid holds NOTHING about why: a header's menu (▾), or
-// Alt+Enter on the cursor's column, or handoverView(column), asks
-// RelGridViewHandover { column } with the mask handle, the domain gathers
-// its own conditions on the panel by whatever controls it likes, and it
-// answers a RelGridView — the pks, in order — or nothing. The grid presents
-// what it was handed (map 1 law 1), reorders nothing, asserts nothing about
-// how one View relates to the next (law 8), and cannot explain the order,
-// because the explanation is the domain's and lives in the domain's chrome.
-// The other way — a specification the grid gathers with its own caret and
-// asks the relation to apply, which it CAN explain — is a later round; the
-// two compose because the grid will pass what it holds with either question
-// and the domain answers with its own conditions applied as well.
+// way built here the grid holds NOTHING about why: handoverView() — from a
+// control in the HOST's own chrome — or Alt+Enter on the table asks
+// RelGridViewHandover with the mask handle, the domain gathers its own
+// conditions on the panel by whatever controls it likes, and it answers a
+// RelGridView — the pks, in order — or nothing. The grid presents what it
+// was handed (map 1 law 1), reorders nothing, asserts nothing about how one
+// View relates to the next (law 8), and cannot explain the order, because
+// the explanation is the domain's and lives in the domain's chrome. The
+// question is about the table as a whole and carries nothing, and the grid
+// attaches no control of its own to it: a domain's arrangement is not a
+// property of any column, so a control on a header would couple the
+// domain's idea to the grid's geometry. The other way — a specification the
+// grid gathers with its own caret and asks the relation to apply, which it
+// CAN explain — is a later round; the two compose because the grid will pass
+// what it holds with either question and the domain answers with its own
+// conditions applied as well.
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
@@ -329,14 +330,6 @@ class RelGrid {
         var minW = Number(opts.minColumnWidth);
         this._minW = isFinite(minW) ? Math.max(_HRG_MIN_W_FLOOR, Math.min(_HRG_MAX_W, minW)) : _HRG_MIN_W;
         this._merge = opts.mergedCells === true;   // honour colSpan() at all
-        // The header's controls. A handover with no channel would be a control
-        // that does nothing, which is worse than none: said once, then off.
-        var ops = opts.columnOps || {};
-        this._ops = { handover: ops.handover === true };
-        if (this._ops.handover && !this._ask) {
-            console.warn("[RelGrid] columnOps.handover needs an ask channel; no control is offered");
-            this._ops.handover = false;
-        }
         // The selection: POSITIONS, and it holds nothing else. The facade is
         // the only thing that knows both it and the cursor.
         this._selection = new RelGridSelection();
@@ -363,13 +356,6 @@ class RelGrid {
             onColResize: function (j, px) {
                 var c = self._maps.columnAt(j);
                 if (c != null) self.setColumnWidth(c, px);
-            },
-            headerOps: this._ops,
-            // The menu MINTS a position; identity is resolved here and the
-            // question is asked where questions are asked.
-            onHeaderMenu: function (j) {
-                var c = self._maps.columnAt(j);
-                if (c != null) self.handoverView(c);
             }
         });
         this._cells = new RelGridCells({ branch: opts.branch });
@@ -737,21 +723,14 @@ class RelGrid {
     // ── the view handover: the rows' arrangement, asked of the domain ──────
 
     /**
-     * Hand the arrangement of the rows to the domain, naming the column the
-     * gesture came from. The programmatic twin of the header's menu and of
-     * Alt+Enter — and reachable without the control, as the sort verb will
-     * be: the option gates the affordance, the channel gates the question.
-     * False when locked or channel-less; a column the relation never declared
-     * is a host's mistake and throws.
+     * Hand the arrangement of the rows to the domain. The verb behind a
+     * control in the host's own chrome, and the twin of Alt+Enter on the
+     * table; the grid offers no control of its own. False when locked or
+     * channel-less.
      */
-    handoverView(column) {
+    handoverView() {
         if (this._locked() || !this._ask) return false;
-        if (this._maps.baseColumns().indexOf(column) < 0)
-            throw new Error("[RelGrid] handoverView: '" + column + "' is not a column of this relation");
-        var j = this._maps.colOf(column);                   // -1 when not presented: no header to mark
-        var asked = this._askPending(new RelGridViewHandover(column), this._applyView);
-        if (asked && j >= 0) this._layout.setMenuOpen(j);
-        return asked;
+        return this._askPending(new RelGridViewHandover(), this._applyView);
     }
 
     /**
@@ -761,7 +740,6 @@ class RelGrid {
      * nothing moves — because half a View is not a View.
      */
     _applyView(answer) {
-        this._layout.setMenuOpen(null);                     // the question is no longer out
         if (answer == null) return;
         if (!(answer instanceof RelGridView)) {
             console.error("[RelGrid] a view handover was answered with something that is not a View:", answer);
@@ -897,12 +875,12 @@ class RelGrid {
             if (e.preventDefault) e.preventDefault();
             return;
         }
-        // Alt+Enter: the menu's chord — hand the CURSOR's column's arrangement
-        // to the domain. Only when the control is offered at all; otherwise
-        // the chord is not ours.
+        // Alt+Enter: hand the rows' arrangement to the domain. The table's own
+        // road to the verb, so a keyboard-first person need not leave it for
+        // the host's control. Consumed only when it was actually asked, as
+        // Ctrl+C is.
         if (e.altKey && key === "Enter") {
-            if (!this._ops.handover) return;
-            if (this._cursor) this.handoverView(this._cursor.column);
+            if (!this.handoverView()) return;
             if (e.preventDefault) e.preventDefault();
             return;
         }

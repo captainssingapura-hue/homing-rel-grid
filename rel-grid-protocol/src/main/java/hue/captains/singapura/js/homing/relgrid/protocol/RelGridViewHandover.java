@@ -16,17 +16,17 @@ package hue.captains.singapura.js.homing.relgrid.protocol;
  * kept and shown in its own chrome. The grid places what it is handed and
  * asserts nothing about how one View relates to the next (map 1, law 8).</p>
  *
- * <p>{@code column} is the column the gesture came from — the header's control,
- * or the cursor's column for the keyboard — offered as context. A domain whose
- * panel is about the table as a whole may ignore it.</p>
+ * <p>It carries nothing: the question is about the table as a whole, and the
+ * kind is the message. It is raised by the host — from a control in the host's
+ * own chrome, through {@code handoverView()} — or from the table with
+ * Alt+Enter; the grid attaches no control of its own to it, because a
+ * domain's arrangement is not a property of any of the grid's columns. When
+ * the grid gathers a specification of its own, that specification will ride
+ * here too, so the domain can honour it alongside its own conditions.</p>
  *
  * <p>While it is outstanding the grid is locked and masked (ext6, law 220),
  * which is what makes the domain's panel modal: conditions are gathered, then
  * applied once, on the answer.</p>
  */
-public record RelGridViewHandover(String column) {
-    public RelGridViewHandover {
-        if (column == null || column.isEmpty())
-            throw new IllegalArgumentException("RelGridViewHandover names the column the gesture came from");
-    }
+public record RelGridViewHandover() {
 }

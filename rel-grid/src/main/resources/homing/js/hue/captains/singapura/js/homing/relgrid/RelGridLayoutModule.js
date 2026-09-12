@@ -35,20 +35,10 @@
 //
 //   new RelGridLayout({ container, label?, showHeader?, overflow?, onCellClick?,
 //                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
-//                       onColResize?, headerOps?, onHeaderMenu? })
+//                       onColResize? })
 //   openOverlay(i, j) / closeOverlay()        the editor's anchor, over a slot
 //   openMask() / openPanel() / closeMask()    the mask, and the canvas in it
 //   openGroup(i, j, n) / placeGroups()        a merged cell's host, over n slots
-//   setMenuOpen(j)                            the header whose question is out
-//
-// THE HEADER OPS SLOT: every <th> ends in a slot for the column's controls,
-// at the header's right edge, clear of the resize handle. Today it holds one
-// control when headerOps.handover is on — a MENU BUTTON (▾) that reports its
-// position, as a slot reports a click — and the facade turns the position
-// into a column and hands the rows' arrangement to the domain. While that
-// question is out the header wears hrg-menu-open; at most one does. The
-// slot's footprint is the same whether or not a control is in it, so a
-// column never changes width by growing a control.
 //
 // A MERGED CELL is the layout's third overlay: a host laid over n slots of a
 // row, in the wrapper, that the leading cell is placed into instead of its
@@ -149,13 +139,6 @@ var _HRG_STYLE_CSS = [
     // The resize HANDLE: a real element on the header's right edge, so the
     // pointer shows col-resize on hover and the drag has a reliable target.
     ".hrg-resize-handle{position:absolute;top:0;right:0;width:8px;height:100%;cursor:col-resize;}",
-    // The ops slot floats at the right edge — a float, because a <th> must
-    // stay a table-cell — inside the padding, so the 8px handle is clear.
-    ".hrg-th-ops{float:right;display:inline-flex;align-items:center;gap:4px;margin-left:8px;",
-    "  line-height:1;font-size:11px;}",
-    ".hrg-th-menu{border:0;background:transparent;cursor:pointer;padding:0 3px;margin:0;",
-    "  font:inherit;font-size:11px;line-height:1;color:var(--color-text-muted);opacity:0.55;}",
-    ".hrg-th-menu:hover,.hrg-th.hrg-menu-open .hrg-th-menu{opacity:1;color:var(--color-accent);}",
     // Widths ride a custom property per <col>; hrg-fixed engages once any
     // explicit width exists, so unsized columns keep sharing the remainder.
     ".hrg-table.hrg-fixed{table-layout:fixed;}",
@@ -310,9 +293,6 @@ class RelGridLayout {
         this._onCellDown = opts.onCellDown || null;           // (i, j, mods) — a press
         this._onCellDragTo = opts.onCellDragTo || null;       // (i, j) — reached while held
         this._onDragEnd = opts.onDragEnd || null;             // () — released
-        this._onHeaderMenu = opts.onHeaderMenu || null;       // (j) — the header's menu control
-        this._ops = opts.headerOps || {};                     // which controls the slot holds
-        this._menuTh = null;                                  // the header wearing hrg-menu-open
         this._press = null;                                   // the slot a button went down on
         this._table = document.createElement("table");
         this._table.className = "hrg-table";
@@ -389,12 +369,10 @@ class RelGridLayout {
             var th = document.createElement("th");
             th.className = "hrg-th";
             th.textContent = headers[h];
-            this._mintOps(th, h);
             if (this._drag) this._drag.wire(th, h);
             this._headerRow.appendChild(th);
         }
 
-        this._menuTh = null;                                  // re-minted with the rest
         var oldBody = this._tbody;
         this._tbody = document.createElement("tbody");
         this._slots = [];
@@ -444,42 +422,6 @@ class RelGridLayout {
             this._slots.push(rowSlots);
         }
         this._table.replaceChild(this._tbody, oldBody);
-        return this;
-    }
-
-    /**
-     * The header's ops slot, and the controls in it. Positional: the menu
-     * button reports j, and what j means is the facade's. The button is its
-     * own control — its press never reaches the header, so it can neither
-     * start a resize nor, later, a reorder.
-     */
-    _mintOps(th, j) {
-        var slot = document.createElement("span");
-        slot.className = "hrg-th-ops";
-        if (this._ops.handover) {
-            var self = this;
-            var menu = document.createElement("button");
-            menu.className = "hrg-th-menu";
-            menu.setAttribute("type", "button");
-            menu.setAttribute("tabindex", "-1");                // reached by chord, not Tab
-            menu.setAttribute("aria-label", "Arrange rows");
-            menu.textContent = "\u25BE";                       // ▾
-            menu.addEventListener("mousedown", function (e) { if (e && e.stopPropagation) e.stopPropagation(); });
-            menu.addEventListener("click", function (e) {
-                if (e && e.stopPropagation) e.stopPropagation();
-                if (self._onHeaderMenu) self._onHeaderMenu(j);
-            });
-            slot.appendChild(menu);
-        }
-        th.appendChild(slot);
-    }
-
-    /** The header whose question is out wears hrg-menu-open; null clears it. At most one. */
-    setMenuOpen(j) {
-        if (this._menuTh) { _hrgRemoveClass(this._menuTh, "hrg-menu-open"); this._menuTh = null; }
-        if (j == null || !this._headerRow) return this;
-        var th = this._headerRow.children[j];
-        if (th) { _hrgAddClass(th, "hrg-menu-open"); this._menuTh = th; }
         return this;
     }
 
