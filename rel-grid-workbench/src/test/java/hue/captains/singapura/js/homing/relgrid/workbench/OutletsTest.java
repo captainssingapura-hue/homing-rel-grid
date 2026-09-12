@@ -36,10 +36,22 @@ class OutletsTest extends JsModuleTestBase {
             }
             """;
 
+    /** The policy test's DOM, plus the attributes the fence's toggle sets. */
+    private static final String DOM_STUB = DishPolicyTest.DOM_STUB + """
+            var __makeEl = makeEl;
+            makeEl = function (tag) {
+                var el = __makeEl(tag); el._a = {};
+                el.setAttribute = function (k, v) { this._a[k] = String(v); };
+                el.getAttribute = function (k) { return (this._a[k] == null) ? null : this._a[k]; };
+                return el;
+            };
+            """;
+
     @BeforeEach
     void setup() {
         js = buildContext();
-        js.eval("js", DishPolicyTest.DOM_STUB);
+        js.eval("js", DOM_STUB);
+        loadModule(GRID_DIR + "protocol/RelGridProtocolModule.js");
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(BENCH_DIR + "SalesStore.js");
         loadModule(BENCH_DIR + "OutletRelation.js");
@@ -136,5 +148,38 @@ class OutletsTest extends JsModuleTestBase {
                     s.sell('harbour', 'fish', 1);
                     return totals.textContent === '92 sold \\u00b7 1116.50 taken';              // disposed: deaf
                 })()"""), "an outlet's fence shows its totals and follows them; the ledger's follows every outlet");
+    }
+    @Test
+    void theFenceToggleTellsTheGroupAndDrawsItselfFromWhatItIsTold() {
+        assertTrue(evalBool("""
+                (() => {
+                    var s = ledger();
+                    // A handle as the group would give one: it records what it is told and holds the state.
+                    var state = false, told = [];
+                    var handle = { tell: function (m) { told.push(m); state = m.folded; return true; }, folded: function () { return state; } };
+                    var f = createOutletFence(s, 'airport'), host = makeEl('div');
+                    f.render(host, handle);
+                    var toggle = byClass(host, 'wb-fence-fold')[0];
+                    if (!toggle || toggle.textContent !== '▾' || toggle.getAttribute('aria-expanded') !== 'true') return false;
+                    // Pressed: a RelGridGroupFold for THIS outlet, the other way round from what the handle says.
+                    toggle.dispatch('click', {});
+                    if (told.length !== 1 || !(told[0] instanceof RelGridGroupFold)) return false;
+                    if (told[0].member !== 'airport' || told[0].folded !== true) return false;
+                    // The fence draws from what it is TOLD, not from having pressed: nothing changed yet...
+                    if (toggle.textContent !== '▾') return false;
+                    f.onFolded(true);                                            // ...until the group says so
+                    if (toggle.textContent !== '▸' || toggle.getAttribute('aria-expanded') !== 'false') return false;
+                    if (toggle.getAttribute('aria-label') !== 'Unfold Airport') return false;
+                    // Pressed again: the handle says folded, so the fence asks to unfold.
+                    toggle.dispatch('click', {});
+                    if (told[1].folded !== false) return false;
+                    f.onFolded(false);
+                    if (toggle.textContent !== '▾') return false;
+                    // A fence rendered with no handle at all still draws, unfolded, and its press is inert.
+                    var g = createOutletFence(s, 'harbour'), ghost = makeEl('div');
+                    g.render(ghost);
+                    byClass(ghost, 'wb-fence-fold')[0].dispatch('click', {});
+                    return byClass(ghost, 'wb-fence-fold')[0].textContent === '▾';
+                })()"""), "the toggle tells the group through its handle and paints itself only from onFolded");
     }
 }

@@ -60,8 +60,9 @@ class RelGridGroupTest extends JsModuleTestBase {
                 return relation;
             }
             function fenceCell(name) {
-                var f = { name: name, rendered: null, disposed: 0,
-                          render: function (host) { f.rendered = host; var el = makeEl('div'); el.textContent = name; host.appendChild(el); },
+                var f = { name: name, rendered: null, handle: null, disposed: 0, told: [],
+                          render: function (host, handle) { f.rendered = host; f.handle = handle; var el = makeEl('div'); el.textContent = name; host.appendChild(el); },
+                          onFolded: function (on) { f.told.push(on); },
                           dispose: function () { f.disposed++; } };
                 return f;
             }
@@ -97,13 +98,16 @@ class RelGridGroupTest extends JsModuleTestBase {
                     memberSpec('c', [['sauer', 'pork', 650], ['burger', 'beef', 780], ['carbo', 'pasta', 720]])
                 ];
                 var trailing = opts.trailing === undefined ? fenceCell('trailing') : opts.trailing;
+                var folds = [];
                 var group = new RelGridGroup({
                     container: container,
                     members: specs,
                     fence: trailing,
                     columnWidths: opts.columnWidths,
                     sharedHeader: opts.sharedHeader,
+                    folded: opts.folded,
                     onColumnResized: function (c, px) { reports.push(c + ' ' + px); },
+                    onFolded: function (id, on) { folds.push(id + (on ? ' folded' : ' unfolded')); },
                     label: 'a group'
                 });
                 function root() { return container.children[0]; }
@@ -121,7 +125,8 @@ class RelGridGroupTest extends JsModuleTestBase {
                     mods = mods || {};
                     tableOf(id).dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
                 }
-                return { group: group, container: container, specs: specs, trailing: trailing, reports: reports,
+                return { group: group, container: container, specs: specs, trailing: trailing, reports: reports, folds: folds,
+                         boxOf: function (id) { return group.member(id).el().parentNode.parentNode; },
                          root: root, kinds: kinds, has: has, tableOf: tableOf, theadOf: theadOf, tdOf: tdOf, click: click, key: key,
                          spec: function (id) { for (var k = 0; k < specs.length; k++) if (specs[k].id === id) return specs[k]; return null; } };
             }
@@ -329,5 +334,81 @@ class RelGridGroupTest extends JsModuleTestBase {
                     f.group.member('a').setColumnWidth('calories', 300);
                     return f.reports.length === 0;
                 })()"""), "destroy takes the members and the root down, and leaves the fences to their owner");
+    }
+    @Test
+    void foldHidesAMembersBoxAndTouchesNothingInside() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = groupFixture();
+                    var gb = f.group.member('b');
+                    f.click('b', 0, 1);                                          // a cursor in b, before it folds
+                    var cell = f.tdOf('b', 0, 0).children[0];
+                    if (f.group.fold('b', true) !== true) return false;
+                    if (!f.group.folded('b') || f.group.folded('a')) return false;
+                    // The box wears the fold and the fence above it says so; the table is as it was.
+                    if (!f.has(f.boxOf('b'), 'hrg-folded') || !f.has(f.group.fence('b'), 'hrg-fence-folded')) return false;
+                    if (f.has(f.boxOf('a'), 'hrg-folded')) return false;
+                    if (gb.cursor().pk !== 'fish' || gb.cursor().column !== 'calories') return false;
+                    if (f.tdOf('b', 0, 0).children[0] !== cell || gb.viewMaps().rows() !== 1) return false;
+                    // Reported once to the host, and once to the fence above it; a's fence heard nothing.
+                    if (f.folds.join('|') !== 'b folded') return false;
+                    if (f.spec('b').fence.told.join(',') !== 'true' || f.spec('a').fence.told.length !== 0) return false;
+                    // The same again is nothing. Unfold: everything back, one report.
+                    if (f.group.fold('b', true) !== false || f.folds.length !== 1) return false;
+                    if (f.group.fold('b', false) !== true) return false;
+                    if (f.has(f.boxOf('b'), 'hrg-folded') || f.has(f.group.fence('b'), 'hrg-fence-folded')) return false;
+                    if (f.folds.join('|') !== 'b folded|b unfolded' || f.spec('b').fence.told.join(',') !== 'true,false') return false;
+                    // A folded member still levels with its siblings: geometry is the group's, folded or not.
+                    f.group.fold('c', true);
+                    f.group.member('a').setColumnWidth('calories', 180);
+                    if (f.group.member('c').columnWidth('calories') !== 180) return false;
+                    try { f.group.fold('nope', true); return false; } catch (e) { return /no member/.test(String(e)); }
+                })()"""), "fold hides the box and marks the fence; the table inside is untouched; each change is reported once");
+    }
+
+    @Test
+    void foldAllAndFoldedAtFirst() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = groupFixture({ folded: ['c', 'ghost'] });         // an id that is no member is drift, dropped
+                    if (!f.group.folded('c') || f.group.folded('ghost') || f.group.folded('a')) return false;
+                    if (!f.has(f.boxOf('c'), 'hrg-folded') || !f.has(f.group.fence('c'), 'hrg-fence-folded')) return false;
+                    if (f.folds.length !== 0) return false;                     // the start is not a report
+                    f.group.foldAll(true);
+                    if (f.folds.join('|') !== 'a folded|b folded') return false; // c was folded already: no report
+                    if (!f.group.folded('a') || !f.group.folded('b') || !f.group.folded('c')) return false;
+                    f.group.foldAll(false);
+                    return f.folds.join('|') === 'a folded|b folded|a unfolded|b unfolded|c unfolded'
+                        && !f.has(f.boxOf('c'), 'hrg-folded');
+                })()"""), "foldAll folds every member with a report per change; folded-at-first hides before anything is seen");
+    }
+
+    @Test
+    void aFenceTellsTheGroupThroughItsHandleAndAnUnknownTellIsRefused() {
+        assertTrue(evalBool("""
+                (() => {
+                    var errors = [];
+                    console.error = function () { errors.push(Array.prototype.slice.call(arguments).join(' ')); };
+                    var f = groupFixture();
+                    var fence = f.spec('b').fence;
+                    if (!fence.handle || typeof fence.handle.tell !== 'function' || fence.handle.folded() !== false) return false;
+                    // The domain's control, pressed: it TELLS, unasked, with a protocol value.
+                    if (fence.handle.tell(new RelGridGroupFold('b', true)) !== true) return false;
+                    if (!f.group.folded('b') || fence.handle.folded() !== true) return false;
+                    if (f.folds.join('|') !== 'b folded' || fence.told.join(',') !== 'true') return false;
+                    // The trailing fence's handle reads no member: folded() is false, and it may still tell.
+                    if (f.trailing.handle.folded() !== false) return false;
+                    if (f.trailing.handle.tell(new RelGridGroupFold('a', true)) !== true || !f.group.folded('a')) return false;
+                    // The host's tell is the same road.
+                    if (f.group.tell(new RelGridGroupFold('b', false)) !== true || f.group.folded('b')) return false;
+                    // A member that is not here, and a kind that is not understood: recorded and refused.
+                    if (f.group.tell(new RelGridGroupFold('nope', true)) !== false) return false;
+                    if (f.group.tell({ some: 'thing' }) !== false) return false;
+                    if (!errors.some(function (e) { return /not here/.test(e); }) || !errors.some(function (e) { return /not understand/.test(e); })) return false;
+                    // A fence without onFolded is simply not told.
+                    var g = groupFixture({ specs: [memberSpec('x', [['mapo', 'tofu', 480]])] });
+                    delete g.spec('x').fence.onFolded;
+                    return g.group.fold('x', true) === true && g.folds.join('|') === 'x folded';
+                })()"""), "tell is the channel's other direction: a fence's handle and the host's verb land on the same fold");
     }
 }

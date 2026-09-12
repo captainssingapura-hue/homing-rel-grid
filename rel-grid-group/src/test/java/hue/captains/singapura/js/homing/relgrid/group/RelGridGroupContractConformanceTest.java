@@ -62,6 +62,9 @@ class RelGridGroupContractConformanceTest extends JsModuleTestBase {
         assertEquals(declared(RelGridFenceContract.class),
                 new TreeSet<>(Arrays.asList(RelGridFenceContract.METHOD_NAMES)),
                 "METHOD_NAMES must name exactly the fence contract's methods");
+        var optional = new TreeSet<>(Arrays.asList(RelGridFenceContract.OPTIONAL_METHODS));
+        assertEquals(new TreeSet<>(List.of("onFolded")), optional, "the one optional method is the fold lifecycle");
+        assertEquals(true, declared(RelGridFenceContract.class).containsAll(optional), "an optional method is still a declared one");
     }
 
     @Test

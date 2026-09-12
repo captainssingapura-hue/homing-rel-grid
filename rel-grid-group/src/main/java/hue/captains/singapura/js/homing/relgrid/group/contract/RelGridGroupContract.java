@@ -37,14 +37,32 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  * them, never here. With {@code sharedHeader} (the default) the first
  * member's header is the group's and the rest show none.</p>
  *
- * <p>Not here, by design: fold, the group's own ask channel, the unsolicited
- * {@code tell}, cursor crossing between members and a selection that spans
- * them. Each is a later round; none will be applied to a member's rows.</p>
+ * <h2>Fold, and the channel's other direction</h2>
+ *
+ * <p>Fold is the group's own state: which members show their table. A folded
+ * member's <b>box</b> is hidden and its fence stays; the table inside is
+ * untouched and never learns. {@link #fold(String, boolean)},
+ * {@link #foldAll(boolean)} and {@link #folded(String)} are the host's;
+ * {@code onFolded(id, folded)} is the report; a fence that offers
+ * {@code onFolded(folded)} is told when the member below it changes, by
+ * whatever road. {@link #tell(Object)} is the domain saying, unasked — a
+ * protocol value such as {@code RelGridGroupFold}, the same kind a fence's
+ * handle carries — applied as the verb would be; an unknown kind is recorded
+ * and refused.</p>
+ *
+ * <p>Not here, by design: the group's own ask channel, cursor crossing
+ * between members and a selection that spans them. Each is a later round;
+ * none will be applied to a member's rows.</p>
  */
 public interface RelGridGroupContract {
     Object  members();                              // the ids, in order
     Object  member(String id);                      // the member's ordinary RelGrid, or null
     Object  fence(String id);                       // the slot above the member (null: the trailing one), or null
+    // ─── fold, and tell ──────────────────────────────────────────────────
+    boolean fold(String id, boolean folded);        // hide or show the member's box; true when anything changed. Unknown id throws
+    void    foldAll(boolean folded);                // every member; one report per member that changed
+    boolean folded(String id);                      // is the member's box hidden
+    boolean tell(Object message);                   // the domain saying, unasked: a protocol value, applied as a verb would be
     // ─── the one shared thing ────────────────────────────────────────────
     void    setColumnWidths(Object snapshot);       // the group's widths, applied to every member
     Object  columnWidths();                         // what the members hold — a plain object the host may keep
@@ -53,5 +71,5 @@ public interface RelGridGroupContract {
     void    destroy();                              // destroys every member's grid; disposes no fence cell
 
     String   JS_CLASS_NAME = "RelGridGroup";
-    String[] CALLBACK_OPTION_NAMES = { "onColumnResized" };
+    String[] CALLBACK_OPTION_NAMES = { "onColumnResized", "onFolded" };
 }

@@ -18,7 +18,9 @@
 //       columnWidths?,      // the widths every member starts at — the group's, not any member's
 //       sharedHeader?,      // true (default): the first member's header is the group's and the
 //                           // rest show none; false: every member keeps its own header option
+//       folded?,            // the ids folded at first — [] by default
 //       onColumnResized?,   // (column, px) — ONE report per change, however many members moved
+//       onFolded?,          // (id, folded) — a REPORT: a member's box was folded or unfolded
 //       label?              // aria-label on the group
 //   });
 //
@@ -35,10 +37,24 @@
 // FENCES. Between every two members, and around the ends, the group mints a
 // SLOT — N+1 of them for N members, each addressed by the member below it
 // and the last by the group — and hands it to the domain the way a table
-// hands a slot to a cell: render(host), and dispose() is the owner's. What
-// goes in it is the domain's — a title, a total, an illustration, a control
-// — and a slot nobody fills takes no height. The group knows no caption; it
-// knows a slot.
+// hands a slot to a cell: render(host, handle), and dispose() is the owner's.
+// What goes in it is the domain's — a title, a total, an illustration, a
+// control — and a slot nobody fills takes no height. The group knows no
+// caption; it knows a slot.
+//
+// FOLD is the group's own state: which members show their table. A folded
+// member's BOX is hidden — its fence stays — and the table inside is
+// untouched: cursor, selection, cells, view, all as they were, and it never
+// learns. fold(id, on), foldAll(on) and folded(id) are the host's verbs;
+// onFolded(id, on) is the report; and every fence with an onFolded is told
+// when the member below it folds or unfolds, by whatever road.
+//
+// TELL is the channel's other direction. The grid asks and the domain
+// answers; here the domain SAYS, unasked: a control the domain drew in a
+// fence was pressed. The handle a fence is given — { tell(message),
+// folded() } — carries a protocol value the same way an answer does, and
+// tell() on the group takes the same values from a host. RelGridGroupFold is
+// the first kind; an unknown one is recorded and refused, never dropped.
 //
 // WHAT IS SHARED, AND HOW. Column geometry is the one thing separate tables
 // cannot agree on by themselves, so it is the group's: it applies its widths
@@ -62,7 +78,10 @@ var _HRGG_STYLE_CSS = [
     ".hrg-group{display:flex;flex-direction:column;align-items:stretch;}",
     ".hrg-member{flex:0 0 auto;}",
     ".hrg-fence{flex:0 0 auto;}",
-    ".hrg-fence.hrg-fence-empty{display:none;}"
+    ".hrg-fence.hrg-fence-empty{display:none;}",
+    // A folded member: its box hidden, its table inside untouched; the fence
+    // above it wears the fact, for a domain that draws its control from it.
+    ".hrg-member.hrg-folded{display:none;}"
 ].join("\n");
 var _hrggStyled = false;
 
@@ -73,6 +92,16 @@ function _hrggEnsureStyles() {
     s.id = _HRGG_STYLE_ID;
     s.textContent = _HRGG_STYLE_CSS;
     document.head.appendChild(s);
+}
+
+function _hrggAddClass(el, c) {
+    var parts = el.className ? el.className.split(" ") : [];
+    if (parts.indexOf(c) < 0) el.className = parts.concat(c).join(" ");
+}
+function _hrggRemoveClass(el, c) {
+    var parts = el.className ? el.className.split(" ") : [], kept = [];
+    for (var k = 0; k < parts.length; k++) if (parts[k] !== c) kept.push(parts[k]);
+    el.className = kept.join(" ");
 }
 
 /** A copy of a plain options object — the member's spec is the host's; the group amends its own copy. */
@@ -92,7 +121,11 @@ class RelGridGroup {
         _hrggEnsureStyles();
         var self = this;
         this._cbResized = opts.onColumnResized || null;
+        this._cbFolded = opts.onFolded || null;
         this._sharedHeader = opts.sharedHeader !== false;
+        this._folded = {};                                      // id → true while folded
+        var f0 = opts.folded || [];
+        for (var i = 0; i < f0.length; i++) this._folded[f0[i]] = true;
         this._widths = _hrggCopy(opts.columnWidths);          // the group's, identity-keyed
         this._broadcasting = false;                             // a report of the group's own making
         this._destroyed = false;
@@ -114,8 +147,10 @@ class RelGridGroup {
             if (!m.grid) throw new Error("[RelGridGroup] member '" + m.id + "' has no grid options");
             this._fences.push(this._mintFence(m.id, m.fence || null));
             this._members.push(this._mintMember(m, k));
+            if (this._folded[m.id]) this._paintFold(m.id, true);   // folded at first: the box hidden before it is seen
         }
         this._fences.push(this._mintFence(null, opts.fence || null));
+        for (var fk in this._folded) if (!seen[fk]) delete this._folded[fk];   // drift: an id that is no member is dropped
         opts.container.appendChild(this._root);
 
         // Every member starts at the group's widths. Done after all are built,
@@ -125,8 +160,13 @@ class RelGridGroup {
 
     // ── minting ────────────────────────────────────────────────────────────
 
-    /** The slot above a member (or the trailing one): the domain's, once it has a cell. */
+    /**
+     * The slot above a member (or the trailing one): the domain's, once it has
+     * a cell. The cell is handed the host and a HANDLE — the channel's other
+     * direction, and what it may read of the member below: nothing else.
+     */
     _mintFence(id, cell) {
+        var self = this;
         var host = document.createElement("div");
         host.className = "hrg-fence" + (cell ? "" : " hrg-fence-empty");
         if (id !== null) host.setAttribute("data-member", String(id));
@@ -134,7 +174,11 @@ class RelGridGroup {
         if (cell) {
             if (typeof cell.render !== "function")
                 throw new Error("[RelGridGroup] a fence cell must render(host)" + (id !== null ? " — member '" + id + "'" : ""));
-            try { cell.render(host); }
+            var handle = {
+                tell:   function (message) { return self.tell(message); },
+                folded: function () { return id !== null && self._folded[id] === true; }
+            };
+            try { cell.render(host, handle); }
             catch (e) { console.error("[RelGridGroup] fence.render threw:", e); }
         }
         return { id: id, host: host, cell: cell };
@@ -202,6 +246,69 @@ class RelGridGroup {
         } finally { this._broadcasting = false; }
     }
 
+    // ── fold: the group's own state, applied to a member's box ─────────────
+
+    /** The box hidden or shown, and the fence above it marked; the table inside is not touched. */
+    _paintFold(id, on) {
+        var m = this._entry(id), f = this._fenceOf(id);
+        if (!m) return;
+        if (on) { _hrggAddClass(m.box, "hrg-folded"); if (f) _hrggAddClass(f.host, "hrg-fence-folded"); }
+        else    { _hrggRemoveClass(m.box, "hrg-folded"); if (f) _hrggRemoveClass(f.host, "hrg-fence-folded"); }
+    }
+
+    /**
+     * Fold or unfold a member. Idempotent — the same state again is nothing,
+     * no report — and every road lands here: the host's verb, foldAll, and a
+     * fence's tell. The fence above the member is told, if it listens; the
+     * host is told once. An unknown member is a mistake and throws.
+     */
+    fold(id, folded) {
+        if (!this._entry(id)) throw new Error("[RelGridGroup] fold: no member '" + id + "'");
+        var on = folded !== false;
+        if ((this._folded[id] === true) === on) return false;
+        if (on) this._folded[id] = true; else delete this._folded[id];
+        this._paintFold(id, on);
+        var f = this._fenceOf(id);
+        if (f && f.cell && typeof f.cell.onFolded === "function") {
+            try { f.cell.onFolded(on); }
+            catch (e) { console.error("[RelGridGroup] fence.onFolded threw:", e); }
+        }
+        if (this._cbFolded) {
+            try { this._cbFolded(id, on); }
+            catch (e) { console.error("[RelGridGroup] onFolded threw:", e); }
+        }
+        return true;
+    }
+
+    /** Every member at once — one report per member that actually changed. */
+    foldAll(folded) {
+        for (var k = 0; k < this._members.length; k++) this.fold(this._members[k].id, folded);
+        return this;
+    }
+
+    folded(id) { return this._folded[id] === true; }
+
+    // ── tell: the channel's other direction ────────────────────────────────
+
+    /**
+     * The domain saying, unasked. A protocol value, dispatched by kind — a
+     * RelGridGroupFold folds — and applied as the host's verb would be; an
+     * unknown kind is recorded and refused, never dropped. Answers whether
+     * anything changed.
+     */
+    tell(message) {
+        if (this._destroyed) return false;
+        if (message instanceof RelGridGroupFold) {
+            if (!this._entry(message.member)) {
+                console.error("[RelGridGroup] told to fold a member that is not here:", message.member);
+                return false;
+            }
+            return this.fold(message.member, message.folded);
+        }
+        console.error("[RelGridGroup] told something it does not understand:", message);
+        return false;
+    }
+
     /** The group's widths — applied to every member; the snapshot a host may keep. */
     setColumnWidths(widths) {
         if (!widths) return this;
@@ -229,7 +336,16 @@ class RelGridGroup {
 
     /** A member's grid — the ordinary RelGrid, for a host that must reach it. */
     member(id) {
-        for (var k = 0; k < this._members.length; k++) if (this._members[k].id === id) return this._members[k].grid;
+        var m = this._entry(id);
+        return m ? m.grid : null;
+    }
+
+    _entry(id) {
+        for (var k = 0; k < this._members.length; k++) if (this._members[k].id === id) return this._members[k];
+        return null;
+    }
+    _fenceOf(id) {
+        for (var k = 0; k < this._fences.length; k++) if (this._fences[k].id === id) return this._fences[k];
         return null;
     }
 

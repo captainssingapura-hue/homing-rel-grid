@@ -36,5 +36,8 @@ public final class RelGridProtocolManifest {
             // handed to the domain. It carries nothing; no dependencies.
             ObjectDefinition.of(RelGridViewHandover.class),
             // Its answer: a View — the root's pks, in order. No dependencies.
-            ObjectDefinition.of(RelGridView.class));
+            ObjectDefinition.of(RelGridView.class),
+            // The group's first kind, and the first that travels the other way:
+            // the domain telling the group to fold a member. No dependencies.
+            ObjectDefinition.of(RelGridGroupFold.class));
 }

@@ -3,6 +3,7 @@ package hue.captains.singapura.js.homing.relgrid.group;
 import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
+import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,8 +27,8 @@ class RelGridGroupCrateConformanceTest {
 
     @Test
     void theGroupIsBuiltOnTheGridAndTheGridKnowsNothingOfIt() {
-        assertEquals(List.of(RelGridCrate.INSTANCE), RelGridGroupCrate.INSTANCE.requires(),
-                "the group requires the grid's crate and nothing else");
+        assertEquals(List.of(RelGridCrate.INSTANCE, RelGridProtocolCrate.INSTANCE), RelGridGroupCrate.INSTANCE.requires(),
+                "the group requires the grid's crate and the protocol's, and nothing else");
         assertEquals(false, RelGridCrate.INSTANCE.requires().contains(RelGridGroupCrate.INSTANCE),
                 "and the dependency runs one way only");
     }
