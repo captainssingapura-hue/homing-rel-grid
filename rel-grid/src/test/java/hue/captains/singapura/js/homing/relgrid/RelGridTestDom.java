@@ -183,7 +183,7 @@ public final class RelGridTestDom {
                 var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
                 var container = makeEl('div');
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
-                var written = [], copied = [], handles = [];
+                var written = [], copied = [], handles = [], edges = [];
                 var grid = new RelGrid({
                     container: container, branch: branch, relation: relation,
                     onArranged:      function (k) { arranged.push(k); },
@@ -192,6 +192,7 @@ public final class RelGridTestDom {
                     onControlReleased: function (pk, col) { ended.push(pk + " " + col); },
                     onColumnResized: function (col, px) { resized.push(col + ' ' + px); },
                     onCopied: function (c) { copied.push(c); },
+                    onEdge: function (d) { edges.push(d); },
                     // THE CHANNEL. Every question arrives here with the mask handle; the
                     // fixture records both and, unless a test says otherwise, answers with
                     // a resolved promise — nothing for a notification, and nothing (absence)
@@ -276,7 +277,7 @@ public final class RelGridTestDom {
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
                          wrap: wrap, overlay: overlay, mask: mask, panel: panel,
-                         sent: sent, handles: handles, written: written, copied: copied,
+                         sent: sent, handles: handles, written: written, copied: copied, edges: edges,
                          // The last COPY question, or null. (asked() is the cellFor count.)
                          copyAsked: function () {
                              for (var k = sent.length - 1; k >= 0; k--)

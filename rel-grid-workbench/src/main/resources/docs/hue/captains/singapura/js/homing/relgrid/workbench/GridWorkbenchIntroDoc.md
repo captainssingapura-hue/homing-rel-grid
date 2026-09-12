@@ -405,8 +405,13 @@ agreeing through the surface every host already uses, and reaches into no member
   the group's root, never asked of the table) or the one `activate(id)` named. The others show
   neither cursor nor selection until they are active again; their state is untouched. **Tab** walks
   the group — fence, table, fence, table, …, trailing fence — and wraps within it, Shift+Tab the
-  other way; an unfilled fence and a folded table are skipped, and a fence stop lands on its
-  first control, the fold toggle here, so Enter on it folds.
+  other way; an unfilled fence, a folded table and a table with nothing to present are skipped,
+  and a fence stop lands on its first control, the fold toggle here, so Enter on it folds.
+  **Arrows step over an edge**, one stop at a time and never wrapping: the table reports a bare
+  arrow that went nowhere — `onEdge`, the one report it gained for groups — and the group moves
+  up to the fence above or down to the fence below; from a fence, Down enters the table below
+  on its first row and Up the table above on its last, in the column the cursor left. Tab is the
+  same walk from wherever the focus is: the fast-forward.
 - **Fold is the group's own state**, applied to a member's *box*: hidden, its fence staying, the
   table inside untouched — cursor, selection, cells, view all as they were, and it never learns.
   `fold`, `foldAll`, `folded` are the host's verbs; `onFolded` the report; a fence that offers

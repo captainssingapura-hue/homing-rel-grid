@@ -136,6 +136,14 @@ class RelGridGroupTest extends JsModuleTestBase {
                     mods = mods || {};
                     tableOf(id).dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
                 }
+                // An arrow pressed wherever the focus is — a table, or a fence.
+                function arrow(dir) {
+                    var ev = { key: dir === 'down' ? 'ArrowDown' : 'ArrowUp', prevented: false };
+                    ev.preventDefault = function () { ev.prevented = true; };
+                    (document.activeElement || root()).dispatch('keydown', ev);
+                    return ev.prevented;
+                }
+                function cursorOf(id) { var c = group.member(id).cursor(); return c ? c.pk + '/' + c.column : 'none'; }
                 function tab(shift) {
                     var ev = { key: 'Tab', shiftKey: !!shift, prevented: false };
                     ev.preventDefault = function () { ev.prevented = true; };
@@ -154,7 +162,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     return 'elsewhere';
                 }
                 return { group: group, container: container, specs: specs, trailing: trailing, reports: reports, folds: folds,
-                         tab: tab, focused: focused,
+                         tab: tab, arrow: arrow, cursorOf: cursorOf, focused: focused,
                          headerBox: headerBox, headerTable: headerTable,
                          boxOf: function (id) { return group.member(id).el().parentNode.parentNode; },
                          root: root, kinds: kinds, has: has, tableOf: tableOf, theadOf: theadOf, tdOf: tdOf, click: click, key: key,
@@ -560,5 +568,76 @@ class RelGridGroupTest extends JsModuleTestBase {
                     h.tab(false);
                     return h.focused() === 'table x' && h.group.active() === 'x';
                 })()"""), "folded tables and empty fences are skipped; a fence's own control is the stop");
+    }
+    @Test
+    void arrowsStepOverAnEdgeOneStopAtATimeAndNeverWrap() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = groupFixture();
+                    f.group.activate('a');
+                    f.click('a', 0, 1);                                          // mapo / calories, a's top row
+                    // Up from the top row: the fence above. Down from the fence: back in, first row, same column.
+                    if (!f.arrow('up') || f.focused() !== 'fence a') return false;
+                    if (!f.arrow('down') || f.focused() !== 'table a' || f.cursorOf('a') !== 'mapo/calories') return false;
+                    // Down through a: the second row is a's own move; the next is the edge, and b's fence.
+                    f.arrow('down');
+                    if (f.cursorOf('a') !== 'coq/calories' || f.focused() !== 'table a') return false;
+                    f.arrow('down');
+                    if (f.focused() !== 'fence b' || f.group.active() !== 'a') return false;
+                    // Into b from above: its first row, still in calories; b is active now.
+                    f.arrow('down');
+                    if (f.focused() !== 'table b' || f.group.active() !== 'b' || f.cursorOf('b') !== 'fish/calories') return false;
+                    // b has one row: down is its edge at once — c's fence — and up from there enters b on its LAST row.
+                    f.arrow('down');
+                    if (f.focused() !== 'fence c') return false;
+                    f.arrow('up');
+                    if (f.focused() !== 'table b' || f.cursorOf('b') !== 'fish/calories') return false;
+                    // Down to c's bottom, then the trailing fence, and no further: arrows never wrap.
+                    f.arrow('down'); f.arrow('down');
+                    if (f.focused() !== 'table c' || f.cursorOf('c') !== 'sauer/calories') return false;
+                    f.arrow('down'); f.arrow('down'); f.arrow('down');
+                    if (f.focused() !== 'fence trailing') return false;
+                    if (f.arrow('down') !== false || f.focused() !== 'fence trailing') return false;
+                    // Up from the trailing fence: c's LAST row. And a's fence is the top: up there goes nowhere.
+                    f.arrow('up');
+                    if (f.focused() !== 'table c' || f.cursorOf('c') !== 'carbo/calories') return false;
+                    f.group.activate('a'); f.click('a', 0, 0);
+                    f.arrow('up');
+                    if (f.focused() !== 'fence a') return false;
+                    return f.arrow('up') === false && f.focused() === 'fence a';
+                })()"""), "up from the top row is the fence above, down from the bottom the fence below; a fence's arrow enters the next table on its near row");
+    }
+
+    @Test
+    void arrowsKeepTheColumnAndSkipWhatIsNotAStop() {
+        assertTrue(evalBool("""
+                (() => {
+                    // b folded and c's fence empty: from a's bottom, down is b's fence, then straight into c.
+                    var f = groupFixture({ specs: [
+                        memberSpec('a', [['mapo', 'tofu', 480], ['coq', 'chicken', 610]]),
+                        memberSpec('b', [['fish', 'cod', 560]]),
+                        memberSpec('c', [['sauer', 'pork', 650], ['burger', 'beef', 780]], { fence: null }),
+                        memberSpec('m', [])                                      // nothing to present: never a stop
+                    ]});
+                    f.group.fold('b', true);
+                    f.group.activate('a');
+                    f.click('a', 1, 0);                                          // coq / ingredient, a's bottom row
+                    f.arrow('down');
+                    if (f.focused() !== 'fence b') return false;
+                    f.arrow('down');                                             // b's table is folded, c's fence unfilled: c itself
+                    if (f.focused() !== 'table c' || f.group.active() !== 'c' || f.cursorOf('c') !== 'sauer/ingredient') return false;
+                    // c's bottom: m's fence is the next stop, m's table (no rows) never is, then the trailing fence.
+                    f.arrow('down'); f.arrow('down');
+                    if (f.focused() !== 'fence m') return false;
+                    f.arrow('down');
+                    if (f.focused() !== 'fence trailing') return false;
+                    // Tab agrees about what is a stop.
+                    f.tab(false);
+                    if (f.focused() !== 'fence a') return false;
+                    f.tab(false); f.tab(false);
+                    if (f.focused() !== 'fence b') return false;
+                    f.tab(false);
+                    return f.focused() === 'table c';
+                })()"""), "arrows and Tab walk the same stops: folded tables, empty tables and unfilled fences are none");
     }
 }

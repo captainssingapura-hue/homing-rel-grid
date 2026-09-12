@@ -93,6 +93,14 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * drops unknown columns as drift and is idempotent. The grid persists nothing —
  * {@code onColumnResized} is a report, and keeping it is the host's (map 9).</p>
  *
+ * <h2>An arrow at the edge is reported</h2>
+ *
+ * <p>A bare arrow with the cursor already at that edge goes nowhere in this
+ * table, and {@code onEdge(direction)} says so — {@code 'up' | 'down' |
+ * 'left' | 'right'}. The grid does nothing else with it; the key is still
+ * consumed. A host that stacks several tables steps over the edge; a table
+ * alone hears nothing and loses nothing.</p>
+ *
  * <p>There is no {@code updateCell}, {@code flushNow}, {@code sortBy},
  * {@code filterRows}, {@code commitEdit} or {@code cancelEdit}. The first two
  * carried values; the next two are the relation's to answer with a View —
@@ -133,7 +141,7 @@ public interface RelGridContract {
 
     String   JS_CLASS_NAME = "RelGrid";
     String[] CALLBACK_OPTION_NAMES = {
-            "onArranged", "onCursorMoved", "onControlTaken", "onControlReleased", "onColumnResized", "onCopied" };
+            "onArranged", "onCursorMoved", "onControlTaken", "onControlReleased", "onColumnResized", "onCopied", "onEdge" };
     /** The channel is not a callback: it is asked, and it answers. */
     String   CHANNEL_OPTION_NAME = "ask";
     /** The clipboard writer: {@code { write(content) → thenable }}. The async Clipboard API unless the host says otherwise. */

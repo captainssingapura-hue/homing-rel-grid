@@ -33,6 +33,9 @@
 //       onControlReleased?, // (pk, column) — and gave it back
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
 //       onCopied?,        // (content) — a REPORT: this was written to the clipboard
+//       onEdge?,          // (direction) — a REPORT: a bare arrow went nowhere, the cursor being
+//                         // already at that edge — 'up' | 'down' | 'left' | 'right'. The grid
+//                         // itself does nothing with it; a host stacking tables steps over.
 //       ask?,             // (question, mask) — THE CHANNEL. See below.
 //       clipboard?        // { write(content) → thenable } — the writer; navigator.clipboard by default
 //   });
@@ -302,6 +305,7 @@ class RelGrid {
         this._cbReleased    = opts.onControlReleased || null;
         this._cbResized     = opts.onColumnResized || null;
         this._cbCopied      = opts.onCopied || null;
+        this._cbEdge        = opts.onEdge || null;
         this._ask = (typeof opts.ask === "function") ? opts.ask : null;
         this._clipboard = opts.clipboard || _hrgStockClipboard();
 
@@ -565,6 +569,17 @@ class RelGrid {
             try { entry.cell.onSelect(mode); }
             catch (e) { console.error("[RelGrid] cell.onSelect threw:", e); }
         }
+    }
+
+    /** The edge a bare arrow would cross, or null when there is room to move. */
+    _edgeOf(key) {
+        var p = this._cursorPos;
+        if (!p) return null;
+        if (key === "ArrowUp"    && p.i === 0) return "up";
+        if (key === "ArrowDown"  && p.i === this._maps.rows() - 1) return "down";
+        if (key === "ArrowLeft"  && p.j === 0) return "left";
+        if (key === "ArrowRight" && p.j === this._maps.cols() - 1) return "right";
+        return null;
     }
 
     _move(di, dj) {
@@ -904,12 +919,24 @@ class RelGrid {
         else if (e.shiftKey && arrow) this._extendBy(key);
         else if (arrow) {
             var self = this;
-            this._bareMove(function () {
-                if      (key === "ArrowUp")    self._move(-1, 0);
-                else if (key === "ArrowDown")  self._move(1, 0);
-                else if (key === "ArrowLeft")  self._move(0, -1);
-                else                           self._move(0, 1);
-            });
+            // A bare arrow with the cursor already at that edge goes nowhere in
+            // this table — and is REPORTED, so a host that stacks tables may
+            // step over the edge. The key is still the grid's: consumed.
+            var edge = this._edgeOf(key);
+            if (edge) {
+                this._bareMove(function () {});      // a bare move still clears the ranges (law 39)
+                if (this._cbEdge) {
+                    try { this._cbEdge(edge); }
+                    catch (e) { console.error("[RelGrid] onEdge threw:", e); }
+                }
+            } else {
+                this._bareMove(function () {
+                    if      (key === "ArrowUp")    self._move(-1, 0);
+                    else if (key === "ArrowDown")  self._move(1, 0);
+                    else if (key === "ArrowLeft")  self._move(0, -1);
+                    else                           self._move(0, 1);
+                });
+            }
         }
         else if (key === "Enter")      this.takeControlAtCursor();
         else return;                           // not ours; let it bubble

@@ -141,4 +141,30 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     return floorless.columnWidth('a') === 8;
                 })()"""), "rowView and columnView present part of a larger relation; a half-square column may be held");
     }
+    @Test
+    void aBareArrowAtTheEdgeGoesNowhereAndIsReported() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture(), g = f.grid;
+                    f.click(0, 0);                                           // mapo / ingredient: top-left
+                    f.key('ArrowUp');
+                    f.key('ArrowLeft');
+                    if (g.cursor().pk !== 'mapo' || g.cursor().column !== 'ingredient') return false;
+                    if (f.edges.join(',') !== 'up,left') return false;
+                    // Room to move: no report, and the cursor moves.
+                    f.key('ArrowDown'); f.key('ArrowRight');
+                    if (g.cursor().pk !== 'coq' || g.cursor().column !== 'calories' || f.edges.length !== 2) return false;
+                    f.key('ArrowDown'); f.key('ArrowDown');                  // the bottom-right, and one past it
+                    f.key('ArrowRight');
+                    if (g.cursor().pk !== 'fish' || f.edges.join(',') !== 'up,left,down,right') return false;
+                    // A bare move at the edge still clears the ranges — it is a bare move.
+                    f.click(0, 0); f.click(2, 1, { shift: true });
+                    if (g.selectionCount() !== 1) return false;
+                    f.click(2, 1); f.key('ArrowDown');
+                    if (g.selectionCount() !== 0) return false;
+                    // Shift+arrow at the edge is an extension, not a report; and a locked grid reports nothing.
+                    f.key('ArrowDown', { shift: true });
+                    return f.edges.length === 5 && f.edges[4] === 'down';
+                })()"""), "an arrow with nowhere to go is reported as the edge it met, and consumed");
+    }
 }

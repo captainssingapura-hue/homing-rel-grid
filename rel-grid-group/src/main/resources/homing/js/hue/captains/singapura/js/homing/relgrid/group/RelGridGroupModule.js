@@ -61,10 +61,20 @@
 //
 // TAB walks the group: fence, table, fence, table, …, trailing fence, in
 // order, and WRAPS within the group — Shift+Tab the other way. An unfilled
-// fence and a folded member's table are not stops. A fence stop lands on the
-// fence's first control when it has one — a fold toggle, say — and on the
-// fence itself otherwise; a table stop makes that member active and gives
-// its table the focus, so the cursor is where the eye is.
+// fence, a folded member's table and a table with nothing to present are not
+// stops. A fence stop lands on the fence's first control when it has one — a
+// fold toggle, say — and on the fence itself otherwise; a table stop makes
+// that member active and gives its table the focus, so the cursor is where
+// the eye is.
+//
+// ARROWS step over an edge. A table reports a bare arrow that went nowhere
+// (onEdge — the one thing the table gained for groups, and a report a table
+// alone may want too); the group then moves ONE stop, up or down, without
+// wrapping: from the top row, up to the fence above; from the bottom row,
+// down to the fence below. From a fence, down enters the table below on its
+// FIRST row and up the table above on its LAST, in the column the cursor
+// left — the table's own selectCell, by identity. Tab is the same walk a
+// stop at a time from wherever the focus is, so it is the fast-forward.
 //
 // TELL is the channel's other direction. The grid asks and the domain
 // answers; here the domain SAYS, unasked: a control the domain drew in a
@@ -193,6 +203,7 @@ class RelGridGroup {
         this._boxes = [];                                       // the boxes a drag's guide runs down: the header's, then every member's
         this._header = null;                                    // { box, grid } — the group's own header, in 'group' mode
         this._activeId = null;                                  // the member whose cursor is the group's
+        this._lastColumn = null;                                // the column the cursor last left a table in
 
         // The specs are checked whole before anything is minted: an id each, unique, and grid options.
         var seen = {};
@@ -221,8 +232,17 @@ class RelGridGroup {
                 if (t && _hrggWithin(t, self._members[k].box)) { self._activate(self._members[k].id, false); return; }
         };
         this._onKeyDown = function (e) {
-            if (!e || e.key !== "Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
-            if (self._step(e.shiftKey ? -1 : 1)) { if (e.preventDefault) e.preventDefault(); }
+            if (!e || e.altKey || e.ctrlKey || e.metaKey) return;
+            if (e.key === "Tab") {
+                if (self._step(e.shiftKey ? -1 : 1, true)) { if (e.preventDefault) e.preventDefault(); }
+                return;
+            }
+            // An arrow pressed ON A FENCE steps one stop. Judged by where the key was
+            // pressed, not where the focus is now: a table's own arrow may already have
+            // moved the focus to a fence, through its edge report, on this same key.
+            if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !e.shiftKey && self._onFence(e.target)) {
+                if (self._step(e.key === "ArrowDown" ? 1 : -1, false)) { if (e.preventDefault) e.preventDefault(); }
+            }
         };
         this._root.addEventListener("focusin", this._onFocusIn);
         this._root.addEventListener("keydown", this._onKeyDown);
@@ -333,6 +353,12 @@ class RelGridGroup {
             if (spec.onArranged) spec.onArranged(kind);
             self._level(id);
         };
+        // The cursor met this table's edge: step over it, one stop, no wrap.
+        g.onEdge = function (direction) {
+            if (spec.onEdge) spec.onEdge(direction);
+            if (direction === "up") self._step(-1, false);
+            else if (direction === "down") self._step(1, false);
+        };
         var entry = { id: id, box: box, grid: null, spec: spec };
         entry.grid = new RelGrid(g);
         return entry;
@@ -390,27 +416,63 @@ class RelGridGroup {
     _stops() {
         var out = [];
         for (var k = 0; k < this._members.length; k++) {
-            var f = this._fences[k];
+            var f = this._fences[k], m = this._members[k];
             if (f.cell) out.push({ el: f.host, fence: f });
-            if (!this._folded[this._members[k].id]) out.push({ el: this._members[k].box, member: this._members[k] });
+            if (!this._folded[m.id] && m.grid.viewMaps().rows() > 0) out.push({ el: m.box, member: m });
         }
         var last = this._fences[this._fences.length - 1];
         if (last.cell) out.push({ el: last.host, fence: last });
         return out;
     }
 
-    /** Move the focus one stop on (+1) or back (-1), wrapping within the group. False when there is nowhere to go. */
-    _step(dir) {
+    /** Is this element in one of the fences? */
+    _onFence(el) {
+        if (!el) return false;
+        for (var k = 0; k < this._fences.length; k++) if (_hrggWithin(el, this._fences[k].host)) return true;
+        return false;
+    }
+
+    /**
+     * Move the focus one stop on (+1) or back (-1). Tab wraps within the
+     * group; an arrow stops at the ends. Entering a table from above puts its
+     * cursor on the first row, from below on the last, in the column the
+     * cursor last left a table in — a table's own verb, by identity. False
+     * when there is nowhere to go.
+     */
+    _step(dir, wrap) {
         var stops = this._stops();
         if (!stops.length || typeof document === "undefined") return false;
         var at = -1, active = document.activeElement || null;
         for (var k = 0; k < stops.length; k++) if (active && _hrggWithin(active, stops[k].el)) { at = k; break; }
-        var next = (at < 0) ? (dir > 0 ? 0 : stops.length - 1) : (at + dir + stops.length) % stops.length;
+        // Leaving a table: remember the column, so the next table is entered in it.
+        if (at >= 0 && stops[at].member) {
+            var cur = stops[at].member.grid.cursor();
+            if (cur) this._lastColumn = cur.column;
+        }
+        var next;
+        if (at < 0) next = (dir > 0 ? 0 : stops.length - 1);
+        else if (wrap) next = (at + dir + stops.length) % stops.length;
+        else { next = at + dir; if (next < 0 || next >= stops.length) return false; }
         var stop = stops[next];
-        if (stop.member) return this._activate(stop.member.id, true);
+        if (stop.member) {
+            if (!wrap) this._enter(stop.member, dir > 0 ? "first" : "last");
+            return this._activate(stop.member.id, true);
+        }
         var target = _hrggFirstControl(stop.fence.host) || stop.fence.host;
         if (target.focus) { try { target.focus({ preventScroll: false }); } catch (e) { target.focus(); } }
         return true;
+    }
+
+    /** Put a member's cursor on its first or last row, in the column last left when it has it. */
+    _enter(m, row) {
+        var maps = m.grid.viewMaps(), rows = maps.rows();
+        if (rows === 0) return;
+        var i = (row === "first") ? 0 : rows - 1;
+        var j = (this._lastColumn !== null) ? maps.colOf(this._lastColumn) : -1;
+        if (j < 0) { var cur = m.grid.cursor(); j = cur ? maps.colOf(cur.column) : 0; }
+        if (j < 0) j = 0;
+        var id = maps.resolve(i, j);
+        if (id) m.grid.selectCell(id.pk, id.column);
     }
 
     /** The member whose cursor is the group's. */

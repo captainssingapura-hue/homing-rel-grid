@@ -55,8 +55,13 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  * Its box wears {@code hrg-active}; the others show neither cursor nor
  * selection, their state untouched. Tab and Shift+Tab walk the group's
  * stops — fence, table, fence, table, …, trailing fence — wrapping within
- * the group; an unfilled fence and a folded member's table are skipped, and
- * a fence stop lands on its first control when it has one.</p>
+ * the group; an unfilled fence, a folded member's table and a table with
+ * nothing to present are skipped, and a fence stop lands on its first control
+ * when it has one. Arrows step over an edge one stop at a time, without
+ * wrapping: the table reports a bare arrow that went nowhere ({@code onEdge}),
+ * and the group moves up to the fence above or down to the fence below; from
+ * a fence, down enters the table below on its first row and up the table
+ * above on its last, in the column the cursor left.</p>
  *
  * <h2>Fold, and the channel's other direction</h2>
  *
