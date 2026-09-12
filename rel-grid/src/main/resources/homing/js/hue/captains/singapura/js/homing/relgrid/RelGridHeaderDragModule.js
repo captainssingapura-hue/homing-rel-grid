@@ -19,6 +19,32 @@
 // several tables under one header wants the line down all of them.
 // =============================================================================
 
+/**
+ * What is SEEN of a box, top to bottom: its rect, clipped by every ancestor
+ * that scrolls or clips and by the viewport. A guide drawn down the whole
+ * box would run on past the pane that cuts the box off — a table, or a stack
+ * of them, is routinely taller than the pane it sits in.
+ */
+function _hrgSeenSpan(el) {
+    var r = el.getBoundingClientRect(), top = r.top, bottom = r.bottom;
+    if (typeof getComputedStyle === "function") {
+        for (var p = el.parentNode; p && p.getBoundingClientRect; p = p.parentNode) {
+            var cs = getComputedStyle(p);
+            if (!cs) continue;
+            if (/(auto|scroll|hidden|clip)/.test(String(cs.overflowY) + " " + String(cs.overflow))) {
+                var pr = p.getBoundingClientRect();
+                if (pr.top > top) top = pr.top;
+                if (pr.bottom < bottom) bottom = pr.bottom;
+            }
+        }
+    }
+    if (typeof window !== "undefined" && window.innerHeight) {
+        if (top < 0) top = 0;
+        if (bottom > window.innerHeight) bottom = window.innerHeight;
+    }
+    return { top: top, height: bottom > top ? bottom - top : 0 };
+}
+
 class RelGridHeaderDrag {
 
     constructor(opts) {
@@ -50,12 +76,12 @@ class RelGridHeaderDrag {
 
     _makeGuide(atX) {
         var over = this._extent || this._table;
-        var rect = over.getBoundingClientRect ? over.getBoundingClientRect() : null;
-        if (!document.body || !rect) return null;
+        if (!document.body || !over.getBoundingClientRect) return null;
+        var span = _hrgSeenSpan(over);                       // down what is SEEN of it, not past the pane
         var guide = document.createElement("div");
         guide.className = "hrg-resize-guide";
-        guide.style.setProperty("--hrg-guide-top", rect.top + "px");
-        guide.style.setProperty("--hrg-guide-h", rect.height + "px");
+        guide.style.setProperty("--hrg-guide-top", span.top + "px");
+        guide.style.setProperty("--hrg-guide-h", span.height + "px");
         guide.style.setProperty("--hrg-guide-x", atX + "px");
         document.body.appendChild(guide);
         return guide;

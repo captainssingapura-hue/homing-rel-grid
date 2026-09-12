@@ -198,4 +198,32 @@ class RelGridResizeTest extends JsModuleTestBase {
                     return top2 === '0px' && h2 === '20px';
                 })()"""), "the guide line runs down the extent the host names, else down the table");
     }
+
+    @Test
+    void theGuideStopsWhereThePaneCutsTheExtentOff() {
+        assertTrue(evalBool("""
+                (() => {
+                    // A pane that scrolls, 100..400 tall, holding a stack 40..640: only 100..400 is seen.
+                    var pane = makeEl('div'); pane._rt = 100; pane._rb = 400; pane._scrolls = true;
+                    var stack = makeEl('div'); stack._rt = 40; stack._rb = 640;
+                    pane.appendChild(stack);
+                    getComputedStyle = function (el) { return { overflowY: el._scrolls ? 'auto' : 'visible', overflow: 'visible' }; };
+                    var f = fixture({ resizeGuide: stack });
+                    var th = f.thAt(1); th._rl = 300; th._rr = 400;
+                    var handle = th.children[th.children.length - 1];
+                    handle.dispatch('mousedown', { clientX: 398 });
+                    var guide = document.body.children[document.body.children.length - 1];
+                    var top = guide.style.getPropertyValue('--hrg-guide-top'), h = guide.style.getPropertyValue('--hrg-guide-h');
+                    document.dispatch('keydown', { key: 'Escape' });
+                    if (top !== '100px' || h !== '300px') return false;
+                    // An ancestor that does not scroll clips nothing.
+                    pane._scrolls = false;
+                    handle.dispatch('mousedown', { clientX: 398 });
+                    var g2 = document.body.children[document.body.children.length - 1];
+                    var top2 = g2.style.getPropertyValue('--hrg-guide-top'), h2 = g2.style.getPropertyValue('--hrg-guide-h');
+                    document.dispatch('keydown', { key: 'Escape' });
+                    delete globalThis.getComputedStyle;
+                    return top2 === '40px' && h2 === '600px';
+                })()"""), "the guide runs down what is SEEN of the extent: a scrolling ancestor cuts it, a plain one does not");
+    }
 }

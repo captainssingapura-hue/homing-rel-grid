@@ -96,10 +96,11 @@ public final class RelGridTestDom {
                     },
                     select: function () {},
                     setAttribute: function () {}, getAttribute: function () { return null; },
-                    // Geometry for a header drag: _rl / _rr set by a test; 100px otherwise.
+                    // Geometry for a header drag: _rl / _rr (and _rt / _rb) set by a test; 100 x 20 otherwise.
                     getBoundingClientRect: function () {
                         var l = this._rl || 0, r = (this._rr != null) ? this._rr : l + 100;
-                        return { left: l, right: r, top: 0, bottom: 20, width: r - l, height: 20 };
+                        var t = this._rt || 0, b = (this._rb != null) ? this._rb : t + 20;
+                        return { left: l, right: r, top: t, bottom: b, width: r - l, height: b - t };
                     },
                     get firstChild() { return this.children[0] || null; },
                     get firstElementChild() { return this.children[0] || null; }
