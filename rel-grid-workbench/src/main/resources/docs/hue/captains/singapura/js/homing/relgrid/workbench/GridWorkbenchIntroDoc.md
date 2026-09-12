@@ -400,6 +400,13 @@ agreeing through the surface every host already uses, and reaches into no member
 - **An illustration is a member with nothing to present**: a relation with an empty row view
   that keeps its identity and its fence. No special row, no special cell, nothing the table
   knows — which is what map 24 predicted, one abstraction lower than it expected.
+- **One cursor.** Every member keeps a cursor of its own — a table alone always has one — and the
+  group presents one: the *active* member's, the one whose table last held the focus (observed at
+  the group's root, never asked of the table) or the one `activate(id)` named. The others show
+  neither cursor nor selection until they are active again; their state is untouched. **Tab** walks
+  the group — fence, table, fence, table, …, trailing fence — and wraps within it, Shift+Tab the
+  other way; an unfilled fence and a folded table are skipped, and a fence stop lands on its
+  first control, the fold toggle here, so Enter on it folds.
 - **Fold is the group's own state**, applied to a member's *box*: hidden, its fence staying, the
   table inside untouched — cursor, selection, cells, view all as they were, and it never learns.
   `fold`, `foldAll`, `folded` are the host's verbs; `onFolded` the report; a fence that offers

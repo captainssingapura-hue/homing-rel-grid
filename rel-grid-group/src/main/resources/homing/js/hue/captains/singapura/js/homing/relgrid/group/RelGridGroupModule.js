@@ -50,6 +50,22 @@
 // onFolded(id, on) is the report; and every fence with an onFolded is told
 // when the member below it folds or unfolds, by whatever road.
 //
+// ONE CURSOR. Every member keeps a cursor of its own — a table alone always
+// has one — but a person's attention is in one place, so the group presents
+// ONE: the ACTIVE member's. The active member is the one whose table last
+// held the focus (observed, never asked of the table), or the one activate()
+// named; its box wears hrg-active, and the group's sheet paints neither a
+// cursor nor a selection wash in the others. Their state is untouched — the
+// cursor and the ranges are still there — it is simply not shown until the
+// member is active again. The first member is active at first.
+//
+// TAB walks the group: fence, table, fence, table, …, trailing fence, in
+// order, and WRAPS within the group — Shift+Tab the other way. An unfilled
+// fence and a folded member's table are not stops. A fence stop lands on the
+// fence's first control when it has one — a fold toggle, say — and on the
+// fence itself otherwise; a table stop makes that member active and gives
+// its table the focus, so the cursor is where the eye is.
+//
 // TELL is the channel's other direction. The grid asks and the domain
 // answers; here the domain SAYS, unasked: a control the domain drew in a
 // fence was pressed. The handle a fence is given — { tell(message),
@@ -91,7 +107,16 @@ var _HRGG_STYLE_CSS = [
     ".hrg-fence.hrg-fence-empty{display:none;}",
     // A folded member: its box hidden, its table inside untouched; the fence
     // above it wears the fact, for a domain that draws its control from it.
-    ".hrg-member.hrg-folded{display:none;}"
+    ".hrg-member.hrg-folded{display:none;}",
+    // One cursor: a member that is not active shows neither its cursor nor
+    // its selection — ext3's predicates, which are published to be styled by.
+    ".hrg-group .hrg-member:not(.hrg-active) .hrg-td.hrg-cursor,",
+    ".hrg-group .hrg-member:not(.hrg-active) .hrg-merge.hrg-cursor{outline-color:transparent;}",
+    ".hrg-group .hrg-member:not(.hrg-active) .hrg-td.hrg-sel,",
+    ".hrg-group .hrg-member:not(.hrg-active) .hrg-merge.hrg-sel{background:transparent;}",
+    // A fence that is the Tab stop itself (no control of its own to land on).
+    ".hrg-fence{outline:none;}",
+    ".hrg-fence:focus{outline:1px dashed color-mix(in srgb, var(--color-accent) 60%, var(--color-border));outline-offset:-1px;}"
 ].join("\n");
 var _hrggStyled = false;
 
@@ -102,6 +127,24 @@ function _hrggEnsureStyles() {
     s.id = _HRGG_STYLE_ID;
     s.textContent = _HRGG_STYLE_CSS;
     document.head.appendChild(s);
+}
+
+/** Is el inside ancestor (or it)? The stub's elements have no contains(). */
+function _hrggWithin(el, ancestor) {
+    for (var p = el; p; p = p.parentNode) if (p === ancestor) return true;
+    return false;
+}
+/** The first control in a fence — a button, a link, anything focusable — or null. Walks: no querySelector needed. */
+function _hrggFirstControl(host) {
+    var kids = host.children || [];
+    for (var k = 0; k < kids.length; k++) {
+        var el = kids[k], tag = String(el.tagName || "").toLowerCase();
+        if (tag === "button" || tag === "input" || tag === "select" || tag === "textarea" || tag === "a"
+            || (el.getAttribute && el.getAttribute("tabindex") !== null)) return el;
+        var deeper = _hrggFirstControl(el);
+        if (deeper) return deeper;
+    }
+    return null;
 }
 
 function _hrggAddClass(el, c) {
@@ -149,6 +192,7 @@ class RelGridGroup {
         this._fences = [];                                      // N+1 of { id, host, cell }; the last id is null
         this._boxes = [];                                       // the boxes a drag's guide runs down: the header's, then every member's
         this._header = null;                                    // { box, grid } — the group's own header, in 'group' mode
+        this._activeId = null;                                  // the member whose cursor is the group's
 
         // The specs are checked whole before anything is minted: an id each, unique, and grid options.
         var seen = {};
@@ -169,6 +213,20 @@ class RelGridGroup {
         }
         this._fences.push(this._mintFence(null, opts.fence || null));
         for (var fk in this._folded) if (!seen[fk]) delete this._folded[fk];   // drift: an id that is no member is dropped
+        // One cursor: the member whose table holds the focus is the active one,
+        // observed at the root; Tab walks the stops. Neither reaches into a table.
+        this._onFocusIn = function (e) {
+            var t = e && e.target;
+            for (var k = 0; k < self._members.length; k++)
+                if (t && _hrggWithin(t, self._members[k].box)) { self._activate(self._members[k].id, false); return; }
+        };
+        this._onKeyDown = function (e) {
+            if (!e || e.key !== "Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
+            if (self._step(e.shiftKey ? -1 : 1)) { if (e.preventDefault) e.preventDefault(); }
+        };
+        this._root.addEventListener("focusin", this._onFocusIn);
+        this._root.addEventListener("keydown", this._onKeyDown);
+        this._activate(this._members[0].id, false);
         opts.container.appendChild(this._root);
 
         // Every member starts at the group's widths. Done after all are built,
@@ -187,6 +245,7 @@ class RelGridGroup {
         var self = this;
         var host = document.createElement("div");
         host.className = "hrg-fence" + (cell ? "" : " hrg-fence-empty");
+        host.setAttribute("tabindex", "-1");                    // a Tab stop by the group's hand, not the browser's
         if (id !== null) host.setAttribute("data-member", String(id));
         this._root.appendChild(host);
         if (cell) {
@@ -308,6 +367,58 @@ class RelGridGroup {
         } finally { this._broadcasting = false; }
     }
 
+    // ── one cursor: the active member, and Tab between the stops ───────────
+
+    /** Mark the active member; with focus, give its table the focus and bring its box into view. */
+    _activate(id, focus) {
+        var m = this._entry(id);
+        if (!m) return false;
+        if (this._activeId !== id) {
+            var was = this._entry(this._activeId);
+            if (was) _hrggRemoveClass(was.box, "hrg-active");
+            _hrggAddClass(m.box, "hrg-active");
+            this._activeId = id;
+        }
+        if (focus) {
+            if (m.box.scrollIntoView) { try { m.box.scrollIntoView({ block: "nearest" }); } catch (e) { /* headless */ } }
+            m.grid.focus();
+        }
+        return true;
+    }
+
+    /** The stops Tab walks, in order: a filled fence, an unfolded member's table, … the trailing fence. */
+    _stops() {
+        var out = [];
+        for (var k = 0; k < this._members.length; k++) {
+            var f = this._fences[k];
+            if (f.cell) out.push({ el: f.host, fence: f });
+            if (!this._folded[this._members[k].id]) out.push({ el: this._members[k].box, member: this._members[k] });
+        }
+        var last = this._fences[this._fences.length - 1];
+        if (last.cell) out.push({ el: last.host, fence: last });
+        return out;
+    }
+
+    /** Move the focus one stop on (+1) or back (-1), wrapping within the group. False when there is nowhere to go. */
+    _step(dir) {
+        var stops = this._stops();
+        if (!stops.length || typeof document === "undefined") return false;
+        var at = -1, active = document.activeElement || null;
+        for (var k = 0; k < stops.length; k++) if (active && _hrggWithin(active, stops[k].el)) { at = k; break; }
+        var next = (at < 0) ? (dir > 0 ? 0 : stops.length - 1) : (at + dir + stops.length) % stops.length;
+        var stop = stops[next];
+        if (stop.member) return this._activate(stop.member.id, true);
+        var target = _hrggFirstControl(stop.fence.host) || stop.fence.host;
+        if (target.focus) { try { target.focus({ preventScroll: false }); } catch (e) { target.focus(); } }
+        return true;
+    }
+
+    /** The member whose cursor is the group's. */
+    active() { return this._activeId; }
+
+    /** Make a member the active one and give its table the focus. False for an id that is no member. */
+    activate(id) { return this._activate(id, true); }
+
     // ── fold: the group's own state, applied to a member's box ─────────────
 
     /** The box hidden or shown, and the fence above it marked; the table inside is not touched. */
@@ -423,6 +534,8 @@ class RelGridGroup {
     /** Destroys every member's grid and the header's, and removes the group. Disposes no fence cell: they are the domain's. */
     destroy() {
         this._destroyed = true;
+        this._root.removeEventListener("focusin", this._onFocusIn);
+        this._root.removeEventListener("keydown", this._onKeyDown);
         if (this._header) this._header.grid.destroy();
         for (var k = 0; k < this._members.length; k++) this._members[k].grid.destroy();
         if (this._root.parentNode) this._root.parentNode.removeChild(this._root);

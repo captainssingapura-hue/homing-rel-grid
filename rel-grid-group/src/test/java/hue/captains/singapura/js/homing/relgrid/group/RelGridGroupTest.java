@@ -59,6 +59,14 @@ class RelGridGroupTest extends JsModuleTestBase {
                 };
                 return relation;
             }
+            function fenceWithButton(name) {
+                var f = fenceCell(name);
+                f.render = function (host, handle) {
+                    f.rendered = host; f.handle = handle;
+                    var b = makeEl('button'); b.textContent = name + ' button'; host.appendChild(b); f.button = b;
+                };
+                return f;
+            }
             function fenceCell(name) {
                 var f = { name: name, rendered: null, handle: null, disposed: 0, told: [],
                           render: function (host, handle) { f.rendered = host; f.handle = handle; var el = makeEl('div'); el.textContent = name; host.appendChild(el); },
@@ -128,7 +136,25 @@ class RelGridGroupTest extends JsModuleTestBase {
                     mods = mods || {};
                     tableOf(id).dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
                 }
+                function tab(shift) {
+                    var ev = { key: 'Tab', shiftKey: !!shift, prevented: false };
+                    ev.preventDefault = function () { ev.prevented = true; };
+                    (document.activeElement || root()).dispatch('keydown', ev);
+                    return ev.prevented;
+                }
+                function focused() {
+                    var a = document.activeElement;
+                    if (!a) return 'nothing';
+                    for (var k = 0; k < specs.length; k++) {
+                        if (a === tableOf(specs[k].id)) return 'table ' + specs[k].id;
+                        var fh = group.fence(specs[k].id);
+                        for (var p = a; p; p = p.parentNode) if (p === fh) return 'fence ' + specs[k].id + (a === fh ? '' : ' control');
+                    }
+                    for (var q = a; q; q = q.parentNode) if (q === group.fence(null)) return 'fence trailing' + (a === group.fence(null) ? '' : ' control');
+                    return 'elsewhere';
+                }
                 return { group: group, container: container, specs: specs, trailing: trailing, reports: reports, folds: folds,
+                         tab: tab, focused: focused,
                          headerBox: headerBox, headerTable: headerTable,
                          boxOf: function (id) { return group.member(id).el().parentNode.parentNode; },
                          root: root, kinds: kinds, has: has, tableOf: tableOf, theadOf: theadOf, tdOf: tdOf, click: click, key: key,
@@ -463,5 +489,76 @@ class RelGridGroupTest extends JsModuleTestBase {
                     delete g.spec('x').fence.onFolded;
                     return g.group.fold('x', true) === true && g.folds.join('|') === 'x folded';
                 })()"""), "tell is the channel's other direction: a fence's handle and the host's verb land on the same fold");
+    }
+    @Test
+    void oneCursorIsTheActiveMembersAndFocusMovesIt() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = groupFixture();
+                    // Every member has a cursor of its own; the group presents the first's.
+                    if (f.group.active() !== 'a') return false;
+                    if (!f.has(f.boxOf('a'), 'hrg-active') || f.has(f.boxOf('b'), 'hrg-active')) return false;
+                    if (f.group.member('b').cursor() === null) return false;              // b's is there, unshown
+                    // The focus arriving in a table — observed at the root, never asked of the table — moves it.
+                    f.tableOf('c').dispatch('focusin', {});
+                    if (f.group.active() !== 'c' || f.has(f.boxOf('a'), 'hrg-active') || !f.has(f.boxOf('c'), 'hrg-active')) return false;
+                    // The host's verb moves it and gives the table the focus.
+                    if (f.group.activate('b') !== true) return false;
+                    if (f.group.active() !== 'b' || document.activeElement !== f.tableOf('b')) return false;
+                    if (f.has(f.boxOf('c'), 'hrg-active') || !f.has(f.boxOf('b'), 'hrg-active')) return false;
+                    // The same again is fine; a stranger is refused.
+                    return f.group.activate('b') === true && f.group.activate('nope') === false && f.group.active() === 'b';
+                })()"""), "one cursor: the active member's, following the focus or the host's activate()");
+    }
+
+    @Test
+    void tabWalksFencesAndTablesInOrderAndWrapsWithinTheGroup() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = groupFixture();
+                    f.group.activate('a');
+                    var walk = [];
+                    for (var k = 0; k < 7; k++) { if (!f.tab(false)) return false; walk.push(f.focused()); }
+                    // From a's table: b's fence, b's table, c's fence, c's table, the trailing fence — then round
+                    // to a's fence, a's table. Every stop consumed the key.
+                    if (walk.join(' > ') !== 'fence b > table b > fence c > table c > fence trailing > fence a > table a') return false;
+                    if (f.group.active() !== 'a') return false;                          // a table stop makes its member active
+                    // And back, from a's table: a's fence, then round to the trailing fence.
+                    var back = [];
+                    for (var j = 0; j < 2; j++) { f.tab(true); back.push(f.focused()); }
+                    if (back.join(' > ') !== 'fence a > fence trailing') return false;
+                    // A modified Tab is not the group's.
+                    var ev = { key: 'Tab', ctrlKey: true, prevented: false }; ev.preventDefault = function () { ev.prevented = true; };
+                    f.tableOf('a').dispatch('keydown', ev);
+                    return !ev.prevented;
+                })()"""), "Tab walks fence, table, fence, table … and wraps; Shift+Tab walks back");
+    }
+
+    @Test
+    void aFoldedTableAndAnUnfilledFenceAreNotStopsAndAControlIsLandedOn() {
+        assertTrue(evalBool("""
+                (() => {
+                    var g = groupFixture({ specs: [
+                        memberSpec('a', [['mapo', 'tofu', 480]], { fence: null }),          // no fence above a
+                        memberSpec('b', [['fish', 'cod', 560]]),
+                        memberSpec('c', [['sauer', 'pork', 650]])
+                    ], trailing: null });                                                 // and none below c
+                    g.group.fold('b', true);                                              // b's table is folded away
+                    g.group.activate('a');
+                    var walk = [];
+                    for (var k = 0; k < 4; k++) { g.tab(false); walk.push(g.focused()); }
+                    // a's table → b's fence (its table is folded, skipped) → c's fence → c's table → round to a's table
+                    // (a has no fence above it, and there is no trailing one).
+                    if (walk.join(' > ') !== 'fence b > fence c > table c > table a') return false;
+                    // A fence with a control of its own lands on the control.
+                    var spec = memberSpec('x', [['mapo', 'tofu', 480]]);
+                    spec.fence = fenceWithButton('x');
+                    var h = groupFixture({ specs: [spec, memberSpec('y', [['fish', 'cod', 560]])], trailing: null });
+                    h.group.activate('y');
+                    h.tab(false);                                                          // round to x's fence: its button
+                    if (h.focused() !== 'fence x control' || document.activeElement !== spec.fence.button) return false;
+                    h.tab(false);
+                    return h.focused() === 'table x' && h.group.active() === 'x';
+                })()"""), "folded tables and empty fences are skipped; a fence's own control is the stop");
     }
 }

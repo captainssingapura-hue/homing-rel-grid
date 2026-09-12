@@ -54,6 +54,7 @@ public final class RelGridTestDom {
                 // Dispatch with bubbling, like the real thing; blur does not bubble.
                 target.dispatch = function (t, ev) {
                     ev = ev || {};
+                    if (!ev.target) ev.target = this;                    // as a browser sets it: where it was dispatched
                     if (!ev.preventDefault) ev.preventDefault = function () {};
                     if (!ev.stopPropagation) { ev._stopped = false; ev.stopPropagation = function () { ev._stopped = true; }; }
                     var node = this;

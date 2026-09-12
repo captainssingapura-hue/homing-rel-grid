@@ -47,6 +47,17 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  * 'each'}: the group adds no table and every member keeps whatever its own
  * options say.</p>
  *
+ * <h2>One cursor, and Tab between the stops</h2>
+ *
+ * <p>Every member keeps a cursor of its own, and the group presents one: the
+ * <b>active</b> member's — the one whose table last held the focus, observed
+ * and never asked of the table, or the one {@link #activate(String)} named.
+ * Its box wears {@code hrg-active}; the others show neither cursor nor
+ * selection, their state untouched. Tab and Shift+Tab walk the group's
+ * stops — fence, table, fence, table, …, trailing fence — wrapping within
+ * the group; an unfilled fence and a folded member's table are skipped, and
+ * a fence stop lands on its first control when it has one.</p>
+ *
  * <h2>Fold, and the channel's other direction</h2>
  *
  * <p>Fold is the group's own state: which members show their table. A folded
@@ -68,6 +79,9 @@ public interface RelGridGroupContract {
     Object  members();                              // the ids, in order
     Object  member(String id);                      // the member's ordinary RelGrid, or null
     Object  fence(String id);                       // the slot above the member (null: the trailing one), or null
+    // ─── one cursor ──────────────────────────────────────────────────────
+    Object  active();                               // the id of the member whose cursor is the group's
+    boolean activate(String id);                    // make it active and give its table the focus; false for no such member
     // ─── fold, and tell ──────────────────────────────────────────────────
     boolean fold(String id, boolean folded);        // hide or show the member's box; true when anything changed. Unknown id throws
     void    foldAll(boolean folded);                // every member; one report per member that changed
