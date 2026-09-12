@@ -23,6 +23,8 @@
 //                         // whose columns are half-squares says 24.
 //       mergedCells?,     // true to honour a cell's colSpan(). Off by default: most
 //                         // relations have no merged cells, and the feature is kept apart.
+//       resizeGuide?,     // the element a header drag's guide line spans. Default the
+//                         // table; a host stacking several tables names their stack.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -346,6 +348,7 @@ class RelGrid {
             label: opts.label || null,
             showHeader: this._showHead,
             overflow: opts.overflow || null,
+            resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._onDblClick(i, j); },
             onCellDown:     function (i, j, mods) { self._onDown(i, j, mods); },

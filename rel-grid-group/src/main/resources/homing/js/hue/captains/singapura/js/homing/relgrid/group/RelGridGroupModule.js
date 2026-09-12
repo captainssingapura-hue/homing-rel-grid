@@ -51,7 +51,9 @@
 // onColumnResized still fires — it is that member's truthful report of its
 // own geometry — and the group's fires once for all of them.
 //
-// WHAT THE TABLE GAINED FOR THIS: nothing. Every verb here existed already.
+// WHAT THE TABLE GAINED FOR THIS: one option, resizeGuide — what a header
+// drag's guide line spans, which a host stacking tables wants to be the
+// stack. Every verb here existed already.
 // =============================================================================
 
 var _HRGG_STYLE_ID = "homing-rel-grid-group-style";
@@ -150,6 +152,7 @@ class RelGridGroup {
         var g = _hrggCopy(spec);
         g.container = box;
         if (this._sharedHeader && k > 0) g.header = { show: false };
+        g.resizeGuide = this._root;                             // a drag's guide line runs down every member
         g.onColumnResized = function (column, px) {
             self._onMemberResized(id, column, px);
             if (spec.onColumnResized) spec.onColumnResized(column, px);

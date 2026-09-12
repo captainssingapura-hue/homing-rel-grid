@@ -35,7 +35,7 @@
 //
 //   new RelGridLayout({ container, label?, showHeader?, overflow?, onCellClick?,
 //                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
-//                       onColResize? })
+//                       onColResize?, resizeGuide? })
 //   openOverlay(i, j) / closeOverlay()        the editor's anchor, over a slot
 //   openMask() / openPanel() / closeMask()    the mask, and the canvas in it
 //   openGroup(i, j, n) / placeGroups()        a merged cell's host, over n slots
@@ -299,8 +299,14 @@ class RelGridLayout {
         this._table.setAttribute("tabindex", "0");            // the keyboard host
         if (opts.label) this._table.setAttribute("aria-label", opts.label);
         // The resize gesture lives in RelGridHeaderDrag; wired per <th> at render.
+        // It starts a drag from the width held, and draws its guide down the
+        // extent the host names — a host stacking tables names their stack.
+        var lay = this;
+        this._colW = null;                                    // the last positional widths applied
         this._drag = opts.onColResize
-                   ? new RelGridHeaderDrag({ table: this._table, onColResize: opts.onColResize })
+                   ? new RelGridHeaderDrag({ table: this._table, onColResize: opts.onColResize,
+                                             heldWidth: function (j) { return (lay._colW && lay._colW[j] != null) ? lay._colW[j] : null; },
+                                             extent: opts.resizeGuide || null })
                    : null;
         this._colgroup = document.createElement("colgroup");
         this._table.appendChild(this._colgroup);
@@ -431,14 +437,25 @@ class RelGridLayout {
      * any explicit width exists.
      */
     setColWidths(widths) {
-        var any = false, cols = this._colgroup.children;
+        var any = false, all = true, sum = 0, cols = this._colgroup.children;
+        this._colW = widths ? widths.slice() : null;
         for (var j = 0; j < cols.length; j++) {
             var w = widths ? widths[j] : null, st = cols[j].style;
-            if (w != null) { any = true; if (st && st.setProperty) st.setProperty("--hrg-col-w", w + "px"); }
-            else if (st && st.removeProperty) st.removeProperty("--hrg-col-w");
+            if (w != null) { any = true; sum += w; if (st && st.setProperty) st.setProperty("--hrg-col-w", w + "px"); }
+            else { all = false; if (st && st.removeProperty) st.removeProperty("--hrg-col-w"); }
         }
         if (any) _hrgAddClass(this._table, "hrg-fixed");
         else _hrgRemoveClass(this._table, "hrg-fixed");
+        // A table whose EVERY column holds a width is exactly their sum. Left at
+        // 100% of a wider box, a fixed layout would stretch every column past
+        // what it holds — widths nobody asked for, and a drag starting from
+        // what is seen would move the wrong way. With any column still free the
+        // table keeps the box's width and the free columns share the remainder.
+        var ts = this._table.style;
+        if (ts && ts.setProperty) {
+            if (any && all && cols.length) ts.setProperty("width", sum + "px");
+            else if (ts.removeProperty) ts.removeProperty("width");
+        }
         this.placeGroups();                                   // the slots moved; the hosts follow
         return this;
     }

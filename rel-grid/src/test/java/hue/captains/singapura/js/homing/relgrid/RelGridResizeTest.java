@@ -123,4 +123,79 @@ class RelGridResizeTest extends JsModuleTestBase {
                     return held && restored && idempotent && f.arranged.join() === 'base';
                 })()"""), "law 56/58/59/60: a snapshot is what is held; restore is drift-tolerant and idempotent; no cycle");
     }
+    @Test
+    void aTableWhoseEveryColumnHoldsAWidthIsExactlyTheirSum() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture(), g = f.grid, ts = f.table().style;
+                    // Nothing held: the sheet's 100% stands (no inline width).
+                    if (ts.getPropertyValue('width') !== '') return false;
+                    // One held, one free: still the box's width — the free column shares the remainder.
+                    g.setColumnWidth('ingredient', 150);
+                    if (ts.getPropertyValue('width') !== '') return false;
+                    // Every column held: exactly their sum, so a fixed layout stretches nothing.
+                    g.setColumnWidth('calories', 90);
+                    if (ts.getPropertyValue('width') !== '240px') return false;
+                    g.setColumnWidth('calories', 60);
+                    if (ts.getPropertyValue('width') !== '210px') return false;
+                    // A column leaving the view leaves the sum: the one shown is the whole width.
+                    g.viewMaps().setColumnView(['ingredient']);
+                    if (ts.getPropertyValue('width') !== '150px') return false;
+                    g.viewMaps().setColumnView(['ingredient', 'calories']);
+                    return ts.getPropertyValue('width') === '210px';
+                })()"""), "with every presented column sized the table is their sum; with any free it keeps the box");
+    }
+
+    @Test
+    void aDragStartsFromTheWidthHeldNotTheWidthSeen() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture(), g = f.grid;
+                    g.setColumnWidths({ ingredient: 140, calories: 140 });
+                    var th = f.thAt(0);
+                    th._rl = 100; th._rr = 290;                                  // seen: 190 — a box wider than the sum once stretched it
+                    var handle = th.children[th.children.length - 1];
+                    handle.dispatch('mousedown', { clientX: 288 });
+                    document.dispatch('mousemove', { clientX: 268 });            // 20 to the LEFT
+                    document.dispatch('mouseup', {});
+                    // Narrower, as asked: 140 - 20, not 190 - 20.
+                    if (g.columnWidth('ingredient') !== 120) return false;
+                    // A column that holds nothing still starts from what is seen.
+                    var h = fixture();
+                    var th2 = h.thAt(1); th2._rl = 300; th2._rr = 400;
+                    var handle2 = th2.children[th2.children.length - 1];
+                    handle2.dispatch('mousedown', { clientX: 398 });
+                    document.dispatch('mousemove', { clientX: 428 });
+                    document.dispatch('mouseup', {});
+                    return h.grid.columnWidth('calories') === 130;
+                })()"""), "a drag moves the width that is held, in the direction the pointer went");
+    }
+
+    @Test
+    void theGuideSpansTheExtentTheHostNames() {
+        assertTrue(evalBool("""
+                (() => {
+                    // A host stacking tables names the stack; here, any box with a rect of its own.
+                    var stack = makeEl('div');
+                    stack.getBoundingClientRect = function () { return { left: 0, right: 500, top: 40, bottom: 640, width: 500, height: 600 }; };
+                    var f = fixture({ resizeGuide: stack });
+                    var th = f.thAt(1); th._rl = 300; th._rr = 400;
+                    var handle = th.children[th.children.length - 1];
+                    handle.dispatch('mousedown', { clientX: 398 });
+                    var guide = document.body.children[document.body.children.length - 1];
+                    if (!guide || guide.className !== 'hrg-resize-guide') return false;
+                    var top = guide.style.getPropertyValue('--hrg-guide-top'), h = guide.style.getPropertyValue('--hrg-guide-h');
+                    document.dispatch('keydown', { key: 'Escape' });
+                    if (top !== '40px' || h !== '600px') return false;
+                    // Without one, the table's own box.
+                    var g = fixture();
+                    var th2 = g.thAt(1); th2._rl = 300; th2._rr = 400;
+                    var handle2 = th2.children[th2.children.length - 1];
+                    handle2.dispatch('mousedown', { clientX: 398 });
+                    var guide2 = document.body.children[document.body.children.length - 1];
+                    var top2 = guide2.style.getPropertyValue('--hrg-guide-top'), h2 = guide2.style.getPropertyValue('--hrg-guide-h');
+                    document.dispatch('keydown', { key: 'Escape' });
+                    return top2 === '0px' && h2 === '20px';
+                })()"""), "the guide line runs down the extent the host names, else down the table");
+    }
 }

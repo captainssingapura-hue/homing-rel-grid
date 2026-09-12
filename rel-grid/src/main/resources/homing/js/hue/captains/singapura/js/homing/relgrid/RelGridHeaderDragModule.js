@@ -9,7 +9,14 @@
 // translates j to a column, bounds the request, holds it, applies it. That
 // split is map 7's capture rule: the gesture MINTS; it never applies.
 //
-//   new RelGridHeaderDrag({ table, onColResize(j, px) }).wire(th, j)
+//   new RelGridHeaderDrag({ table, onColResize(j, px), heldWidth?(j), extent? }).wire(th, j)
+//
+// A drag starts from the width the column HOLDS when it holds one — what is
+// seen is what the browser made of it, and a fixed layout in a wider box
+// than its columns' sum gives every column more than it asked for, so a
+// drag that started from the seen width would move the wrong way. The guide
+// line spans the extent the host names, or the table: a host that stacks
+// several tables under one header wants the line down all of them.
 // =============================================================================
 
 class RelGridHeaderDrag {
@@ -19,6 +26,8 @@ class RelGridHeaderDrag {
         if (!opts.table) throw new Error("[RelGridHeaderDrag] opts.table is required");
         this._table = opts.table;
         this._onColResize = opts.onColResize || null;
+        this._heldWidth = opts.heldWidth || null;              // (j) → px | null: the width held, if any
+        this._extent = opts.extent || null;                    // what the guide spans; the table when absent
     }
 
     /** Wire the resize handle onto a freshly minted header cell. */
@@ -33,13 +42,15 @@ class RelGridHeaderDrag {
             if (!rect || e.clientX == null) return;              // no geometry: inert (headless)
             if (e.preventDefault) e.preventDefault();
             if (e.stopPropagation) e.stopPropagation();          // the header body is not armed
-            self._start(j, rect.right - rect.left, e.clientX);
+            var held = self._heldWidth ? self._heldWidth(j) : null;
+            self._start(j, held != null ? held : rect.right - rect.left, e.clientX);
         });
         return this;
     }
 
     _makeGuide(atX) {
-        var rect = this._table.getBoundingClientRect ? this._table.getBoundingClientRect() : null;
+        var over = this._extent || this._table;
+        var rect = over.getBoundingClientRect ? over.getBoundingClientRect() : null;
         if (!document.body || !rect) return null;
         var guide = document.createElement("div");
         guide.className = "hrg-resize-guide";

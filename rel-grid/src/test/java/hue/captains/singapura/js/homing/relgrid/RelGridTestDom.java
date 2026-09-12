@@ -199,7 +199,9 @@ public final class RelGridTestDom {
                         return opts.ask ? opts.ask(q, mask) : Promise.resolve();
                     },
                     // The clipboard is a recorder: what the grid would have written.
-                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } }
+                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } },
+                    // What a header drag's guide spans, when a test names it.
+                    resizeGuide: opts.resizeGuide || undefined
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 // container > WRAPPER > table. The wrapper is the grid's own, and is
