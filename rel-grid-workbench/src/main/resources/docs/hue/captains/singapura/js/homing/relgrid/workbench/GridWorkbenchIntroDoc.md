@@ -396,23 +396,33 @@ agreeing through the surface every host already uses, and reaches into no member
 - **An illustration is a member with nothing to present**: a relation with an empty row view
   that keeps its identity and its fence. No special row, no special cell, nothing the table
   knows — which is what map 24 predicted, one abstraction lower than it expected.
+- **Fold is the group's own state**, applied to a member's *box*: hidden, its fence staying, the
+  table inside untouched — cursor, selection, cells, view all as they were, and it never learns.
+  `fold`, `foldAll`, `folded` are the host's verbs; `onFolded` the report; a fence that offers
+  `onFolded(folded)` is told when the member below it changes, by whatever road.
+- **`tell` is the channel's other direction.** The grid asks and the domain answers; a control the
+  domain drew in a fence has nobody to answer, so it *tells*, unasked — a protocol value,
+  `RelGridGroupFold { member, folded }`, through the handle the fence was given, applied as the
+  host's verb would be. An unknown kind is recorded and refused, never dropped.
 
 **Outlets** (in Replicating Tables): the six dishes sold at three outlets, one book each over a
 shared ledger, every column read-only. Drag a header edge on Downtown, or Alt+←/→ on any of
 the three — Airport and Harbour have no header at all — and every table follows, the group's
 line under them reporting the widths once. *Trade at Harbour*: Harbour's cells move, Harbour's
 fence moves, the ledger's fence moves, and no other book hears a thing — the path is store →
-that outlet's relation → its own cells, with neither the table nor the group on it. This is the
-specimen the live-feed round will feed.
+that outlet's relation → its own cells, with neither the table nor the group on it. The ▾ on a
+fence is the domain's toggle: pressed, it tells the group to fold the book below, and paints
+itself only from what the group tells back — so *fold all* from the host turns every ▾ to ▸ too.
+Trade at a folded outlet and its hidden cells move all the same; unfold it and the book is
+current, its cursor where it was. This is the specimen the live-feed round will feed.
 
 **Articles** (in Han Article): 楓橋夜泊, an illustration, 靜夜思 — three members, the poems
 ordinary displays over their own articles, the illustration a zero-row member whose fence draws
 a moon and a note. Titles and the colophon are fences too. The group's widths are the squares'.
 
-Not built, and deliberately so far: fold (the group hiding a member's *box*, the table
-untouched), the group's own ask channel, the unsolicited `tell` a fence's control would need,
-cursor crossing between members, and a selection that spans them. Each is a later round; none
-will be applied to a member's rows.
+Not built, and deliberately so far: the group's own ask channel and handover, cursor crossing
+between members, and a selection that spans them. Each is a later round; none will be applied
+to a member's rows.
 
 ## Adding a bench
 
