@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own.
+A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own, and each with a specimen that stacks tables in a group.
 
 ---
 
@@ -369,6 +369,50 @@ typographic refinements a real manuscript grid has — compressing a run of mark
 into the margin rather than a column. And for merged cells, what a later case may ask: a merged
 cell whose contents want the pointer (today the host passes clicks through to the squares), and
 CSS anchor positioning in place of measuring, once every browser has it.
+
+## Groups · a table that does not know it is in one
+
+Two specimens stack several tables down one page, and they exist to prove one sentence: **a
+table in a group is wired exactly as it would be alone, and cannot tell the difference.** The
+studio's federation (E2-ext2) drew a group as one grid over many relations, with every identity
+qualified by its member; that was the price of keeping members' widths, order and hidden set
+agreeing, at a time when the table had no public verb for any of them. It has them now —
+`setColumnWidths`, `setColumnView`, `onColumnResized` — so a group keeps its members
+agreeing through the surface every host already uses, and reaches into no member's layout.
+
+- **Members are identities.** A group is `{ members: [{ id, grid, fence? }] }`, each `grid` the
+  ordinary options a table alone would take — its relation, its branch, its ask, its
+  callbacks — verbatim but for the container. The member's cursor, selection, copy, handover
+  and the domain its ask reaches are its own. The group observes; it does not route.
+- **Fences, not captions.** N members, N+1 slots — one above each member, one trailing — each
+  handed to the domain the way a table hands a slot to a cell: `render(host)`, and
+  `dispose()` is the owner's. What goes in it is the domain's: a name, a published total, a
+  picture, a control. A slot nobody fills takes no height. The group knows no caption.
+- **What is shared: column geometry**, the one thing separate tables cannot agree on by
+  themselves. The group applies its widths to every member, hears any member's resize report,
+  applies it to the siblings through their own `setColumnWidth`, and reports once. A sibling
+  that refused because a cell of its held control is levelled the moment it is free. One
+  header — the first member's — carries the handles; the rest are built with none.
+- **An illustration is a member with nothing to present**: a relation with an empty row view
+  that keeps its identity and its fence. No special row, no special cell, nothing the table
+  knows — which is what map 24 predicted, one abstraction lower than it expected.
+
+**Outlets** (in Replicating Tables): the six dishes sold at three outlets, one book each over a
+shared ledger, every column read-only. Drag a header edge on Downtown, or Alt+←/→ on any of
+the three — Airport and Harbour have no header at all — and every table follows, the group's
+line under them reporting the widths once. *Trade at Harbour*: Harbour's cells move, Harbour's
+fence moves, the ledger's fence moves, and no other book hears a thing — the path is store →
+that outlet's relation → its own cells, with neither the table nor the group on it. This is the
+specimen the live-feed round will feed.
+
+**Articles** (in Han Article): 楓橋夜泊, an illustration, 靜夜思 — three members, the poems
+ordinary displays over their own articles, the illustration a zero-row member whose fence draws
+a moon and a note. Titles and the colophon are fences too. The group's widths are the squares'.
+
+Not built, and deliberately so far: fold (the group hiding a member's *box*, the table
+untouched), the group's own ask channel, the unsolicited `tell` a fence's control would need,
+cursor crossing between members, and a selection that spans them. Each is a later round; none
+will be applied to a member's rows.
 
 ## Adding a bench
 

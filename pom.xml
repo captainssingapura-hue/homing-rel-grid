@@ -32,6 +32,7 @@
         <module>rel-grid-protocol</module>
         <module>rel-grid</module>
         <module>rel-grid-selection</module>
+        <module>rel-grid-group</module>
         <module>rel-grid-workbench</module>
     </modules>
 

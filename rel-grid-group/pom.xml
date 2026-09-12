@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>VOID-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-grid-group</artifactId>
+
+    <description>
+        The Relation Grid GROUP (RFC 0050 · Episode 2, the federation re-read):
+        an ordered list of tables, each an ordinary RelGrid that does not know
+        it is in one, stacked down one column of boxes with a FENCE between
+        every two and around the ends — a slot the group mints and the domain
+        fills. Members are identities; the group's own state is which show, in
+        what order, and (later) which are folded. Everything inside a member —
+        its cursor, its selection, its copy, its handover, the domain its ask
+        reaches — is the member's own and untouched.
+
+        What the group shares is the one thing separate tables cannot agree
+        on by themselves: column geometry. It is the single writer of widths
+        — it hears any member's resize report, applies it to the siblings
+        through their public verbs, and reports once — and it reaches into no
+        member's layout to do it.
+
+        A module of its own because the guarantee is structural: this module
+        depends on the grid, and the grid's does not depend on this one. Not
+        one line of group code lives in the table.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ssjs-test-fixtures</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- The grid's test DOM and fixture, reused: a group's tests need a table's. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

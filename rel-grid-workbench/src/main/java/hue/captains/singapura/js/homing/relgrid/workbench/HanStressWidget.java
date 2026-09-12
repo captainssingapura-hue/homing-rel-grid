@@ -224,7 +224,7 @@ public final class HanStressWidget extends WorkspaceWidget<WorkspaceWidget._None
     }
 
     /** A Java string as a single-quoted JS literal. */
-    private static String jsString(String s) {
+    static String jsString(String s) {
         var sb = new StringBuilder("'");
         for (char c : s.toCharArray()) {
             if (c == '\\' || c == '\'') sb.append('\\').append(c);

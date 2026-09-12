@@ -67,7 +67,13 @@ public final class HanArticleSpec implements WorkspaceSpec {
                         .withDescription(WidgetDescription.of(
                                 "Hypothetical text over the same engine, header shown, every column "
                               + "resizable down to 12px. Measures every merged host against the slots "
-                              + "beneath it after each change and reports the drift."))
+                              + "beneath it after each change and reports the drift.")),
+                WidgetEntry.of(HanArticlesWidget.class, WidgetLabel.of("Articles"))
+                        .withIcon(new WidgetIcon.Emoji("📚"))
+                        .withGroup(WidgetGroup.of("Groups"))
+                        .withDescription(WidgetDescription.of(
+                                "Two poems and an illustration down one page: three members of a group, "
+                              + "each an ordinary display, the fences between them the domain's."))
         );
     }
 

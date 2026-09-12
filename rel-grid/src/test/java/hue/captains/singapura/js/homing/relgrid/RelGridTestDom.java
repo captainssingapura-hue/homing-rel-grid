@@ -17,25 +17,25 @@ package hue.captains.singapura.js.homing.relgrid;
  * arms, nothing fires until a test calls {@code runTimers()}, so the mask's
  * delay and hold are driven rather than waited for.</p>
  */
-final class RelGridTestDom {
+public final class RelGridTestDom {
 
     private RelGridTestDom() {}
 
-    static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
+    public static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
 
     /** The protocol's classes are generated, and live in their own jar. */
-    static final String PROTOCOL =
+    public static final String PROTOCOL =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
 
-    static final String[] MODULES = {
+    public static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
             "RelGridStockCellsModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
-    static final String SELECTION =
+    public static final String SELECTION =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/selection/RelGridSelectionModule.js";
 
-    static final String DOM_STUB = """
+    public static final String DOM_STUB = """
             var __focused = null;
             function makeStyle() {
                 var props = {};
@@ -136,7 +136,7 @@ final class RelGridTestDom {
             """;
 
     /** A relation with NO get: identities, columns, and a manager that owns its cells. */
-    static final String FIXTURE = """
+    public static final String FIXTURE = """
             function fixture(opts) {
                 opts = opts || {};
                 var data = {

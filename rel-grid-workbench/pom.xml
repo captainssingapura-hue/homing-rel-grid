@@ -32,6 +32,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-group</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-server</artifactId>
             <version>${homing.core.version}</version>
