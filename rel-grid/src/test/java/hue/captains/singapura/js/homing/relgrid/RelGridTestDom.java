@@ -199,7 +199,9 @@ final class RelGridTestDom {
                         return opts.ask ? opts.ask(q, mask) : Promise.resolve();
                     },
                     // The clipboard is a recorder: what the grid would have written.
-                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } }
+                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } },
+                    // The header's controls, when a test wants them.
+                    columnOps: opts.columnOps || undefined
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 // container > WRAPPER > table. The wrapper is the grid's own, and is
@@ -278,6 +280,25 @@ final class RelGridTestDom {
                              for (var k = sent.length - 1; k >= 0; k--)
                                  if (sent[k] instanceof RelGridCopyRequested) return sent[k];
                              return null;
+                         },
+                         // The last view HANDOVER, or null.
+                         handoverAsked: function () {
+                             for (var k = sent.length - 1; k >= 0; k--)
+                                 if (sent[k] instanceof RelGridViewHandover) return sent[k];
+                             return null;
+                         },
+                         // The header's menu control at j, or null when none is offered.
+                         menuAt: function (j) {
+                             var th = thAt(j), slot = th.children[th.children.length - 1];
+                             for (var k = 0; k < th.children.length; k++)
+                                 if ((th.children[k].className || '') === 'hrg-th-ops') slot = th.children[k];
+                             return (slot && slot.children[0] && slot.children[0].className === 'hrg-th-menu') ? slot.children[0] : null;
+                         },
+                         // The presented rows, as pks top to bottom.
+                         rowsShown: function () {
+                             var out = [];
+                             for (var a = 0; a < grid.viewMaps().rows(); a++) out.push(grid.viewMaps().resolve(a, 0).pk);
+                             return out.join(',');
                          },
                          // The ranges of the last selection notification, as 'i0,j0..i1,j1'.
                          told: function () {

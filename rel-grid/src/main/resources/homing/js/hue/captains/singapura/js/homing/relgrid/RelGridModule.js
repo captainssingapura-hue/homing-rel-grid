@@ -23,6 +23,9 @@
 //                         // whose columns are half-squares says 24.
 //       mergedCells?,     // true to honour a cell's colSpan(). Off by default: most
 //                         // relations have no merged cells, and the feature is kept apart.
+//       columnOps?,       // { handover? } — the header's controls. handover: true puts a
+//                         // menu (▾) on every header that hands the rows' arrangement to
+//                         // the domain; needs the channel. Off by default.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
@@ -83,6 +86,23 @@
 // command where a page is denied it — which is why copy is no longer the
 // channel's synchronous exception: nothing here needs the browser's copy
 // event to arrive, and everything here needs a panel.
+//
+// THE VIEW HANDOVER is the second question the grid waits for, and the first
+// of two ways rows come to be in an order. A View is which of the root's
+// identities are shown and in what order (E2), and it is the domain's to
+// compute; the grid's transient state is which View it is showing. In the
+// way built here the grid holds NOTHING about why: a header's menu (▾), or
+// Alt+Enter on the cursor's column, or handoverView(column), asks
+// RelGridViewHandover { column } with the mask handle, the domain gathers
+// its own conditions on the panel by whatever controls it likes, and it
+// answers a RelGridView — the pks, in order — or nothing. The grid presents
+// what it was handed (map 1 law 1), reorders nothing, asserts nothing about
+// how one View relates to the next (law 8), and cannot explain the order,
+// because the explanation is the domain's and lives in the domain's chrome.
+// The other way — a specification the grid gathers with its own caret and
+// asks the relation to apply, which it CAN explain — is a later round; the
+// two compose because the grid will pass what it holds with either question
+// and the domain answers with its own conditions applied as well.
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
@@ -309,6 +329,14 @@ class RelGrid {
         var minW = Number(opts.minColumnWidth);
         this._minW = isFinite(minW) ? Math.max(_HRG_MIN_W_FLOOR, Math.min(_HRG_MAX_W, minW)) : _HRG_MIN_W;
         this._merge = opts.mergedCells === true;   // honour colSpan() at all
+        // The header's controls. A handover with no channel would be a control
+        // that does nothing, which is worse than none: said once, then off.
+        var ops = opts.columnOps || {};
+        this._ops = { handover: ops.handover === true };
+        if (this._ops.handover && !this._ask) {
+            console.warn("[RelGrid] columnOps.handover needs an ask channel; no control is offered");
+            this._ops.handover = false;
+        }
         // The selection: POSITIONS, and it holds nothing else. The facade is
         // the only thing that knows both it and the cursor.
         this._selection = new RelGridSelection();
@@ -335,6 +363,13 @@ class RelGrid {
             onColResize: function (j, px) {
                 var c = self._maps.columnAt(j);
                 if (c != null) self.setColumnWidth(c, px);
+            },
+            headerOps: this._ops,
+            // The menu MINTS a position; identity is resolved here and the
+            // question is asked where questions are asked.
+            onHeaderMenu: function (j) {
+                var c = self._maps.columnAt(j);
+                if (c != null) self.handoverView(c);
             }
         });
         this._cells = new RelGridCells({ branch: opts.branch });
@@ -699,6 +734,42 @@ class RelGrid {
         }, function (e) { console.error("[RelGrid] the clipboard write failed:", e); });
     }
 
+    // ── the view handover: the rows' arrangement, asked of the domain ──────
+
+    /**
+     * Hand the arrangement of the rows to the domain, naming the column the
+     * gesture came from. The programmatic twin of the header's menu and of
+     * Alt+Enter — and reachable without the control, as the sort verb will
+     * be: the option gates the affordance, the channel gates the question.
+     * False when locked or channel-less; a column the relation never declared
+     * is a host's mistake and throws.
+     */
+    handoverView(column) {
+        if (this._locked() || !this._ask) return false;
+        if (this._maps.baseColumns().indexOf(column) < 0)
+            throw new Error("[RelGrid] handoverView: '" + column + "' is not a column of this relation");
+        var j = this._maps.colOf(column);                   // -1 when not presented: no header to mark
+        var asked = this._askPending(new RelGridViewHandover(column), this._applyView);
+        if (asked && j >= 0) this._layout.setMenuOpen(j);
+        return asked;
+    }
+
+    /**
+     * The answer to a handover: a View is presented, exactly as given; absence
+     * leaves the rows as they are. A View naming a pk the relation never
+     * declared is refused whole — the maps throw, the settle records it, and
+     * nothing moves — because half a View is not a View.
+     */
+    _applyView(answer) {
+        this._layout.setMenuOpen(null);                     // the question is no longer out
+        if (answer == null) return;
+        if (!(answer instanceof RelGridView)) {
+            console.error("[RelGrid] a view handover was answered with something that is not a View:", answer);
+            return;
+        }
+        this._maps.setRowView(answer.pks);                  // → _arrange("rows"): cursor keeps its identity, ranges clear
+    }
+
     /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
     _afterSelection() {
         var rects = this._selection.resolve(this._cursorPos);
@@ -823,6 +894,15 @@ class RelGrid {
                 var from = (held == null) ? _HRG_DEFAULT_W : held;
                 this.setColumnWidth(this._cursor.column, from + (key === "ArrowRight" ? _HRG_KEY_STEP : -_HRG_KEY_STEP));
             }
+            if (e.preventDefault) e.preventDefault();
+            return;
+        }
+        // Alt+Enter: the menu's chord — hand the CURSOR's column's arrangement
+        // to the domain. Only when the control is offered at all; otherwise
+        // the chord is not ours.
+        if (e.altKey && key === "Enter") {
+            if (!this._ops.handover) return;
+            if (this._cursor) this.handoverView(this._cursor.column);
             if (e.preventDefault) e.preventDefault();
             return;
         }

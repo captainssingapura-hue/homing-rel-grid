@@ -27,6 +27,8 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
     public record RelGridBlock()            implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridCopyRequested()    implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridClipboardContent() implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelGridViewHandover()     implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelGridView()             implements Exportable._Class<RelGridProtocolModule> {}
 
     public static final RelGridProtocolModule INSTANCE = new RelGridProtocolModule();
 
@@ -35,6 +37,7 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
     @Override public ExportsOf<RelGridProtocolModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(
                 new RelGridRange(), new RelGridSelectionChanged(),
-                new RelGridBlock(), new RelGridCopyRequested(), new RelGridClipboardContent()));
+                new RelGridBlock(), new RelGridCopyRequested(), new RelGridClipboardContent(),
+                new RelGridViewHandover(), new RelGridView()));
     }
 }

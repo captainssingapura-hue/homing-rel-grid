@@ -43,7 +43,9 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                                 new RelGridProtocolModule.RelGridSelectionChanged(),
                                 new RelGridProtocolModule.RelGridBlock(),
                                 new RelGridProtocolModule.RelGridCopyRequested(),
-                                new RelGridProtocolModule.RelGridClipboardContent()),
+                                new RelGridProtocolModule.RelGridClipboardContent(),
+                                new RelGridProtocolModule.RelGridViewHandover(),
+                                new RelGridProtocolModule.RelGridView()),
                         RelGridProtocolModule.INSTANCE))
                 .build();
     }
