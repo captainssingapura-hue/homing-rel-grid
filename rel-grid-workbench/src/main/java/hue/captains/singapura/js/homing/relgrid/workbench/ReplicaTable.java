@@ -19,6 +19,15 @@ import java.util.List;
  * commit callback, no list of editable columns. Every table on the page
  * moves when any editor commits or the shop trades, and the path is
  * store → relation → cell. The grid is not on it.</p>
+ *
+ * <p>Two questions the grid does ask, through the one channel: what a
+ * selection is worth (copy), and — from this table's own <i>arrange</i>
+ * button, or Alt+Enter on the table — how the rows should be arranged. The
+ * second is answered here by a profile picked from a list, and it is this
+ * table's answer: every table on the page is arranged on its own, over the
+ * same store, because a View is the grid's transient state and not the
+ * store's. The control is the bench's, not the grid's: a domain's
+ * arrangement is not a property of any column.</p>
  */
 final class ReplicaTable {
 
@@ -32,11 +41,13 @@ final class ReplicaTable {
                 // through the protocol, and depends on nothing else to do it.
                 new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridSelectionChanged(),
-                                new RelGridProtocolModule.RelGridCopyRequested()),
+                                new RelGridProtocolModule.RelGridCopyRequested(),
+                                new RelGridProtocolModule.RelGridViewHandover()),
                         RelGridProtocolModule.INSTANCE),
                 new ModuleImports<>(List.of(new DishStore.dishStoreShared()), DishStore.INSTANCE),
                 new ModuleImports<>(List.of(new DishRelation.createDishRelation()), DishRelation.INSTANCE),
                 new ModuleImports<>(List.of(new DishClipboard.dishCopyPanel()), DishClipboard.INSTANCE),
+                new ModuleImports<>(List.of(new DishViews.createDishViews(), new DishViews.dishViewPanel()), DishViews.INSTANCE),
                 new ModuleImports<>(
                         List.of(new WorkbenchStyles.wb_root(), new WorkbenchStyles.wb_host(),
                                 new WorkbenchStyles.wb_hint(), new WorkbenchStyles.wb_bar(),
@@ -75,6 +86,11 @@ final class ReplicaTable {
                 "    css.addClass(copyOut, wb_status);",
                 "    copyOut.textContent = 'clipboard \u2190 nothing yet. Select, then Ctrl+C.';",
                 "    root.appendChild(copyOut);",
+                "    // The view readout. Domain-owned, and the only place the ORDER of the",
+                "    // rows is explained: the grid handed it over and holds nothing about it.",
+                "    var viewOut = branch.createElement('view', 'div');",
+                "    css.addClass(viewOut, wb_status);",
+                "    root.appendChild(viewOut);",
                 "",
                 "    var cellsB = branch.createBranch('cells');",
                 "    cellsB.activate(owner);",
@@ -85,10 +101,13 @@ final class ReplicaTable {
                 "    var store = dishStoreShared();",
                 "    var relation = createDishRelation(store, { role: ROLE });",
                 "    var EDITS = relation.editableColumns();",
+                "    // This table's view: which profile it is under. One per table, over the",
+                "    // one store — two followers may be arranged two ways.",
+                "    var views = createDishViews(store, { onChanged: function () { showView(); } });",
                 "",
                 "    hint.textContent = EDITS.length",
                 "        ? ROLE.toUpperCase() + ' \u2014 edits ' + EDITS.join(' and ') + ' only. Click or arrow to a cell (shallow); Enter or double-click to edit (deep). Two ways nothing opens: on sold and popularity the grid never even asks, because the relation declared those columns read-only; everywhere else it asks and the cell for this role says no. Enter commits to the store; the store tells every relation; each updates its own cells. The grid is never told what happened.'",
-                "        : 'FOLLOWER \u2014 read-only. It moves when any editor commits or the shop trades, and its grid was never spoken to after construction. Select and Ctrl+C to copy: the grid asks, this table draws the choice, the grid writes it.';",
+                "        : 'FOLLOWER \u2014 read-only. It moves when any editor commits or the shop trades, and its grid was never spoken to after construction. Select and Ctrl+C to copy: the grid asks, this table draws the choice, the grid writes it. The arrange button below (or Alt+Enter on the table) hands the ORDER of the rows over: the grid asks, this table picks a profile, the grid presents what comes back and cannot say why.';",
                 "",
                 "    // THE CHANNEL, and its two customers. The grid asks; the domain answers.",
                 "    //",
@@ -102,6 +121,11 @@ final class ReplicaTable {
                 "    // and mask.panel() is the grid's box — a golden rectangle over the table",
                 "    // — handed over for the domain to fill. The choice is made there, and the",
                 "    // answer is what the grid writes. It learns nothing of how it was made.",
+                "    //",
+                "    // A view handover is the same kind, one level up: the grid hands over",
+                "    // the ARRANGEMENT of its rows and waits. The same panel; a list of",
+                "    // profiles on it; a View back — the pks, in order — or nothing. The grid",
+                "    // presents exactly what it is handed, and the explanation stays here.",
                 "    var toldCount = 0, lastCopy = '';",
                 "    function ask(question, mask) {",
                 "        if (question instanceof RelGridSelectionChanged) {",
@@ -113,6 +137,9 @@ final class ReplicaTable {
                 "            return dishCopyPanel(relation, question, mask.panel(), {",
                 "                onChosen: function (format, cells) { lastCopy = format.toUpperCase() + ' \u00b7 ' + cells + (cells === 1 ? ' cell' : ' cells'); }",
                 "            });",
+                "        }",
+                "        if (question instanceof RelGridViewHandover) {",
+                "            return dishViewPanel(views, question, mask.panel());",
                 "        }",
                 "        return Promise.resolve();      // not understood: answered with nothing",
                 "    }",
@@ -155,8 +182,15 @@ final class ReplicaTable {
                 "                           + '   |   cells owned by this relation ' + relation.cellCount()",
                 "                           + '   |   ' + (EDITS.length ? 'edits ' + EDITS.join(', ') : 'read-only');",
                 "    }",
-                "    var unsub = store.subscribe(function () { report(); });",
-                "    report();",
+                "    // The explanation of the order — the one thing the grid cannot give,",
+                "    // because it holds nothing about it. Counted over the store as it is",
+                "    // now, so after an edit it may say 5 while the table still shows 6: a",
+                "    // View was a reading at the moment it was asked for.",
+                "    function showView() {",
+                "        viewOut.textContent = 'view \u2190 ' + views.describe() + '   |   the arrange button, or Alt+Enter on the table, to change';",
+                "    }",
+                "    var unsub = store.subscribe(function () { report(); showView(); });",
+                "    report(); showView();",
                 "",
                 "    var btnSeq = 0;",
                 "    function btn(text, fn) {",
@@ -174,6 +208,10 @@ final class ReplicaTable {
                 "        btn('reset store to seed', function () { store.reset(); });",
                 "    }",
                 "    btn('re-arrange (grid.reapply)', function () { grid.reapply(); });",
+                "    // THE BENCH'S OWN CONTROL for the domain's arrangement — not the grid's,",
+                "    // because a domain's arrangement is not a property of any column. It",
+                "    // calls the verb; the grid asks; this table answers on the panel.",
+                "    btn('arrange the rows\u2026 (grid.handoverView)', function () { grid.handoverView(); });",
                 "",
                 "    return { root: root, setActive: function (active) {} };"
         );

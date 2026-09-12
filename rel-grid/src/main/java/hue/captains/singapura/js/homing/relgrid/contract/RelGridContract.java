@@ -67,6 +67,21 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * grid writes through {@link #CLIPBOARD_OPTION_NAME} and reports through
  * {@code onCopied}; absence writes nothing. Clear and bulk are later rounds.</p>
  *
+ * <h2>The rows' arrangement is a question too</h2>
+ *
+ * <p>A View is which of the root's identities are shown and in what order,
+ * and it is the domain's to compute. {@code handoverView()} — the verb
+ * behind a control in the host's own chrome, and the twin of Alt+Enter on
+ * the table — asks {@code RelGridViewHandover} with the mask handle and
+ * waits: the domain gathers its own conditions on the panel and answers a
+ * {@code RelGridView}, which the grid presents exactly as given, or nothing.
+ * The grid holds nothing about why the rows are in that order; that
+ * explanation is the domain's. The grid attaches no control of its own to
+ * the question, because a domain's arrangement is not a property of any
+ * column. The other way rows come to be in an order — a specification the
+ * grid gathers with its own caret and asks the relation to apply — is a
+ * later round.</p>
+ *
  * <h2>Widths are geometry, the grid's alone</h2>
  *
  * <p>Map 7, laws 53–60: held by column identity, applied by position, in place —
@@ -80,8 +95,9 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  *
  * <p>There is no {@code updateCell}, {@code flushNow}, {@code sortBy},
  * {@code filterRows}, {@code commitEdit} or {@code cancelEdit}. The first two
- * carried values; the next two are the relation's to answer with a View, in a
- * later round; the last two are the cell's, never the grid's.</p>
+ * carried values; the next two are the relation's to answer with a View —
+ * today through the handover, and a sort the grid gathers itself in a later
+ * round; the last two are the cell's, never the grid's.</p>
  */
 public interface RelGridContract {
     void    reapply();                              // arrange again; carries nothing
@@ -102,6 +118,8 @@ public interface RelGridContract {
     int     selectionCount();                       // how many ranges were MADE; zero is the cursor's own
     // ─── copy (map 6, ext6) ──────────────────────────────────────────────
     boolean copy();                                 // ask what the selection is worth; write the answer. False when locked or channel-less
+    // ─── the view handover ───────────────────────────────────────────────
+    boolean handoverView();                         // hand the rows' arrangement to the domain; present its View. False when locked or channel-less
     // ─── widths (map 7) ──────────────────────────────────────────────────
     boolean setColumnWidth(String column, double px);   // bounded, held by identity, applied in place; false for drift
     Object  columnWidth(String column);                 // what is held, or null

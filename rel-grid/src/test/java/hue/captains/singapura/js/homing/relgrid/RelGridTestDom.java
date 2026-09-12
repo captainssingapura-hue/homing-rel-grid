@@ -279,6 +279,18 @@ final class RelGridTestDom {
                                  if (sent[k] instanceof RelGridCopyRequested) return sent[k];
                              return null;
                          },
+                         // The last view HANDOVER, or null.
+                         handoverAsked: function () {
+                             for (var k = sent.length - 1; k >= 0; k--)
+                                 if (sent[k] instanceof RelGridViewHandover) return sent[k];
+                             return null;
+                         },
+                         // The presented rows, as pks top to bottom.
+                         rowsShown: function () {
+                             var out = [];
+                             for (var a = 0; a < grid.viewMaps().rows(); a++) out.push(grid.viewMaps().resolve(a, 0).pk);
+                             return out.join(',');
+                         },
                          // The ranges of the last selection notification, as 'i0,j0..i1,j1'.
                          told: function () {
                              for (var k = sent.length - 1; k >= 0; k--) {

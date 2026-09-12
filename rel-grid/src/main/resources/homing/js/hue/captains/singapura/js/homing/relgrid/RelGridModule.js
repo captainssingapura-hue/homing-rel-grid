@@ -84,6 +84,27 @@
 // channel's synchronous exception: nothing here needs the browser's copy
 // event to arrive, and everything here needs a panel.
 //
+// THE VIEW HANDOVER is the second question the grid waits for, and the first
+// of two ways rows come to be in an order. A View is which of the root's
+// identities are shown and in what order (E2), and it is the domain's to
+// compute; the grid's transient state is which View it is showing. In the
+// way built here the grid holds NOTHING about why: handoverView() — from a
+// control in the HOST's own chrome — or Alt+Enter on the table asks
+// RelGridViewHandover with the mask handle, the domain gathers its own
+// conditions on the panel by whatever controls it likes, and it answers a
+// RelGridView — the pks, in order — or nothing. The grid presents what it
+// was handed (map 1 law 1), reorders nothing, asserts nothing about how one
+// View relates to the next (law 8), and cannot explain the order, because
+// the explanation is the domain's and lives in the domain's chrome. The
+// question is about the table as a whole and carries nothing, and the grid
+// attaches no control of its own to it: a domain's arrangement is not a
+// property of any column, so a control on a header would couple the
+// domain's idea to the grid's geometry. The other way — a specification the
+// grid gathers with its own caret and asks the relation to apply, which it
+// CAN explain — is a later round; the two compose because the grid will pass
+// what it holds with either question and the domain answers with its own
+// conditions applied as well.
+//
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
 // there is no method on it that could carry one.
@@ -699,6 +720,34 @@ class RelGrid {
         }, function (e) { console.error("[RelGrid] the clipboard write failed:", e); });
     }
 
+    // ── the view handover: the rows' arrangement, asked of the domain ──────
+
+    /**
+     * Hand the arrangement of the rows to the domain. The verb behind a
+     * control in the host's own chrome, and the twin of Alt+Enter on the
+     * table; the grid offers no control of its own. False when locked or
+     * channel-less.
+     */
+    handoverView() {
+        if (this._locked() || !this._ask) return false;
+        return this._askPending(new RelGridViewHandover(), this._applyView);
+    }
+
+    /**
+     * The answer to a handover: a View is presented, exactly as given; absence
+     * leaves the rows as they are. A View naming a pk the relation never
+     * declared is refused whole — the maps throw, the settle records it, and
+     * nothing moves — because half a View is not a View.
+     */
+    _applyView(answer) {
+        if (answer == null) return;
+        if (!(answer instanceof RelGridView)) {
+            console.error("[RelGrid] a view handover was answered with something that is not a View:", answer);
+            return;
+        }
+        this._maps.setRowView(answer.pks);                  // → _arrange("rows"): cursor keeps its identity, ranges clear
+    }
+
     /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
     _afterSelection() {
         var rects = this._selection.resolve(this._cursorPos);
@@ -823,6 +872,15 @@ class RelGrid {
                 var from = (held == null) ? _HRG_DEFAULT_W : held;
                 this.setColumnWidth(this._cursor.column, from + (key === "ArrowRight" ? _HRG_KEY_STEP : -_HRG_KEY_STEP));
             }
+            if (e.preventDefault) e.preventDefault();
+            return;
+        }
+        // Alt+Enter: hand the rows' arrangement to the domain. The table's own
+        // road to the verb, so a keyboard-first person need not leave it for
+        // the host's control. Consumed only when it was actually asked, as
+        // Ctrl+C is.
+        if (e.altKey && key === "Enter") {
+            if (!this.handoverView()) return;
             if (e.preventDefault) e.preventDefault();
             return;
         }

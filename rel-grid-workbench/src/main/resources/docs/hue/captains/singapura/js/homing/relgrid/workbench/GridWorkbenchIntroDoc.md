@@ -39,6 +39,12 @@ only ever been proved against the one thing it was written for.
 
 ### What to try
 
+- Press **arrange the rows…** under a table — or put the cursor on a cell and press
+  **Alt+Enter** — and pick *Most popular*. The rows re-arrange; every other table stays as it was; the line under
+  the table now says why. Pick *Light dishes* in a Follower: three rows. Then edit one of the
+  missing dishes in the Chef and bring the Follower back to *As entered* — the row returns
+  already saying what you typed, because its cell was detached, alive and updated the whole
+  time.
 - In the **Nutritionist**, click or arrow to a *calories* cell — that is **shallow**, the grid's
   cursor. Press **Enter** or double-click to go **deep**: the grid hands the cell control. Type,
   then **Enter** to commit or **Escape** to cancel; the cell hands control back. Every other
@@ -167,6 +173,41 @@ centred, with a floor so a small table still gets a panel that can hold somethin
 ceiling so a vast one does not get a page. The seen area is the host's box, clipped to the
 window; a table three rows tall in a host with room below gets its panel in the middle of the
 host, not overflowing the table.
+
+### The second question: the order of the rows
+
+A **View** is which of the root's identities are shown and in what order, and it is the
+domain's to compute — the grid's transient state is which View it is showing. There are two
+ways rows come to be in an order, and this bench builds the second first, because it proves the
+seam with nothing the grid has to understand — not even a control.
+
+In the first, the grid holds a *specification* — a sort gathered with its own caret — and asks
+the relation to apply it; the grid can then **explain** the arrangement, because it holds what
+was asked. In the second, built here, the grid **hands control over**. The bench's own
+*arrange the rows…* button calls `handoverView()`, and Alt+Enter on the table is the same verb
+from the keyboard; either asks `RelGridViewHandover` — a question about the table as a whole,
+carrying nothing — with the mask handle, the way copy asks. The grid attaches no control of its
+own to it: a domain's arrangement is not a property of any of the grid's columns, and a button
+on a header would have coupled the domain's idea to the grid's geometry. The domain gathers its
+own conditions on the panel by whatever controls it likes — here, a list of fixed profiles, a keep and an order each over the store's values — and
+answers a `RelGridView`: the pks, in order, possibly fewer, or nothing for Cancel. The grid
+presents exactly what it is handed and reorders nothing (map 1, law 1); the same cells move to
+new slots (law 2); the cursor keeps its identity and the ranges clear (law 3); a row that
+leaves is detached and alive; an empty View is an empty table (map 14, law 100). What the grid
+does **not** have is the explanation. It holds nothing about why the rows are in this order —
+that is the domain's, and the line under each table is where it lives: *Light dishes — calories
+under 650 · calories ↑ · 3 of 6*.
+
+Two things follow that are easy to miss. **Every table is arranged on its own** — two Followers
+over the one store may sit under two profiles, because a View is the grid's state, not the
+store's. And **a View is a reading of the store at the moment it was asked for**: an edit
+afterwards changes a cell and never an arrangement, so a dish can outgrow *Light dishes* and
+stay on the table until the next ask, while the line under it already says *2 of 6*. That is the
+model, not a gap — re-asking is a gesture.
+
+The two ways will compose when the first is built: the grid will pass what it holds with either
+question, and a domain answers with its own conditions applied *and* the specification honoured
+— or hands back the part of what it did that the grid can understand, so the caret never lies.
 
 ### Later — themed lighting
 
