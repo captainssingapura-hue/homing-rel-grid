@@ -405,8 +405,10 @@ agreeing through the surface every host already uses, and reaches into no member
   the group's root, never asked of the table) or the one `activate(id)` named. The others show
   neither cursor nor selection until they are active again; their state is untouched. **Tab** walks
   the group — fence, table, fence, table, …, trailing fence — and wraps within it, Shift+Tab the
-  other way; an unfilled fence, a folded table and a table with nothing to present are skipped,
-  and a fence stop lands on its first control, the fold toggle here, so Enter on it folds.
+  other way; an unfilled fence, a folded table and a table with nothing to present are skipped.
+  A fence stop is the fence itself: it takes the focus and wears the cursor's own mark while no
+  table shows one — one mark down the whole group — and **Enter** on it presses its first control,
+  the fold toggle here, so no button ever needs a focus ring of its own.
   **Arrows step over an edge**, one stop at a time and never wrapping: the table reports a bare
   arrow that went nowhere — `onEdge`, the one report it gained for groups — and the group moves
   up to the fence above or down to the fence below; from a fence, Down enters the table below

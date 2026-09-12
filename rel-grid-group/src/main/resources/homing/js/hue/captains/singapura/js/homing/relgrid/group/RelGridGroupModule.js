@@ -62,10 +62,12 @@
 // TAB walks the group: fence, table, fence, table, …, trailing fence, in
 // order, and WRAPS within the group — Shift+Tab the other way. An unfilled
 // fence, a folded member's table and a table with nothing to present are not
-// stops. A fence stop lands on the fence's first control when it has one — a
-// fold toggle, say — and on the fence itself otherwise; a table stop makes
-// that member active and gives its table the focus, so the cursor is where
-// the eye is.
+// stops. A fence stop is the FENCE ITSELF: it takes the focus and wears the
+// cursor — the same outline a cell wears, so the eye follows one mark down
+// the group — and the active member's cursor is not shown while it does.
+// Enter on a fence presses its first control, a fold toggle say, so no
+// control needs a focus ring of its own; a table stop makes that member
+// active and gives its table the focus.
 //
 // ARROWS step over an edge. A table reports a bare arrow that went nowhere
 // (onEdge — the one thing the table gained for groups, and a report a table
@@ -125,8 +127,16 @@ var _HRGG_STYLE_CSS = [
     ".hrg-group .hrg-member:not(.hrg-active) .hrg-td.hrg-sel,",
     ".hrg-group .hrg-member:not(.hrg-active) .hrg-merge.hrg-sel{background:transparent;}",
     // A fence that is the Tab stop itself (no control of its own to land on).
+    // A fence that is the cursor wears the cell's mark: dimmed at rest, full
+    // accent with the focus, as a slot's cursor is; and while a fence is the
+    // cursor no member shows one.
     ".hrg-fence{outline:none;}",
-    ".hrg-fence:focus{outline:1px dashed color-mix(in srgb, var(--color-accent) 60%, var(--color-border));outline-offset:-1px;}"
+    ".hrg-fence.hrg-fence-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));outline-offset:-2px;transition:outline-color .18s ease;}",
+    ".hrg-fence.hrg-fence-cursor:focus{outline-color:var(--color-accent);}",
+    ".hrg-group.hrg-on-fence .hrg-member .hrg-td.hrg-cursor,",
+    ".hrg-group.hrg-on-fence .hrg-member .hrg-merge.hrg-cursor{outline-color:transparent;}",
+    ".hrg-group.hrg-on-fence .hrg-member .hrg-td.hrg-sel,",
+    ".hrg-group.hrg-on-fence .hrg-member .hrg-merge.hrg-sel{background:transparent;}"
 ].join("\n");
 var _hrggStyled = false;
 
@@ -143,6 +153,11 @@ function _hrggEnsureStyles() {
 function _hrggWithin(el, ancestor) {
     for (var p = el; p; p = p.parentNode) if (p === ancestor) return true;
     return false;
+}
+/** Press a control as a click would — the DOM's click, or the stub's dispatch. */
+function _hrggPress(el) {
+    if (typeof el.click === "function") el.click();
+    else if (typeof el.dispatch === "function") el.dispatch("click", {});
 }
 /** The first control in a fence — a button, a link, anything focusable — or null. Walks: no querySelector needed. */
 function _hrggFirstControl(host) {
@@ -226,15 +241,25 @@ class RelGridGroup {
         for (var fk in this._folded) if (!seen[fk]) delete this._folded[fk];   // drift: an id that is no member is dropped
         // One cursor: the member whose table holds the focus is the active one,
         // observed at the root; Tab walks the stops. Neither reaches into a table.
+        this._cursorFence = null;                               // the fence wearing the cursor, while one does
         this._onFocusIn = function (e) {
             var t = e && e.target;
             for (var k = 0; k < self._members.length; k++)
                 if (t && _hrggWithin(t, self._members[k].box)) { self._activate(self._members[k].id, false); return; }
+            for (var q = 0; q < self._fences.length; q++)
+                if (t && _hrggWithin(t, self._fences[q].host)) { self._cursorOnFence(self._fences[q]); return; }
         };
         this._onKeyDown = function (e) {
             if (!e || e.altKey || e.ctrlKey || e.metaKey) return;
             if (e.key === "Tab") {
                 if (self._step(e.shiftKey ? -1 : 1, true)) { if (e.preventDefault) e.preventDefault(); }
+                return;
+            }
+            // Enter on a fence presses its first control — the fence is the stop,
+            // the control never needs the focus.
+            if (e.key === "Enter" && self._onFence(e.target)) {
+                var f = self._fenceAt(e.target), control = f ? _hrggFirstControl(f.host) : null;
+                if (control) { _hrggPress(control); if (e.preventDefault) e.preventDefault(); }
                 return;
             }
             // An arrow pressed ON A FENCE steps one stop. Judged by where the key was
@@ -395,10 +420,30 @@ class RelGridGroup {
 
     // ── one cursor: the active member, and Tab between the stops ───────────
 
+    /** The cursor is on a fence: it wears the mark, and no member shows one. */
+    _cursorOnFence(f) {
+        if (this._cursorFence === f) return;
+        if (this._cursorFence) _hrggRemoveClass(this._cursorFence.host, "hrg-fence-cursor");
+        this._cursorFence = f;
+        _hrggAddClass(f.host, "hrg-fence-cursor");
+        _hrggAddClass(this._root, "hrg-on-fence");
+    }
+    _cursorOffFence() {
+        if (!this._cursorFence) return;
+        _hrggRemoveClass(this._cursorFence.host, "hrg-fence-cursor");
+        _hrggRemoveClass(this._root, "hrg-on-fence");
+        this._cursorFence = null;
+    }
+    _fenceAt(el) {
+        for (var k = 0; k < this._fences.length; k++) if (_hrggWithin(el, this._fences[k].host)) return this._fences[k];
+        return null;
+    }
+
     /** Mark the active member; with focus, give its table the focus and bring its box into view. */
     _activate(id, focus) {
         var m = this._entry(id);
         if (!m) return false;
+        this._cursorOffFence();                                 // a member's cursor is the group's again
         if (this._activeId !== id) {
             var was = this._entry(this._activeId);
             if (was) _hrggRemoveClass(was.box, "hrg-active");
@@ -458,8 +503,10 @@ class RelGridGroup {
             if (!wrap) this._enter(stop.member, dir > 0 ? "first" : "last");
             return this._activate(stop.member.id, true);
         }
-        var target = _hrggFirstControl(stop.fence.host) || stop.fence.host;
-        if (target.focus) { try { target.focus({ preventScroll: false }); } catch (e) { target.focus(); } }
+        // A fence stop is the fence itself: it takes the focus and the cursor.
+        this._cursorOnFence(stop.fence);
+        var host = stop.fence.host;
+        if (host.focus) { try { host.focus({ preventScroll: false }); } catch (e) { host.focus(); } }
         return true;
     }
 

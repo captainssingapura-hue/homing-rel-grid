@@ -558,16 +558,25 @@ class RelGridGroupTest extends JsModuleTestBase {
                     // a's table → b's fence (its table is folded, skipped) → c's fence → c's table → round to a's table
                     // (a has no fence above it, and there is no trailing one).
                     if (walk.join(' > ') !== 'fence b > fence c > table c > table a') return false;
-                    // A fence with a control of its own lands on the control.
+                    // A fence with a control of its own is still the stop itself — it wears the
+                    // cursor, the member shows none — and Enter presses the control.
                     var spec = memberSpec('x', [['mapo', 'tofu', 480]]);
                     spec.fence = fenceWithButton('x');
+                    var pressed = 0;
                     var h = groupFixture({ specs: [spec, memberSpec('y', [['fish', 'cod', 560]])], trailing: null });
+                    spec.fence.button.addEventListener('click', function () { pressed++; });
                     h.group.activate('y');
-                    h.tab(false);                                                          // round to x's fence: its button
-                    if (h.focused() !== 'fence x control' || document.activeElement !== spec.fence.button) return false;
-                    h.tab(false);
-                    return h.focused() === 'table x' && h.group.active() === 'x';
-                })()"""), "folded tables and empty fences are skipped; a fence's own control is the stop");
+                    h.tab(false);                                                          // round to x's fence: the fence
+                    if (h.focused() !== 'fence x' || document.activeElement !== h.group.fence('x')) return false;
+                    if (!h.has(h.group.fence('x'), 'hrg-fence-cursor') || !h.has(h.root(), 'hrg-on-fence')) return false;
+                    if (!h.has(h.boxOf('y'), 'hrg-active')) return false;                 // y is still the active member...
+                    var ev = { key: 'Enter', prevented: false }; ev.preventDefault = function () { ev.prevented = true; };
+                    h.group.fence('x').dispatch('keydown', ev);
+                    if (pressed !== 1 || !ev.prevented) return false;
+                    h.tab(false);                                                          // ...until x's table is entered
+                    if (h.focused() !== 'table x' || h.group.active() !== 'x') return false;
+                    return !h.has(h.group.fence('x'), 'hrg-fence-cursor') && !h.has(h.root(), 'hrg-on-fence');
+                })()"""), "folded tables and empty fences are skipped; a fence is its own stop, wears the cursor, and Enter presses its control");
     }
     @Test
     void arrowsStepOverAnEdgeOneStopAtATimeAndNeverWrap() {
