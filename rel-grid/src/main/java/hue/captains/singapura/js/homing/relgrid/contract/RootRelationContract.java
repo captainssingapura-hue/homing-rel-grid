@@ -46,10 +46,14 @@ import java.util.List;
  * View is not a View; the authority on which half is the relation.</p>
  *
  * <p><b>{@code cellFor} is a manager, not a factory.</b> The grid asks for a
- * cell <b>once per identity per grid lifetime</b> and keeps the instance; the
- * domain creates the cell on first ask and may hold it for as long as it
- * likes — a cell outlives the grid that placed it (Map 17, law 120). The grid
- * never disposes what it did not create.</p>
+ * cell <b>once per presentation</b> — when an identity enters the View — and
+ * keeps the instance while the identity is presented; when it leaves, the
+ * grid forgets it, and asks again if it returns. The domain creates the cell
+ * on first ask and may hold it for as long as it likes — a relation that
+ * keeps its cells answers the same one, and a cell outlives the grid that
+ * placed it (Map 17, law 120); a relation over an endless space may free a
+ * row it no longer presents, and nothing in the grid holds it. The grid never
+ * disposes what it did not create.</p>
  *
  * <p>These three are <b>not</b> on the ask channel and never will be
  * (ext4, law 191). A question may go unrecognised, may be declined, may be

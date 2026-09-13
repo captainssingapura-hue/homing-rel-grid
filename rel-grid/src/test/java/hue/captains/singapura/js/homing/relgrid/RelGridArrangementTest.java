@@ -66,19 +66,26 @@ class RelGridArrangementTest extends JsModuleTestBase {
     }
 
     @Test
-    void aDetachedCellChangedByItsDomainReplacesCurrent() {
+    void aDetachedCellIsForgottenAndTheDomainsOwnChangeShowsWhenItReturns() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture(), maps = f.grid.viewMaps();
+                    var before = f.cellEl('coq', 'calories');
                     maps.setRowView(['mapo']);                       // narrow the presented space
                     var shown = f.tbody().children.length;
-                    f.relation.change('coq', 'calories', 999);       // the domain updates a DETACHED cell
-                    maps.setRowView(['mapo', 'coq', 'fish']);        // widen again
+                    // The registry is exactly the presented cells: the rows that left are
+                    // FORGOTTEN — out of the tree, and out of the grid's hands entirely.
+                    if (f.grid.cells().size() !== 2 || f.grid.cells().get('coq', 'calories') !== null) return false;
+                    if (before.parentNode !== null) return false;
+                    f.relation.change('coq', 'calories', 999);       // the domain updates a cell the grid has forgotten
+                    maps.setRowView(['mapo', 'coq', 'fish']);        // widen again: the two rows are asked for AGAIN
                     var el = f.cellEl('coq', 'calories');
                     return shown === 1
+                        && el === before                            // the relation kept the cell: the same element comes back
                         && el.textContent === '999'                 // current, with no grid involvement
-                        && f.mints() === 6 && f.asked() === 6;      // never re-minted, never re-asked
-                })()"""), "detach keeps the domain's cell alive; the domain's own change shows on re-place");
+                        && f.grid.cells().size() === 6
+                        && f.asked() === 10 && f.mints() === 10;    // once per PRESENTATION: four cells re-asked, re-placed
+                })()"""), "a row that leaves is forgotten; a row that returns is asked for again, and the domain's own change shows");
     }
 
     @Test

@@ -63,14 +63,18 @@
 // RelGridValueFreeTest holds every grid module to that.
 //
 // THE ARRANGEMENT CYCLE: every presented identity is ensured first — asked of
-// the relation once, ever, and kept — BEFORE anything moves, so a relation
-// that refuses one refuses the View whole; then the layout renders the slot
-// matrix for the presented shape, widths ride identity onto the new positions,
-// every cell is placed — into its slot, or into a merged cell's host when it
-// reaches across several — whatever the view no longer shows leaves the tree
-// alive, the cursor resolves (identity first, position as the fallback), and
-// every range goes (law 43: a selection is positions, and these are not the
-// same positions).
+// the relation once per presentation, and kept while presented — BEFORE
+// anything moves, so a relation that refuses one refuses the View whole; then
+// the layout renders the slot matrix for the presented shape, widths ride
+// identity onto the new positions, every cell is placed — into its slot, or
+// into a merged cell's host when it reaches across several — the cursor
+// resolves (identity first, position as the fallback; a cell it leaves is
+// told so while the registry still knows it), whatever the view no longer
+// shows leaves the tree alive AND is forgotten — the domain's cellFor is the
+// keeper, and an identity that returns is asked for again — and every range
+// goes (law 43: a selection is positions, and these are not the same
+// positions). The registry is exactly the presented cells: a window of W
+// rows costs W × columns entries, however far it has scrolled.
 //
 // MEMBERSHIP IS THE RELATION'S. The grid keeps no list of what exists — the
 // row axis is the View — so it cannot tell a stranger from a row; the relation
@@ -184,8 +188,8 @@ class RelGrid {
     _arrange(kind) {
         var maps = this._maps, headers = [], ids = [], i, j, id;
         for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
-        // One ask per identity, ever — and every ask BEFORE a slot moves: a refusal
-        // here leaves the pass with nothing changed, and the maps undo the View.
+        // One ask per identity per presentation — and every ask BEFORE a slot moves:
+        // a refusal here leaves the pass with nothing changed, and the maps undo the View.
         for (i = 0; i < maps.rows(); i++) {
             for (j = 0; j < maps.cols(); j++) {
                 id = maps.resolve(i, j);
@@ -204,8 +208,8 @@ class RelGrid {
             }
         }
         if (this._merge) this._layout.placeGroups();          // every cell is in; measure the hosts
-        this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree
-        this._cursor.resolve(this._control.isDeep());
+        this._cursor.resolve(this._control.isDeep());         // first: a cell the cursor leaves is told while it is still known
+        this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree, forgotten
         this._selection.clear();                              // law 43: every range goes with the presented space
         this._afterSelection();
         if (this._cbArranged) {

@@ -28,7 +28,7 @@ are the domain's operations; they never change an arrangement, so the grid has n
 
 ## What is here, round 1
 
-- arrangement over an immutable root relation — the grid asks `cellFor` once per identity and only places and detaches after; it never disposes
+- arrangement over a root relation — the grid asks `cellFor` once per presentation, places, and on leaving the View detaches and forgets; it never disposes, and its registry is exactly the presented cells
 - a cursor that is an identity while presented and a position when not
 - **shallow and deep, enforced by the grid**: a click or an arrow moves the cursor and the cell is only told; Enter or a double-click hands the cell control until it calls `release()`; the grid never learns commit from cancel
 - column widths — held by identity, applied by position, in place; bounded at normalisation; snapshot and restore; persisted by nobody here
