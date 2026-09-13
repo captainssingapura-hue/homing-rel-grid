@@ -31,7 +31,7 @@ public record GamesRelation() implements DomModule<GamesRelation> {
         return ImportsFor.<GamesRelation>builder()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new GamesConditions.gamesConditions(), new GamesConditions.gamesConditionsCopy(),
-                        new GamesConditions.gamesToggleSort(), new GamesConditions.gamesSetFilter(), new GamesConditions.gamesSortOf(),
+                        new GamesConditions.gamesToggleSort(), new GamesConditions.gamesSetSort(), new GamesConditions.gamesSetFilter(), new GamesConditions.gamesSortOf(),
                         new GamesConditions.gamesApply(), new GamesConditions.gamesDescribe()), GamesConditions.INSTANCE))
                 .add(new ModuleImports<>(List.of(new GamesHeaderCells.GamesHeaderCell()), GamesHeaderCells.INSTANCE))
                 .build();

@@ -513,14 +513,17 @@ tells the grid so, unasked, and the grid asks `view()` again.
 
 Switch the workspace kind to **Games Catalogue**.
 
-- **Click a header** to sort by it — up, then down, then not at all. The caret is the header
-  cell's; so is the click. The rows reorder on the same slots, the cursor stays on its game, the
-  header stays put.
-- **Shift-click** another header to sort by it *after* the first; the small numbers say which key
-  is which. A plain click anywhere replaces them all.
-- **Open a column's ▾.** Text columns take a *contains*; year, sales and score take a range with
-  either end open; platform and type offer their values with counts. Every keystroke changes the
-  View at once; the popover is the header cell's, on its own branch, gone when it closes.
+- **Open a column's ▾** — the header's one control; its caret and number only *say* how the
+  column sorts. The menu is a spreadsheet's: **sorting at the top** — ascending, descending,
+  cleared, each applied at once and the menu gone; tick *then by* first to keep the keys already
+  held, and the small numbers on the headers say which key is which.
+- **Below the sort, the filter**, staged until **OK**. A search narrows the column's values;
+  every value has a count and a box; *(select all)* means whatever the search shows; a number
+  column takes a range with either end open besides. Cancel, Escape or a press outside discards
+  — the table never empties under you while you are still choosing.
+- **The values listed are those the other columns' filters pass.** Filter to Racing, open
+  *year*, and only the years with a racing game are offered; choose one and the next menu is
+  narrower still. The menu is the header cell's, on its own branch, gone when it closes.
 - **Sort by score, then scroll to the bottom.** The unrated are last — and they are last when
   you sort the other way too. A missing score is not a low score; the relation says so, and the
   grid never knew there was a score.
@@ -531,8 +534,8 @@ Switch the workspace kind to **Games Catalogue**.
 
 A store that reads the catalogue with numbers as numbers and blanks as null; **conditions as pure
 logic** — sort keys and filters as a value, every function answering a new one, the judgements
-named where they are made; a header cell that is a noun; and a relation that composes the three
-and answers `view()`. Nothing here is the grid's, and nothing here is yet *provided*: this bench is
+named where they are made; a header cell that is a noun, and the column menu it opens; and a
+relation that composes them and answers `view()`. Nothing here is the grid's, and nothing here is yet *provided*: this bench is
 the demonstration a provided layer will be extracted from — a decorator that wraps any relation
 and gives it this header, and the parts a domain composes for itself.
 

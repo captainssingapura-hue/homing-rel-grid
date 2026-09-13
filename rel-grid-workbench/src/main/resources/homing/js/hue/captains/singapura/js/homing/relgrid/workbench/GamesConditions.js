@@ -8,9 +8,15 @@
 //   gamesToggleSort(c, column, additive)               a caret click: none → asc → desc → none. Not additive,
 //                                                      the column becomes the ONLY key; additive (shift), it joins
 //                                                      the keys after the ones there, or cycles where it already is
+//   gamesSetSort(c, column, dir, additive)             a menu's choice: 'asc' | 'desc' | null outright. Not
+//                                                      additive, the column becomes the ONLY key (or none);
+//                                                      additive ("then by"), the keys held stay and this one
+//                                                      joins after them, or turns where it already is
 //   gamesSetFilter(c, column, spec)                    a filter on a column, or null to lift it:
 //                                                        text    { contains: 'x' }          case-insensitive
-//                                                        number  { min: 1998, max: 2004 }   either end open
+//                                                                { in: ['a', 'b'] }         any of the values
+//                                                        number  { min: 1998, max: 2004 }   either end open —
+//                                                                and/or { in: [...] }       any of the values
 //                                                        set     { in: ['PS4', 'PC'] }      any of
 //   gamesApply(c, pks, valueOf, kindOf)                the View: the pks that pass every filter, in the
 //                                                      keys' order, ties in base order (a stable sort)
@@ -50,6 +56,18 @@ function gamesToggleSort(c, column, additive) {
     return next;
 }
 
+function gamesSetSort(c, column, dir, additive) {
+    var next = gamesConditionsCopy(c), at = -1;
+    for (var k = 0; k < next.sort.length; k++) if (next.sort[k].column === column) at = k;
+    if (!additive) next.sort = [];
+    else if (at >= 0) next.sort.splice(at, 1);
+    if (dir === "asc" || dir === "desc") {
+        if (additive && at >= 0) next.sort.splice(at, 0, { column: column, dir: dir });
+        else next.sort.push({ column: column, dir: dir });
+    }
+    return next;
+}
+
 function gamesSetFilter(c, column, spec) {
     var next = gamesConditionsCopy(c);
     if (spec == null) delete next.filters[column];
@@ -68,9 +86,10 @@ function _wbGcPasses(v, spec, kind) {
     if (kind === "number") {
         if (spec.min != null && v < spec.min) return false;
         if (spec.max != null && v > spec.max) return false;
-        return true;
+        return !Array.isArray(spec.in) || spec.in.indexOf(v) >= 0;
     }
-    if (kind === "set") return Array.isArray(spec.in) && spec.in.indexOf(v) >= 0;
+    if (Array.isArray(spec.in)) return spec.in.indexOf(v) >= 0;   // any of, for a set or a text column alike
+    if (kind === "set") return false;
     var needle = String(spec.contains == null ? "" : spec.contains).toLowerCase();
     return needle === "" || String(v).toLowerCase().indexOf(needle) >= 0;
 }
@@ -114,10 +133,11 @@ function gamesDescribe(c, labelOf) {
     var fs = [];
     for (var col in c.filters) {
         if (!Object.prototype.hasOwnProperty.call(c.filters, col)) continue;
-        var f = c.filters[col];
-        if (f.in) fs.push(name(col) + " in {" + f.in.join(", ") + "}");
-        else if (f.contains != null) fs.push(name(col) + " contains “" + f.contains + "”");
-        else fs.push(name(col) + " " + (f.min != null ? f.min : "") + "–" + (f.max != null ? f.max : ""));
+        var f = c.filters[col], said = [];
+        if (f.min != null || f.max != null) said.push((f.min != null ? f.min : "") + "–" + (f.max != null ? f.max : ""));
+        if (f.in) said.push(f.in.length > 4 ? "one of " + f.in.length + " values" : "in {" + f.in.join(", ") + "}");
+        if (f.contains != null) said.push("contains “" + f.contains + "”");
+        fs.push(name(col) + " " + said.join(" and "));
     }
     if (fs.length) parts.push("where " + fs.join(" and "));
     return parts.length ? parts.join("; ") : "as catalogued";

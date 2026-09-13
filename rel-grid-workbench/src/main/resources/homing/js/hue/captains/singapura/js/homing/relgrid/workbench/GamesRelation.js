@@ -8,10 +8,10 @@
 // (headerFor) — and the header cells it answers with are the controls by
 // which a person changes what view() will answer next.
 //
-//   createGamesRelation(store, { branch, popoverHost, onViewChanged })
+//   createGamesRelation(store, { branch, menuHost, onViewChanged })
 //       branch: the relation's OWN, unactivated when handed; it activates, and dispose() dissolves;
 //               a sub-branch per cell, a sub-branch per header cell
-//       popoverHost: where a header cell may put its popover — the bench's root
+//       menuHost: where a header cell puts its column menu — the bench's root
 //       onViewChanged(): the relation's View changed underneath whoever presents it. The
 //               relation cannot reach the presenter and does not try: it tells its OWNER,
 //               which is the common parent, and the owner tells the presenter.
@@ -20,9 +20,12 @@
 //                          movement answers nothing — a catalogue is the whole of itself
 //   columns() / labels() / readOnlyColumns()   the structure; every column is read
 //   cellFor(pk, col)       a text cell showing the value as catalogued; a stranger refused
-//   headerFor(col)         a GamesHeaderCell: label, caret, funnel — once per column, kept
+//   headerFor(col)         a GamesHeaderCell: label, indication, the menu's ▾ — once per column, kept
 //   conditions() / setConditions(c)   the order and the choice, as data (GamesConditions)
-//   toggleSort(col, additive) / setFilter(col, spec) / clear()   what a header cell calls
+//   setSort(col, dir, additive) / toggleSort(col, additive) / setFilter(col, spec) / clear()
+//                          what a column menu calls, and a host's programmatic twins
+//   values(col)            the column's values with counts among the rows the OTHER columns'
+//                          filters pass — what a menu lists, so one choice narrows the next
 //   count()                how many rows the View presents; store.size() is the whole
 //   dispose()
 // =============================================================================
@@ -42,7 +45,7 @@ function createGamesRelation(store, opts) {
     if (!opts.branch) throw new Error("[GamesRelation] opts.branch is required: the relation's own");
     var branch = opts.branch, owner = { toString: function () { return "GamesRelation"; } };
     branch.activate(owner);
-    var popoverHost = opts.popoverHost || null;
+    var menuHost = opts.menuHost || null;
     var onViewChanged = (typeof opts.onViewChanged === "function") ? opts.onViewChanged : null;
     var columns = store.columns(), cells = new Map(), headers = new Map(), cellSeq = 0;
     var conditions = gamesConditions(), view = null;         // the View is computed once per change, kept
@@ -53,6 +56,22 @@ function createGamesRelation(store, opts) {
     function current() {
         if (!view) view = gamesApply(conditions, store.pks(), valueOf, kindOf);
         return view;
+    }
+    /** The values of a column with their counts, among the rows every OTHER filter passes. */
+    function values(col) {
+        var others = gamesSetFilter(conditions, col, null);
+        var pks = Object.keys(others.filters).length ? gamesApply({ sort: [], filters: others.filters }, store.pks(), valueOf, kindOf) : store.pks();
+        var counts = new Map();
+        for (var i = 0; i < pks.length; i++) { var v = valueOf(pks[i], col); counts.set(v, (counts.get(v) || 0) + 1); }
+        var out = [];
+        counts.forEach(function (n, v) { out.push({ value: v, count: n }); });
+        var kind = kindOf(col);
+        out.sort(function (a, b) {
+            var aa = a.value === null || a.value === "", bb = b.value === null || b.value === "";
+            if (aa !== bb) return aa ? 1 : -1;
+            return kind === "number" ? a.value - b.value : String(a.value).localeCompare(String(b.value), undefined, { sensitivity: "base" });
+        });
+        return out;
     }
     /** The conditions changed: a new View, every header repainted, the owner told. */
     function changed(next) {
@@ -65,14 +84,15 @@ function createGamesRelation(store, opts) {
         }
     }
 
-    // What a header cell may ask and do — the relation as its OWNER.
+    // What a header cell and its menu may ask and do — the relation as their OWNER.
     var headerOwner = {
         label:      labelOf,
         kind:       kindOf,
         sortOf:     function (col) { return gamesSortOf(conditions, col); },
         sortCount:  function () { return conditions.sort.length; },
         filterOf:   function (col) { return conditions.filters[col] || null; },
-        distinct:   function (col) { return store.distinct(col); },
+        values:     values,
+        setSort:    function (col, dir, additive) { changed(gamesSetSort(conditions, col, dir, additive)); },
         toggleSort: function (col, additive) { changed(gamesToggleSort(conditions, col, additive)); },
         setFilter:  function (col, spec) { changed(gamesSetFilter(conditions, col, spec)); }
     };
@@ -96,15 +116,17 @@ function createGamesRelation(store, opts) {
             if (columns.indexOf(col) < 0) throw new Error("[GamesRelation] no such column: " + col);
             var h = headers.get(col);
             if (!h) {
-                h = new GamesHeaderCell({ branch: branch.createBranch("h-" + col), column: col, owner: headerOwner, popoverHost: popoverHost });
+                h = new GamesHeaderCell({ branch: branch.createBranch("h-" + col), column: col, owner: headerOwner, menuHost: menuHost });
                 headers.set(col, h);
             }
             return h;
         },
         conditions:    function () { return gamesConditionsCopy(conditions); },
         setConditions: function (c) { changed(gamesConditionsCopy(c || gamesConditions())); },
+        setSort:       headerOwner.setSort,
         toggleSort:    headerOwner.toggleSort,
         setFilter:     headerOwner.setFilter,
+        values:        values,
         clear:         function () { changed(gamesConditions()); },
         describe:      function () { return gamesDescribe(conditions, labelOf); },
         count:         function () { return current().length; },

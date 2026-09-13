@@ -97,6 +97,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(EndlessRelation.INSTANCE),
                 CrateEntry.of(EndlessWidget.INSTANCE),
                 // Games Catalogue: header cells of the relation's own, sorting and filtering for itself.
+                CrateEntry.of(GamesColumnMenuModule.INSTANCE),
                 CrateEntry.of(GamesHeaderCells.INSTANCE),
                 CrateEntry.of(GamesRelation.INSTANCE),
                 CrateEntry.of(GamesWidget.INSTANCE));

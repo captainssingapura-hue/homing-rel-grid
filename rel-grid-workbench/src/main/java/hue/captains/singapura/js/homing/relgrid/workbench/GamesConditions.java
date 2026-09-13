@@ -20,6 +20,7 @@ public record GamesConditions() implements EsModule<GamesConditions> {
     public record gamesConditions()     implements Exportable._Constant<GamesConditions> {}
     public record gamesConditionsCopy() implements Exportable._Constant<GamesConditions> {}
     public record gamesToggleSort()     implements Exportable._Constant<GamesConditions> {}
+    public record gamesSetSort()        implements Exportable._Constant<GamesConditions> {}
     public record gamesSetFilter()      implements Exportable._Constant<GamesConditions> {}
     public record gamesSortOf()         implements Exportable._Constant<GamesConditions> {}
     public record gamesApply()          implements Exportable._Constant<GamesConditions> {}
@@ -31,6 +32,6 @@ public record GamesConditions() implements EsModule<GamesConditions> {
 
     @Override public ExportsOf<GamesConditions> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new gamesConditions(), new gamesConditionsCopy(), new gamesToggleSort(),
-                new gamesSetFilter(), new gamesSortOf(), new gamesApply(), new gamesDescribe()));
+                new gamesSetSort(), new gamesSetFilter(), new gamesSortOf(), new gamesApply(), new gamesDescribe()));
     }
 }

@@ -8,6 +8,8 @@ import hue.captains.singapura.js.homing.conformance.rules.GradedFinding;
 import hue.captains.singapura.js.homing.conformance.rules.ServedModule;
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
+import hue.captains.singapura.js.homing.core.DomModule;
+import hue.captains.singapura.js.homing.core.EsModule;
 import hue.captains.singapura.js.homing.core.JsModuleType;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 
@@ -35,7 +37,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * current findings — deliberately, never to silence a fresh violation.</p>
  *
  * <p>Modules with no {@code .js} resource (a widget's Java-emitted body) are
- * not swept here; that is the module server's renderer's to produce.</p>
+ * not swept here; that is the module server's renderer's to produce. But a
+ * module of a resource-backed KIND — a DomModule or an EsModule — with no
+ * resource beside it is a mistake, not a widget: the file is misnamed, and the
+ * server would answer 404 for it. That fails the build too, by name.</p>
  */
 public final class RelGridConformanceSweep {
 
@@ -56,8 +61,41 @@ public final class RelGridConformanceSweep {
         return out;
     }
 
+    /**
+     * A DomModule or EsModule whose JS is not where the server will look for it:
+     * misnamed, or missing. A widget's body is Java-emitted and has no resource;
+     * a module of a resource-backed kind without one would be served as 404.
+     */
+    public static List<String> unbacked(Crate crate) {
+        var out = new ArrayList<String>();
+        for (CrateEntry entry : crate.entries()) {
+            String cls = entry.moduleClass();
+            if (resource(cls) != null) continue;
+            if (entry.declaredType() == StandardJsModuleType.GENERATED_CSS) continue;   // a style group: the server renders it
+            try {
+                Class<?> c = Class.forName(cls);
+                if (isWidget(c)) continue;                                                // its body is Java-emitted
+                if (DomModule.class.isAssignableFrom(c) || EsModule.class.isAssignableFrom(c))
+                    out.add(cls + " has no /homing/js/" + cls.replace('.', '/') + ".js — is the file named after the class?");
+            } catch (ClassNotFoundException e) {
+                out.add(cls + " — no such class");
+            }
+        }
+        return out;
+    }
+
+    /** A workspace widget, by name up the superclasses — this module does not depend on the workspace to say so. */
+    private static boolean isWidget(Class<?> c) {
+        for (Class<?> k = c; k != null; k = k.getSuperclass())
+            if (k.getName().equals("hue.captains.singapura.js.homing.workspace.WorkspaceWidget")) return true;
+        return false;
+    }
+
     /** Fail unless every finding is in the ledger and every ledger line is a finding. Records instead when asked. */
     public static void assertLedger(Crate crate, Path ledger) throws IOException {
+        var unbacked = unbacked(crate);
+        if (!unbacked.isEmpty())
+            fail("crate '" + crate.name() + "' has modules the server cannot serve:\n  " + String.join("\n  ", unbacked));
         var findings = findings(crate);
         if (Boolean.getBoolean(RECORD_PROPERTY)) {
             Files.createDirectories(ledger.getParent());
