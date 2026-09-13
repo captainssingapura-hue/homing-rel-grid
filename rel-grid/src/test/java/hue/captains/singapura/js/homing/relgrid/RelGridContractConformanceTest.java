@@ -93,7 +93,7 @@ class RelGridContractConformanceTest extends JsModuleTestBase {
     @Test
     void theRelationsMandatoryThreeAreWhatTheGridDemands() {
         var mandatory = new TreeSet<>(Arrays.asList(RootRelationContract.METHOD_NAMES));
-        assertEquals(new TreeSet<>(List.of("cellFor", "columns", "pks")), mandatory,
+        assertEquals(new TreeSet<>(List.of("cellFor", "columns", "view")), mandatory,
                 "law 191: the root relation is these three, and they are never on the channel");
         // The grid's own guard must demand exactly them, and nothing more.
         String guard = js.eval("js",

@@ -3,11 +3,17 @@
 The Relation Grid — RFC 0050 · Episode 2 — as its own project.
 
 A grid that **captures intents and arranges cells, and holds no value.** A relation is
-identities, columns and a cell manager:
+a View answered on request, columns and a cell manager — one root, never an enumeration:
 
 ```
-pks()   columns()   cellFor(pk, column)
+view(intent?)   columns()   cellFor(pk, column)
 ```
+
+`view()` answers the rows to present now — the whole of a static relation, a window of an
+endless one — and the grid holds exactly that: the row axis is the View and has no base.
+`view({ by: n })` is the same seam asked to move: keys back, or nothing, and the rows stay.
+Membership is the relation's: `cellFor` throws for an identity it does not own, and the grid
+asks for every identity before a slot moves, so a stranger refuses a View whole.
 
 The domain owns every cell for its whole life and updates it directly. Edit, commit and update
 are the domain's operations; they never change an arrangement, so the grid has no part in them.
@@ -16,13 +22,13 @@ are the domain's operations; they never change an arrangement, so the grid has n
 
 | module | what |
 |---|---|
-| `rel-grid` | the grid — `RelGrid`, the facade, composing: its seam (`RelGridViewMaps`), the layout (`RelGridLayout` over `RelGridSlots`, `RelGridOverlays`, `RelGridReveal`, `RelGridHeaderDrag`), the cells registry, the cursor, the gestures, the handover of control, the ask channel, the widths, the stock clipboard writer — one module each, every one under 250 effective lines — and a stock cell that is deliberately domain-side. Plain JS classes with no runtime dependency on anything; packaged as homing `DomModule`s for this stack. |
+| `rel-grid` | the grid — `RelGrid`, the facade, composing: its seam (`RelGridViewMaps`), the layout (`RelGridLayout` over `RelGridSlots`, `RelGridOverlays`, `RelGridReveal`, `RelGridHeaderDrag`), the cells registry, the cursor, the gestures, the handover of control, the ask channel, the widths, the window (the relation's seam asked to move), the stock clipboard writer — one module each, every one under 250 effective lines — and a stock cell that is deliberately domain-side. Plain JS classes with no runtime dependency on anything; packaged as homing `DomModule`s for this stack. |
 | `rel-grid-group` | the group — `RelGridGroup`: an ordered list of tables, each an ordinary `RelGrid` that does not know it is in one, with a fence (a slot the domain fills) between every two and around the ends. Its minting (`RelGridGroupMint`) and its one cursor (`RelGridGroupWalk`) are modules of their own. Shares column geometry through the members' public verbs; depends on `rel-grid`, never the reverse. |
-| `rel-grid-workbench` | a solo studio of benches that try to make the grid fail. `GridWorkbenchServer` on 8083. |
+| `rel-grid-workbench` | a solo studio of benches that try to make the grid fail — Replicating Tables, Han Article, and the Endless Table, a window of twenty over a million rows measured through the party. `GridWorkbenchServer` on 8083. |
 
 ## What is here, round 1
 
-- arrangement over an immutable root relation — the grid asks `cellFor` once per identity and only places and detaches after; it never disposes
+- arrangement over a root relation — the grid asks `cellFor` once per presentation, places, and on leaving the View detaches and forgets; it never disposes, and its registry is exactly the presented cells
 - a cursor that is an identity while presented and a position when not
 - **shallow and deep, enforced by the grid**: a click or an arrow moves the cursor and the cell is only told; Enter or a double-click hands the cell control until it calls `release()`; the grid never learns commit from cancel
 - column widths — held by identity, applied by position, in place; bounded at normalisation; snapshot and restore; persisted by nobody here

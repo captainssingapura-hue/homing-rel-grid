@@ -4,49 +4,54 @@
 //
 // The ONLY place (i, j) meets (pk, column). Two maps:
 //
-//   i → pk        the row view: an ordered subset of the base identities
+//   i → pk        the row view: the rows PRESENTED, in order — the View
 //   j → column    the column view: an ordered subset of the base columns
 //
-// The base axes are the ROOT RELATION's and fixed for the grid's lifetime —
-// there is no addPk and no removePk here on purpose. A row that arrives is a
-// new relation and a new grid; a row that goes is absorbed by a later View.
-// Remaps (setRowView / setColumnView) are pure reassignments a later round
-// will drive from the relation's answers; nothing in this class reads a value
-// or decides an order.
+// THE ROW AXIS HAS NO BASE. What the relation answers to view() is what is
+// presented, and there is no other list: the grid holds W keys for a window
+// of W rows over a relation of any size, and asks the relation for no
+// enumeration of anything. Membership is not decided here — the relation is
+// the authority on its own identity space, and refuses an identity it does
+// not own where it is asked for the cell (cellFor). A remap this cannot
+// check is a remap that never happened here: when the arrangement refuses a
+// View — the facade rethrows a cellFor refusal before a slot moves — the
+// rows go back as they were, and the caller hears the refusal.
 //
-//   new RelGridViewMaps({ pks, columns, rowView?, columnView?, onViewChanged? })
+// The column axis is STRUCTURE and stays listed: columns() is fixed for the
+// grid's lifetime, widths are held by column identity, and a column view is
+// a subset of it. Nothing in this class reads a value or decides an order.
 //
-// An INITIAL view may be given, so a grid over a relation that declares more
-// identities than it presents — an article with a capacity of rows — arranges
-// only what is presented from its first pass, rather than everything and then
-// a remap. The same checks as a remap; no callback, since nothing is arranged yet.
+//   new RelGridViewMaps({ rowView, columns, columnView?, onViewChanged? })
+//
+// Every check is O(W): uniqueness within the View, and — for columns — the
+// subset of a list that is short by nature.
 // =============================================================================
 
 class RelGridViewMaps {
 
     constructor(opts) {
         opts = opts || {};
-        this._basePks     = this._checkUnique(opts.pks || [], "pks");
         this._baseColumns = this._checkUnique(opts.columns || [], "columns");
         // onViewChanged(kind) — 'rows' | 'columns'. The facade re-arranges.
         this._onViewChanged = opts.onViewChanged || null;
-        this._rowView = opts.rowView    ? this._checkSubset(opts.rowView,    this._basePks,     "rowView")
-                                        : this._basePks.slice();
+        this._rowView = this._checkUnique(opts.rowView || [], "rowView");
         this._colView = opts.columnView ? this._checkSubset(opts.columnView, this._baseColumns, "columnView")
                                         : this._baseColumns.slice();
         this._rowIndex = null;
         this._colIndex = null;
     }
 
-    // ── the base axes (identity — what exists) ─────────────────────────────
+    // ── the column structure (identity — what exists) ─────────────────────
 
-    basePks()     { return this._basePks.slice(); }
     baseColumns() { return this._baseColumns.slice(); }
 
     // ── the view (position — what shows, where) ────────────────────────────
 
     rows() { return this._rowView.length; }
     cols() { return this._colView.length; }
+
+    rowView()    { return this._rowView.slice(); }
+    columnView() { return this._colView.slice(); }
 
     pkAt(i)     { return (i >= 0 && i < this._rowView.length) ? this._rowView[i] : null; }
     columnAt(j) { return (j >= 0 && j < this._colView.length) ? this._colView[j] : null; }
@@ -68,25 +73,37 @@ class RelGridViewMaps {
 
     // ── remaps (pure reassignments) ────────────────────────────────────────
 
+    /** Present these rows, in this order. Unique, or refused; refused by the arrangement, and undone. */
     setRowView(pks) {
-        this._rowView = this._checkSubset(pks, this._basePks, "row view");
-        this._rowIndex = null;
-        this._fire("rows");
-        return this;
+        return this._swap("rows", "_rowView", "_rowIndex", this._checkUnique(pks, "row view"));
     }
 
-    resetRowView() { return this.setRowView(this._basePks.slice()); }
-
     setColumnView(names) {
-        this._colView = this._checkSubset(names, this._baseColumns, "column view");
-        this._colIndex = null;
-        this._fire("columns");
-        return this;
+        return this._swap("columns", "_colView", "_colIndex", this._checkSubset(names, this._baseColumns, "column view"));
     }
 
     resetColumnView() { return this.setColumnView(this._baseColumns.slice()); }
 
     // ── internals ──────────────────────────────────────────────────────────
+
+    /**
+     * The one way a view changes: set, then tell the facade. An arrangement
+     * that throws has refused the View — half a View is not a View — so the
+     * view goes back to what it was and the refusal travels on to the caller.
+     */
+    _swap(kind, field, indexField, next) {
+        var prev = this[field];
+        this[field] = next;
+        this[indexField] = null;
+        if (!this._onViewChanged) return this;
+        try { this._onViewChanged(kind); }
+        catch (e) {
+            this[field] = prev;
+            this[indexField] = null;
+            throw e;
+        }
+        return this;
+    }
 
     _index(view, cacheField, key) {
         if (this[cacheField] == null) {
@@ -115,11 +132,5 @@ class RelGridViewMaps {
             if (!baseSet.has(out[m])) throw new Error("[RelGridViewMaps] " + what + " references unknown key: " + out[m]);
         }
         return out;
-    }
-
-    _fire(kind) {
-        if (!this._onViewChanged) return;
-        try { this._onViewChanged(kind); }
-        catch (e) { console.error("[RelGridViewMaps] onViewChanged threw:", e); }
     }
 }

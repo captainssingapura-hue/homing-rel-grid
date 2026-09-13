@@ -44,7 +44,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                 var cellsB = hostBranch(), seq = 0;                        // the DOMAIN's branch, activated as a relation activates its own: a sub-branch per cell
                 rows.forEach(function (r) { data[r[0]] = { ingredient: r[1], calories: r[2] }; });
                 var relation = {
-                    pks:     function () { return Object.keys(data); },
+                    view:    function (intent) { return intent ? null : Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
                     cellFor: function (pk, col) {
                         var k = pk + ' ' + col, c = cells.get(k);

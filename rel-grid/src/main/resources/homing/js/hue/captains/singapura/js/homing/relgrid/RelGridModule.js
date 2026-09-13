@@ -2,11 +2,13 @@
 // RelGridModule — RFC 0050 · Episode 2's facade: composes the grid and is the
 // ONLY place the two branches meet. Orchestration only — the seam is
 // RelGridViewMaps, the chrome is RelGridLayout, the registry is RelGridCells;
-// the facade reads the relation's identities and columns, threads the pieces,
-// and re-places cells into freshly minted slots on every arrangement pass.
+// the facade reads the relation's View and columns, threads the pieces, and
+// re-places cells into the slots on every arrangement pass — the same slots
+// while the shape holds, fresh ones when it changes.
 // What a gesture means is RelGridGestures; the cursor is RelGridCursor; the
 // handover of control is RelGridControl; the channel and its questions are
-// RelGridChannel; the widths are RelGridWidths; the stock clipboard writer is
+// RelGridChannel; the widths are RelGridWidths; the window — the relation's
+// seam asked to move — is RelGridWindow; the stock clipboard writer is
 // RelGridClipboard. Each holds its own state and is handed only what it needs.
 //
 // TWO INDEPENDENT BRANCHES. The grid mints its own chrome on its own
@@ -22,16 +24,20 @@
 //                         // activates it, as the owner does, and everything the grid mints —
 //                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
 //                         // Dissolving it is the host's. Never a cell's element.
-//       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
+//       relation,         // { view(intent?), columns(), cellFor(pk, column) } — and nothing else.
+//                         // ONE ROOT: view() answers the rows to PRESENT now, in order — the whole
+//                         // of a static relation, a window of an endless one. The grid asks it at
+//                         // construction and holds what it answered, and no other list; there is
+//                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
+//                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
 //       overflow?,        // wrap | clip | ellipsis — what a slot does with content
 //                         // too wide for it. Default ellipsis.
-//       rowView?,         // the identities to PRESENT at first, in order — a subset of
-//                         // relation.pks(). Default: all of them. For a relation that
-//                         // declares more than it shows; later remaps go through viewMaps().
-//       columnView?,      // the same for columns — a subset of relation.columns(). A
-//                         // relation may declare columns it shows only sometimes.
+//       columnView?,      // a subset of relation.columns() — the column axis IS listed. A
+//                         // relation may declare columns it shows only sometimes. (There is
+//                         // no rowView: what is presented is what relation.view() answers,
+//                         // and later remaps go through viewMaps().)
 //       minColumnWidth?,  // the floor a width request is bounded to. Default 40, the
 //                         // narrowest a column stays grabbable at; never below 8. A host
 //                         // whose columns are half-squares says 24.
@@ -48,23 +54,37 @@
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
 //       onCopied?,        // (content) — a REPORT: this was written to the clipboard
 //       onEdge?,          // (direction) — a REPORT: a bare arrow went nowhere, the cursor being
-//                         // already at that edge — 'up' | 'down' | 'left' | 'right'. The grid
-//                         // itself does nothing with it; a host stacking tables steps over.
+//                         // already at that edge — 'up' | 'down' | 'left' | 'right' — and, up
+//                         // or down, the relation asked for the View a row on answered nothing.
+//                         // The grid itself does nothing with it; a host stacking tables steps over.
 //       ask?,             // (question, mask) — THE CHANNEL: see RelGridChannel.
 //       clipboard?        // { write(content) → thenable } — the writer; the stock one by default
 //   });
 //
-// THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
-// columns and cells. It never asks for, holds, pushes or writes a value, and
+// THE ROOT PRINCIPLE, AS CODE: this file asks the relation for its View, its
+// columns and its cells. It never asks for, holds, pushes or writes a value, and
 // RelGridValueFreeTest holds every grid module to that.
 //
-// THE ARRANGEMENT CYCLE: the layout renders the slot matrix for the presented
-// shape, widths ride identity onto the new positions, every presented cell is
-// ensured once and placed — into its slot, or into a merged cell's host when
-// it reaches across several — whatever the view no longer shows leaves the
-// tree alive, the cursor resolves (identity first, position as the fallback),
-// and every range goes (law 43: a selection is positions, and these are not
-// the same positions).
+// THE ARRANGEMENT CYCLE: every presented identity is ensured first — asked of
+// the relation once per presentation, and kept while presented — BEFORE
+// anything moves, so a relation that refuses one refuses the View whole; then
+// the layout renders the slot matrix for the presented shape, widths ride
+// identity onto the new positions, every cell is placed — into its slot, or
+// into a merged cell's host when it reaches across several — the cursor
+// resolves (identity first, position as the fallback; a cell it leaves is
+// told so while the registry still knows it), whatever the view no longer
+// shows leaves the tree alive AND is forgotten — the domain's cellFor is the
+// keeper, and an identity that returns is asked for again — and every range
+// goes (law 43: a selection is positions, and these are not the same
+// positions). The registry is exactly the presented cells: a window of W
+// rows costs W × columns entries, however far it has scrolled.
+//
+// MEMBERSHIP IS THE RELATION'S. The grid keeps no list of what exists — the
+// row axis is the View — so it cannot tell a stranger from a row; the relation
+// can, and refuses a stranger by throwing from cellFor. The ensure pass puts
+// that refusal before the first slot is touched: the arrangement throws, the
+// maps put the rows back, and the caller — a host's remap, or the channel's
+// settle — hears it. Half a View is not a View.
 //
 // MERGED CELLS — a matrix that stays whole, and a cell laid over part of it.
 // Every position keeps its slot and its own cell. A cell that answers
@@ -74,9 +94,17 @@
 // OUT of the group; Enter anywhere in a group offers control to the LEADING
 // cell. Spans are read on every arrangement. Behind mergedCells.
 //
+// THE WINDOW MOVES BY THE SAME SEAM. An arrow at the top or bottom edge, the
+// wheel, PageUp and PageDown ask the relation for the View n rows on —
+// view({ by: n }) — and present what comes back; nothing back means the rows
+// stay, the arrow is reported as the edge it met, and the wheel is left to the
+// browser. A static relation answers nothing and behaves as it always did; an
+// endless one answers a window, arranged on the same slots. scrollRows(n) is
+// the programmatic twin.
+//
 // LOCKED while a cell is deep OR a question is pending — the two are exclusive
 // (law 228) — every intent is refused, not deferred (law 221): keys, clicks,
-// drags, the handover, a resize, and the programmatic twins of each.
+// drags, the handover, a resize, the window, and the programmatic twins of each.
 // =============================================================================
 
 class RelGrid {
@@ -87,8 +115,11 @@ class RelGrid {
         if (!opts.branch)    throw new Error("[RelGrid] opts.branch is required");
         if (!opts.relation)  throw new Error("[RelGrid] opts.relation is required");
         var r = opts.relation;
-        if (typeof r.pks !== "function" || typeof r.columns !== "function" || typeof r.cellFor !== "function")
-            throw new Error("[RelGrid] relation must expose pks(), columns() and cellFor(pk, column)");
+        if (typeof r.view !== "function" || typeof r.columns !== "function" || typeof r.cellFor !== "function")
+            throw new Error("[RelGrid] relation must expose view(), columns() and cellFor(pk, column)");
+        if (opts.rowView) throw new Error("[RelGrid] there is no rowView: what is presented is what relation.view() answers");
+        var start = r.view();                    // the rows to present now — the relation's answer, held as the View
+        if (!Array.isArray(start)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + start);
         var self = this;
         opts.branch.activate(this);              // the grid's own: the party refuses one that is already somebody's
         this._relation = r;
@@ -109,8 +140,8 @@ class RelGrid {
         this._merge = opts.mergedCells === true;   // honour colSpan() at all
         this._selection = new RelGridSelection();  // POSITIONS, and nothing else
         this._maps = new RelGridViewMaps({
-            pks: r.pks(), columns: r.columns(),
-            rowView: opts.rowView || null, columnView: opts.columnView || null,
+            rowView: start, columns: r.columns(),
+            columnView: opts.columnView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
@@ -129,6 +160,7 @@ class RelGrid {
             }
         });
         this._cells = new RelGridCells();       // the domain's elements, by identity; the grid mints none
+        this._window = new RelGridWindow({ relation: r, maps: this._maps });
         this._widths = new RelGridWidths({ maps: this._maps, minColumnWidth: opts.minColumnWidth });
         this._cursor = new RelGridCursor({
             maps: this._maps, layout: this._layout, cells: this._cells,
@@ -153,10 +185,13 @@ class RelGrid {
             afterSelection: function () { self._afterSelection(); },
             stepJ: function (i, j, dj) { return self._stepJ(i, j, dj); },
             stepWidth: function (column, dir) { self.setColumnWidth(column, self._widths.stepped(column, dir)); },
+            rowHeight: function () { return self._layout.rowHeight(); },
             onEdge: opts.onEdge
         });
         this._keydown = function (e) { self._gestures.onKey(e); };
+        this._wheel = function (e) { self._gestures.onWheel(e); };
         this._layout.el().addEventListener("keydown", this._keydown);
+        this._layout.el().addEventListener("wheel", this._wheel, { passive: false });
         this._arrange("base");
     }
 
@@ -166,22 +201,30 @@ class RelGrid {
     // ── the arrangement cycle: structure, then re-place ────────────────────
 
     _arrange(kind) {
-        var maps = this._maps, headers = [];
+        var maps = this._maps, headers = [], ids = [], i, j, id;
         for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
+        // One ask per identity per presentation — and every ask BEFORE a slot moves:
+        // a refusal here leaves the pass with nothing changed, and the maps undo the View.
+        for (i = 0; i < maps.rows(); i++) {
+            for (j = 0; j < maps.cols(); j++) {
+                id = maps.resolve(i, j);
+                this._cells.ensure(id.pk, id.column, this._cellFor);
+                ids.push(id);
+            }
+        }
         this._layout.render({ headers: headers, rows: maps.rows() });
         this._layout.setColWidths(this._widths.positional());   // widths ride identity onto the new positions
-        // One ask per identity, ever; one appendChild per cell, per pass.
-        for (var i = 0; i < maps.rows(); i++) {
-            for (var j = 0; j < maps.cols(); j++) {
-                var id = maps.resolve(i, j);
-                this._cells.ensure(id.pk, id.column, this._cellFor);
+        // One appendChild per cell, per pass.
+        for (i = 0; i < maps.rows(); i++) {
+            for (j = 0; j < maps.cols(); j++) {
+                id = ids[i * maps.cols() + j];
                 this._cells.place(id.pk, id.column, this._layout.slotAt(i, j));
                 if (this._merge) this._markSpan(i, j, id);
             }
         }
         if (this._merge) this._layout.placeGroups();          // every cell is in; measure the hosts
-        this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree
-        this._cursor.resolve(this._control.isDeep());
+        this._cursor.resolve(this._control.isDeep());         // first: a cell the cursor leaves is told while it is still known
+        this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree, forgotten
         this._selection.clear();                              // law 43: every range goes with the presented space
         this._afterSelection();
         if (this._cbArranged) {
@@ -298,6 +341,19 @@ class RelGrid {
         return this._channel.handoverView();
     }
 
+    // ── the window: the same seam, asked to move ───────────────────────────
+
+    /**
+     * Ask the relation for the View n rows on (negative: back) and present it.
+     * The twin of the wheel and of an arrow at the window's edge. False when
+     * locked, when n is 0, and when the relation answers nothing or the same
+     * rows — the rows stay; that is how a static relation answers every time.
+     */
+    scrollRows(n) {
+        if (this._locked()) return false;
+        return this._window.move(n);
+    }
+
     // ── deep: the grid hands control to the cell, and takes it back ────────
 
     /** May the cursor's cell take control right now? Public, because a feature must be able to ask WITHOUT opening anything. */
@@ -379,6 +435,7 @@ class RelGrid {
         this._control.destroy();               // a late settle must not resume a dead grid
         this._channel.destroy();
         this._layout.el().removeEventListener("keydown", this._keydown);
+        this._layout.el().removeEventListener("wheel", this._wheel);
         this._cells.destroy();
         this._layout.destroy();
     }

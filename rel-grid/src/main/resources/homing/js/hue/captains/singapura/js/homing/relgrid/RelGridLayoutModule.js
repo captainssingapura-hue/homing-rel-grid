@@ -29,7 +29,7 @@
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   render({ headers, rows }) / setColWidths(widths) / slotAt(i, j) / rows() / cols()
 //   paintCursor(ij) / paintSelection(rects) / setDeep(on) / setMasked(on)
-//   focus() / revealSlot(i, j) / hasKeyboard() / el()
+//   focus() / revealSlot(i, j) / hasKeyboard() / el() / rowHeight()
 //   openOverlay(i, j) / closeOverlay() / overlay()
 //   openMask() / openPanel(el) / closePanel() / closeMask() / mask() / panel()
 //   openGroup(i, j, n) / groupAt(i, j) / placeGroups() / closeGroups() / groups()
@@ -106,15 +106,20 @@ class RelGridLayout {
     }
 
     /**
-     * (Re)build the structure for a shape: { headers: string[], rows: n }.
-     * The merged cells' hosts go first — the slots they sat over are going —
-     * then the matrix is minted fresh. Slot CONTENT IS NOT TOUCHED.
+     * The structure for a shape: { headers: string[], rows: n }. The merged
+     * cells' hosts go first — spans are read afresh on every pass, and the
+     * slots they marked are unmarked, since those slots may live on — then
+     * the matrix: kept when the shape is unchanged, minted fresh when not.
+     * The cursor and selection paint is forgotten only with a fresh matrix;
+     * on a kept one the painted slots are still the painted slots, and the
+     * diff-painters take it from there. Slot CONTENT IS NOT TOUCHED.
      */
     render(shape) {
         this.closeGroups();
-        this._cursorTd = null;                                // the old slots go with the old matrix
-        this._selTds = [];
-        this._slots.render(shape);
+        if (this._slots.render(shape)) {                      // a fresh matrix: the old paint went with the old slots
+            this._cursorTd = null;
+            this._selTds = [];
+        }
         return this;
     }
 
@@ -152,6 +157,13 @@ class RelGridLayout {
         }
         this.placeGroups();                                   // the slots moved; the hosts follow
         return this;
+    }
+
+    /** One row's height as laid out — the first slot's — or a nominal 24 where there is no geometry. */
+    rowHeight() {
+        var td = this.slotAt(0, 0);
+        var h = (td && td.getBoundingClientRect) ? td.getBoundingClientRect().height : 0;
+        return h > 0 ? h : 24;
     }
 
     /** Paint the cursor on one slot ({ i, j }) or on none (null). A diff, not a sweep. */

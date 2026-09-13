@@ -50,35 +50,75 @@ class RelGridArrangementTest extends JsModuleTestBase {
     }
 
     @Test
-    void reapplyMintsFreshSlotsButAsksForNoCellTwice() {
+    void reapplyKeepsTheSlotsAndAsksForNoCellTwice() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture();
-                    var before = f.cellEl('coq', 'calories'), oldBody = f.tbody();
+                    var before = f.cellEl('coq', 'calories'), oldBody = f.tbody(), oldTd = f.td(1, 1);
+                    var minted = f.branch.getBranch('slots').elementCount;
                     f.grid.reapply();
                     var after = f.cellEl('coq', 'calories');
-                    return f.tbody() !== oldBody          // slots were rebuilt
-                        && after === before               // the cell's element kept its identity
+                    return f.tbody() === oldBody          // the same shape: the same slots, nothing minted, nothing released
+                        && f.td(1, 1) === oldTd
+                        && f.branch.getBranch('slots').elementCount === minted
+                        && after === before               // the cell's element kept its identity, in its slot
+                        && after.parentNode === oldTd
                         && f.asked() === 6                // cellFor was NOT asked again
                         && f.mints() === 6                // no host re-minted
                         && f.arranged.join() === 'base,reapply';
-                })()"""), "re-arrangement re-places the same cells: created rarely, retrieved from the registry");
+                })()"""), "re-arrangement over an unchanged shape re-places the same cells into the same slots");
     }
 
     @Test
-    void aDetachedCellChangedByItsDomainReplacesCurrent() {
+    void anUnchangedShapeKeepsTheSlotsAndThePaintFollowsTheIdentities() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture(), g = f.grid, maps = g.viewMaps();
+                    f.click(0, 0);                                           // the cursor on mapo / ingredient
+                    var td00 = f.td(0, 0), td20 = f.td(2, 0), slots = f.branch.getBranch('slots');
+                    if (!css.hasClass(td00, hrg_cursor)) return false;
+                    // A PERMUTATION is the same shape: the slots stay, the cells move between
+                    // them, and the cursor — an identity — is painted where its cell went.
+                    maps.setRowView(['fish', 'coq', 'mapo']);
+                    if (f.branch.getBranch('slots') !== slots || f.td(0, 0) !== td00 || f.td(2, 0) !== td20) return false;
+                    if (f.cellEl('mapo', 'ingredient').parentNode !== td20) return false;
+                    if (css.hasClass(td00, hrg_cursor) || !css.hasClass(td20, hrg_cursor)) return false;
+                    if (g.cursor().pk !== 'mapo') return false;
+                    // A selection is positions and goes with the arrangement (law 43): the
+                    // old paint came off the kept slots, and what is painted is the cursor's
+                    // own 1x1 — fish / ingredient, where that cell went.
+                    f.click(0, 0); f.click(1, 1, { shift: true });
+                    if (f.painted() !== '0,0 0,1 1,0 1,1') return false;
+                    maps.setRowView(['mapo', 'coq', 'fish']);
+                    if (f.painted() !== '2,0' || g.selectionCount() !== 0 || g.cursor().pk !== 'fish') return false;
+                    // A different NUMBER of rows is a new shape: minted fresh, the old released.
+                    maps.setRowView(['mapo', 'coq']);
+                    if (f.branch.getBranch('slots') === slots || slots.elementCount !== 0 || f.td(0, 0) === td00) return false;
+                    return f.tbody().children.length === 2;
+                })()"""), "the same shape keeps its slots and the paint follows identities; a new shape mints fresh");
+    }
+
+    @Test
+    void aDetachedCellIsForgottenAndTheDomainsOwnChangeShowsWhenItReturns() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture(), maps = f.grid.viewMaps();
+                    var before = f.cellEl('coq', 'calories');
                     maps.setRowView(['mapo']);                       // narrow the presented space
                     var shown = f.tbody().children.length;
-                    f.relation.change('coq', 'calories', 999);       // the domain updates a DETACHED cell
-                    maps.resetRowView();                             // widen again
+                    // The registry is exactly the presented cells: the rows that left are
+                    // FORGOTTEN — out of the tree, and out of the grid's hands entirely.
+                    if (f.grid.cells().size() !== 2 || f.grid.cells().get('coq', 'calories') !== null) return false;
+                    if (before.parentNode !== null) return false;
+                    f.relation.change('coq', 'calories', 999);       // the domain updates a cell the grid has forgotten
+                    maps.setRowView(['mapo', 'coq', 'fish']);        // widen again: the two rows are asked for AGAIN
                     var el = f.cellEl('coq', 'calories');
                     return shown === 1
+                        && el === before                            // the relation kept the cell: the same element comes back
                         && el.textContent === '999'                 // current, with no grid involvement
-                        && f.mints() === 6 && f.asked() === 6;      // never re-minted, never re-asked
-                })()"""), "detach keeps the domain's cell alive; the domain's own change shows on re-place");
+                        && f.grid.cells().size() === 6
+                        && f.asked() === 10 && f.mints() === 10;    // once per PRESENTATION: four cells re-asked, re-placed
+                })()"""), "a row that leaves is forgotten; a row that returns is asked for again, and the domain's own change shows");
     }
 
     @Test
@@ -97,22 +137,28 @@ class RelGridArrangementTest extends JsModuleTestBase {
     }
 
     @Test
-    void aRelationMayDeclareMoreThanItPresentsAndTheGridArrangesOnlyThePresented() {
+    void theRowAxisIsTheViewAndAStrangerIsRefusedByTheRelationWhole() {
         assertTrue(evalBool("""
                 (() => {
-                    // A relation with a CAPACITY: it declares more identities than it shows,
-                    // and the host presents a prefix at construction. The first arrangement
-                    // is the prefix — no cell beyond it is asked for, let alone minted.
+                    // A relation that could present fifty rows presents three: the grid holds
+                    // the three — the row axis is the View, there is no base — and no cell
+                    // beyond them is asked for, let alone minted. The relation, not the grid,
+                    // knows what it owns: a stranger is refused at cellFor.
                     var asked = [], cellsB = hostBranch(), seq = 0;              // the domain's branch, a sub-branch per cell
+                    var shown = ['r0', 'r1', 'r2'];                                // what the relation presents right now
                     var relation = {
-                        pks:     function () { var o = []; for (var r = 0; r < 50; r++) o.push('r' + r); return o; },
+                        view:    function (intent) { return intent ? null : shown.slice(); },
                         columns: function () { return ['a', 'b']; },
-                        cellFor: function (pk, col) { asked.push(pk + ' ' + col); return new RelGridTextCell({ branch: cellsB.createBranch('c' + (++seq)), value: pk + col }); }
+                        cellFor: function (pk, col) {
+                            if (!/^r([0-9]|[1-4][0-9])$/.test(pk)) throw new Error('no such row: ' + pk);
+                            asked.push(pk + ' ' + col);
+                            return new RelGridTextCell({ branch: cellsB.createBranch('c' + (++seq)), value: pk + col });
+                        }
                     };
                     var container = makeEl('div');
-                    var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation,
-                                             rowView: ['r0', 'r1', 'r2'] });
-                    if (grid.viewMaps().rows() !== 3 || grid.viewMaps().basePks().length !== 50) return false;
+                    var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation });
+                    if (grid.viewMaps().rows() !== 3 || typeof grid.viewMaps().basePks === 'function') return false;
+                    if (typeof relation.pks !== 'undefined') return false;         // nothing enumerates
                     if (asked.length !== 6) return false;                          // three rows, two columns
                     // The article grows a row: the host presents one more, through the seam.
                     grid.viewMaps().setRowView(['r0', 'r1', 'r2', 'r3']);
@@ -120,15 +166,33 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     // And shrinks: nothing is asked, nothing is disposed, the row is just not shown.
                     grid.viewMaps().setRowView(['r0', 'r1']);
                     if (grid.viewMaps().rows() !== 2 || asked.length !== 8) return false;
-                    // A view naming an identity the relation never declared is refused.
+                    // A View naming an identity the relation does not own is refused WHOLE, by the
+                    // relation, before a slot moves: the rows stay as they were, the maps too,
+                    // and the caller hears it. A duplicate is the one thing the maps refuse alone.
+                    var tbody = container.children[0].children[0].children[2], before = tbody;
                     var refused = false;
-                    try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation, rowView: ['r0', 'nope'] }); }
-                    catch (e) { refused = /unknown key/.test(String(e)); }
+                    try { grid.viewMaps().setRowView(['r0', 'nope']); }
+                    catch (e) { refused = /no such row: nope/.test(String(e)); }
+                    if (!refused || grid.viewMaps().rows() !== 2 || grid.viewMaps().rowView().join() !== 'r0,r1') return false;
+                    if (container.children[0].children[0].children[2] !== before || tbody.children.length !== 2) return false;
+                    if (asked.length !== 8) return false;                          // r0 was in the registry; nope was refused before b
+                    try { grid.viewMaps().setRowView(['r0', 'r0']); refused = false; }
+                    catch (e) { refused = /duplicate/.test(String(e)); }
+                    if (!refused || grid.viewMaps().rows() !== 2) return false;
+                    // And at construction, the same refusal, out of the constructor.
+                    refused = false; shown = ['r0', 'nope'];
+                    try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation }); }
+                    catch (e) { refused = /no such row/.test(String(e)); }
+                    if (!refused) return false;
+                    // A host that still says rowView is told there is none.
+                    refused = false; shown = ['r0'];
+                    try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation, rowView: ['r0'] }); }
+                    catch (e) { refused = /no rowView/.test(String(e)); }
                     if (!refused) return false;
                     // And the same for columns: a relation may declare a column it shows only
                     // sometimes — a half-square for a squeezed mark — and present it later.
                     var narrow = new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation,
-                                               rowView: ['r0'], columnView: ['b'], minColumnWidth: 24 });
+                                               columnView: ['b'], minColumnWidth: 24 });
                     if (narrow.viewMaps().cols() !== 1 || narrow.viewMaps().columnAt(0) !== 'b') return false;
                     narrow.viewMaps().setColumnView(['a', 'b']);
                     if (narrow.viewMaps().cols() !== 2) return false;
@@ -137,7 +201,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     if (!narrow.setColumnWidth('a', 24) || narrow.columnWidth('a') !== 24) return false;
                     if (!narrow.setColumnWidth('b', 2) || narrow.columnWidth('b') !== 24) return false;
                     var floorless = new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation,
-                                                  rowView: ['r0'], minColumnWidth: 2 });
+                                                  minColumnWidth: 2 });
                     floorless.setColumnWidth('a', 2);
                     return floorless.columnWidth('a') === 8;
                 })()"""), "rowView and columnView present part of a larger relation; a half-square column may be held");

@@ -15,7 +15,7 @@ import java.util.List;
  * poem, the illustration itself, a colophon after the last.
  *
  * <p>The illustration is a member with nothing to present — a relation whose
- * row view is empty — that keeps its identity and its fence. That is the
+ * View is empty and that owns no row — that keeps its identity and its fence. That is the
  * whole of how a picture stands between two tables: no special row, no
  * special cell, nothing the table has to know. The group shares nothing here
  * but the squares' widths, which every member already agrees on.</p>
@@ -71,7 +71,7 @@ public final class HanArticlesWidget extends WorkspaceWidget<WorkspaceWidget._No
                 "    css.addClass(status, wb_status);",
                 "    root.appendChild(status);",
                 "",
-                "    hint.textContent = 'ARTICLES \\u2014 two poems down one page with an illustration between, three members of a GROUP. Each poem is an ordinary display over its own article, wired as it would be alone. The illustration is a member with nothing to present \\u2014 an empty row view \\u2014 that keeps its identity and its fence, and the fence is where the picture is drawn: no special row, no special cell, nothing the table knows. Titles and the colophon are fences too, the domain\\u2019s.';",
+                "    hint.textContent = 'ARTICLES \\u2014 two poems down one page with an illustration between, three members of a GROUP. Each poem is an ordinary display over its own article, wired as it would be alone. The illustration is a member with nothing to present \\u2014 a relation whose View is empty \\u2014 that keeps its identity and its fence, and the fence is where the picture is drawn: no special row, no special cell, nothing the table knows. Titles and the colophon are fences too, the domain\\u2019s.';",
                 "",
                 "    var POEMS = [",
                 "        { id: 'fengqiao', title: '\\u6953\\u6a4b\\u591c\\u6cca', author: '\\u5f35\\u7e7c', text: " + HanStressWidget.jsString(FENGQIAO) + " },",
@@ -87,7 +87,7 @@ public final class HanArticlesWidget extends WorkspaceWidget<WorkspaceWidget._No
                 "    var relations = {};",
                 "    function poemMember(p) {",
                 "        var store = createHanStore(p.text, { key: null });",
-                "        var relation = createHanRelation(store, { cols: COLS, capacity: 40, branch: domainB.createBranch('cells-' + p.id) });",
+                "        var relation = createHanRelation(store, { cols: COLS, branch: domainB.createBranch('cells-' + p.id) });",
                 "        relations[p.id] = relation;",
                 "        return {",
                 "            id: p.id,",
@@ -95,7 +95,6 @@ public final class HanArticlesWidget extends WorkspaceWidget<WorkspaceWidget._No
                 "            grid: {",
                 "                relation: relation,",
                 "                header: { show: false },",
-                "                rowView: relation.presented(),",
                 "                columnView: relation.presentedColumns(),",
                 "                minColumnWidth: SIDE / 2,",
                 "                mergedCells: true,",
@@ -103,15 +102,22 @@ public final class HanArticlesWidget extends WorkspaceWidget<WorkspaceWidget._No
                 "            }",
                 "        };",
                 "    }",
-                "    // The illustration: a member with nothing to present. It declares the",
-                "    // same columns as the poems, so the group's widths fit it, and an empty",
-                "    // row view, so no square is ever asked for. Its fence carries the picture.",
+                "    // The illustration: a member with NOTHING to present, and a relation that",
+                "    // says exactly that — the poems' columns, so the group's widths fit it; an",
+                "    // empty View, so no square is ever asked for; and no row of its own, so a",
+                "    // cell asked for is a stranger. Its fence carries the picture.",
                 "    function illustrationMember() {",
-                "        var relation = createHanRelation(createHanStore('', { key: null }), { cols: COLS, capacity: 1, branch: domainB.createBranch('cells-moon') });",
+                "        var squares = [];",
+                "        for (var k = 0; k < COLS; k++) squares.push('c' + k);",
+                "        var relation = {",
+                "            view:    function () { return []; },",
+                "            columns: function () { return ['lead'].concat(squares, ['trail']); },",
+                "            cellFor: function (pk) { throw new Error('the illustration owns no row: ' + pk); }",
+                "        };",
                 "        return {",
                 "            id: 'moon',",
                 "            fence: createHanOrnamentFence({ branch: domainB.createBranch('fence-moon'), glyph: '\\u263E', note: '\\u5bd2\\u5c71\\u5bfa \\u00b7 \\u591c\\u534a\\u9418\\u8072' }),",
-                "            grid: { relation: relation, header: { show: false }, rowView: [], columnView: relation.presentedColumns(), label: 'illustration' }",
+                "            grid: { relation: relation, header: { show: false }, columnView: squares, label: 'illustration' }",
                 "        };",
                 "    }",
                 "    var members = [poemMember(POEMS[0]), illustrationMember(), poemMember(POEMS[1])];",

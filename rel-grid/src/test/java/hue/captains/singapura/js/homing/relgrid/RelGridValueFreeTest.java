@@ -28,7 +28,7 @@ class RelGridValueFreeTest {
     /** The grid proper. Not RelGridStockCellsModule.js — cells are the domain's. */
     private static final List<String> GRID_MODULES = List.of(
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
-            "RelGridModule.js");
+            "RelGridWindowModule.js", "RelGridModule.js");
 
     /** Anything that would let a value in, out, or through. */
     private static final Pattern FORBIDDEN = Pattern.compile(

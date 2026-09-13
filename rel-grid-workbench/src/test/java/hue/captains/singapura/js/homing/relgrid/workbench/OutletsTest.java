@@ -108,7 +108,8 @@ class OutletsTest extends JsModuleTestBase {
                 (() => {
                     var s = ledger();
                     var h = createOutletRelation(s, 'harbour', { branch: testBranch() }), d = createOutletRelation(s, 'downtown', { branch: testBranch() });
-                    if (h.pks().join(',') !== s.dishes().join(',') || h.columns().join(',') !== 'dish,sold,revenue,lastSale') return false;
+                    if (h.view().join(',') !== s.dishes().join(',') || h.columns().join(',') !== 'dish,sold,revenue,lastSale') return false;
+                    if (h.view({ by: 1 }) !== null || typeof h.pks !== 'undefined') return false;   // one root: a book has nowhere to move
                     if (h.readOnlyColumns().join(',') !== 'dish,sold,revenue,lastSale') return false;   // a book is read
                     if (h.name() !== 'Harbour' || h.outlet() !== 'harbour') return false;
                     var c = h.cellFor('fish', 'revenue'), el = c.cellElement();   // the cell's own element, as the grid asks for it

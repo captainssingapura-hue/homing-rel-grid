@@ -89,6 +89,9 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(HanStressWidget.INSTANCE),
                 // Articles: fences for poems, and the group widget.
                 CrateEntry.of(HanFences.INSTANCE),
-                CrateEntry.of(HanArticlesWidget.INSTANCE));
+                CrateEntry.of(HanArticlesWidget.INSTANCE),
+                // Endless Table: a window over a million rows, and the widget that measures it.
+                CrateEntry.of(EndlessRelation.INSTANCE),
+                CrateEntry.of(EndlessWidget.INSTANCE));
     }
 }

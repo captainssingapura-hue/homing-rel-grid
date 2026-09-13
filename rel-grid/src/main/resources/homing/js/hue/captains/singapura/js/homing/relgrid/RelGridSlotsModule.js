@@ -14,13 +14,18 @@
 // a selection.
 //
 // Every element is minted through the DomOpsParty on a 'slots' sub-branch of
-// the grid's own, made for the arrangement and dissolved by the next: that is
+// the grid's own, made for a SHAPE and dissolved by the next shape: that is
 // what releases the cols, the headers, the body and every slot, and nothing
-// is ever removed by hand.
+// is ever removed by hand. An arrangement whose shape is UNCHANGED — the same
+// headers, the same number of rows — keeps the matrix it has: the slots are
+// positions, and the same positions are the same slots. A window of W rows
+// over an endless relation is arranged on the same W × columns slots however
+// far it scrolls; only the cells in them change. Nothing is minted, nothing
+// is released, and the grid's branch holds a constant count.
 //
 //   new RelGridSlots({ branch, table, colgroup, headerRow, drag, onCellClick?,
 //                      onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd? })
-//   render({ headers, rows })      the matrix, minted fresh
+//   render({ headers, rows })      the matrix for a shape: true when minted fresh, false when kept
 //   slotAt(i, j) / rows() / cols() / colAt(j)
 //   pressed() / release()          the press-drag's state, for the document-level release
 //   destroy()
@@ -45,7 +50,8 @@ class RelGridSlots {
         this._onCellDown = opts.onCellDown || null;           // (i, j, mods) — a press
         this._onCellDragTo = opts.onCellDragTo || null;       // (i, j) — reached while held
         this._onDragEnd = opts.onDragEnd || null;             // () — released
-        this._slotsBranch = null;               // the current arrangement's
+        this._slotsBranch = null;               // the current shape's
+        this._shape = null;                     // { headers, rows } the matrix was minted for
         this._tbody = null;
         this._slots = [];                       // [i][j] → td
         this._cols = [];                        // [j] → col
@@ -82,17 +88,28 @@ class RelGridSlots {
         });
     }
 
+    /** The same headers, in the same order, and the same number of rows. */
+    _sameShape(headers, rows) {
+        var s = this._shape;
+        if (!s || s.rows !== rows || s.headers.length !== headers.length) return false;
+        for (var h = 0; h < headers.length; h++) if (s.headers[h] !== headers[h]) return false;
+        return true;
+    }
+
     /**
-     * (Re)build the matrix for a shape: { headers: string[], rows: n }. The
-     * last arrangement's branch is dissolved first, and everything is minted
-     * fresh on a new one.
+     * The matrix for a shape: { headers: string[], rows: n }. An unchanged
+     * shape keeps the matrix it has and answers false — nothing minted,
+     * nothing released. A new shape dissolves the last shape's branch first
+     * and mints everything fresh on a new one; true.
      */
     render(shape) {
         var headers = (shape && shape.headers) || [];
         var rows = (shape && shape.rows) || 0;
+        if (this._slotsBranch && this._sameShape(headers, rows)) return false;
         if (this._slotsBranch) this._slotsBranch.dissolve();
         var slots = this._slotsBranch = this._branch.createBranch("slots");
         slots.activate(this);
+        this._shape = { headers: headers.slice(), rows: rows };
         this._cols = [];
         for (var h = 0; h < headers.length; h++) {
             var col = slots.createElement("col-" + h, "col");   // widths need cols regardless
@@ -122,7 +139,7 @@ class RelGridSlots {
             this._slots.push(rowSlots);
         }
         this._table.appendChild(this._tbody);
-        return this;
+        return true;
     }
 
     /** The slot at a position, or null. */
@@ -145,6 +162,7 @@ class RelGridSlots {
 
     destroy() {
         if (this._slotsBranch) { this._slotsBranch.dissolve(); this._slotsBranch = null; }
+        this._shape = null;
         this._slots = [];
         this._cols = [];
         this._press = null;
