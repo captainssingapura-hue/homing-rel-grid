@@ -82,7 +82,8 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
      */
     public record wb_han_host() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
-                flex: 0 0 auto;
+                flex: 0 1 auto;
+                min-height: 0;
                 align-self: flex-start;
                 max-width: 100%;
                 overflow: auto;

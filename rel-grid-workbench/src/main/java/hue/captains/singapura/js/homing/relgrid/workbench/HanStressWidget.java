@@ -105,7 +105,7 @@ public final class HanStressWidget extends WorkspaceWidget<WorkspaceWidget._None
                 "        container: host,",
                 "        branch: gridB,",
                 "        relation: relation,",
-                "        header: { show: true, labels: labels },",
+                "        header: { show: true, labels: labels, sticky: true },",
                 "        columnView: relation.presentedColumns(),",
                 "        minColumnWidth: 12,",
                 "        mergedCells: true,",

@@ -24,9 +24,12 @@
 // are TYPED — RelGridStyles — with theme tokens only, under the hrg- prefix
 // so this grid and the live one can share a page.
 //
-//   new RelGridLayout({ container, branch, label?, showHeader?, overflow?, onCellClick?,
-//                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
+//   new RelGridLayout({ container, branch, label?, showHeader?, stickyHeader?, stickyInset?, overflow?,
+//                       onCellClick?, onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
+//   stickyHeader: the header cells stay at the top of whatever scrolls the table, and a
+//                 revealed slot clears them; stickyInset: () → px of a band the HOST keeps stuck
+//                 above the table — a group's header — that a revealed slot must clear too
 //   render({ headers, rows }) / setColWidths(widths) / slotAt(i, j) / rows() / cols()
 //   paintCursor(ij) / paintSelection(rects) / setDeep(on) / setMasked(on)
 //   focus() / revealSlot(i, j) / hasKeyboard() / el() / rowHeight()
@@ -67,6 +70,8 @@ class RelGridLayout {
         this._colgroup = this._branch.createElement("colgroup", "colgroup");
         this._table.appendChild(this._colgroup);
         this._headerRow = null;
+        this._sticky = opts.showHeader !== false && opts.stickyHeader === true;
+        this._stickyInset = (typeof opts.stickyInset === "function") ? opts.stickyInset : null;
         if (opts.showHeader !== false) {
             var thead = this._branch.createElement("thead", "thead");
             this._headerRow = this._branch.createElement("header-row", "tr");
@@ -82,6 +87,7 @@ class RelGridLayout {
 
         this._slots = new RelGridSlots({
             branch: this._branch, table: this._table, colgroup: this._colgroup, headerRow: this._headerRow, drag: this._drag,
+            sticky: this._sticky,
             onCellClick: opts.onCellClick, onCellDblClick: opts.onCellDblClick, onCellDown: opts.onCellDown,
             onCellDragTo: opts.onCellDragTo, onDragEnd: opts.onDragEnd
         });
@@ -255,7 +261,15 @@ class RelGridLayout {
     focus() { if (this._table.focus) this._table.focus({ preventScroll: true }); return this; }
 
     /** The least scroll that shows a slot; nothing moves when it already shows. */
-    revealSlot(i, j) { relGridRevealSlot(this.slotAt(i, j)); return this; }
+    revealSlot(i, j) { relGridRevealSlot(this.slotAt(i, j), this._inset()); return this; }
+
+    /** What is stuck at the top of the port: the grid's own header when it sticks, and the host's band when it names one. */
+    _inset() {
+        var px = 0;
+        if (this._sticky && this._headerRow && this._headerRow.getBoundingClientRect) px += this._headerRow.getBoundingClientRect().height || 0;
+        if (this._stickyInset) { var band = Number(this._stickyInset()); if (band > 0) px += band; }
+        return px;
+    }
 
     /** Does the grid have the keyboard — the table, or something in it, holding the focus? */
     hasKeyboard() { return relGridHasKeyboard(this._table); }

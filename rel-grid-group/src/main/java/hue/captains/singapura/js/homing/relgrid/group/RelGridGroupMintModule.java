@@ -29,7 +29,7 @@ public record RelGridGroupMintModule() implements DomModule<RelGridGroupMintModu
     public ImportsFor<RelGridGroupMintModule> imports() {
         return ImportsFor.<RelGridGroupMintModule>builder()
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
-                .add(new ModuleImports<>(List.of(new RelGridGroupStyles.hrg_member(), new RelGridGroupStyles.hrg_group_header(),
+                .add(new ModuleImports<>(List.of(new RelGridGroupStyles.hrg_member(), new RelGridGroupStyles.hrg_group_header(), new RelGridGroupStyles.hrg_group_header_sticky(),
                         new RelGridGroupStyles.hrg_fence(), new RelGridGroupStyles.hrg_fence_empty()), RelGridGroupStyles.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_lit()), RelGridStyles.INSTANCE))   // a fence lights under the focus
                 .build();

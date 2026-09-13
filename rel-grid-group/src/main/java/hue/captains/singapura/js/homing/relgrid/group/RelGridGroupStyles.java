@@ -38,6 +38,23 @@ public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
         }
     }
 
+    /**
+     * The group's header box STAYS at the top of whatever scrolls the group,
+     * over the members passing under it. The box, not the header cells: a
+     * cell sticks only within its own table, and the header's table is one
+     * row tall — the box's containing block is the group's root, which is
+     * every member long. Above a merged cell's host (30), under a member's
+     * frame (40) and editor (50).
+     */
+    public record hrg_group_header_sticky() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                position: sticky;
+                top: var(--hrg-sticky-top, 0px);
+                z-index: 35;
+                """;
+        }
+    }
+
     /** The group's own header, in 'group' mode: a table with nothing to present, at the very top. */
     public record hrg_group_header() implements CssClass<RelGridGroupStyles> {
         @Override public String body() { return """
@@ -116,7 +133,7 @@ public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
     @Override public CssImportsFor<RelGridGroupStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<RelGridGroupStyles>> cssClasses() {
-        return List.of(new hrg_group(), new hrg_member(), new hrg_group_header(), new hrg_fence(),
+        return List.of(new hrg_group(), new hrg_member(), new hrg_group_header(), new hrg_group_header_sticky(), new hrg_fence(),
                        new hrg_fence_empty(), new hrg_folded(), new hrg_fence_folded(), new hrg_active(),
                        new hrg_dormant(), new hrg_fence_cursor(), new hrg_on_fence());
     }

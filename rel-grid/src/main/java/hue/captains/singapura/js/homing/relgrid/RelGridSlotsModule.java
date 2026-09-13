@@ -25,7 +25,7 @@ public record RelGridSlotsModule() implements DomModule<RelGridSlotsModule> {
     @Override
     public ImportsFor<RelGridSlotsModule> imports() {
         return ImportsFor.<RelGridSlotsModule>builder()
-                .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_col(), new RelGridStyles.hrg_th(), new RelGridStyles.hrg_td()),
+                .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_col(), new RelGridStyles.hrg_th(), new RelGridStyles.hrg_sticky(), new RelGridStyles.hrg_td()),
                         RelGridStyles.INSTANCE))
                 .build();
     }

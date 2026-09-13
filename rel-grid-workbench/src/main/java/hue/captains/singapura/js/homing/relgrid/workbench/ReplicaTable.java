@@ -178,6 +178,7 @@ final class ReplicaTable {
                 "        container: host,",
                 "        branch: gridB,",
                 "        relation: relation,",
+                "        header: { sticky: true },          // the host scrolls; the header stays (map 12)",
                 "        ask: ask,",
                 "        // A REPORT: the grid wrote this. What it is was decided above.",
                 "        onCopied: function (content) {",

@@ -23,8 +23,9 @@
 // far it scrolls; only the cells in them change. Nothing is minted, nothing
 // is released, and the grid's branch holds a constant count.
 //
-//   new RelGridSlots({ branch, table, colgroup, headerRow, drag, onCellClick?,
+//   new RelGridSlots({ branch, table, colgroup, headerRow, drag, sticky?, onCellClick?,
 //                      onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd? })
+//   sticky: the header cells stay at the top of whatever scrolls the table
 //   render({ headers, rows })      the matrix for a shape: true when minted fresh, false when kept
 //   slotAt(i, j) / rows() / cols() / colAt(j)
 //   pressed() / release()          the press-drag's state, for the document-level release
@@ -45,6 +46,7 @@ class RelGridSlots {
         this._colgroup = opts.colgroup;
         this._headerRow = opts.headerRow || null;
         this._drag = opts.drag || null;         // the header drag, wired per <th>
+        this._sticky = opts.sticky === true;    // the header cells wear hrg_sticky
         this._onCellClick = opts.onCellClick || null;         // (i, j, mods)
         this._onCellDblClick = opts.onCellDblClick || null;   // (i, j)
         this._onCellDown = opts.onCellDown || null;           // (i, j, mods) — a press
@@ -119,6 +121,7 @@ class RelGridSlots {
             if (!this._headerRow) continue;
             var th = slots.createElement("th-" + h, "th");
             css.addClass(th, hrg_th);
+            if (this._sticky) css.addClass(th, hrg_sticky);
             th.textContent = headers[h];
             if (this._drag) this._drag.wire(th, h, slots);
             this._headerRow.appendChild(th);

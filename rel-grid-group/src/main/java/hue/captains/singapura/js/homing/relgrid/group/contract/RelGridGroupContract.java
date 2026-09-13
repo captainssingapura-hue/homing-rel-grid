@@ -57,6 +57,16 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  * 'each'}: the group adds no table and every member keeps whatever its own
  * options say.</p>
  *
+ * <p>{@code stickyHeader: true}, in 'group' mode: the header's <b>box</b>
+ * stays at the top of whatever scrolls the group — the box rather than the
+ * header cells, since a cell sticks only within its own table and the
+ * header's table is one row tall — and every member is handed the box's
+ * height as the band its cursor must be revealed clear of. In 'each' mode
+ * <b>no header sticks</b>: a member's own {@code header.sticky} is overridden,
+ * as its header is in 'group' mode, so a stack of tables never shows a header
+ * stuck to a table that is scrolling away. The group's header sticks, or none
+ * does.</p>
+ *
  * <h2>One cursor, and Tab between the stops</h2>
  *
  * <p>Every member keeps a cursor of its own, and the group presents one: the
