@@ -14,9 +14,10 @@
 //
 //   new RelGrid({
 //       container,        // where the layout mounts
-//       branch,           // the grid's OWN branch (DomOpsParty): everything the grid mints —
-//                         // chrome, slots, overlays, mask — is on it or a sub-branch of it,
-//                         // and dissolving it is the host's. Never a cell's element.
+//       branch,           // the grid's OWN branch (DomOpsParty), handed UNACTIVATED: the grid
+//                         // activates it, as the owner does, and everything the grid mints —
+//                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
+//                         // Dissolving it is the host's. Never a cell's element.
 //       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
@@ -328,6 +329,7 @@ class RelGrid {
         if (typeof r.pks !== "function" || typeof r.columns !== "function" || typeof r.cellFor !== "function")
             throw new Error("[RelGrid] relation must expose pks(), columns() and cellFor(pk, column)");
         var self = this;
+        opts.branch.activate(this);              // the grid's own: the party refuses one that is already somebody's
         this._relation = r;
         this._cellFor = function (pk, col) { return r.cellFor(pk, col); };
         this._cbArranged    = opts.onArranged || null;

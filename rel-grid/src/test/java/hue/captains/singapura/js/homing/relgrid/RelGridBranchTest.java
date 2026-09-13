@@ -19,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * hosts ride into the new ones; an overlay, the mask and a drag's guide each
  * come on a sub-branch and go with it; destroy() dissolves everything the
  * grid made for itself and leaves the branch's own elements to the host; and
- * one branch is one grid's — a second grid on it is refused by name.</p>
+ * one branch is one grid's — handed unactivated, activated by the grid, and a
+ * second grid on it is refused by the party.</p>
  */
 class RelGridBranchTest extends JsModuleTestBase {
 
@@ -144,15 +145,19 @@ class RelGridBranchTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture();
+                    // The grid activated the branch it was handed: it is the owner the party records.
+                    if (f.branch.isOwnerAlive !== true) return false;
+                    // A second grid on it is refused by the party before the grid mints a thing:
+                    // the branch is already somebody's.
                     var refused = null;
                     try { new RelGrid({ container: makeEl('div'), branch: f.branch, relation: f.relation }); }
                     catch (e) { refused = String(e); }
-                    if (!refused || !/"table" is already in use/.test(refused)) return false;
-                    // And a branch nobody activated is refused by the party before the grid mints a thing.
-                    var dormant = domOpsParty.createBranch('dormant'), gate = null;
-                    try { new RelGrid({ container: makeEl('div'), branch: dormant, relation: f.relation }); }
+                    if (!refused || !/already activated/.test(refused)) return false;
+                    // And so is one the host activated itself: a host creates and dissolves, never activates.
+                    var hosts = hostBranch(), gate = null;
+                    try { new RelGrid({ container: makeEl('div'), branch: hosts, relation: f.relation }); }
                     catch (e) { gate = String(e); }
-                    return !!gate && /has not been activated/.test(gate);
-                })()"""), "a second grid on a branch is refused by name; an unactivated branch is refused at the gate");
+                    return !!gate && /already activated/.test(gate);
+                })()"""), "a grid activates the branch it is handed, so a branch that is already somebody's is refused");
     }
 }

@@ -142,14 +142,12 @@ public final class RelGridTestDom {
                 return due.length;
             }
             function pendingTimers() { return __timers.length; }
-            // A branch of the real party for one grid (or group) to own — what a
-            // host would hand it. Activated, as a host's branch is; named uniquely.
+            // A branch of the real party for one component to own — a grid, a group, a
+            // relation — as a host hands it: UNACTIVATED, the owner activates. And a
+            // branch the test itself divides, as a host divides its own: activated.
             var __branchSeq = 0, __branchOwner = { toString: function () { return 'test host'; } };
-            function testBranch() {
-                var b = domOpsParty.createBranch('t' + (++__branchSeq));
-                b.activate(__branchOwner);
-                return b;
-            }
+            function testBranch() { return domOpsParty.createBranch('t' + (++__branchSeq)); }
+            function hostBranch() { var b = testBranch(); b.activate(__branchOwner); return b; }
             """;
 
     /** A relation with NO get: identities, columns, and a manager that owns its cells — on a branch of its own. */
@@ -163,8 +161,9 @@ public final class RelGridTestDom {
                 };
                 var cells = new Map(), asked = 0, commits = [];
                 var readOnly = opts.readOnly || null;   // the relation's COLUMN constraint
-                // The DOMAIN's branch: every cell's element is minted under it, never under the grid's.
-                var cellsBranch = testBranch(), cellSeq = 0, mints = 0;
+                // The DOMAIN's branch: every cell's element is minted under it, never under the
+                // grid's. Activated here, as a relation activates its own.
+                var cellsBranch = hostBranch(), cellSeq = 0, mints = 0;
                 var relation = {
                     pks:     function () { return Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },

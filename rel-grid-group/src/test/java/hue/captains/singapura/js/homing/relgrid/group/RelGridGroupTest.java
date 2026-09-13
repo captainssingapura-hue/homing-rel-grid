@@ -40,7 +40,7 @@ class RelGridGroupTest extends JsModuleTestBase {
             function relationOf(rows, opts) {
                 opts = opts || {};
                 var data = {}, cells = new Map(), commits = [];
-                var cellsB = testBranch(), seq = 0;                        // the DOMAIN's branch: a sub-branch per cell
+                var cellsB = hostBranch(), seq = 0;                        // the DOMAIN's branch, activated as a relation activates its own: a sub-branch per cell
                 rows.forEach(function (r) { data[r[0]] = { ingredient: r[1], calories: r[2] }; });
                 var relation = {
                     pks:     function () { return Object.keys(data); },
@@ -415,7 +415,9 @@ class RelGridGroupTest extends JsModuleTestBase {
                 (() => {
                     var f = groupFixture();
                     var ta = f.tableOf('a'), b = f.branch;
+                    if (b.isOwnerAlive !== true) return false;                     // the group activated what it was handed
                     if (b.listBranches().sort().join(' ') !== 'grid-0 grid-1 grid-2 grid-header') return false;   // a sub-branch per grid
+                    if (b.getBranch('grid-1').isOwnerAlive !== true) return false;   // and each member's grid its own
                     f.group.destroy();
                     if (f.container.children.length !== 0) return false;
                     if (ta.parentNode !== null || b.branchCount !== 0) return false;   // the members' branches dissolved by the group: the tables released

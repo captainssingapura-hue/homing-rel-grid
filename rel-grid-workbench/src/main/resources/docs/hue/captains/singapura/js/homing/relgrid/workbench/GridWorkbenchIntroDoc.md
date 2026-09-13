@@ -384,8 +384,12 @@ agreeing through the surface every host already uses, and reaches into no member
 - **Members are identities.** A group is `{ branch, members: [{ id, grid, fence? }] }`, each
   `grid` the ordinary options a table alone would take — its relation, its ask, its
   callbacks — verbatim but for the container and the branch, which the group gives it: a
-  sub-branch of the group's own. The member's cursor, selection, copy, handover and the domain
-  its ask reaches are its own. The group observes; it does not route.
+  sub-branch of the group's own, the member's grid to activate. The member's cursor,
+  selection, copy, handover and the domain its ask reaches are its own. The group observes;
+  it does not route.
+- **Two branches, as for a table alone.** The bench makes exactly two under its own: `grid`,
+  handed whole to the group, and `domain`, which the bench divides — a part per relation for
+  its cells, one per fence. Neither side sees the other's; the bench dissolves both.
 - **Fences, not captions.** N members, N+1 slots — one above each member, one trailing — in
   each the domain's fence is placed the way a cell is placed in a slot: `fenceElement()`
   once, an element the fence owns on a branch of the domain's, and `dispose()` is the

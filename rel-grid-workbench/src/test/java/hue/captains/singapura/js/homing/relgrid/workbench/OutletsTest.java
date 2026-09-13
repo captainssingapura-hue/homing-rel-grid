@@ -106,7 +106,7 @@ class OutletsTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var s = ledger();
-                    var h = createOutletRelation(s, 'harbour', { branch: ownBranch() }), d = createOutletRelation(s, 'downtown', { branch: ownBranch() });
+                    var h = createOutletRelation(s, 'harbour', { branch: testBranch() }), d = createOutletRelation(s, 'downtown', { branch: testBranch() });
                     if (h.pks().join(',') !== s.dishes().join(',') || h.columns().join(',') !== 'dish,sold,revenue,lastSale') return false;
                     if (h.readOnlyColumns().join(',') !== 'dish,sold,revenue,lastSale') return false;   // a book is read
                     if (h.name() !== 'Harbour' || h.outlet() !== 'harbour') return false;
@@ -118,7 +118,7 @@ class OutletsTest extends JsModuleTestBase {
                     if (el.textContent !== '372.00') return false;             // Harbour's cell moved
                     if (dl.textContent !== '204.00') return false;             // Downtown's did not
                     if (h.totals().sold !== 92) return false;
-                    try { createOutletRelation(s, 'nowhere', { branch: ownBranch() }); return false; } catch (e) { if (!/unknown outlet/.test(String(e))) return false; }
+                    try { createOutletRelation(s, 'nowhere', { branch: testBranch() }); return false; } catch (e) { if (!/unknown outlet/.test(String(e))) return false; }
                     h.dispose();
                     s.sell('harbour', 'fish', 1);
                     return el.textContent === '372.00' && h.cellCount() === 0;   // disposed: deaf, and empty
@@ -130,13 +130,13 @@ class OutletsTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var s = ledger();
-                    var f = createOutletFence(s, 'harbour', { branch: ownBranch() }), host = makeEl('div');
+                    var f = createOutletFence(s, 'harbour', { branch: testBranch() }), host = makeEl('div');
                     host.appendChild(f.fenceElement());                          // placed, as the group places it
                     if (f.fenceElement() !== host.children[0]) return false;     // a noun: the same element every time
                     if (byClass(host, 'wb-fence-name')[0].textContent !== 'Harbour') return false;
                     var totals = byClass(host, 'wb-fence-totals')[0];
                     if (totals.textContent !== '90 sold \\u00b7 1092.50 taken') return false;
-                    var g = createLedgerFence(s, { branch: ownBranch() }), ghost = makeEl('div');
+                    var g = createLedgerFence(s, { branch: testBranch() }), ghost = makeEl('div');
                     ghost.appendChild(g.fenceElement());
                     if (byClass(ghost, 'wb-fence-name')[0].textContent !== 'All outlets') return false;
                     var all = byClass(ghost, 'wb-fence-totals')[0], before = all.textContent;
@@ -158,7 +158,7 @@ class OutletsTest extends JsModuleTestBase {
                     // The closure a HOST builds a fence with: onto the group's tell. It records what it is told.
                     var told = [];
                     var tell = function (m) { told.push(m); return true; };
-                    var f = createOutletFence(s, 'airport', { branch: ownBranch(), tell: tell }), host = makeEl('div');
+                    var f = createOutletFence(s, 'airport', { branch: testBranch(), tell: tell }), host = makeEl('div');
                     host.appendChild(f.fenceElement());
                     var toggle = byClass(host, 'wb-fence-fold')[0];
                     if (!toggle || toggle.textContent !== '▾' || toggle.getAttribute('aria-expanded') !== 'true') return false;
@@ -177,7 +177,7 @@ class OutletsTest extends JsModuleTestBase {
                     f.onFolded(false);
                     if (toggle.textContent !== '▾') return false;
                     // A fence told it starts folded draws so; one built with no tell at all still draws, and its press is inert.
-                    var g = createOutletFence(s, 'harbour', { branch: ownBranch(), folded: true }), ghost = makeEl('div');
+                    var g = createOutletFence(s, 'harbour', { branch: testBranch(), folded: true }), ghost = makeEl('div');
                     ghost.appendChild(g.fenceElement());
                     if (byClass(ghost, 'wb-fence-fold')[0].textContent !== '▸' || g.folded() !== true) return false;
                     byClass(ghost, 'wb-fence-fold')[0].dispatch('click', {});

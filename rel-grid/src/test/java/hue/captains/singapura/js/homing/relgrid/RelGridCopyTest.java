@@ -443,7 +443,7 @@ class RelGridCopyTest extends JsModuleTestBase {
                 };
                 var FakeBlob = function (parts, o) { this.parts = parts; this.type = o.type; };
                 var FakeItem = function (m) { this.m = m; };
-                var branch = testBranch();
+                var branch = hostBranch();                                     // the grid's, which the grid activated
                 var W = _hrgStockClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc, branch: branch });
                 var outcome = 'pending';
                 W.write(new RelGridClipboardContent('a\\tb', '<b>a</b>')).then(function () { outcome = 'written'; },
@@ -462,7 +462,7 @@ class RelGridCopyTest extends JsModuleTestBase {
                 })()"""), "denied the async API, the writer copies through the command, both forms, and cleans up");
         act("""
                 // Both roads closed: a rejection that says so, never a silence.
-                var noDoc = _hrgStockClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null, branch: testBranch() });
+                var noDoc = _hrgStockClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null, branch: hostBranch() });
                 var outcome2 = 'pending';
                 noDoc.write(new RelGridClipboardContent('x', undefined)).then(function () { outcome2 = 'written'; },
                                                                               function (e) { outcome2 = e.message; });

@@ -7,9 +7,10 @@
 //
 //   new RelGridGroup({
 //       container,          // where the group mounts
-//       branch,             // the group's OWN branch (DomOpsParty): its boxes and fence slots
-//                           // are minted on it, every member's grid gets a sub-branch of it,
-//                           // and dissolving it is the host's
+//       branch,             // the group's OWN branch (DomOpsParty), handed unactivated: the
+//                           // group activates it; its boxes and fence slots are minted on it,
+//                           // every member's grid gets a sub-branch of it to activate as its
+//                           // own, and dissolving it is the host's
 //       members: [{         // in order, top to bottom
 //           id,             // the member's IDENTITY — unique in the group, never empty
 //           grid,           // the ordinary RelGrid options this member is built from:
@@ -217,6 +218,7 @@ class RelGridGroup {
         this._broadcasting = false;                             // a report of the group's own making
         this._destroyed = false;
         this._branch = opts.branch;                             // the group's own; the host dissolves it
+        this._branch.activate(this);
         this._grids = [];                                       // the sub-branches the members' grids were given
 
         this._root = this._branch.createElement("root", "div");
@@ -359,10 +361,9 @@ class RelGridGroup {
         return { box: box, grid: grid };
     }
 
-    /** A sub-branch of the group's for one grid to own, remembered so destroy() dissolves it. */
+    /** A sub-branch of the group's for one grid to own — it activates it — remembered so destroy() dissolves it. */
     _gridBranch(name) {
         var b = this._branch.createBranch("grid-" + name);
-        b.activate(this);
         this._grids.push(b);
         return b;
     }

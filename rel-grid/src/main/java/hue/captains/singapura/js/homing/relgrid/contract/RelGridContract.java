@@ -8,9 +8,10 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * <pre>{@code
  *   new RelGrid({
  *       container,          // where the layout mounts
- *       branch,             // the grid's OWN branch (DomOpsParty): everything the grid mints —
- *                           // chrome, slots, overlays, cell hosts — is on it or a sub-branch
- *                           // of it; one grid per branch, and dissolving it is the host's
+ *       branch,             // the grid's OWN branch (DomOpsParty), handed unactivated: the grid
+ *                           // activates it, and everything it mints — chrome, slots, overlays,
+ *                           // mask — is on it or a sub-branch of it; one grid per branch, and
+ *                           // dissolving it is the host's. A cell's element is never on it.
  *       relation,           // RootRelationContract shape: pks(), columns(), cellFor(pk, column)
  *       label?,             // aria-label for the table
  *       header?,            // { show?: boolean, labels?: {column: text} } — display only

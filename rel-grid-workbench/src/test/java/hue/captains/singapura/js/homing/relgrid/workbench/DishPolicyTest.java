@@ -72,21 +72,17 @@ class DishPolicyTest extends JsModuleTestBase {
                 removeItem: function (k) { delete __mem[k]; }
             };
             var console = console || { error: function () {} };
-            // A branch of the real party for one domain object to own — a relation's
-            // cells, a fence, a panel — as a widget would hand it. Named uniquely.
+            // A branch of the real party for one domain object to own — a relation, a
+            // fence — as a widget hands it: UNACTIVATED, the owner activates. And a
+            // branch the test itself divides, as a widget divides its 'domain': activated.
             var __branchSeq = 0, __branchOwner = { toString: function () { return 'test widget'; } };
-            function testBranch() {
-                var b = domOpsParty.createBranch('t' + (++__branchSeq));
-                b.activate(__branchOwner);
-                return b;
-            }
-            // A branch for ONE object to own — a fence, a cell — unactivated, as an owner hands it.
-            function ownBranch() { return testBranch().createBranch('own'); }
+            function testBranch() { return domOpsParty.createBranch('t' + (++__branchSeq)); }
+            function hostBranch() { var b = testBranch(); b.activate(__branchOwner); return b; }
             """;
 
     /** Owner-side helpers: a relation over its own branch, a cell asked for its element, an edit driven. No grid. */
     private static final String HELPERS = """
-            function relationOf(store, role) { return createDishRelation(store, { role: role, branch: ownBranch() }); }
+            function relationOf(store, role) { return createDishRelation(store, { role: role, branch: testBranch() }); }
             // A cell is a NOUN: asked for its element, as the grid would ask, and nothing rendered into it.
             function mount(rel, pk, col) { var c = rel.cellFor(pk, col); c.cellElement(); return c; }
             // The cell's own half of the two-stage handover. Stage one is the whole

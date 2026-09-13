@@ -36,6 +36,19 @@ value could cross — `relation.get`, `adapter`, `.update(`, `subscribe`, `updat
 `getValue`, `columnMeta`, `compare(`, `commit`, `preview`, `effectiveType` — and fails the
 build on the first one.
 
+## Two branches
+
+A host that composes a grid over a domain makes **exactly two** DomOpsParty branches under its
+own — `grid` and `domain` — and neither side ever sees the other's. `grid` is handed to the
+grid (or the group) whole and unactivated: the grid activates it and mints everything it makes
+on it or a sub-branch of it — chrome, slots, overlays, mask, a member grid's own. `domain` is
+the host's to divide: a part for the relation's cells, one per fence, one for the panels a
+question is answered on; each domain object activates the part it is handed and dissolves it
+on dispose. What crosses between the two is an element: the grid asks a cell for
+`cellElement()` once and places it in a slot, a fence for `fenceElement()`, an editor for
+`editorElement()`, and a domain hands `mask.panel(element)` what it drew. The host creates
+both branches and dissolves both; it activates neither side's own.
+
 ## The RFC 0044 ledger
 
 Every module is a `CONSUMER` under the full DOM-owner discipline (the grid is a component

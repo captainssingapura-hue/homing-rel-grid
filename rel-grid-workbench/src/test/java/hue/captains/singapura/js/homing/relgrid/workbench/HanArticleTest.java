@@ -199,7 +199,7 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore(POEM);
-                    var rel = createHanRelation(store, { cols: 9, capacity: 12, branch: ownBranch() });
+                    var rel = createHanRelation(store, { cols: 9, capacity: 12, branch: testBranch() });
                     // Identities are the CAPACITY; what is presented is the prefix in use.
                     if (rel.pks().length !== 12 || rel.pks()[11] !== 'r11') return false;
                     if (rel.presented().join(',') !== 'r0,r1,r2,r3') return false;
@@ -224,7 +224,7 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore('甲，。乙。');
-                    var rel = createHanRelation(store, { cols: 9, branch: ownBranch() });
+                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
                     // A character: the mark span alone, no halves.
                     var han = mount(rel, 'r0', 'c0');
                     if (inkOf(han) !== '甲' || han._ink.children.length !== 1) return false;
@@ -252,7 +252,7 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore('一二三四五六七八九。乙');
-                    var rel = createHanRelation(store, { cols: 9, branch: ownBranch() });
+                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
                     if (rel.presentedColumns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8,trail') return false;
                     // The trailing cell: narrow, and showing the squeezed mark as one half-box.
                     var t = mount(rel, 'r0', 'trail');
@@ -323,7 +323,7 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore('善哉what也');
-                    var rel = createHanRelation(store, { cols: 9, branch: ownBranch() });
+                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
                     var run = mount(rel, 'r0', 'c2');
                     // The cell answers the reach the grid asks about, and draws itself that wide.
                     if (run.colSpan() !== 2 || !/han-run/.test(run._el.className)) return false;
@@ -349,8 +349,8 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore(POEM);
-                    var a = createHanRelation(store, { cols: 9, branch: ownBranch() });
-                    var b = createHanRelation(store, { cols: 9, branch: ownBranch() });
+                    var a = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    var b = createHanRelation(store, { cols: 9, branch: testBranch() });
                     // Mount a few cells on both, as two grids would have.
                     ['r0','r1','r2','r3'].forEach(function (r) { for (var k = 0; k < 9; k++) { mount(a, r, 'c' + k); mount(b, r, 'c' + k); } });
 
