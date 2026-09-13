@@ -1,5 +1,9 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.core.CssClass;
+import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.util.CssClassName;
+
 /**
  * The headless DOM the e2 tests run on, and the fixture relation they share.
  *
@@ -28,12 +32,36 @@ public final class RelGridTestDom {
             "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
 
     public static final String[] MODULES = {
-            "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
-            "RelGridStockCellsModule.js", "RelGridModule.js" };
+            "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
+            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridLayoutModule.js",
+            "RelGridCellsModule.js", "RelGridStockCellsModule.js",
+            "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
+            "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
     public static final String SELECTION =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/selection/RelGridSelectionModule.js";
+
+    /**
+     * The typed classes a served module would import as handles — {@code var hrg_table = css.cls("hrg-table");}
+     * per record of each group, exactly as the server's CssGroupContentProvider emits them.
+     */
+    public static String handles(CssGroup<?>... groups) {
+        var sb = new StringBuilder();
+        for (CssGroup<?> g : groups)
+            for (CssClass<?> c : g.cssClasses())
+                sb.append("var ").append(c.getClass().getSimpleName())
+                  .append(" = css.cls(\"").append(CssClassName.toCssName(c.getClass())).append("\");\n");
+        return sb.toString();
+    }
+
+    /** The grid's and the stock cell's handles, for every test that loads the grid's modules. */
+    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE);
+
+    /** The DomOpsParty — the real one, from homing-core-js: base first, then the levels and the root singleton. */
+    public static final String[] PARTY = {
+            "/homing/js/hue/captains/singapura/js/homing/core/js/DomOpsPartyBaseModule.js",
+            "/homing/js/hue/captains/singapura/js/homing/core/js/DomOpsPartyModule.js" };
 
     public static final String DOM_STUB = """
             var __focused = null;
@@ -89,6 +117,21 @@ public final class RelGridTestDom {
                         this.children[i] = nu; old.parentNode = null;
                         nu.parentNode = this; return old;
                     },
+                    // What a branch's dissolve calls on every element it owns.
+                    remove: function () { if (this.parentNode) this.parentNode.removeChild(this); },
+                    // What the css manager drives: a classList over the className string.
+                    classList: {
+                        _parts: function () { return el.className ? el.className.split(/\s+/).filter(Boolean) : []; },
+                        _set: function (parts) { el.className = parts.join(' '); },
+                        add: function (c) { var p = this._parts(); if (p.indexOf(c) < 0) { p.push(c); this._set(p); } },
+                        remove: function (c) { this._set(this._parts().filter(function (x) { return x !== c; })); },
+                        contains: function (c) { return this._parts().indexOf(c) >= 0; },
+                        toggle: function (c, force) {
+                            var on = (force === undefined) ? !this.contains(c) : !!force;
+                            if (on) this.add(c); else this.remove(c);
+                            return on;
+                        }
+                    },
                     // Focus moves: the element losing it is told, as in a browser.
                     focus: function () {
                         var prev = __focused; if (prev === this) return;
@@ -121,6 +164,25 @@ public final class RelGridTestDom {
                 parentNode: null
             });
             var console = console || { error: function () {} };
+            // The css manager, as the server injects it into a module that imports typed
+            // classes: handles are { name }, and every class operation goes through here.
+            var css = (function () {
+                function name(c) {
+                    if (!c || typeof c.name !== 'string') throw new Error('Invalid CSS class handle: ' + JSON.stringify(c));
+                    return c.name;
+                }
+                return {
+                    cls: function (n) { return { name: n, toString: function () { return n; } }; },
+                    addClass: function (el) { for (var k = 1; k < arguments.length; k++) el.classList.add(name(arguments[k])); },
+                    removeClass: function (el) { for (var k = 1; k < arguments.length; k++) el.classList.remove(name(arguments[k])); },
+                    toggleClass: function (el, c, force) {
+                        return arguments.length === 3 ? el.classList.toggle(name(c), force) : el.classList.toggle(name(c));
+                    },
+                    setClass: function (el) { el.className = Array.prototype.slice.call(arguments, 1).map(name).join(' '); },
+                    hasClass: function (el, c) { return el.classList.contains(name(c)); },
+                    className: name
+                };
+            })();
             // Fake timers. Armed here, fired by the test, in the order they were
             // due: the grid's mask delay and hold are driven, never waited for.
             var __timers = [], __tid = 0;
@@ -135,9 +197,15 @@ public final class RelGridTestDom {
                 return due.length;
             }
             function pendingTimers() { return __timers.length; }
+            // A branch of the real party for one component to own — a grid, a group, a
+            // relation — as a host hands it: UNACTIVATED, the owner activates. And a
+            // branch the test itself divides, as a host divides its own: activated.
+            var __branchSeq = 0, __branchOwner = { toString: function () { return 'test host'; } };
+            function testBranch() { return domOpsParty.createBranch('t' + (++__branchSeq)); }
+            function hostBranch() { var b = testBranch(); b.activate(__branchOwner); return b; }
             """;
 
-    /** A relation with NO get: identities, columns, and a manager that owns its cells. */
+    /** A relation with NO get: identities, columns, and a manager that owns its cells — on a branch of its own. */
     public static final String FIXTURE = """
             function fixture(opts) {
                 opts = opts || {};
@@ -148,6 +216,9 @@ public final class RelGridTestDom {
                 };
                 var cells = new Map(), asked = 0, commits = [];
                 var readOnly = opts.readOnly || null;   // the relation's COLUMN constraint
+                // The DOMAIN's branch: every cell's element is minted under it, never under the
+                // grid's. Activated here, as a relation activates its own.
+                var cellsBranch = hostBranch(), cellSeq = 0, mints = 0;
                 var relation = {
                     pks:     function () { return Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
@@ -156,6 +227,7 @@ public final class RelGridTestDom {
                         var k = pk + ' ' + col, c = cells.get(k);
                         if (!c) {
                             c = new RelGridTextCell({
+                                branch: cellsBranch.createBranch('c' + (++cellSeq)),   // the cell's own, from the DOMAIN's branch
                                 value: data[pk][col],
                                 // An editable relation: the cell reports to its OWNER, and the
                                 // owner decides — here, accept and set() the cell.
@@ -164,6 +236,9 @@ public final class RelGridTestDom {
                                     relation.change(pk, col, text);
                                 } : undefined
                             });
+                            // The grid asks a cell for its element ONCE: counted here, as the domain would see it.
+                            var element = c.cellElement.bind(c);
+                            c.cellElement = function () { mints++; return element(); };
                             cells.set(k, c);
                         }
                         return c;
@@ -179,8 +254,7 @@ public final class RelGridTestDom {
                         if (c) c.set(v);
                     }
                 };
-                var mints = 0;
-                var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
+                var branch = testBranch();                          // the grid's own, as a host would hand it
                 var container = makeEl('div');
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
                 var written = [], copied = [], handles = [], edges = [];
@@ -312,7 +386,9 @@ public final class RelGridTestDom {
                              return null;
                          },
                          arranged: arranged, moves: moves, started: started, ended: ended, commits: commits, resized: resized,
-                         mints: function () { return mints; }, asked: function () { return asked; } };
+                         // how many times the grid asked a cell for its element: once each, ever
+                         mints: function () { return mints; },
+                         branch: branch, cellsBranch: cellsBranch, asked: function () { return asked; } };
             }
             """;
 }

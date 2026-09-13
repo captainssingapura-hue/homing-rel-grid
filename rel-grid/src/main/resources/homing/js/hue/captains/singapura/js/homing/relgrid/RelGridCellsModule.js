@@ -1,50 +1,50 @@
 // =============================================================================
 // RelGridCellsModule — RFC 0050 · Episode 2's cells branch, grid side. A registry
-// keyed by identity: the host element the grid minted through the handed-in
-// branch, and the cell the domain's manager answered with. Addressed purely by
-// (pk, column); it never sees (i, j) and never touches the layout — the facade
-// hands it layout-owned slots to place into.
+// keyed by identity: the cell the domain's manager answered with, and the
+// ELEMENT that cell owns — asked of it once, through cellElement(), and
+// placed by the grid into a slot the layout minted. The grid mints nothing
+// for a cell: the two branches are independent, and this registry is where
+// the domain's elements are handed to the grid's slots. Addressed purely by
+// (pk, column); it never sees (i, j) and never touches the layout — the
+// facade hands it layout-owned slots to place into.
 //
 // Three rules, each one a law of the episode:
-//   · ensure() asks cellFor ONCE per identity and keeps the instance. The
-//     domain created it; the grid only holds a reference so it can place it.
-//   · Nothing is passed into a cell but its host, and nothing is read out.
+//   · ensure() asks cellFor ONCE per identity and keeps the instance, and
+//     asks cellElement() of it once. The domain created both; the grid only
+//     holds a reference so it can place the element.
+//   · Nothing is passed into a cell, and nothing is read out but its element.
 //   · Nothing is ever disposed. Detach leaves element, instance and state
 //     alive; destroy() detaches everything and forgets — the cells are still
 //     the domain's, and the next grid over the same relation may find them.
 //
-//   new RelGridCells({ branch })
+//   new RelGridCells()
 // =============================================================================
 
 class RelGridCells {
 
-    constructor(opts) {
-        opts = opts || {};
-        if (!opts.branch) throw new Error("[RelGridCells] opts.branch is required");
-        this._branch = opts.branch;
+    constructor() {
         this._entries = new Map();   // "pk col" → { pk, col, cell, el }
-        this._seq = 0;
     }
 
     _key(pk, col) { return pk + " " + col; }
 
     /**
-     * The entry for (pk, col): minted on first ask — a host element through
-     * the branch, the cell from the manager, one render(host) — and returned
+     * The entry for (pk, col): on first ask, the cell from the manager and
+     * its element from the cell — one cellElement(), kept — and returned
      * untouched on every ask after. Idempotent by identity.
      */
     ensure(pk, col, cellFor) {
         var k = this._key(pk, col);
         var entry = this._entries.get(k);
         if (entry) return entry;
-        var el = this._branch.createElement("cell" + (++this._seq), "div");
         var cell = cellFor(pk, col);
-        if (!cell || typeof cell.render !== "function")
-            throw new Error("[RelGridCells] cellFor(" + pk + ", " + col + ") must answer a cell with render(host)");
+        if (!cell || typeof cell.cellElement !== "function")
+            throw new Error("[RelGridCells] cellFor(" + pk + ", " + col + ") must answer a cell with cellElement()");
+        var el = cell.cellElement();
+        if (!el || typeof el !== "object" || typeof el.appendChild !== "function")
+            throw new Error("[RelGridCells] cellElement() of (" + pk + ", " + col + ") must answer an element");
         entry = { pk: pk, col: col, cell: cell, el: el };
         this._entries.set(k, entry);
-        try { cell.render(el); }
-        catch (e) { console.error("[RelGridCells] cell.render threw:", e); }
         return entry;
     }
 

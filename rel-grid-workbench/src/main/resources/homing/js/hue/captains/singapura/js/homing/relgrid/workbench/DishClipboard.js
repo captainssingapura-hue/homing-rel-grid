@@ -1,71 +1,27 @@
 // =============================================================================
-// DishClipboard — what a selection of dishes is WORTH on a clipboard, and the
-// panel a person chooses that on. DOMAIN CODE, and the bench's answer to the
-// first question the grid waits for (RFC 0050 · Episode 2, map 6 and ext6).
+// DishClipboard — the panel a person chooses a copy's FORMAT on. DOMAIN CODE,
+// and the bench's answer to the first question the grid waits for (RFC 0050 ·
+// Episode 2, map 6 and ext6).
 //
 // The grid asked with IDENTITIES — one block per range, pks down and columns
-// across — and it will write whatever comes back. Everything between those
-// two is here: reading the relation's own cells, composing three forms, and
-// drawing the choice on the panel the grid minted.
+// across — and it will write whatever comes back. What comes back is composed
+// by DishClipboardFormats (pure logic: the three forms over the relation's
+// own cells); what is here is the choice, drawn for the grid's panel.
 //
-//   dishClipboardContent(relation, blocks, format, { headers? })
-//       → RelGridClipboardContent          format: 'tsv' | 'csv' | 'html'
-//   dishCopyPanel(relation, question, host, { onChosen? })
+//   dishCopyPanel(relation, question, mask, { branch, onChosen? })
 //       → Promise<RelGridClipboardContent | undefined>
-//
-// The copier reads CELLS, not the store (map 6 law 48): a cell knows what it
-// is worth on a clipboard better than a store does, which is exactly what the
-// rating proves. In text it is a number, because that is what a spreadsheet
-// can add up; in HTML it is the stars a person saw, because that is what they
-// meant to copy. A cell that offers clipboardHtml() is taken at its word;
-// one that does not is escaped.
 //
 // The panel is the grid's BOX and this file's CONTENT. Its size was decided
 // by the grid — a golden rectangle over the table — and nothing here reads or
-// changes it; this fills it. The person's choice settles the promise: content
-// for a format, nothing for Cancel or Escape. The grid never learns which.
+// changes it; this HANDS the grid an element, mask.panel(element), minted on
+// a branch of its own for the session — a sub-branch of the branch the host
+// gave — and the grid places it in the box. The person's choice settles the
+// promise: content for a format, nothing for Cancel or Escape; then the
+// session's branch is dissolved, and the grid takes its box down. The grid
+// never learns which.
 // =============================================================================
 
-var _WB_COPY_STYLE_ID = "bench-copy-style";
-// Laid out for the SMALLEST box the grid will mint — 320 × 198 — because a
-// wide, short table binds the panel's height at a fifth of a short host, and
-// a panel that only works in a generous box is not a panel for a bench.
-var _WB_COPY_CSS = [
-    ".wb-copy{display:flex;flex-direction:column;gap:6px;height:100%;box-sizing:border-box;",
-    "  padding:10px 14px;font:12px sans-serif;outline:none;}",
-    ".wb-copy-head{display:flex;align-items:baseline;gap:8px;white-space:nowrap;overflow:hidden;}",
-    ".wb-copy-title{font-size:14px;font-weight:600;}",
-    ".wb-copy-sub{color:var(--color-text-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;}",
-    ".wb-copy-opts{display:flex;gap:6px;}",
-    ".wb-copy-opt{flex:1 1 0;padding:5px 0;border:1px solid var(--color-border);border-radius:5px;",
-    "  background:var(--color-surface);color:var(--color-text-primary);cursor:pointer;",
-    "  font:inherit;font-weight:600;letter-spacing:0.5px;text-align:center;}",
-    ".wb-copy-opt:hover,.wb-copy-opt:focus{border-color:var(--color-accent);outline:none;",
-    "  box-shadow:0 0 0 2px color-mix(in srgb, var(--color-accent) 35%, transparent);}",
-    // One line, for whichever format is under the focus or the pointer.
-    ".wb-copy-hint{color:var(--color-text-muted);font-size:11px;white-space:nowrap;overflow:hidden;",
-    "  text-overflow:ellipsis;}",
-    ".wb-copy-preview{flex:1 1 auto;min-height:0;overflow:hidden;margin:0;padding:4px 8px;",
-    "  border:1px dashed var(--color-border);border-radius:4px;",
-    "  font:10px/1.35 monospace;white-space:pre;color:var(--color-text-muted);}",
-    ".wb-copy-foot{display:flex;align-items:center;gap:10px;color:var(--color-text-muted);font-size:10px;",
-    "  white-space:nowrap;}",
-    ".wb-copy-foot label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--color-text-primary);",
-    "  font-size:11px;}",
-    ".wb-copy-foot input{margin:0;}",
-    ".wb-copy-keys{flex:1 1 auto;text-align:right;overflow:hidden;text-overflow:ellipsis;}",
-    ".wb-copy-cancel{font:inherit;font-size:11px;padding:2px 9px;border:1px solid var(--color-border);",
-    "  border-radius:4px;background:transparent;color:var(--color-text-primary);cursor:pointer;}"
-].join("\n");
-
-function _wbCopyEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById(_WB_COPY_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _WB_COPY_STYLE_ID;
-    s.textContent = _WB_COPY_CSS;
-    document.head.appendChild(s);
-}
+// THE LOOKS ARE TYPED — DishCopyStyles, applied through the css manager.
 
 var _WB_COPY_FORMATS = [
     { key: "tsv",  label: "TSV",  hint: "tab-separated — pastes into a spreadsheet",  hotkey: "t" },
@@ -73,84 +29,9 @@ var _WB_COPY_FORMATS = [
     { key: "html", label: "HTML", hint: "a table — and the stars stay stars",         hotkey: "h" }
 ];
 
-/** A field for a delimited line: quoted only when it has to be, RFC 4180 style. */
-function _wbDelimited(v, delim) {
-    var s = (v == null) ? "" : String(v);
-    var must = s.indexOf(delim) >= 0 || s.indexOf('"') >= 0 || s.indexOf("\n") >= 0 || s.indexOf("\r") >= 0;
-    return must ? '"' + s.replace(/"/g, '""') + '"' : s;
-}
-
-function _wbEscapeHtml(v) {
-    return String(v == null ? "" : v)
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-/** What the relation's OWN cell says it holds. Identities in, worth out. */
-function _wbCellOf(relation, pk, col) { return relation.cellFor(pk, col); }
-function _wbCellText(cell) {
-    var v = (cell && typeof cell.value === "function") ? cell.value() : null;
-    return (v == null) ? "" : v;
-}
-function _wbCellHtml(cell) {
-    if (cell && typeof cell.clipboardHtml === "function") return cell.clipboardHtml();
-    return _wbEscapeHtml(_wbCellText(cell));
-}
-
-function _wbHtmlTable(relation, block, headers) {
-    var out = ['<table style="border-collapse:collapse;font:13px sans-serif">'];
-    if (headers) {
-        out.push("<thead><tr>");
-        for (var c = 0; c < block.columns.length; c++)
-            out.push('<th style="text-align:left;padding:2px 8px;border-bottom:1px solid #999">'
-                     + _wbEscapeHtml(block.columns[c]) + "</th>");
-        out.push("</tr></thead>");
-    }
-    out.push("<tbody>");
-    for (var r = 0; r < block.pks.length; r++) {
-        out.push("<tr>");
-        for (var k = 0; k < block.columns.length; k++) {
-            var cell = _wbCellOf(relation, block.pks[r], block.columns[k]);
-            var numeric = typeof _wbCellText(cell) === "number";
-            out.push('<td style="padding:2px 8px' + (numeric ? ";text-align:right" : "") + '">'
-                     + _wbCellHtml(cell) + "</td>");
-        }
-        out.push("</tr>");
-    }
-    out.push("</tbody></table>");
-    return out.join("");
-}
-
-/**
- * The content, composed. Text is always there — TSV for 'tsv' and 'html'
- * alike, since a spreadsheet takes tabs from text/plain, and CSV for 'csv'.
- * HTML rides beside it only for 'html'. Blocks are kept apart: a blank line
- * in text, a table each in HTML. Nothing is refused here; the bench copies
- * any shape it is handed and lets the paste target make of it what it will.
- */
-function dishClipboardContent(relation, blocks, format, opts) {
-    opts = opts || {};
-    var headers = opts.headers !== false;
-    var delim = (format === "csv") ? "," : "\t";
-    var textParts = [], htmlParts = [];
-    for (var b = 0; b < blocks.length; b++) {
-        var block = blocks[b], lines = [], row, c;
-        if (headers) {
-            row = [];
-            for (c = 0; c < block.columns.length; c++) row.push(_wbDelimited(block.columns[c], delim));
-            lines.push(row.join(delim));
-        }
-        for (var r = 0; r < block.pks.length; r++) {
-            row = [];
-            for (c = 0; c < block.columns.length; c++)
-                row.push(_wbDelimited(_wbCellText(_wbCellOf(relation, block.pks[r], block.columns[c])), delim));
-            lines.push(row.join(delim));
-        }
-        textParts.push(lines.join("\n"));
-        if (format === "html") htmlParts.push(_wbHtmlTable(relation, block, headers));
-    }
-    return new RelGridClipboardContent(textParts.join("\n\n"),
-                                       (format === "html") ? htmlParts.join("\n") : undefined);
-}
+// WHAT IS WRITTEN is composed elsewhere: dishClipboardContent, in
+// DishClipboardFormats — pure logic, no DOM — is what the preview shows and
+// what a choice answers with. This module draws the choice, and nothing else.
 
 function _wbBlocksCells(blocks) {
     var n = 0;
@@ -158,17 +39,22 @@ function _wbBlocksCells(blocks) {
     return n;
 }
 
+var _wbCopySeq = 0;
+
 /**
- * The choice, drawn on the grid's panel. Three formats, a header toggle, a
+ * The choice, handed to the grid's panel. Three formats, a header toggle, a
  * live preview of what the chosen format would write, and Cancel. Keys: T, C,
  * H choose; ← → move between the formats; Enter takes the focused one; Escape
- * cancels. Settles ONCE — content or nothing — and the grid takes the panel
- * down; nothing here needs to clean up after itself.
+ * cancels. Settles ONCE — content or nothing — dissolves its own branch, and
+ * the grid takes the box down.
  */
-function dishCopyPanel(relation, question, host, opts) {
+function dishCopyPanel(relation, question, mask, opts) {
     opts = opts || {};
+    if (!opts.branch) throw new Error("[DishClipboard] opts.branch is required: the panel's own");
     var blocks = question.blocks, cells = _wbBlocksCells(blocks);
-    _wbCopyEnsureStyle();
+    var b = opts.branch.createBranch("copy-" + (++_wbCopySeq));   // this session's, dissolved with it
+    b.activate({ toString: function () { return "dishCopyPanel"; } });
+    var mint = function (name, tag) { return b.createElement(name, tag); };
 
     return new Promise(function (resolve) {
         var settled = false;
@@ -176,6 +62,7 @@ function dishCopyPanel(relation, question, host, opts) {
             if (settled) return;
             settled = true;
             resolve(content);
+            b.dissolve();                                     // the elements go; the grid's box follows
         }
         function choose(format) {
             if (settled) return;
@@ -184,30 +71,31 @@ function dishCopyPanel(relation, question, host, opts) {
             settle(content);
         }
 
-        var root = document.createElement("div");
-        root.className = "wb-copy";
+        var root = mint("root", "div");
+        css.addClass(root, wb_copy);
         root.tabIndex = -1;
 
-        var head = document.createElement("div");
-        head.className = "wb-copy-head";
-        var title = document.createElement("span");
-        title.className = "wb-copy-title";
+        var head = mint("head", "div");
+        css.addClass(head, wb_copy_head);
+        var title = mint("title", "span");
+        css.addClass(title, wb_copy_title);
         title.textContent = "Copy " + cells + (cells === 1 ? " cell" : " cells");
-        var sub = document.createElement("span");
-        sub.className = "wb-copy-sub";
+        var sub = mint("sub", "span");
+        css.addClass(sub, wb_copy_sub);
         sub.textContent = blocks.length + (blocks.length === 1 ? " range" : " ranges")
                         + " · " + relation.role() + "’s table · the grid is waiting";
         head.appendChild(title); head.appendChild(sub);
         root.appendChild(head);
 
-        var opts_ = document.createElement("div");
-        opts_.className = "wb-copy-opts";
+        var opts_ = mint("formats", "div");
+        css.addClass(opts_, wb_copy_opts);
         var buttons = [];
-        var hint = document.createElement("div");
-        hint.className = "wb-copy-hint";
-        var preview = document.createElement("pre");
-        preview.className = "wb-copy-preview";
-        var headersBox = document.createElement("input");
+        var hint = mint("hint", "div");
+        css.addClass(hint, wb_copy_hint);
+        var preview = mint("preview", "pre");
+        css.addClass(preview, wb_copy_preview);
+        var headersBox = mint("headers", "input");
+        css.addClass(headersBox, wb_copy_check);
         headersBox.type = "checkbox";
         headersBox.checked = true;
         var shown = "tsv";                              // the format the preview shows
@@ -223,8 +111,8 @@ function dishCopyPanel(relation, question, host, opts) {
         }
 
         _WB_COPY_FORMATS.forEach(function (f, idx) {
-            var btn = document.createElement("button");
-            btn.className = "wb-copy-opt";
+            var btn = mint("format-" + f.key, "button");
+            css.addClass(btn, wb_copy_opt, wb_copy_opt_hot);
             btn.type = "button";
             btn.format = f.key;                           // a property, so a test can read it back
             btn.textContent = f.label;
@@ -238,18 +126,19 @@ function dishCopyPanel(relation, question, host, opts) {
         root.appendChild(hint);
         root.appendChild(preview);
 
-        var foot = document.createElement("div");
-        foot.className = "wb-copy-foot";
-        var label = document.createElement("label");
+        var foot = mint("foot", "div");
+        css.addClass(foot, wb_copy_foot);
+        var label = mint("headers-label", "label");
+        css.addClass(label, wb_copy_label);
         label.appendChild(headersBox);
-        var lt = document.createElement("span"); lt.textContent = "column headers";
+        var lt = mint("headers-text", "span"); lt.textContent = "column headers";
         label.appendChild(lt);
         headersBox.addEventListener("change", function () { showPreview(shown); });
-        var keys = document.createElement("span");
-        keys.className = "wb-copy-keys";
+        var keys = mint("keys", "span");
+        css.addClass(keys, wb_copy_keys);
         keys.textContent = "T·C·H  ←→  Enter  Esc";
-        var cancel = document.createElement("button");
-        cancel.className = "wb-copy-cancel";
+        var cancel = mint("cancel", "button");
+        css.addClass(cancel, wb_copy_cancel);
         cancel.type = "button";
         cancel.textContent = "Cancel";
         cancel.addEventListener("click", function () { settle(undefined); });
@@ -285,7 +174,7 @@ function dishCopyPanel(relation, question, host, opts) {
             }
         });
 
-        host.appendChild(root);
+        mask.panel(root);                                     // the grid places it in its box
         showPreview("tsv");
         if (buttons[0].focus) buttons[0].focus();
     });

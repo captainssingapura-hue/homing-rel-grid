@@ -9,7 +9,12 @@
 // translates j to a column, bounds the request, holds it, applies it. That
 // split is map 7's capture rule: the gesture MINTS; it never applies.
 //
-//   new RelGridHeaderDrag({ table, onColResize(j, px), heldWidth?(j), extent? }).wire(th, j)
+//   new RelGridHeaderDrag({ branch, table, onColResize(j, px), heldWidth?(j), extent? }).wire(th, j, branch)
+//
+// Every element here is minted through the DomOpsParty: the handle on the
+// branch the layout minted the header on — it goes when the header goes —
+// and the guide's segments on a sub-branch of the grid's own, made for the
+// gesture and dissolved with it.
 //
 // A drag starts from the width the column HOLDS when it holds one — what is
 // seen is what the browser made of it, and a fixed layout in a wider box
@@ -52,18 +57,22 @@ class RelGridHeaderDrag {
     constructor(opts) {
         opts = opts || {};
         if (!opts.table) throw new Error("[RelGridHeaderDrag] opts.table is required");
+        if (!opts.branch) throw new Error("[RelGridHeaderDrag] opts.branch is required");
         this._table = opts.table;
+        this._branch = opts.branch;                            // the grid's own: the guide's segments are minted under it
+        this._seq = 0;                                         // one sub-branch per gesture
         this._onColResize = opts.onColResize || null;
         this._heldWidth = opts.heldWidth || null;              // (j) → px | null: the width held, if any
         this._extent = opts.extent || null;                    // what the guide spans — an element or a list; the table when absent
     }
 
-    /** Wire the resize handle onto a freshly minted header cell. */
-    wire(th, j) {
+    /** Wire the resize handle onto a freshly minted header cell, on the branch the cell was minted on. */
+    wire(th, j, branch) {
         if (!this._onColResize) return this;
+        if (!branch) throw new Error("[RelGridHeaderDrag] wire(th, j, branch): the header's branch is required");
         var self = this;
-        var handle = document.createElement("span");
-        handle.className = "hrg-resize-handle";
+        var handle = branch.createElement("handle-" + j, "span");
+        css.addClass(handle, hrg_resize_handle);
         th.appendChild(handle);
         handle.addEventListener("mousedown", function (e) {
             var rect = th.getBoundingClientRect ? th.getBoundingClientRect() : null;
@@ -79,30 +88,33 @@ class RelGridHeaderDrag {
     /**
      * The guide: one segment of line per box of the extent, each down what is
      * SEEN of its box — not past the pane, and not across whatever sits
-     * between two boxes. Answers the list of segments; empty when headless.
+     * between two boxes. Answers the segments on a branch of their own, so the
+     * gesture's end dissolves them; none when headless.
      */
     _makeGuide(atX) {
         var over = this._extent || this._table;
         var boxes = Array.isArray(over) ? over : [over], out = [];
-        if (!document.body) return out;
+        var branch = this._branch.createBranch("guide-" + (++this._seq));
+        branch.activate(this);
+        if (!document.body) return { branch: branch, els: out };
         for (var k = 0; k < boxes.length; k++) {
             if (!boxes[k] || !boxes[k].getBoundingClientRect) continue;
             var span = _hrgSeenSpan(boxes[k]);
             if (span.height <= 0) continue;                    // out of view: no segment
-            var guide = document.createElement("div");
-            guide.className = "hrg-resize-guide";
+            var guide = branch.createElement("segment-" + k, "div");
+            css.addClass(guide, hrg_resize_guide);
             guide.style.setProperty("--hrg-guide-top", span.top + "px");
             guide.style.setProperty("--hrg-guide-h", span.height + "px");
             guide.style.setProperty("--hrg-guide-x", atX + "px");
             document.body.appendChild(guide);
             out.push(guide);
         }
-        return out;
+        return { branch: branch, els: out };
     }
 
     _start(j, startW, startX) {
         var self = this, lastX = startX;
-        var guides = this._makeGuide(startX);
+        var guide = this._makeGuide(startX), guides = guide.els;
         function onMove(e) {
             lastX = e.clientX;
             for (var k = 0; k < guides.length; k++) guides[k].style.setProperty("--hrg-guide-x", lastX + "px");
@@ -111,8 +123,7 @@ class RelGridHeaderDrag {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
             document.removeEventListener("keydown", onKey, true);
-            for (var k = 0; k < guides.length; k++)
-                if (guides[k].parentNode) guides[k].parentNode.removeChild(guides[k]);
+            guide.branch.dissolve();                           // the segments go with their branch
         }
         // One request, on release. Whole pixels: a header's rect is fractional
         // and a request is something a host may keep — normalisation only

@@ -18,9 +18,10 @@ import java.util.List;
  * an order each, over the store's values. {@code createDishViews(store)} is
  * one table's memory of which profile it is under, and computes any profile's
  * View over the store as it is now. {@code dishViewPanel(views, question,
- * host)} draws the list on the panel the grid minted and answers a promise —
- * a {@code RelGridView} for the chosen profile, nothing for Cancel — that
- * the grid presents exactly as given.</p>
+ * mask, { branch })} mints the list on a branch of its own, hands it to the
+ * grid's panel — {@code mask.panel(element)} — and answers a promise — a
+ * {@code RelGridView} for the chosen profile, nothing for Cancel — that the
+ * grid presents exactly as given.</p>
  *
  * <p>The explanation lives here: the grid holds nothing about why its rows
  * are in this order, and {@code views.describe()} is the one line that says
@@ -41,6 +42,13 @@ public record DishViews() implements DomModule<DishViews> {
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridView()),
                         RelGridProtocolModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new DishViewStyles.wb_view(), new DishViewStyles.wb_view_head(),
+                        new DishViewStyles.wb_view_title(), new DishViewStyles.wb_view_sub(), new DishViewStyles.wb_view_list(),
+                        new DishViewStyles.wb_view_item(), new DishViewStyles.wb_view_item_end(), new DishViewStyles.wb_view_item_hot(),
+                        new DishViewStyles.wb_view_held(), new DishViewStyles.wb_view_tick(), new DishViewStyles.wb_view_num(),
+                        new DishViewStyles.wb_view_label(), new DishViewStyles.wb_view_rule(), new DishViewStyles.wb_view_count(),
+                        new DishViewStyles.wb_view_foot(), new DishViewStyles.wb_view_keys(), new DishViewStyles.wb_view_cancel()),
+                        DishViewStyles.INSTANCE))
                 .build();
     }
 

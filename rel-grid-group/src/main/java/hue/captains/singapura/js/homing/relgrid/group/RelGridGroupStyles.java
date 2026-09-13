@@ -1,0 +1,123 @@
+package hue.captains.singapura.js.homing.relgrid.group;
+
+import hue.captains.singapura.js.homing.core.CssClass;
+import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.CssImportsFor;
+
+import java.util.List;
+
+/**
+ * RFC 0050 · Episode 2 — the GROUP's looks, typed: the column of boxes, the
+ * fence slots, and the states the group paints. Nothing here reaches into a
+ * member's slots with a selector: ONE CURSOR is kept by painting a member
+ * DORMANT — a class on its box that sets the grid's own published properties
+ * ({@code --hrg-cursor-color}, {@code --hrg-sel-color}) to transparent, which
+ * every slot beneath inherits. A fence that is the stop wears the grid's
+ * {@code hrg_lit} as well, so its outline lights under the focus the same way
+ * a table's cursor does.
+ */
+public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
+
+    public static final RelGridGroupStyles INSTANCE = new RelGridGroupStyles();
+
+    /** The column: member boxes and fence slots, stacked. */
+    public record hrg_group() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                """;
+        }
+    }
+
+    /** A member's box: the grid it holds mounts inside. */
+    public record hrg_member() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                flex: 0 0 auto;
+                """;
+        }
+    }
+
+    /** The group's own header, in 'group' mode: a table with nothing to present, at the very top. */
+    public record hrg_group_header() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                flex: 0 0 auto;
+                """;
+        }
+    }
+
+    /** A fence slot: the domain's element is placed in it. A Tab stop by the group's hand, with no outline of its own. */
+    public record hrg_fence() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                flex: 0 0 auto;
+                outline: none;
+                """;
+        }
+    }
+
+    /** A slot nobody filled takes no height. */
+    public record hrg_fence_empty() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                display: none;
+                """;
+        }
+    }
+
+    /** A folded member: its box hidden, the table inside untouched. */
+    public record hrg_folded() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                display: none;
+                """;
+        }
+    }
+
+    /** The fence above a folded member wears the fact, for a domain that draws its control from it. A predicate. */
+    public record hrg_fence_folded() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return ""; }
+    }
+
+    /** The active member — the one whose cursor is the group's. A predicate. */
+    public record hrg_active() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return ""; }
+    }
+
+    /**
+     * A member that is not active, or any member while a fence is the stop:
+     * its cursor and selection are still there and simply not shown, through
+     * the grid's own properties, inherited by every slot beneath the box.
+     */
+    public record hrg_dormant() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                --hrg-cursor-color: transparent;
+                --hrg-sel-color: transparent;
+                """;
+        }
+    }
+
+    /**
+     * A fence that is the cursor wears the cell's mark: the same outline a
+     * slot wears, in the same colour — dim at rest, full accent with the focus
+     * through {@code hrg_lit} — so the eye follows one mark down the group.
+     */
+    public record hrg_fence_cursor() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return """
+                outline: 2px solid var(--hrg-cursor-color, color-mix(in srgb, var(--color-accent) 45%, var(--color-border)));
+                outline-offset: -2px;
+                transition: outline-color .18s ease;
+                """;
+        }
+    }
+
+    /** The cursor is on a fence: worn by the root. A predicate. */
+    public record hrg_on_fence() implements CssClass<RelGridGroupStyles> {
+        @Override public String body() { return ""; }
+    }
+
+    @Override public CssImportsFor<RelGridGroupStyles> cssImports() { return CssImportsFor.none(this); }
+
+    @Override public List<CssClass<RelGridGroupStyles>> cssClasses() {
+        return List.of(new hrg_group(), new hrg_member(), new hrg_group_header(), new hrg_fence(),
+                       new hrg_fence_empty(), new hrg_folded(), new hrg_fence_folded(), new hrg_active(),
+                       new hrg_dormant(), new hrg_fence_cursor(), new hrg_on_fence());
+    }
+}

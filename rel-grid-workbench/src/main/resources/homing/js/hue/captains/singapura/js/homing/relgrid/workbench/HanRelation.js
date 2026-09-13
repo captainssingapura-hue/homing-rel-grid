@@ -3,8 +3,11 @@
 // HanLayout into rows of square slots, and a CELL MANAGER that owns one
 // HanCell per slot. DOMAIN CODE; the word "grid" does not appear in it.
 //
-//   createHanRelation(store, { cols?, capacity? })
+//   createHanRelation(store, { branch, cols?, capacity? })
 //
+//   · branch is the relation's OWN — unactivated when handed; it activates,
+//     and dispose() dissolves — and every cell is given a sub-branch of it to
+//     own. The grid that places the cells never sees it.
 //   · pks() are ROWS — all of them, up to the CAPACITY, 'r0'…'r{capacity-1}';
 //     columns() are 'lead', the squares 'c0'…'c{cols-1}', and 'trail' — the
 //     two HALF-SQUARE columns declared always and shown only when some row
@@ -33,6 +36,9 @@
 
 function createHanRelation(store, opts) {
     opts = opts || {};
+    if (!opts.branch) throw new Error("[HanRelation] opts.branch is required: the relation's own");
+    var branch = opts.branch, cellSeq = 0;
+    branch.activate({ toString: function () { return "HanRelation"; } });         // its own: unactivated when handed
     var cols = (opts.cols > 0) ? opts.cols : 9;
     var capacity = (opts.capacity > 0) ? opts.capacity : 200;   // rows the article may grow to
     var cells = new Map();
@@ -83,7 +89,8 @@ function createHanRelation(store, opts) {
             var key = pk + " " + col, cell = cells.get(key);
             if (!cell) {
                 var s = slotOf(pk, col);
-                cell = new HanCell({ glyph: s ? s.glyph : null, span: s ? s.span : 1,
+                cell = new HanCell({ branch: branch.createBranch("c" + (++cellSeq)),
+                                     glyph: s ? s.glyph : null, span: s ? s.span : 1,
                                      narrow: col === "lead" || col === "trail" });
                 cells.set(key, cell);
             }
@@ -100,6 +107,7 @@ function createHanRelation(store, opts) {
             unsubscribe();
             cells.forEach(function (c) { c.dispose(); });
             cells.clear();
+            branch.dissolve();
         }
     };
 }

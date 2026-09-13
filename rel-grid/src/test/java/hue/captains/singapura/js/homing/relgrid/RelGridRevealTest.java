@@ -44,6 +44,8 @@ class RelGridRevealTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);

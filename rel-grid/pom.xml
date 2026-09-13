@@ -66,6 +66,14 @@
             <version>${homing.core.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The real DomOpsParty: every element the grid mints is minted on a
+             branch of it, and the tests hold it to that with the real thing. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core-js</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

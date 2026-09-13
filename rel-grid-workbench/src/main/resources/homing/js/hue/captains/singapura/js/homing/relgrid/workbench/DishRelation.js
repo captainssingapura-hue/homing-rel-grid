@@ -3,7 +3,9 @@
 // a CELL MANAGER. This is the domain's whole side of the seam, and the word
 // "grid" does not appear in it.
 //
-//   createDishRelation(store, { role })     role: chef | nutritionist | manager | follower
+//   createDishRelation(store, { role, branch })   role: chef | nutritionist | manager | follower;
+//                                                  branch: the relation's OWN (unactivated when handed;
+//                                                  it activates, and dispose() dissolves) — a sub-branch per cell
 //   dishRoles()                             the policy: which columns each role may edit
 //
 //   · cellFor(pk, col) builds a cell ONCE per identity and keeps it — a
@@ -39,6 +41,9 @@ function createDishRelation(store, opts) {
     opts = opts || {};
     var role = opts.role || 'follower';
     if (!DISH_ROLES[role]) throw new Error('[DishRelation] unknown role: ' + role);
+    if (!opts.branch) throw new Error("[DishRelation] opts.branch is required: the relation's own");
+    var branch = opts.branch, cellSeq = 0;
+    branch.activate({ toString: function () { return 'DishRelation ' + role; } });   // its own: unactivated when handed
     // The role says who; the store says what may be written at all. Both must agree.
     var writable = store.writableColumns();
     var editable = DISH_ROLES[role].filter(function (c) { return writable.indexOf(c) >= 0; });
@@ -82,9 +87,10 @@ function createDishRelation(store, opts) {
                 var commit = mayEdit(col)
                     ? function (text) { store.commit(pk, col, coerce(col, text)); }
                     : undefined;
+                var own = branch.createBranch('c' + (++cellSeq));      // the cell's own branch, to mint its element on
                 c = (col === 'stars')
-                    ? new DishStarsCell({ value: store.get(pk, col), onCommit: commit })
-                    : new RelGridTextCell({ value: store.get(pk, col), onCommit: commit });
+                    ? new DishStarsCell({ branch: own, value: store.get(pk, col), onCommit: commit })
+                    : new RelGridTextCell({ branch: own, value: store.get(pk, col), onCommit: commit });
                 cells.set(k, c);
             }
             return c;
@@ -96,6 +102,7 @@ function createDishRelation(store, opts) {
             unsubscribe();
             cells.forEach(function (c) { c.dispose(); });
             cells.clear();
+            branch.dissolve();
         }
     };
 }

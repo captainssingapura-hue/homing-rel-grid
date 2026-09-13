@@ -22,9 +22,19 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  *
  * <p>N members, N+1 slots: one above each member, addressed by that member,
  * and one trailing, addressed by nothing ({@link #fence(String)} with null).
- * Each is handed to the domain's {@link RelGridFenceContract fence cell} as a
- * table hands a slot to a cell; a slot nobody fills takes no height. The
- * group knows no caption.</p>
+ * In each the group places the domain's {@link RelGridFenceContract fence
+ * cell}'s own element, as a table places a cell's element in a slot; a slot
+ * nobody fills takes no height. The group knows no caption.</p>
+ *
+ * <h2>Its branch</h2>
+ *
+ * <p>The group is handed a DomOpsParty branch of its own — {@code branch},
+ * unactivated; the group activates it — and mints nothing raw: its root, the
+ * members' boxes and the fence slots are minted on it, and every member's
+ * grid (and the group's header grid) is given a sub-branch of it to activate
+ * as its own, so a member spec carries no branch. {@code destroy()} dissolves
+ * the sub-branches; the branch itself is the host's to dissolve, which is
+ * what releases the boxes and slots.</p>
  *
  * <h2>What is shared: column geometry</h2>
  *

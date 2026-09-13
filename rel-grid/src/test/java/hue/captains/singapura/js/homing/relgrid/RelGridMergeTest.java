@@ -28,20 +28,21 @@ class RelGridMergeTest extends JsModuleTestBase {
                     cellFor: function (pk, col) {
                         asked.push(pk + ' ' + col);
                         var key = pk + ' ' + col;
+                        var el = makeEl('div'); el.textContent = key;              // the domain's own element
+                        var ed = makeEl('div'); ed.textContent = 'editing ' + key;  // and its editor
                         return {
-                            _el: null,
-                            render:  function (host) { this._el = host; host.textContent = key; },
+                            cellElement: function () { return el; },
                             onSelect: function () {},
                             dispose: function () {},
                             colSpan: function () { return spans[key] || 1; },
                             mayTakeControl: function () { return true; },
-                            takeControl: function (host) { taken.push(key); host.textContent = 'editing ' + key; return new Promise(function () {}); }
+                            editorElement: function () { return ed; },
+                            takeControl: function () { taken.push(key); return new Promise(function () {}); }
                         };
                     }
                 };
-                var branch = { createElement: function (n, t) { return makeEl(t); } };
                 var container = makeEl('div');
-                var grid = new RelGrid({ container: container, branch: branch, relation: relation,
+                var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation,
                                          mergedCells: opts.mergedCells === true });
                 function wrap() { return container.children[0]; }
                 function table() { return wrap().children[0]; }
@@ -62,6 +63,8 @@ class RelGridMergeTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
@@ -102,8 +105,8 @@ class RelGridMergeTest extends JsModuleTestBase {
                     f.td(0, 3)._rl = 300; f.td(0, 3)._rr = 400;
                     f.grid.setColumnWidth('a', 50);                                  // any resize re-measures
                     var st = f.groups()[0].style;
-                    return st.getPropertyValue('left') === '100px' && st.getPropertyValue('width') === '300px'
-                        && st.getPropertyValue('height') === '20px';
+                    return st.getPropertyValue('--hrg-left') === '100px' && st.getPropertyValue('--hrg-width') === '300px'
+                        && st.getPropertyValue('--hrg-height') === '20px';
                 })()"""), "the leading cell is placed in a host over its slots; every slot keeps its cell");
     }
 
@@ -173,7 +176,7 @@ class RelGridMergeTest extends JsModuleTestBase {
                     if (!f.grid.takeControlAtCursor()) return false;
                     if (f.taken.join() !== 'r0 b' || !f.grid.isDeep()) return false;
                     var e = f.editor();
-                    if (!e || e.style.getPropertyValue('left') !== '100px' || e.style.getPropertyValue('width') !== '300px') return false;
+                    if (!e || e.style.getPropertyValue('--hrg-left') !== '100px' || e.style.getPropertyValue('--hrg-width') !== '300px') return false;
                     // And the cursor stayed where it was: the tracker is exact even now.
                     return f.at() === 'r0 d';
                 })()"""), "Enter anywhere in a group offers the leading cell, over the group's whole box");
@@ -191,16 +194,17 @@ class RelGridMergeTest extends JsModuleTestBase {
                     f.td(0, 1)._rl = 100; f.td(0, 1)._rr = 200;
                     f.td(0, 3)._rl = 300; f.td(0, 3)._rr = 400;
                     f.grid.setColumnWidth('a', 50);
-                    if (f.groups()[0].style.getPropertyValue('left') !== '100px') return false;
+                    if (f.groups()[0].style.getPropertyValue('--hrg-left') !== '100px') return false;
                     // Now a host whose report moves everything 40px to the left.
                     var g2 = spanning({ mergedCells: true });
                     g2.grid.destroy();
                     var moved = false;
                     var relation = { pks: function () { return ['r0']; }, columns: function () { return ['a', 'b', 'c']; },
-                                     cellFor: function (pk, col) { return { render: function (h) { h.textContent = col; }, onSelect: function () {}, dispose: function () {},
-                                                                              colSpan: function () { return col === 'a' ? 2 : 1; } }; } };
+                                     cellFor: function (pk, col) { var el = makeEl('div'); el.textContent = col;
+                                                                    return { cellElement: function () { return el; }, onSelect: function () {}, dispose: function () {},
+                                                                             colSpan: function () { return col === 'a' ? 2 : 1; } }; } };
                     var container = makeEl('div');
-                    var grid = new RelGrid({ container: container, branch: { createElement: function (n, t) { return makeEl(t); } },
+                    var grid = new RelGrid({ container: container, branch: testBranch(),
                                              relation: relation, mergedCells: true,
                                              onColumnResized: function () {
                                                  // the container narrows; every slot shifts
@@ -214,7 +218,7 @@ class RelGridMergeTest extends JsModuleTestBase {
                     grid.setColumnWidth('c', 50);
                     // Measured after the host moved the slots: left 60, width 100 — not the
                     // stub's default 0 and 100 that stood before the report.
-                    return moved && host.style.getPropertyValue('left') === '60px' && host.style.getPropertyValue('width') === '100px';
+                    return moved && host.style.getPropertyValue('--hrg-left') === '60px' && host.style.getPropertyValue('--hrg-width') === '100px';
                 })()"""), "the merged cells' hosts are measured again after the resize report, in case the host moved the slots");
     }
 

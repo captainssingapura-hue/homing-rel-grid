@@ -1,13 +1,27 @@
 // =============================================================================
-// RelGridModule — RFC 0050 · Episode 2's facade: composes the grid and
-// is the ONLY place the two branches meet. Orchestration only — the seam is
-// RelGridViewMaps, the chrome is RelGridLayout, the registry is RelGridCells; the facade
-// reads the relation's identities and columns, threads the pieces, and
-// re-places cells into freshly minted slots on every arrangement pass.
+// RelGridModule — RFC 0050 · Episode 2's facade: composes the grid and is the
+// ONLY place the two branches meet. Orchestration only — the seam is
+// RelGridViewMaps, the chrome is RelGridLayout, the registry is RelGridCells;
+// the facade reads the relation's identities and columns, threads the pieces,
+// and re-places cells into freshly minted slots on every arrangement pass.
+// What a gesture means is RelGridGestures; the cursor is RelGridCursor; the
+// handover of control is RelGridControl; the channel and its questions are
+// RelGridChannel; the widths are RelGridWidths; the stock clipboard writer is
+// RelGridClipboard. Each holds its own state and is handed only what it needs.
+//
+// TWO INDEPENDENT BRANCHES. The grid mints its own chrome on its own
+// DomOpsParty branch and nothing else; the domain mints its cells on a
+// branch of its own and the grid never sees it. A cell is a NOUN: the grid
+// asks cellFor(pk, column) for it, asks it once for cellElement(), and
+// PLACES that element in the slot its identity maps to — that is the whole
+// of what crosses. Nothing is rendered into anything; nothing is read back.
 //
 //   new RelGrid({
 //       container,        // where the layout mounts
-//       branch,           // the CELLS branch (DomOpsParty) — hands out cell hosts
+//       branch,           // the grid's OWN branch (DomOpsParty), handed UNACTIVATED: the grid
+//                         // activates it, as the owner does, and everything the grid mints —
+//                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
+//                         // Dissolving it is the host's. Never a cell's element.
 //       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
@@ -36,263 +50,34 @@
 //       onEdge?,          // (direction) — a REPORT: a bare arrow went nowhere, the cursor being
 //                         // already at that edge — 'up' | 'down' | 'left' | 'right'. The grid
 //                         // itself does nothing with it; a host stacking tables steps over.
-//       ask?,             // (question, mask) — THE CHANNEL. See below.
-//       clipboard?        // { write(content) → thenable } — the writer; navigator.clipboard by default
+//       ask?,             // (question, mask) — THE CHANNEL: see RelGridChannel.
+//       clipboard?        // { write(content) → thenable } — the writer; the stock one by default
 //   });
-//
-// THE ASK CHANNEL (ext4, ext6): one function, typed questions down, typed
-// answers up. Its first customer is a NOTIFICATION — a question with no answer
-// — and notifications are where the channel is cheapest to prove: the grid
-// hands one over, does not wait, does not mask, and learns nothing.
-//
-//   ask(new RelGridSelectionChanged([ RelGridRange, ... ]))
-//
-// The payload is a value object GENERATED from a Java record, so its shape
-// cannot drift from the declaration. The grid mints it and never reads it
-// back. What it must not do is lose a failure, so a returned thenable that
-// rejects is recorded — the diligence rule, which is why fire-and-forget is
-// not the same as fire-and-ignore.
-//
-// A host with no ask gets no channel and nothing changes; the callbacks that
-// remain are reports the channel has not claimed yet.
-//
-// THE PENDING ANSWER (ext6): the second customer is a QUESTION — the grid
-// waits for the answer, and the interval is dangerous, because an answer
-// describes the state it was asked about and the person must not be allowed
-// to change that state underneath it. So while a question is pending:
-//
-//   · the grid is LOCKED: every intent is refused, not deferred (law 221) —
-//     keys, clicks, drags, the handover, a resize, and the programmatic
-//     twins of each;
-//   · the grid is MASKED: a wash over the table that reads as unavailable,
-//     holding the focus so no key reaches the table (law 220). Delayed, so a
-//     fast answer shows none, and held briefly once up, so it never strobes
-//     (law 224);
-//   · the domain may draw on it. The second argument to ask is the MASK
-//     HANDLE, and mask.panel() mints the panel — a golden rectangle at the
-//     golden section of what is seen of the host's box — and hands it over
-//     as a slot is handed to a cell. Asking for it mounts the mask at once;
-//     not asking leaves a bare wash, because the grid invents no progress
-//     (law 225).
-//
-// The answer is applied when it comes; absence applies nothing; a rejection
-// is recorded and the grid resumes. One question at a time, because the only
-// party that can raise one while the grid is locked is the host, and a host
-// that asks twice is told no.
-//
-// COPY (map 6) is that question. Ctrl+C, or copy(), resolves the selection to
-// IDENTITIES — one block per range, pks down and columns across, in view
-// order — and asks what they are worth. The domain answers with finished
-// content, or with nothing, and the grid WRITES what it was given (law 50):
-// it is the party inside the person's gesture, so it is the party that
-// writes, and it reads nothing of what it writes. The clipboard is reached
-// under that gesture's activation — the async Clipboard API, or the copy
-// command where a page is denied it — which is why copy is no longer the
-// channel's synchronous exception: nothing here needs the browser's copy
-// event to arrive, and everything here needs a panel.
-//
-// THE VIEW HANDOVER is the second question the grid waits for, and the first
-// of two ways rows come to be in an order. A View is which of the root's
-// identities are shown and in what order (E2), and it is the domain's to
-// compute; the grid's transient state is which View it is showing. In the
-// way built here the grid holds NOTHING about why: handoverView() — from a
-// control in the HOST's own chrome — or Alt+Enter on the table asks
-// RelGridViewHandover with the mask handle, the domain gathers its own
-// conditions on the panel by whatever controls it likes, and it answers a
-// RelGridView — the pks, in order — or nothing. The grid presents what it
-// was handed (map 1 law 1), reorders nothing, asserts nothing about how one
-// View relates to the next (law 8), and cannot explain the order, because
-// the explanation is the domain's and lives in the domain's chrome. The
-// question is about the table as a whole and carries nothing, and the grid
-// attaches no control of its own to it: a domain's arrangement is not a
-// property of any column, so a control on a header would couple the
-// domain's idea to the grid's geometry. The other way — a specification the
-// grid gathers with its own caret and asks the relation to apply, which it
-// CAN explain — is a later round; the two compose because the grid will pass
-// what it holds with either question and the domain answers with its own
-// conditions applied as well.
-//
-// THE VIEWPORT FOLLOWS THE CURSOR. A keyboard move, an extension, and a
-// programmatic selectCell scroll the least amount that shows the slot the
-// person is now looking at — the cursor, or the range's far corner — in
-// every port that scrolls; a click, Ctrl+A and an arrangement move nothing,
-// because none of them is a place the person went. A grid the keyboard has
-// left does not move the page: the follow is gated on the grid holding the
-// focus, except for selectCell, which a host calls on purpose.
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
-// there is no method on it that could carry one.
+// RelGridValueFreeTest holds every grid module to that.
 //
-// SHALLOW AND DEEP, ENFORCED HERE AND NOWHERE ELSE:
-//   · A single click or an arrow key is a SHALLOW gesture — it moves the
-//     cursor, an identity the grid holds. The cell is only told.
-//   · Deep is entered ONLY through the grid — Enter or a double-click on the
-//     cursor's cell — and the offer is made in TWO STAGES:
-//        1. the column's constraint, declared once by the relation. A
-//           constrained column's cell is NEVER ASKED (map 16, law 112).
-//        2. cell.mayTakeControl(), asked afresh every time. Only an explicit
-//           true is a yes.
-//     Then, and only then, cell.takeControl(host) — which MUST answer a thenable.
-//     The HOST is minted over the slot but OUTSIDE the table, so an editor
-//     cannot widen a column, stretch a row, or be clipped by its own cell —
-//     and a cell may open something larger than itself. Where it sits is the
-//     grid's; what goes in it is the cell's, exactly as with render(host).
-//     Structure refuses always; a cell refuses sometimes; neither substitutes
-//     for the other (law 113). Two stages rather than one because bulk edit
-//     and paste must ask whether a cell is writable WITHOUT opening it, and a
-//     single take-it-or-leave-it call cannot serve them.
-//   · The grid then goes deep and its capture is INERT: clicks and keys do
-//     nothing, because the keyboard is the cell's now.
-//   · The cell hands control back by SETTLING the thenable, resolved or
-//     rejected — an edit that blew up still ended. The grid never learns what
-//     happened inside; it resumes: shallow, focus on the table, the cursor
-//     repainted. Edit, commit and update are the domain’s operations and never
-//     change an arrangement.
-//
-// THE SELECTION IS ASKED, NEVER OBEYED (map 5): the facade holds a
-// RelGridSelection — an ordered list of position rectangles that knows nothing
-// but positions — and does three things with it. It ROUTES the gestures
-// (shift extends the last range's far corner, ctrl adds a 1x1 and moves the
-// cursor, Ctrl+A takes the whole presented space, a BARE move clears the
-// list, and a PRESS-DRAG is whichever of those three the press meant followed
-// by an extension per slot the pointer reaches); it CLEARS on every
-// arrangement, because a selection is positions and these are not the same
-// positions; and it asks what is selected in order to
-// paint it. The cursor stays here rather than in the selection: it is
-// identity-first, it tells its cell and it paints, and none of that is the
-// selection's business. The two meet in exactly two lines — a bare move
-// clears, and an empty list resolves to the cursor's own 1x1.
-//
-// Copy is the first thing that CONSUMES a selection, and it reads the list in
-// one place — copy() — and resolves it there. Clear and bulk are later rounds.
+// THE ARRANGEMENT CYCLE: the layout renders the slot matrix for the presented
+// shape, widths ride identity onto the new positions, every presented cell is
+// ensured once and placed — into its slot, or into a merged cell's host when
+// it reaches across several — whatever the view no longer shows leaves the
+// tree alive, the cursor resolves (identity first, position as the fallback),
+// and every range goes (law 43: a selection is positions, and these are not
+// the same positions).
 //
 // MERGED CELLS — a matrix that stays whole, and a cell laid over part of it.
-// Every position keeps its slot and its own cell; nothing is skipped and
-// nothing is asked differently. A cell that answers colSpan() > 1 is a
-// LEADING cell: the layout mints a host over the n slots it reaches across
-// and the cell is placed THERE instead of in its own slot, which stays,
-// empty. The host is opaque, takes no pointer, and mirrors the state of the
-// slots beneath — so the whole group reads as one cell while the tracker
-// keeps the exact square:
+// Every position keeps its slot and its own cell. A cell that answers
+// colSpan() > 1 is a LEADING cell: the layout mints a host over the n slots it
+// reaches across and the cell is placed THERE; the host mirrors the state of
+// the slots beneath. A vertical move passes through; a horizontal move jumps
+// OUT of the group; Enter anywhere in a group offers control to the LEADING
+// cell. Spans are read on every arrangement. Behind mergedCells.
 //
-//   · a vertical move passes through: the column is kept, covered or not;
-//   · a horizontal move jumps OUT of the group — right lands on the slot
-//     after it, left on the slot before — and a move that lands inside
-//     another group lands on the exact slot reached;
-//   · a selection is the rectangle it is, never widened; the group is painted
-//     when any of its slots is in one;
-//   · Enter anywhere in a group offers control to the LEADING cell, over the
-//     group's whole box.
-//
-// Spans are read on every arrangement, so a span that moves is an
-// arrangement the host asks for. Behind mergedCells, because most relations
-// have no merged cell and the check is not free.
-//
-// WIDTHS ARE GEOMETRY, THE GRID'S ALONE (map 7): held by column IDENTITY,
-// applied by POSITION, in place — no arrangement runs, because no identity
-// and no order moved. A request is bounded at normalisation and the bounded
-// request is what is held. A snapshot returns what is held, never what was
-// measured. The grid persists nothing: onColumnResized is a report, and
-// remembering it is the host's.
+// LOCKED while a cell is deep OR a question is pending — the two are exclusive
+// (law 228) — every intent is refused, not deferred (law 221): keys, clicks,
+// drags, the handover, a resize, and the programmatic twins of each.
 // =============================================================================
-
-var _HRG_MIN_W = 40, _HRG_MAX_W = 2000;   // the legal range — normalisation's bound
-var _HRG_MIN_W_FLOOR = 8;                 // and the least a host may lower the floor to
-var _HRG_DEFAULT_W = 120;                 // what a keyboard resize starts from when nothing is held
-var _HRG_KEY_STEP = 10;                   // one Alt+arrow
-var _HRG_MASK_DELAY = 200;                // a question answered sooner shows no mask
-var _HRG_MASK_HOLD = 250;                 // and one that showed stays at least this long
-
-function _hrgLater(fn, ms)  { return setTimeout(fn, ms); }
-function _hrgCancel(handle) { clearTimeout(handle); }
-function _hrgNow()          { return Date.now(); }
-
-/**
- * The stock clipboard writer. Two roads to the same clipboard, both open only
- * while the person's activation is fresh — and it is, because the answer was
- * produced by their click on the domain's panel:
- *
- *   1. the async Clipboard API. Rich content goes as one item carrying both
- *      forms, so a spreadsheet takes the table and an editor takes the text;
- *      without an html, or without ClipboardItem, the plain form alone.
- *   2. the copy COMMAND, when the first is absent or refused. An insecure
- *      origin has no navigator.clipboard at all, and an embedded page can be
- *      denied it by policy while the command — gated on activation, not on
- *      policy — still works. Both forms ride the copy event's clipboardData.
- *
- * Neither road is a silence: a write that fails on both is a rejection, which
- * the grid records.
- */
-function _hrgStockClipboard(env) {
-    env = env || {
-        navigator:     (typeof navigator !== "undefined") ? navigator : null,
-        ClipboardItem: (typeof ClipboardItem !== "undefined") ? ClipboardItem : null,
-        Blob:          (typeof Blob !== "undefined") ? Blob : null,
-        document:      (typeof document !== "undefined") ? document : null
-    };
-    function modern(content) {
-        var cb = env.navigator ? env.navigator.clipboard : null;
-        if (!cb) return Promise.reject(new Error("navigator.clipboard is absent (not a secure context?)"));
-        if (content.html != null && typeof env.ClipboardItem === "function" && typeof env.Blob === "function"
-                && typeof cb.write === "function") {
-            var item = new env.ClipboardItem({
-                "text/plain": new env.Blob([content.text], { type: "text/plain" }),
-                "text/html":  new env.Blob([content.html], { type: "text/html" })
-            });
-            return cb.write([item]);
-        }
-        if (typeof cb.writeText !== "function") return Promise.reject(new Error("navigator.clipboard cannot write"));
-        return cb.writeText(content.text);
-    }
-    function command(content) {
-        var doc = env.document;
-        if (!doc || typeof doc.execCommand !== "function" || !doc.body) return false;
-        var took = false;
-        // The command fires a copy event; answering it is how both forms are
-        // set. Captured, so nothing on the page sees a copy it did not make.
-        var onCopy = function (e) {
-            var data = e.clipboardData;
-            if (!data || typeof data.setData !== "function") return;
-            data.setData("text/plain", content.text);
-            if (content.html != null) data.setData("text/html", content.html);
-            if (e.preventDefault) e.preventDefault();
-            took = true;
-        };
-        // The command needs a selection to act on; a textarea off-screen is one.
-        var ta = doc.createElement("textarea");
-        ta.textContent = content.text;
-        ta.setAttribute("aria-hidden", "true");
-        if (ta.style && ta.style.setProperty) {
-            ta.style.setProperty("position", "fixed");
-            ta.style.setProperty("left", "-9999px");
-            ta.style.setProperty("top", "0");
-        }
-        // Selecting the textarea takes the focus, and this runs AFTER the grid
-        // has already handed the focus back to the table — so what was focused
-        // is put back, or the person is left typing into nothing.
-        var prev = doc.activeElement || null;
-        doc.addEventListener("copy", onCopy, true);
-        doc.body.appendChild(ta);
-        var ran = false;
-        try { ta.select(); ran = doc.execCommand("copy"); }
-        catch (e) { ran = false; }
-        doc.body.removeChild(ta);
-        doc.removeEventListener("copy", onCopy, true);
-        if (prev && prev.focus) {
-            try { prev.focus({ preventScroll: true }); } catch (e) { /* gone; nothing to restore */ }
-        }
-        return ran && took;
-    }
-    return {
-        write: function (content) {
-            return modern(content).then(null, function (why) {
-                if (command(content)) return;
-                throw new Error("the clipboard refused both roads — " + (why && why.message ? why.message : why));
-            });
-        }
-    };
-}
 
 class RelGrid {
 
@@ -305,69 +90,37 @@ class RelGrid {
         if (typeof r.pks !== "function" || typeof r.columns !== "function" || typeof r.cellFor !== "function")
             throw new Error("[RelGrid] relation must expose pks(), columns() and cellFor(pk, column)");
         var self = this;
+        opts.branch.activate(this);              // the grid's own: the party refuses one that is already somebody's
         this._relation = r;
         this._cellFor = function (pk, col) { return r.cellFor(pk, col); };
-        this._cbArranged    = opts.onArranged || null;
-        this._cbCursor      = opts.onCursorMoved || null;
-        this._cbTaken       = opts.onControlTaken || null;
-        this._cbReleased    = opts.onControlReleased || null;
-        this._cbResized     = opts.onColumnResized || null;
-        this._cbCopied      = opts.onCopied || null;
-        this._cbEdge        = opts.onEdge || null;
-        this._ask = (typeof opts.ask === "function") ? opts.ask : null;
-        this._clipboard = opts.clipboard || _hrgStockClipboard();
-
-        var head = opts.header || {};
-        this._showHead = head.show !== false;
-        var labels = head.labels || {};
-        this._labelOf = function (c) {
-            return Object.prototype.hasOwnProperty.call(labels, c) ? labels[c] : c;
-        };
-
-        // The cursor: an IDENTITY the grid holds, with the position it was last
-        // seen at as the fallback when the identity leaves the presented space.
-        this._cursor = null;       // { pk, column } | null
-        this._cursorPos = null;    // { i, j } | null
-        this._deep = false;        // the one fact the grid holds about editing
-        this._pending = null;      // and the second, about waiting: the question outstanding
+        this._cbArranged = opts.onArranged || null;
+        this._cbResized  = opts.onColumnResized || null;
         this._destroyed = false;
+        var head = opts.header || {};
+        var labels = head.labels || {};
+        this._labelOf = function (c) { return Object.prototype.hasOwnProperty.call(labels, c) ? labels[c] : c; };
         // The column constraint: read ONCE, here, because it is structure and
         // not a question about a moment. Absent means no constraint.
-        this._readOnly = new Set();
+        var readOnly = new Set();
         if (typeof r.readOnlyColumns === "function") {
             var declared = r.readOnlyColumns() || [];
-            for (var d = 0; d < declared.length; d++) this._readOnly.add(declared[d]);
+            for (var d = 0; d < declared.length; d++) readOnly.add(declared[d]);
         }
-        this._widths = new Map();  // column → px, identity-keyed; positional only at the layout
-        // The floor of the legal range: the host's, within reason. A column
-        // narrower than the default is a host's deliberate geometry — a
-        // half-square for a squeezed mark — and not something a drag should
-        // be able to reach by accident, which is what the default protects.
-        var minW = Number(opts.minColumnWidth);
-        this._minW = isFinite(minW) ? Math.max(_HRG_MIN_W_FLOOR, Math.min(_HRG_MAX_W, minW)) : _HRG_MIN_W;
         this._merge = opts.mergedCells === true;   // honour colSpan() at all
-        // The selection: POSITIONS, and it holds nothing else. The facade is
-        // the only thing that knows both it and the cursor.
-        this._selection = new RelGridSelection();
-
+        this._selection = new RelGridSelection();  // POSITIONS, and nothing else
         this._maps = new RelGridViewMaps({
-            pks: r.pks(),
-            columns: r.columns(),
-            rowView: opts.rowView || null,
-            columnView: opts.columnView || null,
+            pks: r.pks(), columns: r.columns(),
+            rowView: opts.rowView || null, columnView: opts.columnView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
-            container: opts.container,
-            label: opts.label || null,
-            showHeader: this._showHead,
-            overflow: opts.overflow || null,
-            resizeGuide: opts.resizeGuide || null,
-            onCellClick:    function (i, j, mods) { self._onClick(i, j, mods); },
-            onCellDblClick: function (i, j) { self._onDblClick(i, j); },
-            onCellDown:     function (i, j, mods) { self._onDown(i, j, mods); },
-            onCellDragTo:   function (i, j) { self._onDragTo(i, j); },
-            onDragEnd:      function () { self._onDragEnd(); },
+            branch: opts.branch, container: opts.container, label: opts.label || null,
+            showHeader: head.show !== false, overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
+            onCellClick:    function (i, j, mods) { self._gestures.onClick(i, j, mods); },
+            onCellDblClick: function (i, j) { self._gestures.onDblClick(i, j); },
+            onCellDown:     function (i, j, mods) { self._gestures.onDown(i, j, mods); },
+            onCellDragTo:   function (i, j) { self._gestures.onDragTo(i, j); },
+            onDragEnd:      function () { self._gestures.onDragEnd(); },
             // The staged drag MINTS (j, px) on release; position becomes identity
             // here, and the request is normalised where it is held.
             onColResize: function (j, px) {
@@ -375,13 +128,40 @@ class RelGrid {
                 if (c != null) self.setColumnWidth(c, px);
             }
         });
-        this._cells = new RelGridCells({ branch: opts.branch });
-
-        this._keydown = function (e) { self._onKey(e); };
+        this._cells = new RelGridCells();       // the domain's elements, by identity; the grid mints none
+        this._widths = new RelGridWidths({ maps: this._maps, minColumnWidth: opts.minColumnWidth });
+        this._cursor = new RelGridCursor({
+            maps: this._maps, layout: this._layout, cells: this._cells,
+            stepJ: function (i, j, dj) { return self._stepJ(i, j, dj); },
+            onMoved: opts.onCursorMoved
+        });
+        this._control = new RelGridControl({
+            layout: this._layout, cells: this._cells, readOnly: readOnly,
+            tell: function (id, mode) { self._cursor.tell(id, mode); },
+            onTaken: opts.onControlTaken, onReleased: opts.onControlReleased
+        });
+        this._channel = new RelGridChannel({
+            ask: (typeof opts.ask === "function") ? opts.ask : null,
+            layout: this._layout, maps: this._maps, selection: this._selection,
+            cursorPos: function () { return self._cursor.pos(); },
+            clipboard: opts.clipboard || createRelGridClipboard({ branch: opts.branch }),
+            onCopied: opts.onCopied
+        });
+        this._gestures = new RelGridGestures({
+            grid: this, maps: this._maps, selection: this._selection, cursor: this._cursor,
+            locked: function () { return self._locked(); },
+            afterSelection: function () { self._afterSelection(); },
+            stepJ: function (i, j, dj) { return self._stepJ(i, j, dj); },
+            stepWidth: function (column, dir) { self.setColumnWidth(column, self._widths.stepped(column, dir)); },
+            onEdge: opts.onEdge
+        });
+        this._keydown = function (e) { self._gestures.onKey(e); };
         this._layout.el().addEventListener("keydown", this._keydown);
-
         this._arrange("base");
     }
+
+    /** Locked while a cell is deep OR a question is pending — the two are exclusive (law 228). */
+    _locked() { return this._control.isDeep() || this._channel.isPending(); }
 
     // ── the arrangement cycle: structure, then re-place ────────────────────
 
@@ -389,8 +169,7 @@ class RelGrid {
         var maps = this._maps, headers = [];
         for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
         this._layout.render({ headers: headers, rows: maps.rows() });
-        this._layout.setColWidths(this._widthsPositional());   // widths ride identity onto the new positions
-
+        this._layout.setColWidths(this._widths.positional());   // widths ride identity onto the new positions
         // One ask per identity, ever; one appendChild per cell, per pass.
         for (var i = 0; i < maps.rows(); i++) {
             for (var j = 0; j < maps.cols(); j++) {
@@ -401,18 +180,10 @@ class RelGrid {
             }
         }
         if (this._merge) this._layout.placeGroups();          // every cell is in; measure the hosts
-        // Whatever the view no longer shows leaves the tree alive.
-        this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });
-
-        this._resolveCursor();
-
-        // Law 43: every range goes when the presented space is rebuilt. A range
-        // is positions, and after an arrangement these are not the same
-        // positions — the cursor survives because it is an identity, and the
-        // selection does not because it is not.
-        this._selection.clear();
+        this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree
+        this._cursor.resolve(this._control.isDeep());
+        this._selection.clear();                              // law 43: every range goes with the presented space
         this._afterSelection();
-
         if (this._cbArranged) {
             try { this._cbArranged(kind); }
             catch (e) { console.error("[RelGrid] onArranged threw:", e); }
@@ -441,11 +212,7 @@ class RelGrid {
     /** The merged cell a position is in, or null: { i, j, n }. */
     _groupAt(i, j) { return this._merge ? this._layout.groupAt(i, j) : null; }
 
-    /**
-     * One horizontal step from a position: out of a merged cell entirely, if
-     * the position is in one, and one slot otherwise. Landing inside another
-     * group lands on the exact slot reached.
-     */
+    /** One horizontal step from a position: out of a merged cell entirely, and one slot otherwise. */
     _stepJ(i, j, dj) {
         var grp = this._groupAt(i, j);
         if (!grp) return j + dj;
@@ -458,11 +225,19 @@ class RelGrid {
      * in it, and the editor opens over the whole group.
      */
     _deepAt() {
-        if (!this._cursor || !this._cursorPos) return null;
-        var at = this._cursorPos, grp = this._groupAt(at.i, at.j);
-        if (!grp) return { id: this._cursor, i: at.i, j: at.j };
-        var id = this._maps.resolve(grp.i, grp.j);
-        return id ? { id: id, i: grp.i, j: grp.j } : null;
+        var id = this._cursor.id(), at = this._cursor.pos();
+        if (!id || !at) return null;
+        var grp = this._groupAt(at.i, at.j);
+        if (!grp) return { id: id, i: at.i, j: at.j };
+        var lead = this._maps.resolve(grp.i, grp.j);
+        return lead ? { id: lead, i: grp.i, j: grp.j } : null;
+    }
+
+    /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
+    _afterSelection() {
+        var rects = this._selection.resolve(this._cursor.pos());
+        this._layout.paintSelection(rects);
+        this._channel.selectionChanged(rects);
     }
 
     /** Arrange again. The domain calls this after changing something the grid
@@ -471,35 +246,20 @@ class RelGrid {
 
     // ── widths: identity-keyed, applied positionally, in place ─────────────
 
-    _widthsPositional() {
-        var out = [], m = this._maps;
-        for (var j = 0; j < m.cols(); j++) {
-            var c = m.columnAt(j);
-            out.push(this._widths.has(c) ? this._widths.get(c) : null);
-        }
-        return out;
-    }
-
     /**
-     * Hold a width for a column. The request is bounded to the legal range and
-     * the BOUNDED request is what is held; a column the relation does not have
-     * is refused (drift). Applied in place — no arrangement runs.
+     * Hold a width for a column: bounded, held, applied in place, reported
+     * once. Not while a cell holds control: the editor is laid over a slot at
+     * a fixed position, and moving the column under it would leave the two
+     * disagreeing.
      */
     setColumnWidth(column, px) {
-        // Geometry is the grid's, but not while a cell holds control: the
-        // editor is laid over a slot at a fixed position, and moving the column
-        // under it would leave the two disagreeing. The keyboard path was
-        // already inert while deep; a header drag was not.
         if (this._locked()) return false;
-        if (this._maps.baseColumns().indexOf(column) < 0) return false;
-        var n = Number(px);
-        if (!isFinite(n)) return false;
-        var bounded = Math.max(this._minW, Math.min(_HRG_MAX_W, n));
-        if (this._widths.get(column) === bounded) return true;    // already held: nothing to do
-        this._widths.set(column, bounded);
-        this._layout.setColWidths(this._widthsPositional());
+        var held = this._widths.hold(column, px);
+        if (!held) return false;
+        if (!held.changed) return true;                       // already held: nothing to do
+        this._layout.setColWidths(this._widths.positional());
         if (this._cbResized) {
-            try { this._cbResized(column, bounded); }
+            try { this._cbResized(column, held.px); }
             catch (e) { console.error("[RelGrid] onColumnResized threw:", e); }
             // A host may answer the report by changing the geometry the grid sits in
             // — sizing its container to the widths now held is the common case — and
@@ -510,17 +270,12 @@ class RelGrid {
     }
 
     /** What is HELD for a column, or null. Never what was measured. */
-    columnWidth(column) { return this._widths.has(column) ? this._widths.get(column) : null; }
+    columnWidth(column) { return this._widths.get(column); }
 
     /** The snapshot: every held width, by column. A plain object — the host may keep it. */
-    columnWidths() {
-        var out = {};
-        this._widths.forEach(function (px, c) { out[c] = px; });
-        return out;
-    }
+    columnWidths() { return this._widths.snapshot(); }
 
-    /** Apply a snapshot. Unknown columns are dropped as drift; the rest apply;
-     *  applying a snapshot twice is applying it once. */
+    /** Apply a snapshot. Unknown columns are dropped as drift; applying it twice is applying it once. */
     setColumnWidths(widths) {
         if (!widths) return this;
         for (var c in widths) {
@@ -529,528 +284,33 @@ class RelGrid {
         return this;
     }
 
-    // ── the cursor: identity first, position as the fallback ───────────────
+    // ── the channel's questions ────────────────────────────────────────────
 
-    _resolveCursor() {
-        var maps = this._maps;
-        if (maps.rows() === 0 || maps.cols() === 0) {          // an empty presented space: no cursor
-            this._tell(this._cursor, "none");
-            this._cursor = null; this._cursorPos = null;
-            this._layout.paintCursor(null);
-            return;
-        }
-        var at = this._cursor ? maps.locate(this._cursor.pk, this._cursor.column) : null;
-        if (at) {                                                // the identity survived
-            this._cursorPos = at;
-        } else {                                                 // fall back to the position
-            var p = this._cursorPos || { i: 0, j: 0 };
-            var i = Math.min(p.i, maps.rows() - 1), j = Math.min(p.j, maps.cols() - 1);
-            this._tell(this._cursor, "none");
-            this._cursor = maps.resolve(i, j);
-            this._cursorPos = { i: i, j: j };
-            this._tell(this._cursor, this._deep ? "deep" : "shallow");
-        }
-        this._layout.paintCursor(this._cursorPos);
-    }
-
-    _setCursor(i, j) {
-        var id = this._maps.resolve(i, j);
-        if (!id) return false;
-        if (this._cursor && this._cursor.pk === id.pk && this._cursor.column === id.column) return false;
-        this._tell(this._cursor, "none");
-        this._cursor = id;
-        this._cursorPos = { i: i, j: j };
-        this._tell(id, "shallow");
-        this._layout.paintCursor(this._cursorPos);
-        if (this._cbCursor) {
-            try { this._cbCursor(id.pk, id.column); }
-            catch (e) { console.error("[RelGrid] onCursorMoved threw:", e); }
-        }
-        return true;
-    }
-
-    /** Tell a cell its selection mode — pure lifecycle; the cell may ignore it. */
-    _tell(id, mode) {
-        if (!id) return;
-        var entry = this._cells.get(id.pk, id.column);
-        if (entry && typeof entry.cell.onSelect === "function") {
-            try { entry.cell.onSelect(mode); }
-            catch (e) { console.error("[RelGrid] cell.onSelect threw:", e); }
-        }
-    }
-
-    /** The edge a bare arrow would cross, or null when there is room to move. */
-    _edgeOf(key) {
-        var p = this._cursorPos;
-        if (!p) return null;
-        if (key === "ArrowUp"    && p.i === 0) return "up";
-        if (key === "ArrowDown"  && p.i === this._maps.rows() - 1) return "down";
-        if (key === "ArrowLeft"  && p.j === 0) return "left";
-        if (key === "ArrowRight" && p.j === this._maps.cols() - 1) return "right";
-        return null;
-    }
-
-    _move(di, dj) {
-        if (!this._cursorPos) return;
-        var p = this._cursorPos;
-        this._setCursor(this._clampI(p.i + di), this._clampJ(dj ? this._stepJ(p.i, p.j, dj) : p.j));
-        this._follow(this._cursorPos);
-    }
-
-    /** The viewport follows a position the person went to — when the grid has the keyboard. */
-    _follow(pos, regardless) {
-        if (!pos) return;
-        if (regardless || this._layout.hasKeyboard()) this._layout.revealSlot(pos.i, pos.j);
-    }
-
-    _clampI(i) { return Math.max(0, Math.min(this._maps.rows() - 1, i)); }
-    _clampJ(j) { return Math.max(0, Math.min(this._maps.cols() - 1, j)); }
-
-    // ── the selection: routed here, held next door, painted by the layout ──
-
-    /**
-     * A NOTIFICATION: a question the domain is not expected to answer. The grid
-     * does not wait for it and does not mask for it, because nothing is pending
-     * on it (ext6 law 229). It may still FAIL, though, and a lost failure is
-     * worse than a slow one — so a thenable that rejects is recorded.
-     */
-    _notify(question) {
-        if (!this._ask) return;
-        var out;
-        try { out = this._ask(question); }
-        catch (e) { console.error("[RelGrid] ask threw:", e); return; }
-        if (out && typeof out.then === "function")
-            out.then(null, function (e) { console.error("[RelGrid] ask rejected:", e); });
-    }
-
-    /**
-     * A QUESTION: the grid waits, and the person is stopped until it is
-     * answered (ext6). The mask handle is the domain's way to draw while it
-     * thinks; the delay timer is the grid's way to mask anyway if it does
-     * not. apply(answer) runs when the answer comes — before the mask comes
-     * down, because what it does may not wait on a hold.
-     *
-     * One at a time. The person cannot raise a second while locked, and a
-     * host that does is refused, so no generation stamp is needed yet.
-     */
-    _askPending(question, apply) {
-        if (!this._ask || this._pending) return false;
-        var self = this;
-        var session = { question: question, mounted: false, shownAt: 0, timer: null };
-        this._pending = session;
-        var handle = {
-            /** The domain's canvas, minted on first call; null once the session is over. */
-            panel: function () {
-                if (self._pending !== session) return null;
-                self._mount(session);
-                return self._layout.openPanel();
-            }
-        };
-        var out;
-        try { out = this._ask(question, handle); }
-        catch (e) {
-            console.error("[RelGrid] ask threw:", e);
-            this._settle(session, undefined, apply);
-            return true;                       // the gesture was taken; the domain failed it
-        }
-        var p = (out && typeof out.then === "function") ? out : Promise.resolve(out);
-        if (!session.mounted)
-            session.timer = _hrgLater(function () {
-                session.timer = null;
-                if (self._pending === session) self._mount(session);
-            }, _HRG_MASK_DELAY);
-        p.then(function (answer) { self._settle(session, answer, apply); },
-               function (e) {
-                   console.error("[RelGrid] ask rejected:", e);
-                   self._settle(session, undefined, apply);
-               });
-        return true;
-    }
-
-    /** The mask goes up: once per session, whether the domain asked or the clock did. */
-    _mount(session) {
-        if (session.mounted) return;
-        session.mounted = true;
-        session.shownAt = _hrgNow();
-        if (session.timer) { _hrgCancel(session.timer); session.timer = null; }
-        this._layout.openMask();
-        this._layout.setMasked(true);
-    }
-
-    /**
-     * The answer came — or did not. Apply first; then the mask, at once if it
-     * has been up long enough and after the rest of the hold otherwise. A
-     * settle after destroy, or for a session that is not the current one,
-     * does nothing.
-     */
-    _settle(session, answer, apply) {
-        if (this._destroyed || this._pending !== session) return;
-        this._pending = null;
-        if (session.timer) { _hrgCancel(session.timer); session.timer = null; }
-        if (apply) {
-            try { apply.call(this, answer); }
-            catch (e) { console.error("[RelGrid] applying an answer threw:", e); }
-        }
-        if (!session.mounted) return;          // nothing to take down
-        var self = this, up = _hrgNow() - session.shownAt;
-        if (up >= _HRG_MASK_HOLD) this._unmask();
-        else _hrgLater(function () { self._unmask(); }, _HRG_MASK_HOLD - up);
-    }
-
-    /** Down, unless a new question has taken the mask over in the meantime. */
-    _unmask() {
-        if (this._destroyed || this._pending) return;
-        this._layout.closeMask();
-        this._layout.setMasked(false);
-        this._layout.focus();                  // the keyboard host takes the keys again
-    }
-
-    /** Locked while a cell is deep OR a question is pending — the two are exclusive (law 228). */
-    _locked() { return this._deep || !!this._pending; }
-
-    // ── copy: the selection, resolved, asked about, and the answer written ──
-
-    /**
-     * What is selected, as IDENTITIES: one block per range, in the order the
-     * ranges were made, each the pks down its rows and the columns across it
-     * in view order. Faithful — no bounding box, no merge, no refusal here.
-     */
-    _blocks() {
-        var rects = this._selection.resolve(this._cursorPos), maps = this._maps, out = [];
-        for (var k = 0; k < rects.length; k++) {
-            var r = rects[k], pks = [], cols = [];
-            for (var i = r.i0; i <= r.i1; i++) pks.push(maps.pkAt(i));
-            for (var j = r.j0; j <= r.j1; j++) cols.push(maps.columnAt(j));
-            out.push(new RelGridBlock(pks, cols));
-        }
-        return out;
-    }
-
-    /**
-     * Ask what the selection is worth on a clipboard, and write the answer.
-     * False when there is no channel, nothing presented, or the grid is
-     * locked; true when the question was asked, whatever comes of it.
-     */
+    /** Ask what the selection is worth on a clipboard, and write the answer. False when locked, channel-less, or empty. */
     copy() {
-        if (this._locked() || !this._ask || !this._cursorPos) return false;
-        return this._askPending(new RelGridCopyRequested(this._blocks()), this._applyCopy);
+        if (this._locked() || !this._channel.has() || !this._cursor.pos()) return false;
+        return this._channel.copy();
     }
 
-    /** The answer to a copy: content is written and reported; absence writes nothing (law 49). */
-    _applyCopy(answer) {
-        if (answer == null) return;
-        if (!(answer instanceof RelGridClipboardContent)) {
-            console.error("[RelGrid] a copy was answered with something that is not clipboard content:", answer);
-            return;
-        }
-        var self = this, out;
-        try { out = this._clipboard.write(answer); }
-        catch (e) { console.error("[RelGrid] the clipboard write threw:", e); return; }
-        var p = (out && typeof out.then === "function") ? out : Promise.resolve();
-        p.then(function () {
-            if (self._cbCopied) {
-                try { self._cbCopied(answer); }
-                catch (e) { console.error("[RelGrid] onCopied threw:", e); }
-            }
-        }, function (e) { console.error("[RelGrid] the clipboard write failed:", e); });
-    }
-
-    // ── the view handover: the rows' arrangement, asked of the domain ──────
-
-    /**
-     * Hand the arrangement of the rows to the domain. The verb behind a
-     * control in the host's own chrome, and the twin of Alt+Enter on the
-     * table; the grid offers no control of its own. False when locked or
-     * channel-less.
-     */
+    /** Hand the arrangement of the rows to the domain. The twin of Alt+Enter; the grid offers no control of its own. */
     handoverView() {
-        if (this._locked() || !this._ask) return false;
-        return this._askPending(new RelGridViewHandover(), this._applyView);
-    }
-
-    /**
-     * The answer to a handover: a View is presented, exactly as given; absence
-     * leaves the rows as they are. A View naming a pk the relation never
-     * declared is refused whole — the maps throw, the settle records it, and
-     * nothing moves — because half a View is not a View.
-     */
-    _applyView(answer) {
-        if (answer == null) return;
-        if (!(answer instanceof RelGridView)) {
-            console.error("[RelGrid] a view handover was answered with something that is not a View:", answer);
-            return;
-        }
-        this._maps.setRowView(answer.pks);                  // → _arrange("rows"): cursor keeps its identity, ranges clear
-    }
-
-    /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
-    _afterSelection() {
-        var rects = this._selection.resolve(this._cursorPos);
-        this._layout.paintSelection(rects);
-        if (!this._ask) return;                // nothing to tell, and nothing to build
-        var ranges = [];
-        for (var k = 0; k < rects.length; k++) {
-            var r = rects[k];
-            ranges.push(new RelGridRange(r.i0, r.j0, r.i1, r.j1));
-        }
-        this._notify(new RelGridSelectionChanged(ranges));
-    }
-
-    /** A bare move: the gesture means START OVER, so the list goes (law 40). */
-    _bareMove(fn) {
-        this._selection.clear();
-        fn.call(this);
-        this._afterSelection();
-    }
-
-    /**
-     * Extension to a position. The cursor DOES NOT MOVE (law 39) — the anchor
-     * is where the cursor already is, and what travels is the last range's far
-     * corner.
-     */
-    _extendTo(i, j) {
-        if (!this._cursorPos) return false;
-        this._selection.extend({ i: this._clampI(i), j: this._clampJ(j) }, this._cursorPos);
-        this._afterSelection();
-        return true;
-    }
-
-    /** Shift+arrow: step the corner extension moves, from the cursor on the first one. */
-    _extendBy(key) {
-        if (!this._cursorPos) return;
-        var from = this._selection.far() || this._cursorPos;
-        var di = (key === "ArrowUp") ? -1 : (key === "ArrowDown") ? 1 : 0;
-        var dj = (key === "ArrowLeft") ? -1 : (key === "ArrowRight") ? 1 : 0;
-        this._extendTo(from.i + di, dj ? this._stepJ(from.i, from.j, dj) : from.j);
-        this._follow(this._selection.far());               // the range's far corner is where the person went
-    }
-
-    /**
-     * The press action — what a click WOULD have done, performed early because
-     * the pointer has started to travel. The three meanings are the click's
-     * three, so a drag is only ever a click that kept going.
-     */
-    _press(i, j, mods) {
-        if (mods.shift) return;                // the range extends from where it already is
-        if (mods.ctrl) {
-            this._selection.add({ i: i, j: j });
-            this._setCursor(i, j);
-            this._afterSelection();
-            return;
-        }
-        this._bareMove(function () { this._setCursor(i, j); });
-    }
-
-    // ── capture: inert while deep ──────────────────────────────────────────
-
-    /** A button went down on a slot. Nothing happens yet — a press that never
-     *  travels is a click, and the click handler owns it. */
-    _onDown(i, j, mods) {
-        if (this._locked()) return;
-        this._swallowClick = false;            // a fresh gesture; whatever the last one left, drop it
-        this._pressAt = { i: i, j: j, mods: mods || {} };
-        this._dragged = false;
-    }
-
-    /**
-     * The pointer reached another slot while held. The FIRST such report turns
-     * the press into a drag and performs the press action; every one after
-     * moves the far corner. Blocked while deep, like every other selection
-     * gesture.
-     */
-    _onDragTo(i, j) {
-        if (this._locked() || !this._pressAt) return;
-        if (!this._dragged) {
-            this._dragged = true;
-            this._press(this._pressAt.i, this._pressAt.j, this._pressAt.mods);
-        }
-        this._extendTo(i, j);
-    }
-
-    /**
-     * Released. A drag is followed by a click — on the slot it started and
-     * ended in, or on none at all — and that click must not undo what the drag
-     * just made, so it is swallowed. The flag cannot outlive its gesture: the
-     * next press clears it whether a click came or not.
-     */
-    _onDragEnd() {
-        if (this._dragged) this._swallowClick = true;
-        this._pressAt = null;
-        this._dragged = false;
-    }
-
-    _onClick(i, j, mods) {
-        if (this._swallowClick) { this._swallowClick = false; return; }
-        if (this._locked()) return;            // the cell has the pointer and the keyboard, or an answer is owed
-        mods = mods || {};
-        // A shift-click is an extension TO where it landed; the other two mean
-        // at the slot itself, which is exactly the press action.
-        if (mods.shift) this._extendTo(i, j);
-        else            this._press(i, j, mods);
-    }
-
-    _onDblClick(i, j) {
-        if (this._locked()) return;
-        // A bare move like any other. In a browser the click that precedes has
-        // already cleared, but the double-click must not depend on that.
-        this._bareMove(function () { this._setCursor(i, j); });
-        this.takeControlAtCursor();
-    }
-
-    _onKey(e) {
-        if (this._locked()) return;            // the keyboard is the cell's, or an answer is owed
-        var key = e.key;
-        // Alt+Left/Right: the pointer-free resize of the CURSOR's column. The
-        // cursor does not move.
-        if (e.altKey && (key === "ArrowLeft" || key === "ArrowRight")) {
-            if (this._cursor) {
-                var held = this.columnWidth(this._cursor.column);
-                var from = (held == null) ? _HRG_DEFAULT_W : held;
-                this.setColumnWidth(this._cursor.column, from + (key === "ArrowRight" ? _HRG_KEY_STEP : -_HRG_KEY_STEP));
-            }
-            if (e.preventDefault) e.preventDefault();
-            return;
-        }
-        // Alt+Enter: hand the rows' arrangement to the domain. The table's own
-        // road to the verb, so a keyboard-first person need not leave it for
-        // the host's control. Consumed only when it was actually asked, as
-        // Ctrl+C is.
-        if (e.altKey && key === "Enter") {
-            if (!this.handoverView()) return;
-            if (e.preventDefault) e.preventDefault();
-            return;
-        }
-        var arrow = (key === "ArrowUp" || key === "ArrowDown" || key === "ArrowLeft" || key === "ArrowRight");
-        // Ctrl+A: the whole presented space, in one range. The cursor stays.
-        if ((e.ctrlKey || e.metaKey) && (key === "a" || key === "A")) {
-            this._selection.all(this._maps.rows(), this._maps.cols());
-            this._afterSelection();
-        }
-        // Ctrl+C: the question. Consumed only when it was actually asked, so
-        // a grid with no channel leaves the browser's own copy alone.
-        else if ((e.ctrlKey || e.metaKey) && (key === "c" || key === "C")) {
-            if (!this.copy()) return;
-        }
-        // Shift+arrow: extension. The cursor stays here too (law 39).
-        else if (e.shiftKey && arrow) this._extendBy(key);
-        else if (arrow) {
-            var self = this;
-            // A bare arrow with the cursor already at that edge goes nowhere in
-            // this table — and is REPORTED, so a host that stacks tables may
-            // step over the edge. The key is still the grid's: consumed.
-            var edge = this._edgeOf(key);
-            if (edge) {
-                this._bareMove(function () {});      // a bare move still clears the ranges (law 39)
-                if (this._cbEdge) {
-                    try { this._cbEdge(edge); }
-                    catch (e) { console.error("[RelGrid] onEdge threw:", e); }
-                }
-            } else {
-                this._bareMove(function () {
-                    if      (key === "ArrowUp")    self._move(-1, 0);
-                    else if (key === "ArrowDown")  self._move(1, 0);
-                    else if (key === "ArrowLeft")  self._move(0, -1);
-                    else                           self._move(0, 1);
-                });
-            }
-        }
-        else if (key === "Enter")      this.takeControlAtCursor();
-        else return;                           // not ours; let it bubble
-        if (e.preventDefault) e.preventDefault();
+        if (this._locked() || !this._channel.has()) return false;
+        return this._channel.handoverView();
     }
 
     // ── deep: the grid hands control to the cell, and takes it back ────────
 
-    /**
-     * May the cursor's cell take control right now? The two refusals, in
-     * order: the column's declared constraint, answered without touching the
-     * cell at all, and then the cell's own judgement. Public, because a
-     * feature must be able to ask WITHOUT opening anything.
-     */
+    /** May the cursor's cell take control right now? Public, because a feature must be able to ask WITHOUT opening anything. */
     mayTakeControlAtCursor() {
         var at = this._deepAt();
-        return at ? this._mayTakeControl(at.id) : false;
+        return at ? this._control.may(at.id) : false;
     }
 
-    _mayTakeControl(id) {
-        if (this._readOnly.has(id.column)) return false;   // structural: never asked
-        var entry = this._cells.get(id.pk, id.column);
-        var cell = entry && entry.cell;
-        if (!cell) return false;
-        // Both halves or neither: a cell offering one is offered nothing.
-        if (typeof cell.mayTakeControl !== "function" || typeof cell.takeControl !== "function") return false;
-        var may;
-        try { may = cell.mayTakeControl(); }
-        catch (e) { console.error("[RelGrid] cell.mayTakeControl threw:", e); return false; }
-        return may === true;                               // only an explicit yes
-    }
-
-    /**
-     * Offer the cursor's cell control. Both stages must pass, and the cell
-     * must answer the second with a thenable; the grid is deep until that
-     * thenable SETTLES, resolved or rejected alike, because an edit that blew
-     * up still ended.
-     *
-     * Nothing is marked deep until the cell has answered, so there is no
-     * optimistic state to roll back — and a settle cannot arrive before the
-     * bookkeeping below is done, because a thenable's callbacks never run in
-     * the task that created it.
-     */
+    /** Offer the cursor's cell control. True when it was taken. */
     takeControlAtCursor() {
-        if (this._locked() || !this._cursor) return false;
+        if (this._locked()) return false;
         var at = this._deepAt();
-        if (!at) return false;
-        var id = at.id;
-        if (!this._mayTakeControl(id)) return false;
-        var cell = this._cells.get(id.pk, id.column).cell;
-        var host = this._layout.openOverlay(at.i, at.j);
-        if (!host) return false;
-        var out;
-        try { out = cell.takeControl(host); }
-        catch (e) {
-            console.error("[RelGrid] cell.takeControl threw:", e);
-            this._layout.closeOverlay();
-            return false;
-        }
-        if (!out || typeof out.then !== "function") {
-            // A contract violation, not a decline: it already said it may.
-            // Recorded and refused, because waiting for a settle that cannot
-            // come would leave the grid inert with nothing to show for it.
-            console.error("[RelGrid] cell.takeControl must answer a thenable; got:", out);
-            this._layout.closeOverlay();
-            return false;
-        }
-        this._deep = true;
-        this._layout.setDeep(true);
-        this._tell(id, "deep");
-        if (this._cbTaken) {
-            try { this._cbTaken(id.pk, id.column); }
-            catch (e) { console.error("[RelGrid] onControlTaken threw:", e); }
-        }
-        var self = this;
-        out.then(function () { self._resume(id); },
-                 function (e) {
-                     console.error("[RelGrid] the cell's control ended in a rejection:", e);
-                     self._resume(id);
-                 });
-        return true;
-    }
-
-    /** The cell handed control back. What happened inside is not the grid's. */
-    _resume(id) {
-        // A settle can arrive after the grid is gone, or after something else
-        // has already resumed it. Neither may resurrect a dead grid or fire a
-        // second report.
-        if (this._destroyed || !this._deep) return;
-        this._deep = false;
-        this._layout.closeOverlay();           // the editor goes with the session
-        this._layout.setDeep(false);
-        this._tell(id, "shallow");
-        this._layout.focus();                  // the keyboard host takes the keys again
-        if (this._cbReleased) {
-            try { this._cbReleased(id.pk, id.column); }
-            catch (e) { console.error("[RelGrid] onControlReleased threw:", e); }
-        }
+        return at ? this._control.take(at) : false;
     }
 
     // ── the surface ────────────────────────────────────────────────────────
@@ -1062,18 +322,16 @@ class RelGrid {
         var at = this._maps.locate(pk, column);
         if (!at) return false;
         var moved = false, self = this;
-        this._bareMove(function () { moved = self._setCursor(at.i, at.j); });
-        this._follow(at, true);                             // a host asked for this cell: show it, keyboard or not
+        this._gestures.bareMove(function () { moved = self._cursor.set(at.i, at.j); });
+        this._cursor.follow(at, true);                        // a host asked for this cell: show it, keyboard or not
         return moved;
     }
-
-    // ── the selection's surface: the gestures' API twins, and one read ─────
 
     /** Extend to an identity — the shift gesture. The cursor does not move. */
     extendSelection(pk, column) {
         if (this._locked()) return false;
         var at = this._maps.locate(pk, column);
-        return at ? this._extendTo(at.i, at.j) : false;
+        return at ? this._gestures.extendTo(at.i, at.j) : false;
     }
 
     /** Add a 1x1 at an identity and go there — the ctrl gesture. */
@@ -1082,7 +340,7 @@ class RelGrid {
         var at = this._maps.locate(pk, column);
         if (!at) return false;
         this._selection.add({ i: at.i, j: at.j });
-        this._setCursor(at.i, at.j);
+        this._cursor.set(at.i, at.j);
         this._afterSelection();
         return true;
     }
@@ -1101,31 +359,25 @@ class RelGrid {
         return this;
     }
 
-    /**
-     * What is selected: the RESOLVED list of rectangles in the presented
-     * space, so an empty list reads as the cursor's own 1x1 and no caller
-     * needs a case for "nothing selected". Positions, because that is what a
-     * range is; resolving them to identities is the business of whoever uses
-     * them, and in this round nobody does.
-     */
-    selectedRanges()  { return this._selection.resolve(this._cursorPos); }
+    /** What is selected: the RESOLVED list of rectangles in the presented space — an empty list reads as the cursor's own 1x1. */
+    selectedRanges()  { return this._selection.resolve(this._cursor.pos()); }
     /** How many ranges were actually MADE — zero when the selection is just the cursor. */
     selectionCount()  { return this._selection.count(); }
 
-    cursor()   { return this._cursor ? { pk: this._cursor.pk, column: this._cursor.column } : null; }
-    isDeep()   { return this._deep; }
-    isPending() { return !!this._pending; }
-    focus()    { this._layout.focus(); return this; }
-    viewMaps() { return this._maps; }
-    el()       { return this._layout.el(); }
-    cells()    { return this._cells; }
+    cursor()    { var id = this._cursor.id(); return id ? { pk: id.pk, column: id.column } : null; }
+    isDeep()    { return this._control.isDeep(); }
+    isPending() { return this._channel.isPending(); }
+    focus()     { this._layout.focus(); return this; }
+    viewMaps()  { return this._maps; }
+    el()        { return this._layout.el(); }
+    cells()     { return this._cells; }
 
     /** Detaches every cell and removes the table. Disposes nothing: the cells
      *  are the domain's, and the next grid over this relation may find them. */
     destroy() {
-        this._destroyed = true;                // a late settle must not resume a dead grid
-        if (this._pending && this._pending.timer) _hrgCancel(this._pending.timer);
-        this._pending = null;
+        this._destroyed = true;
+        this._control.destroy();               // a late settle must not resume a dead grid
+        this._channel.destroy();
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._cells.destroy();
         this._layout.destroy();

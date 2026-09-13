@@ -27,6 +27,8 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.SELECTION);
         loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
@@ -115,8 +117,8 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     if (f.wrap().children[0] !== f.table()) return false;
                     if (ov.children[0].tagName !== 'input') return false;
                     // Placed at the slot and sized to at least it.
-                    if (ov.style.getPropertyValue('left') === '') return false;
-                    if (ov.style.getPropertyValue('width') === '') return false;
+                    if (ov.style.getPropertyValue('--hrg-left') === '') return false;
+                    if (ov.style.getPropertyValue('--hrg-width') === '') return false;
                     // The cell's own element is untouched — still showing what it showed.
                     if (host.children.length !== 0 || host.textContent !== 'tofu') return false;
                     // And a resize cannot move the column out from under it.
@@ -290,6 +292,14 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     cell.takeControl = function () { return undefined; };
                     if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
 
+                    // One whose editor is not an element breaks it the same way.
+                    cell.takeControl = function () { return new Promise(function () {}); };
+                    var editor = cell.editorElement;
+                    cell.editorElement = function () { return undefined; };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+                    cell.editorElement = function () { throw new Error('nope'); };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+                    cell.editorElement = editor;
                     // One that throws in either stage is refused, not fatal.
                     cell.mayTakeControl = function () { throw new Error('nope'); };
                     if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;

@@ -35,6 +35,8 @@ class RelGridContractConformanceTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.SELECTION);
         loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
@@ -79,10 +81,13 @@ class RelGridContractConformanceTest extends JsModuleTestBase {
         assertEquals(declared(RelGridCellContract.class),
                 new TreeSet<>(Arrays.asList(RelGridCellContract.ALL_METHODS)),
                 "ALL_METHODS must name exactly the contract's methods");
-        // Both halves of the handover, or neither: the arrays say so and the grid enforces it.
-        assertEquals(new TreeSet<>(List.of("mayTakeControl", "takeControl")),
+        // All of the handover, or none: the arrays say so and the grid enforces it.
+        assertEquals(new TreeSet<>(List.of("mayTakeControl", "editorElement", "takeControl")),
                 new TreeSet<>(Arrays.asList(RelGridCellContract.CONTROL_METHODS)),
-                "CONTROL_METHODS is the two-stage handover, and nothing else");
+                "CONTROL_METHODS is the two-stage handover and the editor between, and nothing else");
+        assertEquals(new TreeSet<>(List.of("cellElement")),
+                new TreeSet<>(Arrays.asList(RelGridCellContract.REQUIRED_METHODS)),
+                "the one thing every cell must answer is its element");
     }
 
     @Test

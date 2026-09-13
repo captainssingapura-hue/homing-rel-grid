@@ -29,6 +29,8 @@ class RelGridViewHandoverTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
@@ -151,7 +153,7 @@ class RelGridViewHandoverTest extends JsModuleTestBase {
         act("""
                 var A = fixture({ ask: function (q, mask) {
                     if (!(q instanceof RelGridViewHandover)) return Promise.resolve();
-                    mask.panel();                                              // the domain drew something...
+                    mask.panel(makeEl('div'));                                 // the domain drew something...
                     return new Promise(function (r) { A_answer = r; });
                 }});
                 var A_answer = null;
@@ -238,31 +240,33 @@ class RelGridViewHandoverTest extends JsModuleTestBase {
     @Test
     void theMaskAndItsPanelServeTheHandover() {
         act("""
+                var M_list = makeEl('ul');                                     // the domain's controls, its own element
                 var M = fixture({ ask: function (q, mask) {
                     if (!(q instanceof RelGridViewHandover)) return Promise.resolve();
-                    var panel = mask.panel();
-                    var list = document.createElement('ul');                   // the domain's controls
-                    panel.appendChild(list);
-                    M_panel = panel;
+                    mask.panel(M_list);
                     return new Promise(function (r) { M_answer = r; });
                 }});
-                var M_answer = null, M_panel = null;
+                var M_answer = null;
                 M.grid.handoverView();
                 """);
         assertTrue(evalBool("""
                 (() => {
-                    // The mask went up at once, with the panel in it, and the domain's list in that.
-                    if (M.mask() === null || M.panel() !== M_panel) return false;
-                    if (M_panel.children.length !== 1 || M_panel.children[0].tagName !== 'ul') return false;
+                    // The mask went up at once, with the panel in it, and the domain's list placed in that.
+                    var p = M.panel();
+                    if (M.mask() === null || !p) return false;
+                    if (p.children.length !== 1 || p.children[0] !== M_list) return false;
                     if (!M.grid.isPending()) return false;
                     M_answer(new RelGridView(['coq']));
                     return true;
-                })()"""), "the handover lends the domain the mask's panel, as copy does");
+                })()"""), "the handover places the domain's element in the mask's panel, as copy does");
         assertTrue(evalBool("""
                 (() => {
                     if (M.rowsShown() !== 'coq' || M.grid.isPending()) return false;
+                    // The answer came: the panel is down at once — the domain's list out of the
+                    // mask with it, alive and the domain's to dissolve — while the wash holds.
+                    if (M.panel() !== null || M.mask() === null || M_list.parentNode.parentNode !== null) return false;
                     runTimers();                                               // the hold
                     return M.mask() === null;
-                })()"""), "and the View is presented when the panel's answer comes");
+                })()"""), "and the View is presented when the panel's answer comes; the panel goes with the answer, the wash after its hold");
     }
 }

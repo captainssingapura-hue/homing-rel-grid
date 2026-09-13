@@ -5,7 +5,6 @@ import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
-import hue.captains.singapura.js.homing.relgrid.RelGridModule;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 
 import java.util.List;
@@ -16,8 +15,11 @@ import java.util.List;
  * it is in one, with a <b>fence</b> — a slot the domain fills — between every
  * two and around the ends.
  *
- * <p>It imports the grid and the protocol's group kind, and the grid imports
- * nothing of it: that one-way dependency is the whole guarantee. Members are
+ * <p>The minting is {@link RelGridGroupMintModule} and the one cursor is
+ * {@link RelGridGroupWalkModule}; what is here is the group's own state and
+ * the verbs over it. It imports the grid (through its minting) and the
+ * protocol's group kind, and the grid imports nothing of it: that one-way
+ * dependency is the whole guarantee. Members are
  * identities; everything inside a member is the member's own, wired as it
  * would be alone. What the group shares is column geometry, kept level
  * through the members' public verbs and never by reaching into a layout;
@@ -33,8 +35,11 @@ public record RelGridGroupModule() implements DomModule<RelGridGroupModule> {
     @Override
     public ImportsFor<RelGridGroupModule> imports() {
         return ImportsFor.<RelGridGroupModule>builder()
-                .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridGroupMintModule.RelGridGroupMint()), RelGridGroupMintModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridGroupWalkModule.RelGridGroupWalk()), RelGridGroupWalkModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridGroupFold()), RelGridProtocolModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridGroupStyles.hrg_group(), new RelGridGroupStyles.hrg_folded(),
+                        new RelGridGroupStyles.hrg_fence_folded()), RelGridGroupStyles.INSTANCE))
                 .build();
     }
 

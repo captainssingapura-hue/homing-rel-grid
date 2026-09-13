@@ -16,8 +16,8 @@ are the domain's operations; they never change an arrangement, so the grid has n
 
 | module | what |
 |---|---|
-| `rel-grid` | the primitive — `RelGrid`, its seam (`RelGridViewMaps`), layout, cells registry, header drag, and a stock cell that is deliberately domain-side. Plain JS classes with no runtime dependency on anything; packaged as homing `DomModule`s for this stack. |
-| `rel-grid-group` | the group — `RelGridGroup`: an ordered list of tables, each an ordinary `RelGrid` that does not know it is in one, with a fence (a slot the domain fills) between every two and around the ends. Shares column geometry through the members' public verbs; depends on `rel-grid`, never the reverse. |
+| `rel-grid` | the grid — `RelGrid`, the facade, composing: its seam (`RelGridViewMaps`), the layout (`RelGridLayout` over `RelGridSlots`, `RelGridOverlays`, `RelGridReveal`, `RelGridHeaderDrag`), the cells registry, the cursor, the gestures, the handover of control, the ask channel, the widths, the stock clipboard writer — one module each, every one under 250 effective lines — and a stock cell that is deliberately domain-side. Plain JS classes with no runtime dependency on anything; packaged as homing `DomModule`s for this stack. |
+| `rel-grid-group` | the group — `RelGridGroup`: an ordered list of tables, each an ordinary `RelGrid` that does not know it is in one, with a fence (a slot the domain fills) between every two and around the ends. Its minting (`RelGridGroupMint`) and its one cursor (`RelGridGroupWalk`) are modules of their own. Shares column geometry through the members' public verbs; depends on `rel-grid`, never the reverse. |
 | `rel-grid-workbench` | a solo studio of benches that try to make the grid fail. `GridWorkbenchServer` on 8083. |
 
 ## What is here, round 1
@@ -35,6 +35,50 @@ Not here, by decision: sort and filter (the relation's, answered with a View), s
 value could cross — `relation.get`, `adapter`, `.update(`, `subscribe`, `updateCell`, `value`,
 `getValue`, `columnMeta`, `compare(`, `commit`, `preview`, `effectiveType` — and fails the
 build on the first one.
+
+## Two branches
+
+A host that composes a grid over a domain makes **exactly two** DomOpsParty branches under its
+own — `grid` and `domain` — and neither side ever sees the other's. `grid` is handed to the
+grid (or the group) whole and unactivated: the grid activates it and mints everything it makes
+on it or a sub-branch of it — chrome, slots, overlays, mask, a member grid's own. `domain` is
+the host's to divide: a part for the relation's cells, one per fence, one for the panels a
+question is answered on; each domain object activates the part it is handed and dissolves it
+on dispose. What crosses between the two is an element: the grid asks a cell for
+`cellElement()` once and places it in a slot, a fence for `fenceElement()`, an editor for
+`editorElement()`, and a domain hands `mask.panel(element)` what it drew. The host creates
+both branches and dissolves both; it activates neither side's own.
+
+## Typed looks
+
+There is no stylesheet in any module. Every class the grid, the group or a bench module wears is
+a `CssClass` record in a `CssGroup` — `RelGridStyles`, `RelGridStockStyles`, `RelGridGroupStyles`,
+and one per bench module that draws — applied through the `css` manager the server injects. The
+substrate renders one rule per class, so a state that has to reach every slot beneath it is a
+custom property the state class sets on an ancestor and the slot's class reads: `hrg_lit`
+(the wrapper under `:focus-within`) sets `--hrg-cursor-color`, `hrg_deep` sets
+`--hrg-cursor-style`, a group's `hrg_dormant` sets both cursor and selection transparent,
+`hrg_ov_ellipsis` publishes `--hrg-text-overflow` for a text cell to honour. Geometry the
+layout measures rides `--hrg-left / --hrg-top / --hrg-width / --hrg-height / --hrg-table-w`
+on the element; a column's width `--hrg-col-w` on its `<col>`. Those properties are the
+grid's published vocabulary: a host or a theme may set them on any ancestor.
+
+## The RFC 0044 ledger
+
+Every module that draws is a `CONSUMER` under the full DOM-owner discipline (the grid is a
+component a widget composes, not a pane the shell is made of — nothing here is a primitive);
+the ones that compute — the view maps, the selection, the protocol, the clipboard's
+formats — are `PURE_LOGIC` and may touch no DOM at all. Each crate's conformance test
+sweeps its modules under the homing rule set and grades them against
+`src/test/resources/rfc0044-ledger.txt`, a committed list of the violations that were there
+before the sweep began. A finding not in the ledger fails the build; so does a ledger line
+whose violation is gone. The ledger only shrinks — and every ledger is empty now: the 102
+findings the sweep began with are gone, and any new one fails the build. To rewrite a
+ledger — deliberately, never to silence a fresh violation:
+
+```bash
+mvn install -Dhoming.conformance.record=true
+```
 
 ## Build and run
 

@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
+import hue.captains.singapura.js.homing.core.ModuleImports;
 
 import java.util.List;
 
@@ -31,7 +32,14 @@ public record DishStarsCellModule() implements DomModule<DishStarsCellModule> {
 
     public static final DishStarsCellModule INSTANCE = new DishStarsCellModule();
 
-    @Override public ImportsFor<DishStarsCellModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<DishStarsCellModule> imports() {
+        return ImportsFor.<DishStarsCellModule>builder()
+                .add(new ModuleImports<>(List.of(new DishClipboardFormats.dishStarsHtml()), DishClipboardFormats.INSTANCE))
+                .add(new ModuleImports<>(List.of(new DishStarsStyles.wb_stars(), new DishStarsStyles.wb_stars_ro(),
+                        new DishStarsStyles.wb_stars_panel(), new DishStarsStyles.wb_stars_row(), new DishStarsStyles.wb_star(),
+                        new DishStarsStyles.wb_star_on(), new DishStarsStyles.wb_stars_hint()), DishStarsStyles.INSTANCE))
+                .build();
+    }
 
     @Override public ExportsOf<DishStarsCellModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new DishStarsCell()));

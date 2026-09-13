@@ -30,11 +30,27 @@ public final class RelGridCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(RelGridViewMapsModule.INSTANCE,     StandardJsModuleType.PURE_LOGIC),
-                CrateEntry.of(RelGridHeaderDragModule.INSTANCE,   StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridLayoutModule.INSTANCE,       StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridCellsModule.INSTANCE,        StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridStockCellsModule.INSTANCE,   StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridModule.INSTANCE, StandardJsModuleType.PRIMITIVE));
+                // PURE_LOGIC touches no DOM; everything else is undeclared, i.e. a
+                // CONSUMER under the full DOM-owner discipline. Nothing here is a
+                // structural primitive: a grid is a component a widget composes, not
+                // a pane the shell is made of.
+                CrateEntry.of(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                // The looks, typed: generated CSS modules, one for the grid's chrome and one for the stock cell.
+                CrateEntry.of(RelGridStyles.INSTANCE,      StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(RelGridStockStyles.INSTANCE, StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(RelGridHeaderDragModule.INSTANCE),
+                CrateEntry.of(RelGridRevealModule.INSTANCE),
+                CrateEntry.of(RelGridSlotsModule.INSTANCE),
+                CrateEntry.of(RelGridOverlaysModule.INSTANCE),
+                CrateEntry.of(RelGridLayoutModule.INSTANCE),
+                CrateEntry.of(RelGridClipboardModule.INSTANCE),
+                CrateEntry.of(RelGridWidthsModule.INSTANCE),
+                CrateEntry.of(RelGridCursorModule.INSTANCE),
+                CrateEntry.of(RelGridControlModule.INSTANCE),
+                CrateEntry.of(RelGridChannelModule.INSTANCE),
+                CrateEntry.of(RelGridGesturesModule.INSTANCE),
+                CrateEntry.of(RelGridCellsModule.INSTANCE),
+                CrateEntry.of(RelGridStockCellsModule.INSTANCE),
+                CrateEntry.of(RelGridModule.INSTANCE));
     }
 }

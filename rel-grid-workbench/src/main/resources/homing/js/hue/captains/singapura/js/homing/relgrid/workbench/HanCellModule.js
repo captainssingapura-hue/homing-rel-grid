@@ -31,12 +31,14 @@
 // everything else left. Measured, not assumed: a pair of halves left at
 // their min-content width grew to a full em each and overflowed the square.
 //
-// The contract, the display half of it:
+// A NOUN: the square is the cell's own element, minted on the branch it was
+// handed — a DomOpsParty branch of its own, its owner's gift — and the grid
+// places it. The contract, the display half of it:
 //
-//   render(host)        mount once into the element the grid minted
+//   cellElement()       the square, minted once; the grid places it
 //   set(glyph)          the OWNER changed it; repaint
 //   onSelect(mode)      'none' | 'shallow' | 'deep' — pure lifecycle
-//   dispose()           the owner's, never the grid's
+//   dispose()           the owner's, never the grid's; dissolves the branch
 //
 // A NARROW cell is a half-square: the leading or trailing column's, half as
 // wide as a square and as tall as one, holding one squeezed mark at the same
@@ -54,65 +56,31 @@
 // is never asked, so Enter on a square does nothing and the grid stays
 // shallow. Editing is the text editor's.
 //
-//   new HanCell({ glyph?, narrow? })
+// The ink is three spans the cell mints once and keeps — a mark for a
+// character or a run, and two halves for punctuation — and a paint ATTACHES
+// the ones the slot's kind needs and detaches the rest. Nothing is re-minted
+// and nothing is wiped: a slot changes kind as the article moves under it,
+// and the spans simply change places.
+//
+//   new HanCell({ branch, glyph?, narrow?, span? })
 // =============================================================================
 
-var _HAN_STYLE_ID = "bench-han-style";
-var _HAN_CSS = [
-    // The square. Width from the column; height from the width — or from the
-    // host's --han-side, which then wins over the ratio; the glyph measured
-    // against the height. `container-type: size` is what makes cqh units
-    // below refer to THIS box.
-    ".han-glyph{width:100%;height:var(--han-side,auto);aspect-ratio:1/1;box-sizing:border-box;container-type:size;",
-    "  display:grid;place-items:center;overflow:hidden;}",
-    ".han-ink{font:68cqh/1 'Noto Serif CJK SC','Source Han Serif SC','Songti SC','SimSun','PMingLiU',serif;",
-    "  color:var(--color-text-primary);user-select:none;-webkit-user-select:none;}",
-    // Two marks in one square: each in its half, half-width alternates on.
-    // min-width:0 on the flex row too: as a grid item its automatic minimum is
-    // its content's — two full-width marks — and it would widen past the square.
-    ".han-ink.han-punct{display:flex;width:100%;height:100%;min-width:0;align-items:center;}",
-    ".han-half{flex:0 0 50%;width:50%;min-width:0;overflow:hidden;text-align:left;white-space:nowrap;",
-    "  font-feature-settings:'halt' 1;}",
-    ".han-half.han-open{text-align:right;}",
-    // The half-square: half as wide as a square, as tall as one; its mark is
-    // sized from the height like every other, so it is the size a square draws.
-    ".han-glyph.han-narrow{aspect-ratio:1/2;}",
-    ".han-narrow .han-half{flex-basis:100%;width:100%;}",
-    // A run: it fills the host the grid laid over its squares — n of them
-    // wide, one tall — so it sizes itself to nothing, and its letters are
-    // sized against that box's height: one square's.
-    ".han-glyph.han-run{width:100%;height:100%;aspect-ratio:auto;}",
-    ".han-run .han-ink{font:68cqh/1 'Noto Serif','Georgia','Times New Roman',serif;",
-    "  letter-spacing:0.02em;white-space:pre;}"
-].join("\n");
-
-function _hanEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById(_HAN_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _HAN_STYLE_ID;
-    s.textContent = _HAN_CSS;
-    document.head.appendChild(s);
-}
-
-function _hanAddClass(el, name) {
-    var cur = el.className || "", parts = cur.split(/\s+/);
-    for (var i = 0; i < parts.length; i++) if (parts[i] === name) return;
-    el.className = cur ? cur + " " + name : name;
-}
-
-function _hanSetClass(el, name, on) {
-    var parts = (el.className || "").split(/\s+/).filter(function (p) { return p && p !== name; });
-    if (on) parts.push(name);
-    el.className = parts.join(" ");
-}
+// THE LOOKS ARE TYPED — HanCellStyles, applied through the css manager. What
+// the old sheet said with a descendant selector — a run's ink in the Latin
+// serif, a half-square's box at full width — is a custom property the kind
+// sets on the square and the ink reads.
 
 class HanCell {
 
     constructor(opts) {
         opts = opts || {};
+        if (!opts.branch) throw new Error("[HanCell] opts.branch is required: the cell's own");
+        this._branch = opts.branch;
+        this._branch.activate(this);
         this._el = null;
         this._ink = null;
+        this._mark = null;         // one character, or a run
+        this._halves = null;       // two half-width boxes, for marks
         this._glyph = (typeof opts.glyph === "string" && opts.glyph.length) ? opts.glyph : null;
         this._narrow = opts.narrow === true;
         this._span = (opts.span > 1) ? Math.floor(opts.span) : 1;
@@ -122,49 +90,63 @@ class HanCell {
     /** How many squares this cell reaches over — read by a grid built with mergedCells. */
     colSpan() { return this._span; }
 
+    _detach(child) { if (child.parentNode) child.parentNode.removeChild(child); }
+
     /**
-     * A character is the square's text. A mark, or a pair of marks, is one
-     * half-width box each, side by side; a lone mark leaves its right half
-     * empty. Ink is rebuilt rather than patched, because a slot changes kind
-     * as the article moves under it.
+     * A character is the square's text, in the mark. A mark, or a pair of
+     * marks, is one half-width box each, side by side; a lone mark leaves its
+     * right half empty. The spans are attached or detached, never rebuilt,
+     * because a slot changes kind as the article moves under it.
      */
     _paint() {
         if (!this._ink) return;
-        var ink = this._ink, el = this._el;
-        while (ink.children.length) ink.removeChild(ink.children[0]);
+        var ink = this._ink, el = this._el, mark = this._mark, halves = this._halves;
         // The reach: a run's box is as wide as its squares; anything else is one.
         // The number itself is the grid's business (colSpan); the class is enough
         // for the drawing, which is sized from the height and not the reach.
-        _hanSetClass(el, "han-run", this._span > 1);
+        css.toggleClass(el, han_run, this._span > 1);
         var g = this._glyph;
-        if (g == null) { ink.textContent = ""; _hanSetClass(ink, "han-punct", false); return; }
-        var marks = Array.from(g);
-        if (this._span > 1 || (marks.length === 1 && !hanIsPunct(marks[0]))) {
-            ink.textContent = g;
-            _hanSetClass(ink, "han-punct", false);
+        if (g == null) {
+            this._detach(mark); this._detach(halves[0]); this._detach(halves[1]);
+            css.removeClass(ink, han_punct);
             return;
         }
-        ink.textContent = "";
-        _hanSetClass(ink, "han-punct", true);
-        for (var k = 0; k < marks.length; k++) {
-            var half = document.createElement("span");
-            half.className = hanIsOpener(marks[k]) ? "han-half han-open" : "han-half";
-            half.textContent = marks[k];
-            ink.appendChild(half);
+        var marks = Array.from(g);
+        if (this._span > 1 || (marks.length === 1 && !hanIsPunct(marks[0]))) {
+            this._detach(halves[0]); this._detach(halves[1]);
+            mark.textContent = g;
+            ink.appendChild(mark);
+            css.removeClass(ink, han_punct);
+            return;
+        }
+        this._detach(mark);
+        css.addClass(ink, han_punct);
+        for (var k = 0; k < 2; k++) {
+            if (k >= marks.length) { this._detach(halves[k]); continue; }
+            css.toggleClass(halves[k], han_open, hanIsOpener(marks[k]));
+            halves[k].textContent = marks[k];
+            ink.appendChild(halves[k]);
         }
     }
 
-    render(host) {
-        this._el = host;
-        _hanEnsureStyle();
-        _hanAddClass(host, "han-glyph");
-        if (this._narrow) _hanAddClass(host, "han-narrow");
-        var ink = document.createElement("span");
-        ink.className = "han-ink";
-        host.appendChild(ink);
+    /** The square, minted once on the cell's branch with its ink; the grid places it. */
+    cellElement() {
+        if (this._el) return this._el;
+        var b = this._branch;
+        var el = b.createElement("cell", "div");
+        css.addClass(el, han_glyph);
+        if (this._narrow) css.addClass(el, han_narrow);
+        var ink = b.createElement("ink", "span");
+        css.addClass(ink, han_ink);
+        el.appendChild(ink);
+        this._mark = b.createElement("mark", "span");
+        this._halves = [b.createElement("half-0", "span"), b.createElement("half-1", "span")];
+        css.addClass(this._halves[0], han_half);
+        css.addClass(this._halves[1], han_half);
+        this._el = el;
         this._ink = ink;
         this._paint();
-        return this;
+        return el;
     }
 
     /** The owner changed it — and, for a run, how far it reaches. */
@@ -184,5 +166,8 @@ class HanCell {
     dispose() {
         this._el = null;
         this._ink = null;
+        this._mark = null;
+        this._halves = null;
+        this._branch.dissolve();
     }
 }

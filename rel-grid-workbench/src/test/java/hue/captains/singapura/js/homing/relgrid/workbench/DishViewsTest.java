@@ -38,6 +38,9 @@ class DishViewsTest extends JsModuleTestBase {
             """;
 
     private static final String HELPERS = """
+            // What the grid hands a domain with its question: a mask whose panel(element)
+            // PLACES the domain's element in the grid's box — here, a host of the test's.
+            function maskOf(host) { return { panel: function (el) { host.appendChild(el); return true; } }; }
             function byClass(root, c) {
                 var out = [];
                 (function walk(el) {
@@ -52,6 +55,8 @@ class DishViewsTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", DOM_STUB);
+        for (String m : DishPolicyTest.PARTY) loadModule(m);
+        js.eval("js", DishPolicyTest.STYLES);
         loadModule(PROTOCOL);
         loadModule(BENCH_DIR + "DishStore.js");
         loadModule(BENCH_DIR + "DishViews.js");
@@ -130,9 +135,11 @@ class DishViewsTest extends JsModuleTestBase {
                 var store = createDishStore(), v = createDishViews(store);
                 var host = makeEl('div'), chosen = null, answer = 'unsettled';
                 var q = new RelGridViewHandover();
-                dishViewPanel(v, q, host, { onChosen: function (k, n) { chosen = k + ':' + n; } })
+                var branch = hostBranch();
+                dishViewPanel(v, q, maskOf(host), { branch: branch, onChosen: function (k, n) { chosen = k + ':' + n; } })
                     .then(function (a) { answer = a; });
                 var root = host.children[0];
+                if (branch.branchCount !== 1) throw new Error('the panel mints on a branch of its own for the session');
                 var items = byClass(root, 'wb-view-item');
                 """);
         assertTrue(evalBool("""
@@ -159,8 +166,9 @@ class DishViewsTest extends JsModuleTestBase {
                     if (answer.pks.join(',') !== 'mapo,fish,coq') return false;
                     // And a second choice cannot settle it again.
                     items[1].dispatch('click', {});
-                    return chosen === 'light:3';
-                })()"""), "the promise settles once, with the chosen profile's View");
+                    // Settled, the session's branch is dissolved: the list is out of the box.
+                    return chosen === 'light:3' && branch.branchCount === 0 && host.children.length === 0;
+                })()"""), "the promise settles once, with the chosen profile's View, and the panel's branch dissolves");
     }
 
     @Test
@@ -168,25 +176,25 @@ class DishViewsTest extends JsModuleTestBase {
         act("""
                 var S = createDishStore(), V = createDishViews(S);
                 var nHost = makeEl('div'), nAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), nHost, {}).then(function (a) { nAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), maskOf(nHost), { branch: hostBranch() }).then(function (a) { nAnswer = a; });
                 nHost.children[0].dispatch('keydown', { key: '4' });
                 """);
         assertTrue(evalBool("nAnswer instanceof RelGridView && nAnswer.pks.join(',') === 'fish,mapo,carbo,sauer,coq,burger' && V.held() === 'rated'"),
                 "4 chooses the fourth profile");
         act("""
                 var cHost = makeEl('div'), cAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), cHost, {}).then(function (a) { cAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), maskOf(cHost), { branch: hostBranch() }).then(function (a) { cAnswer = a; });
                 byClass(cHost, 'wb-view-item')[6].dispatch('click', {});
                 """);
         assertTrue(evalBool("cAnswer instanceof RelGridView && cAnswer.pks.join(',') === 'coq,carbo,burger,mapo' && V.held() === 'bestsellers'"),
                 "a click chooses, and the table now remembers that one");
         act("""
                 var eHost = makeEl('div'), eAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), eHost, {}).then(function (a) { eAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), maskOf(eHost), { branch: hostBranch() }).then(function (a) { eAnswer = a; });
                 if (!/wb-view-held/.test(byClass(eHost, 'wb-view-item')[6].className)) throw new Error('the held profile is not marked');
                 eHost.children[0].dispatch('keydown', { key: 'Escape' });
                 var xHost = makeEl('div'), xAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), xHost, {}).then(function (a) { xAnswer = a; });
+                dishViewPanel(V, new RelGridViewHandover(), maskOf(xHost), { branch: hostBranch() }).then(function (a) { xAnswer = a; });
                 byClass(xHost, 'wb-view-cancel')[0].dispatch('click', {});
                 """);
         assertTrue(evalBool("eAnswer === undefined && xAnswer === undefined && V.held() === 'bestsellers'"),

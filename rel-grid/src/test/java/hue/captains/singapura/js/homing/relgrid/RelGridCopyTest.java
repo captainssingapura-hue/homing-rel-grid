@@ -28,6 +28,8 @@ class RelGridCopyTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
@@ -121,26 +123,30 @@ class RelGridCopyTest extends JsModuleTestBase {
     void theDomainMayAskForThePanelAndTheMaskGoesUpAtOnce() {
         assertTrue(evalBool("""
                 (() => {
-                    var host1 = null, host2 = null;
+                    var drawn = makeEl('div'), placed = [];
+                    drawn.textContent = 'choose a format';                    // the domain's own element, drawn already
                     var f = fixture({ ask: function (q, mask) {
                         if (!(q instanceof RelGridCopyRequested)) return Promise.resolve();
-                        host1 = mask.panel();
-                        host2 = mask.panel();                                  // the same one
-                        host1.textContent = 'choose a format';                // the domain draws
+                        placed.push(mask.panel(drawn));
+                        placed.push(mask.panel(drawn));                        // again: the same box, nothing doubled
                         return new Promise(function () {});                    // and thinks
                     }});
                     f.click(0, 0);
                     if (!f.grid.copy()) return false;
                     var m = f.mask(), p = f.panel();
-                    if (!m || !p || p !== host1 || host1 !== host2) return false;
+                    if (!m || !p || placed.join() !== 'true,true') return false;
                     // A sibling of the table in the wrapper, over it — never in it.
                     if (m.parentNode !== f.wrap() || f.wrap().children[0] !== f.table()) return false;
                     if (!/hrg-panel/.test(p.className) || p.parentNode !== m) return false;
-                    // Placed and sized by the grid; the content is the domain's.
-                    var st = p.style;
-                    if (st.getPropertyValue('left') === '' || st.getPropertyValue('top') === '') return false;
-                    if (st.getPropertyValue('width') === '' || st.getPropertyValue('height') === '') return false;
-                    if (p.textContent !== 'choose a format') return false;
+                    // Placed and sized by the grid; the content is the domain's, in the box, once.
+                    var st = p.style;                                     // the geometry the grid measured, as custom properties its class reads
+                    if (st.getPropertyValue('--hrg-left') === '' || st.getPropertyValue('--hrg-top') === '') return false;
+                    if (st.getPropertyValue('--hrg-width') === '' || st.getPropertyValue('--hrg-height') === '') return false;
+                    if (p.children.length !== 1 || p.children[0] !== drawn) return false;
+                    // The box is never handed out: the domain must hand an element.
+                    var refused = false;
+                    try { f.handles[f.handles.length - 1].panel(); } catch (e) { refused = /hands its own element/.test(String(e)); }
+                    if (!refused) return false;
                     // The table wears the state, and no delay timer is left armed: the
                     // domain asked, so the clock has nothing to do.
                     return /hrg-masked/.test(f.table().className) && pendingTimers() === 0
@@ -256,7 +262,7 @@ class RelGridCopyTest extends JsModuleTestBase {
         act("""
                 var H = fixture({ ask: function (q, mask) {
                     if (!(q instanceof RelGridCopyRequested)) return Promise.resolve();
-                    mask.panel();
+                    mask.panel(makeEl('div'));
                     return new Promise(function (r) { H_answer = r; });
                 }});
                 var H_answer = null;
@@ -388,7 +394,7 @@ class RelGridCopyTest extends JsModuleTestBase {
                         write:     function (items) { got = { items: items }; return Promise.resolve(); },
                         writeText: function (t) { got = { text: t }; return Promise.resolve(); }
                     }};
-                    var w = _hrgStockClipboard({ navigator: modern, ClipboardItem: FakeItem, Blob: FakeBlob });
+                    var w = createRelGridClipboard({ navigator: modern, ClipboardItem: FakeItem, Blob: FakeBlob });
                     var rich = new RelGridClipboardContent('a\\tb', '<b>a</b>');
                     var plain = new RelGridClipboardContent('a\\tb', undefined);
                     w.write(rich);
@@ -401,10 +407,10 @@ class RelGridCopyTest extends JsModuleTestBase {
                     if (got.text !== 'a\\tb') return false;
                     // Without ClipboardItem the rich content still goes, as text.
                     got = null;
-                    _hrgStockClipboard({ navigator: modern, ClipboardItem: null, Blob: FakeBlob }).write(rich);
+                    createRelGridClipboard({ navigator: modern, ClipboardItem: null, Blob: FakeBlob }).write(rich);
                     if (got.text !== 'a\\tb') return false;
                     // And with no clipboard at all — an insecure origin — a rejection, not a silence.
-                    var out = _hrgStockClipboard({ navigator: {}, ClipboardItem: null, Blob: null }).write(plain);
+                    var out = createRelGridClipboard({ navigator: {}, ClipboardItem: null, Blob: null }).write(plain);
                     return !!out && typeof out.then === 'function';
                 })()"""), "the stock writer sends both forms as one item when it can, and the plain one otherwise");
     }
@@ -438,7 +444,8 @@ class RelGridCopyTest extends JsModuleTestBase {
                 };
                 var FakeBlob = function (parts, o) { this.parts = parts; this.type = o.type; };
                 var FakeItem = function (m) { this.m = m; };
-                var W = _hrgStockClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc });
+                var branch = hostBranch();                                     // the grid's, which the grid activated
+                var W = createRelGridClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc, branch: branch });
                 var outcome = 'pending';
                 W.write(new RelGridClipboardContent('a\\tb', '<b>a</b>')).then(function () { outcome = 'written'; },
                                                                                 function (e) { outcome = 'failed: ' + e.message; });
@@ -451,11 +458,12 @@ class RelGridCopyTest extends JsModuleTestBase {
                     // The selection it needed is gone again, nothing is left listening,
                     // and the focus it took to select is back where it was.
                     return doc.body.children.length === 0 && listeners.length === 0
+                        && branch.branchCount === 0                                // the scratch branch dissolved with its textarea
                         && __focused === table;
                 })()"""), "denied the async API, the writer copies through the command, both forms, and cleans up");
         act("""
                 // Both roads closed: a rejection that says so, never a silence.
-                var noDoc = _hrgStockClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null });
+                var noDoc = createRelGridClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null, branch: hostBranch() });
                 var outcome2 = 'pending';
                 noDoc.write(new RelGridClipboardContent('x', undefined)).then(function () { outcome2 = 'written'; },
                                                                               function (e) { outcome2 = e.message; });

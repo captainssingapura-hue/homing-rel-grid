@@ -2,8 +2,11 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
+import hue.captains.singapura.js.homing.relgrid.RelGridConformanceSweep;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,5 +24,15 @@ class RelGridWorkbenchConformanceTest {
     void importsRespectCrateBoundaries() {
         assertEquals(List.of(), CrateDependencyRule.check(RelGridWorkbenchCrate.INSTANCE),
                 "every JS import must resolve to the crate itself or one it directly requires");
+    }
+
+    /**
+     * RFC 0044 — the rule sweep, under each module's declared type, against the
+     * committed ledger of pre-existing violations. A NEW finding fails; so does a
+     * ledger line no longer found, so the ledger only ever shrinks.
+     */
+    @Test
+    void ruleSweepAgainstTheLedger() throws IOException {
+        RelGridConformanceSweep.assertLedger(RelGridWorkbenchCrate.INSTANCE, Path.of("src/test/resources/rfc0044-ledger.txt"));
     }
 }

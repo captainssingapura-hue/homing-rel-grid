@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
+import hue.captains.singapura.js.homing.core.ModuleImports;
 
 import java.util.List;
 
@@ -20,7 +21,12 @@ public record RelGridStockCellsModule() implements DomModule<RelGridStockCellsMo
 
     public static final RelGridStockCellsModule INSTANCE = new RelGridStockCellsModule();
 
-    @Override public ImportsFor<RelGridStockCellsModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridStockCellsModule> imports() {
+        return ImportsFor.<RelGridStockCellsModule>builder()
+                .add(new ModuleImports<>(List.of(new RelGridStockStyles.hrg_text(), new RelGridStockStyles.hrg_text_ro(),
+                        new RelGridStockStyles.hrg_text_edit()), RelGridStockStyles.INSTANCE))
+                .build();
+    }
 
     @Override public ExportsOf<RelGridStockCellsModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridTextCell()));
