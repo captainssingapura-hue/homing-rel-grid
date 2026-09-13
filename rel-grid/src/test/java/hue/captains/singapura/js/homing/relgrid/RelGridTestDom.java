@@ -223,6 +223,9 @@ public final class RelGridTestDom {
                     pks:     function () { return Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
                     cellFor: function (pk, col) {
+                        // The relation is the authority on its own identity space: an identity
+                        // it does not own is refused HERE, and the grid refuses the View whole.
+                        if (!Object.prototype.hasOwnProperty.call(data, pk)) throw new Error('[fixture] no such row: ' + pk);
                         asked++;
                         var k = pk + ' ' + col, c = cells.get(k);
                         if (!c) {

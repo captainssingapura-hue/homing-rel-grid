@@ -27,10 +27,10 @@
 //       header?,          // { show?, labels? } — display only
 //       overflow?,        // wrap | clip | ellipsis — what a slot does with content
 //                         // too wide for it. Default ellipsis.
-//       rowView?,         // the identities to PRESENT at first, in order — a subset of
-//                         // relation.pks(). Default: all of them. For a relation that
-//                         // declares more than it shows; later remaps go through viewMaps().
-//       columnView?,      // the same for columns — a subset of relation.columns(). A
+//       rowView?,         // the rows to PRESENT at first, in order. Default: relation.pks().
+//                         // The row axis has no base (RelGridViewMaps): what is presented
+//                         // is the View and nothing else; later remaps go through viewMaps().
+//       columnView?,      // a subset of relation.columns() — the column axis IS listed. A
 //                         // relation may declare columns it shows only sometimes.
 //       minColumnWidth?,  // the floor a width request is bounded to. Default 40, the
 //                         // narrowest a column stays grabbable at; never below 8. A host
@@ -58,13 +58,22 @@
 // columns and cells. It never asks for, holds, pushes or writes a value, and
 // RelGridValueFreeTest holds every grid module to that.
 //
-// THE ARRANGEMENT CYCLE: the layout renders the slot matrix for the presented
-// shape, widths ride identity onto the new positions, every presented cell is
-// ensured once and placed — into its slot, or into a merged cell's host when
-// it reaches across several — whatever the view no longer shows leaves the
-// tree alive, the cursor resolves (identity first, position as the fallback),
-// and every range goes (law 43: a selection is positions, and these are not
-// the same positions).
+// THE ARRANGEMENT CYCLE: every presented identity is ensured first — asked of
+// the relation once, ever, and kept — BEFORE anything moves, so a relation
+// that refuses one refuses the View whole; then the layout renders the slot
+// matrix for the presented shape, widths ride identity onto the new positions,
+// every cell is placed — into its slot, or into a merged cell's host when it
+// reaches across several — whatever the view no longer shows leaves the tree
+// alive, the cursor resolves (identity first, position as the fallback), and
+// every range goes (law 43: a selection is positions, and these are not the
+// same positions).
+//
+// MEMBERSHIP IS THE RELATION'S. The grid keeps no list of what exists — the
+// row axis is the View — so it cannot tell a stranger from a row; the relation
+// can, and refuses a stranger by throwing from cellFor. The ensure pass puts
+// that refusal before the first slot is touched: the arrangement throws, the
+// maps put the rows back, and the caller — a host's remap, or the channel's
+// settle — hears it. Half a View is not a View.
 //
 // MERGED CELLS — a matrix that stays whole, and a cell laid over part of it.
 // Every position keeps its slot and its own cell. A cell that answers
@@ -109,8 +118,8 @@ class RelGrid {
         this._merge = opts.mergedCells === true;   // honour colSpan() at all
         this._selection = new RelGridSelection();  // POSITIONS, and nothing else
         this._maps = new RelGridViewMaps({
-            pks: r.pks(), columns: r.columns(),
-            rowView: opts.rowView || null, columnView: opts.columnView || null,
+            rowView: opts.rowView || r.pks(), columns: r.columns(),
+            columnView: opts.columnView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
@@ -166,15 +175,23 @@ class RelGrid {
     // ── the arrangement cycle: structure, then re-place ────────────────────
 
     _arrange(kind) {
-        var maps = this._maps, headers = [];
+        var maps = this._maps, headers = [], ids = [], i, j, id;
         for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
+        // One ask per identity, ever — and every ask BEFORE a slot moves: a refusal
+        // here leaves the pass with nothing changed, and the maps undo the View.
+        for (i = 0; i < maps.rows(); i++) {
+            for (j = 0; j < maps.cols(); j++) {
+                id = maps.resolve(i, j);
+                this._cells.ensure(id.pk, id.column, this._cellFor);
+                ids.push(id);
+            }
+        }
         this._layout.render({ headers: headers, rows: maps.rows() });
         this._layout.setColWidths(this._widths.positional());   // widths ride identity onto the new positions
-        // One ask per identity, ever; one appendChild per cell, per pass.
-        for (var i = 0; i < maps.rows(); i++) {
-            for (var j = 0; j < maps.cols(); j++) {
-                var id = maps.resolve(i, j);
-                this._cells.ensure(id.pk, id.column, this._cellFor);
+        // One appendChild per cell, per pass.
+        for (i = 0; i < maps.rows(); i++) {
+            for (j = 0; j < maps.cols(); j++) {
+                id = ids[i * maps.cols() + j];
                 this._cells.place(id.pk, id.column, this._layout.slotAt(i, j));
                 if (this._merge) this._markSpan(i, j, id);
             }

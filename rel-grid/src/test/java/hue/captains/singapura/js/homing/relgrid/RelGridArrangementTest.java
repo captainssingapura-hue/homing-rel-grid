@@ -73,7 +73,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     maps.setRowView(['mapo']);                       // narrow the presented space
                     var shown = f.tbody().children.length;
                     f.relation.change('coq', 'calories', 999);       // the domain updates a DETACHED cell
-                    maps.resetRowView();                             // widen again
+                    maps.setRowView(['mapo', 'coq', 'fish']);        // widen again
                     var el = f.cellEl('coq', 'calories');
                     return shown === 1
                         && el.textContent === '999'                 // current, with no grid involvement
@@ -97,22 +97,27 @@ class RelGridArrangementTest extends JsModuleTestBase {
     }
 
     @Test
-    void aRelationMayDeclareMoreThanItPresentsAndTheGridArrangesOnlyThePresented() {
+    void theRowAxisIsTheViewAndAStrangerIsRefusedByTheRelationWhole() {
         assertTrue(evalBool("""
                 (() => {
-                    // A relation with a CAPACITY: it declares more identities than it shows,
-                    // and the host presents a prefix at construction. The first arrangement
-                    // is the prefix — no cell beyond it is asked for, let alone minted.
+                    // A relation that could present fifty rows presents three: the grid holds
+                    // the three — the row axis is the View, there is no base — and no cell
+                    // beyond them is asked for, let alone minted. The relation, not the grid,
+                    // knows what it owns: a stranger is refused at cellFor.
                     var asked = [], cellsB = hostBranch(), seq = 0;              // the domain's branch, a sub-branch per cell
                     var relation = {
                         pks:     function () { var o = []; for (var r = 0; r < 50; r++) o.push('r' + r); return o; },
                         columns: function () { return ['a', 'b']; },
-                        cellFor: function (pk, col) { asked.push(pk + ' ' + col); return new RelGridTextCell({ branch: cellsB.createBranch('c' + (++seq)), value: pk + col }); }
+                        cellFor: function (pk, col) {
+                            if (!/^r([0-9]|[1-4][0-9])$/.test(pk)) throw new Error('no such row: ' + pk);
+                            asked.push(pk + ' ' + col);
+                            return new RelGridTextCell({ branch: cellsB.createBranch('c' + (++seq)), value: pk + col });
+                        }
                     };
                     var container = makeEl('div');
                     var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation,
                                              rowView: ['r0', 'r1', 'r2'] });
-                    if (grid.viewMaps().rows() !== 3 || grid.viewMaps().basePks().length !== 50) return false;
+                    if (grid.viewMaps().rows() !== 3 || typeof grid.viewMaps().basePks === 'function') return false;
                     if (asked.length !== 6) return false;                          // three rows, two columns
                     // The article grows a row: the host presents one more, through the seam.
                     grid.viewMaps().setRowView(['r0', 'r1', 'r2', 'r3']);
@@ -120,10 +125,23 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     // And shrinks: nothing is asked, nothing is disposed, the row is just not shown.
                     grid.viewMaps().setRowView(['r0', 'r1']);
                     if (grid.viewMaps().rows() !== 2 || asked.length !== 8) return false;
-                    // A view naming an identity the relation never declared is refused.
+                    // A View naming an identity the relation does not own is refused WHOLE, by the
+                    // relation, before a slot moves: the rows stay as they were, the maps too,
+                    // and the caller hears it. A duplicate is the one thing the maps refuse alone.
+                    var tbody = container.children[0].children[0].children[2], before = tbody;
                     var refused = false;
+                    try { grid.viewMaps().setRowView(['r0', 'nope']); }
+                    catch (e) { refused = /no such row: nope/.test(String(e)); }
+                    if (!refused || grid.viewMaps().rows() !== 2 || grid.viewMaps().rowView().join() !== 'r0,r1') return false;
+                    if (container.children[0].children[0].children[2] !== before || tbody.children.length !== 2) return false;
+                    if (asked.length !== 8) return false;                          // r0 was in the registry; nope was refused before b
+                    try { grid.viewMaps().setRowView(['r0', 'r0']); refused = false; }
+                    catch (e) { refused = /duplicate/.test(String(e)); }
+                    if (!refused || grid.viewMaps().rows() !== 2) return false;
+                    // And at construction, the same refusal, out of the constructor.
+                    refused = false;
                     try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation, rowView: ['r0', 'nope'] }); }
-                    catch (e) { refused = /unknown key/.test(String(e)); }
+                    catch (e) { refused = /no such row/.test(String(e)); }
                     if (!refused) return false;
                     // And the same for columns: a relation may declare a column it shows only
                     // sometimes — a half-square for a squeezed mark — and present it later.
