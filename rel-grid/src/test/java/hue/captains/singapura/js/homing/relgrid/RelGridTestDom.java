@@ -152,7 +152,7 @@ public final class RelGridTestDom {
             }
             """;
 
-    /** A relation with NO get: identities, columns, and a manager that owns its cells. */
+    /** A relation with NO get: identities, columns, and a manager that owns its cells — on a branch of its own. */
     public static final String FIXTURE = """
             function fixture(opts) {
                 opts = opts || {};
@@ -163,6 +163,8 @@ public final class RelGridTestDom {
                 };
                 var cells = new Map(), asked = 0, commits = [];
                 var readOnly = opts.readOnly || null;   // the relation's COLUMN constraint
+                // The DOMAIN's branch: every cell's element is minted under it, never under the grid's.
+                var cellsBranch = testBranch(), cellSeq = 0, mints = 0;
                 var relation = {
                     pks:     function () { return Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
@@ -171,6 +173,7 @@ public final class RelGridTestDom {
                         var k = pk + ' ' + col, c = cells.get(k);
                         if (!c) {
                             c = new RelGridTextCell({
+                                branch: cellsBranch.createBranch('c' + (++cellSeq)),   // the cell's own, from the DOMAIN's branch
                                 value: data[pk][col],
                                 // An editable relation: the cell reports to its OWNER, and the
                                 // owner decides — here, accept and set() the cell.
@@ -179,6 +182,9 @@ public final class RelGridTestDom {
                                     relation.change(pk, col, text);
                                 } : undefined
                             });
+                            // The grid asks a cell for its element ONCE: counted here, as the domain would see it.
+                            var element = c.cellElement.bind(c);
+                            c.cellElement = function () { mints++; return element(); };
                             cells.set(k, c);
                         }
                         return c;
@@ -326,9 +332,9 @@ public final class RelGridTestDom {
                              return null;
                          },
                          arranged: arranged, moves: moves, started: started, ended: ended, commits: commits, resized: resized,
-                         // the cell hosts the grid minted: on its cells sub-branch, so the party counts them
-                         mints: function () { var c = branch.getBranch('cells'); return c ? c.elementCount : 0; },
-                         branch: branch, asked: function () { return asked; } };
+                         // how many times the grid asked a cell for its element: once each, ever
+                         mints: function () { return mints; },
+                         branch: branch, cellsBranch: cellsBranch, asked: function () { return asked; } };
             }
             """;
 }

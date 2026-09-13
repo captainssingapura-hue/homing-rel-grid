@@ -122,26 +122,30 @@ class RelGridCopyTest extends JsModuleTestBase {
     void theDomainMayAskForThePanelAndTheMaskGoesUpAtOnce() {
         assertTrue(evalBool("""
                 (() => {
-                    var host1 = null, host2 = null;
+                    var drawn = makeEl('div'), placed = [];
+                    drawn.textContent = 'choose a format';                    // the domain's own element, drawn already
                     var f = fixture({ ask: function (q, mask) {
                         if (!(q instanceof RelGridCopyRequested)) return Promise.resolve();
-                        host1 = mask.panel();
-                        host2 = mask.panel();                                  // the same one
-                        host1.textContent = 'choose a format';                // the domain draws
+                        placed.push(mask.panel(drawn));
+                        placed.push(mask.panel(drawn));                        // again: the same box, nothing doubled
                         return new Promise(function () {});                    // and thinks
                     }});
                     f.click(0, 0);
                     if (!f.grid.copy()) return false;
                     var m = f.mask(), p = f.panel();
-                    if (!m || !p || p !== host1 || host1 !== host2) return false;
+                    if (!m || !p || placed.join() !== 'true,true') return false;
                     // A sibling of the table in the wrapper, over it — never in it.
                     if (m.parentNode !== f.wrap() || f.wrap().children[0] !== f.table()) return false;
                     if (!/hrg-panel/.test(p.className) || p.parentNode !== m) return false;
-                    // Placed and sized by the grid; the content is the domain's.
+                    // Placed and sized by the grid; the content is the domain's, in the box, once.
                     var st = p.style;
                     if (st.getPropertyValue('left') === '' || st.getPropertyValue('top') === '') return false;
                     if (st.getPropertyValue('width') === '' || st.getPropertyValue('height') === '') return false;
-                    if (p.textContent !== 'choose a format') return false;
+                    if (p.children.length !== 1 || p.children[0] !== drawn) return false;
+                    // The box is never handed out: the domain must hand an element.
+                    var refused = false;
+                    try { f.handles[f.handles.length - 1].panel(); } catch (e) { refused = /hands its own element/.test(String(e)); }
+                    if (!refused) return false;
                     // The table wears the state, and no delay timer is left armed: the
                     // domain asked, so the clock has nothing to do.
                     return /hrg-masked/.test(f.table().className) && pendingTimers() === 0
@@ -257,7 +261,7 @@ class RelGridCopyTest extends JsModuleTestBase {
         act("""
                 var H = fixture({ ask: function (q, mask) {
                     if (!(q instanceof RelGridCopyRequested)) return Promise.resolve();
-                    mask.panel();
+                    mask.panel(makeEl('div'));
                     return new Promise(function (r) { H_answer = r; });
                 }});
                 var H_answer = null;

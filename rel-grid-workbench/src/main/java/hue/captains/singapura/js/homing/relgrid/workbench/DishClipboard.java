@@ -18,8 +18,9 @@ import java.util.List;
  * pure over the relation's own cells and composes TSV, CSV or HTML; it reads
  * cells rather than the store (law 48), which is how a rating comes out as a
  * number in text and as stars in HTML. {@code dishCopyPanel(relation, question,
- * host)} draws the choice on the panel the grid minted and answers a promise —
- * content for a format, nothing for Cancel — that the grid writes.</p>
+ * mask, { branch })} mints the choice on a branch of its own and hands it to the
+ * grid's panel — {@code mask.panel(element)} — and answers a promise — content
+ * for a format, nothing for Cancel — that the grid writes.</p>
  *
  * <p>Imports the protocol and nothing of the grid: a domain answers through
  * the protocol, and depends on nothing else to do it.</p>

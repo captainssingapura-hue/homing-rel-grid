@@ -5,11 +5,18 @@
 // reads the relation's identities and columns, threads the pieces, and
 // re-places cells into freshly minted slots on every arrangement pass.
 //
+// TWO INDEPENDENT BRANCHES. The grid mints its own chrome on its own
+// DomOpsParty branch and nothing else; the domain mints its cells on a
+// branch of its own and the grid never sees it. A cell is a NOUN: the grid
+// asks cellFor(pk, column) for it, asks it once for cellElement(), and
+// PLACES that element in the slot its identity maps to — that is the whole
+// of what crosses. Nothing is rendered into anything; nothing is read back.
+//
 //   new RelGrid({
 //       container,        // where the layout mounts
 //       branch,           // the grid's OWN branch (DomOpsParty): everything the grid mints —
-//                         // chrome, slots, overlays, cell hosts — is on it or a sub-branch of
-//                         // it, and dissolving it is the host's
+//                         // chrome, slots, overlays, mask — is on it or a sub-branch of it,
+//                         // and dissolving it is the host's. Never a cell's element.
 //       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
@@ -71,11 +78,12 @@
 //     fast answer shows none, and held briefly once up, so it never strobes
 //     (law 224);
 //   · the domain may draw on it. The second argument to ask is the MASK
-//     HANDLE, and mask.panel() mints the panel — a golden rectangle at the
-//     golden section of what is seen of the host's box — and hands it over
-//     as a slot is handed to a cell. Asking for it mounts the mask at once;
-//     not asking leaves a bare wash, because the grid invents no progress
-//     (law 225).
+//     HANDLE, and mask.panel(element) PLACES the domain's element in the
+//     panel — a golden rectangle at the golden section of what is seen of
+//     the host's box, minted by the grid — as a cell's element is placed in
+//     a slot. Handing one over mounts the mask at once; handing nothing
+//     leaves a bare wash, because the grid invents no progress (law 225).
+//     The panel comes down the moment the answer comes; the wash holds.
 //
 // The answer is applied when it comes; absence applies nothing; a rejection
 // is recorded and the grid resumes. One question at a time, because the only
@@ -135,11 +143,13 @@
 //           constrained column's cell is NEVER ASKED (map 16, law 112).
 //        2. cell.mayTakeControl(), asked afresh every time. Only an explicit
 //           true is a yes.
-//     Then, and only then, cell.takeControl(host) — which MUST answer a thenable.
-//     The HOST is minted over the slot but OUTSIDE the table, so an editor
-//     cannot widen a column, stretch a row, or be clipped by its own cell —
-//     and a cell may open something larger than itself. Where it sits is the
-//     grid's; what goes in it is the cell's, exactly as with render(host).
+//     Then, and only then: cell.editorElement() — the editor, an element the
+//     cell OWNS — is placed by the grid in an ANCHOR minted over the slot but
+//     OUTSIDE the table, so an editor cannot widen a column, stretch a row,
+//     or be clipped by its own cell, and a cell may open something larger
+//     than itself; then cell.takeControl(), which MUST answer a thenable; then
+//     the focus goes to the editor. Where it sits is the grid's; what it is is
+//     the cell's, exactly as with cellElement().
 //     Structure refuses always; a cell refuses sometimes; neither substitutes
 //     for the other (law 113). Two stages rather than one because bulk edit
 //     and paste must ask whether a cell is writable WITHOUT opening it, and a
@@ -389,10 +399,7 @@ class RelGrid {
                 if (c != null) self.setColumnWidth(c, px);
             }
         });
-        // The cell hosts on a sub-branch of the grid's own, dissolved with the grid.
-        this._cellsBranch = opts.branch.createBranch("cells");
-        this._cellsBranch.activate(this);
-        this._cells = new RelGridCells({ branch: this._cellsBranch });
+        this._cells = new RelGridCells();       // the domain's elements, by identity; the grid mints none
 
         this._keydown = function (e) { self._onKey(e); };
         this._layout.el().addEventListener("keydown", this._keydown);
@@ -656,11 +663,18 @@ class RelGrid {
         var session = { question: question, mounted: false, shownAt: 0, timer: null };
         this._pending = session;
         var handle = {
-            /** The domain's canvas, minted on first call; null once the session is over. */
-            panel: function () {
-                if (self._pending !== session) return null;
+            /**
+             * PLACE the domain's element in the panel — the grid's box, minted on
+             * first call — and give it the focus. Answers false once the session
+             * is over. The element is the domain's; the box is never handed out.
+             */
+            panel: function (element) {
+                if (!element || typeof element !== "object" || typeof element.appendChild !== "function")
+                    throw new Error("[RelGrid] mask.panel(element): the domain hands its own element; the box is the grid's");
+                if (self._pending !== session) return false;
                 self._mount(session);
-                return self._layout.openPanel();
+                self._layout.openPanel(element);
+                return true;
             }
         };
         var out;
@@ -709,6 +723,7 @@ class RelGrid {
             catch (e) { console.error("[RelGrid] applying an answer threw:", e); }
         }
         if (!session.mounted) return;          // nothing to take down
+        this._layout.closePanel();             // the answer came: the domain's box goes at once; the wash holds
         var self = this, up = _hrgNow() - session.shownAt;
         if (up >= _HRG_MASK_HOLD) this._unmask();
         else _hrgLater(function () { self._unmask(); }, _HRG_MASK_HOLD - up);
@@ -995,7 +1010,8 @@ class RelGrid {
         var cell = entry && entry.cell;
         if (!cell) return false;
         // Both halves or neither: a cell offering one is offered nothing.
-        if (typeof cell.mayTakeControl !== "function" || typeof cell.takeControl !== "function") return false;
+        if (typeof cell.mayTakeControl !== "function" || typeof cell.editorElement !== "function"
+                || typeof cell.takeControl !== "function") return false;
         var may;
         try { may = cell.mayTakeControl(); }
         catch (e) { console.error("[RelGrid] cell.mayTakeControl threw:", e); return false; }
@@ -1020,10 +1036,21 @@ class RelGrid {
         var id = at.id;
         if (!this._mayTakeControl(id)) return false;
         var cell = this._cells.get(id.pk, id.column).cell;
+        // The editor is the cell's noun: asked for, placed in the grid's anchor,
+        // and only then is control offered — so the cell arms an editor that is
+        // already where it will be seen.
+        var editor;
+        try { editor = cell.editorElement(); }
+        catch (e) { console.error("[RelGrid] cell.editorElement threw:", e); return false; }
+        if (!editor || typeof editor !== "object" || typeof editor.appendChild !== "function") {
+            console.error("[RelGrid] cell.editorElement must answer an element; got:", editor);
+            return false;
+        }
         var host = this._layout.openOverlay(at.i, at.j);
         if (!host) return false;
+        host.appendChild(editor);
         var out;
-        try { out = cell.takeControl(host); }
+        try { out = cell.takeControl(); }
         catch (e) {
             console.error("[RelGrid] cell.takeControl threw:", e);
             this._layout.closeOverlay();
@@ -1039,6 +1066,7 @@ class RelGrid {
         }
         this._deep = true;
         this._layout.setDeep(true);
+        if (typeof editor.focus === "function") editor.focus({ preventScroll: true });   // the keys are the cell's now
         this._tell(id, "deep");
         if (this._cbTaken) {
             try { this._cbTaken(id.pk, id.column); }
@@ -1145,7 +1173,6 @@ class RelGrid {
         this._pending = null;
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._cells.destroy();
-        this._cellsBranch.dissolve();
         this._layout.destroy();
     }
 }

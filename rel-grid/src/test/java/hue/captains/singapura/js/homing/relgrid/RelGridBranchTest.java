@@ -46,13 +46,18 @@ class RelGridBranchTest extends JsModuleTestBase {
                     var names = b.listElements().map(function (e) { return e.name; }).sort().join(' ');
                     if (names !== 'colgroup header-row table thead wrap') return false;
                     if (b.getElement('table') !== f.table() || b.getElement('wrap') !== f.wrap()) return false;
-                    // What one arrangement makes: on 'slots'; the cell hosts: on 'cells'.
-                    if (b.listBranches().sort().join(' ') !== 'cells slots') return false;
+                    // What one arrangement makes: on 'slots' — and nothing of a cell's: the
+                    // cells' elements are on the DOMAIN's branch, and the grid mints none.
+                    if (b.listBranches().sort().join(' ') !== 'slots') return false;
                     var slots = b.getBranch('slots'), rows = f.grid.viewMaps().rows(), cols = f.grid.viewMaps().cols();
                     // cols + ths + the body + trs + tds — and the resize handles, one per header
                     if (slots.elementCount !== cols + cols + 1 + rows + rows * cols + cols) return false;
                     if (slots.getElement('td-0-0') !== f.td(0, 0) || slots.getElement('th-1') !== f.thAt(1)) return false;
-                    return b.getBranch('cells').elementCount === rows * cols;
+                    // Each cell's element is in its slot, and each is the domain's: minted on a
+                    // sub-branch of the domain's branch, one per cell.
+                    if (f.cellsBranch.branchCount !== rows * cols || f.cellsBranch.elementCount !== 0) return false;
+                    var c = f.cellsBranch.getBranch('c1');
+                    return c.getElement('cell') === f.td(0, 0).children[0];
                 })()"""), "the grid's chrome is the branch's; an arrangement's slots and the cell hosts are on sub-branches of it");
     }
 
@@ -70,9 +75,9 @@ class RelGridBranchTest extends JsModuleTestBase {
                     if (b.getBranch('slots') === oldSlots || oldSlots.elementCount !== 0) return false;
                     if (oldBody.parentNode !== null || oldTd.parentNode !== null) return false;
                     if (f.tbody() === oldBody) return false;
-                    // The cell host was never re-minted: the same element, in the new slot.
+                    // The cell's element was never asked for again: the same element, in the new slot.
                     if (f.cellEl('mapo', 'ingredient') !== host || host.parentNode !== f.td(2, 0)) return false;
-                    return b.listBranches().sort().join(' ') === 'cells slots' && f.mints() === 6;   // the same six, never re-minted
+                    return b.listBranches().sort().join(' ') === 'slots' && f.mints() === 6;   // asked once each, ever
                 })()"""), "a rebuild dissolves the last arrangement's slots; the cell hosts are the same elements, re-placed");
     }
 
@@ -81,13 +86,15 @@ class RelGridBranchTest extends JsModuleTestBase {
         act("""
                 var F = fixture({ editable: true, ask: function (q, mask) {
                     if (!(q instanceof RelGridCopyRequested)) return Promise.resolve();
-                    mask.panel();
+                    mask.panel(makeEl('div'));
                     return new Promise(function () {});                        // the domain thinks
                 }});
-                // The editor's overlay: up on Enter, on a sub-branch of its own.
+                // The editor's overlay: up on Enter, on a sub-branch of its own — and the
+                // editor in it is the CELL's element, from the domain's branch.
                 F.click(0, 0); F.key('Enter');
                 var OV = F.branch.getBranch('overlay');
-                var OV_UP = !!OV && OV.getElement('overlay') === F.overlay();
+                var OV_UP = !!OV && OV.getElement('overlay') === F.overlay()
+                         && F.overlay().children[0] === F.cellsBranch.getBranch('c1').getElement('editor');
                 F.overlay().children[0].dispatch('keydown', { key: 'Escape' });   // the cell cancels; the settle is a microtask
                 """);
         assertTrue(evalBool("""
@@ -108,8 +115,9 @@ class RelGridBranchTest extends JsModuleTestBase {
                     f.click(0, 0);
                     if (!f.grid.copy()) return false;
                     var mb = b.getBranch('mask');
-                    if (!mb || mb.getElement('mask') !== f.mask() || mb.getElement('panel') !== f.panel()) return false;
-                    return b.listBranches().sort().join(' ') === 'cells mask slots';
+                    if (!mb || mb.getElement('mask') !== f.mask()) return false;
+                    if (mb.getBranch('panel').getElement('panel') !== f.panel()) return false;   // the panel: its own, under the mask's
+                    return b.listBranches().sort().join(' ') === 'mask slots';
                 })()"""), "the overlay, a guide and the mask are each a sub-branch: minted for the occasion, dissolved with it");
     }
 

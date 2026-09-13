@@ -28,14 +28,16 @@ class RelGridMergeTest extends JsModuleTestBase {
                     cellFor: function (pk, col) {
                         asked.push(pk + ' ' + col);
                         var key = pk + ' ' + col;
+                        var el = makeEl('div'); el.textContent = key;              // the domain's own element
+                        var ed = makeEl('div'); ed.textContent = 'editing ' + key;  // and its editor
                         return {
-                            _el: null,
-                            render:  function (host) { this._el = host; host.textContent = key; },
+                            cellElement: function () { return el; },
                             onSelect: function () {},
                             dispose: function () {},
                             colSpan: function () { return spans[key] || 1; },
                             mayTakeControl: function () { return true; },
-                            takeControl: function (host) { taken.push(key); host.textContent = 'editing ' + key; return new Promise(function () {}); }
+                            editorElement: function () { return ed; },
+                            takeControl: function () { taken.push(key); return new Promise(function () {}); }
                         };
                     }
                 };
@@ -197,8 +199,9 @@ class RelGridMergeTest extends JsModuleTestBase {
                     g2.grid.destroy();
                     var moved = false;
                     var relation = { pks: function () { return ['r0']; }, columns: function () { return ['a', 'b', 'c']; },
-                                     cellFor: function (pk, col) { return { render: function (h) { h.textContent = col; }, onSelect: function () {}, dispose: function () {},
-                                                                              colSpan: function () { return col === 'a' ? 2 : 1; } }; } };
+                                     cellFor: function (pk, col) { var el = makeEl('div'); el.textContent = col;
+                                                                    return { cellElement: function () { return el; }, onSelect: function () {}, dispose: function () {},
+                                                                             colSpan: function () { return col === 'a' ? 2 : 1; } }; } };
                     var container = makeEl('div');
                     var grid = new RelGrid({ container: container, branch: testBranch(),
                                              relation: relation, mergedCells: true,

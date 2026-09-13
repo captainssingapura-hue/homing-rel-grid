@@ -10,8 +10,9 @@ import java.util.List;
 /**
  * What the Articles bench puts between its poems: a title above each, an
  * illustration where a zero-row member stands, a colophon after the last.
- * Fences are domain objects handed a host, as cells are; this module imports
- * nothing.
+ * Fences are nouns, as cells are: each owns its element, minted on the branch
+ * it was handed, and answers {@code fenceElement()} to whoever places it; this
+ * module imports nothing.
  */
 public record HanFences() implements DomModule<HanFences> {
 

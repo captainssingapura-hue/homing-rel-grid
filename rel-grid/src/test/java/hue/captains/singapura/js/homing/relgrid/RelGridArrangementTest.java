@@ -102,11 +102,11 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     // A relation with a CAPACITY: it declares more identities than it shows,
                     // and the host presents a prefix at construction. The first arrangement
                     // is the prefix — no cell beyond it is asked for, let alone minted.
-                    var asked = [];
+                    var asked = [], cellsB = testBranch(), seq = 0;              // the domain's branch, a sub-branch per cell
                     var relation = {
                         pks:     function () { var o = []; for (var r = 0; r < 50; r++) o.push('r' + r); return o; },
                         columns: function () { return ['a', 'b']; },
-                        cellFor: function (pk, col) { asked.push(pk + ' ' + col); return new RelGridTextCell({ value: pk + col }); }
+                        cellFor: function (pk, col) { asked.push(pk + ' ' + col); return new RelGridTextCell({ branch: cellsB.createBranch('c' + (++seq)), value: pk + col }); }
                     };
                     var container = makeEl('div');
                     var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation,

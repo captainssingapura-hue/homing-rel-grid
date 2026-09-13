@@ -18,9 +18,10 @@ import java.util.List;
  * an order each, over the store's values. {@code createDishViews(store)} is
  * one table's memory of which profile it is under, and computes any profile's
  * View over the store as it is now. {@code dishViewPanel(views, question,
- * host)} draws the list on the panel the grid minted and answers a promise —
- * a {@code RelGridView} for the chosen profile, nothing for Cancel — that
- * the grid presents exactly as given.</p>
+ * mask, { branch })} mints the list on a branch of its own, hands it to the
+ * grid's panel — {@code mask.panel(element)} — and answers a promise — a
+ * {@code RelGridView} for the chosen profile, nothing for Cancel — that the
+ * grid presents exactly as given.</p>
  *
  * <p>The explanation lives here: the grid holds nothing about why its rows
  * are in this order, and {@code views.describe()} is the one line that says

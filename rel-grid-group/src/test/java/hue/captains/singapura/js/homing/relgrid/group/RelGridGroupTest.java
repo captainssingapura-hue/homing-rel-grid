@@ -40,6 +40,7 @@ class RelGridGroupTest extends JsModuleTestBase {
             function relationOf(rows, opts) {
                 opts = opts || {};
                 var data = {}, cells = new Map(), commits = [];
+                var cellsB = testBranch(), seq = 0;                        // the DOMAIN's branch: a sub-branch per cell
                 rows.forEach(function (r) { data[r[0]] = { ingredient: r[1], calories: r[2] }; });
                 var relation = {
                     pks:     function () { return Object.keys(data); },
@@ -48,6 +49,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                         var k = pk + ' ' + col, c = cells.get(k);
                         if (!c) {
                             c = new RelGridTextCell({
+                                branch: cellsB.createBranch('c' + (++seq)),
                                 value: data[pk][col],
                                 onCommit: opts.editable ? function (text) { commits.push(pk + ' ' + col + ' ' + text); data[pk][col] = text; c.set(text); } : undefined
                             });
@@ -61,15 +63,14 @@ class RelGridGroupTest extends JsModuleTestBase {
             }
             function fenceWithButton(name) {
                 var f = fenceCell(name);
-                f.render = function (host, handle) {
-                    f.rendered = host; f.handle = handle;
-                    var b = makeEl('button'); b.textContent = name + ' button'; host.appendChild(b); f.button = b;
-                };
+                var b = makeEl('button'); b.textContent = name + ' button'; f.el.appendChild(b); f.button = b;
                 return f;
             }
+            // A fence is a NOUN: its element is its own, asked for once; it is handed nothing.
             function fenceCell(name) {
-                var f = { name: name, rendered: null, handle: null, disposed: 0, told: [],
-                          render: function (host, handle) { f.rendered = host; f.handle = handle; var el = makeEl('div'); el.textContent = name; host.appendChild(el); },
+                var el = makeEl('div'); el.textContent = name;
+                var f = { name: name, el: el, asked: 0, disposed: 0, told: [],
+                          fenceElement: function () { f.asked++; return el; },
                           onFolded: function (on) { f.told.push(on); },
                           dispose: function () { f.disposed++; } };
                 return f;
@@ -196,15 +197,15 @@ class RelGridGroupTest extends JsModuleTestBase {
                     // member b, fence c, member c, and the trailing fence.
                     if (f.kinds() !== 'hrg-group-header hrg-fence hrg-member hrg-fence hrg-member hrg-fence hrg-member hrg-fence') return false;
                     if (f.root().getAttribute('aria-label') !== 'a group') return false;
-                    // Each fence was handed to its cell, and each member's box carries its id.
+                    // Each fence's own element was placed in its slot — asked for once — and each member's box carries its id.
                     for (var k = 0; k < 3; k++) {
                         var id = 'abc'[k], spec = f.spec(id);
-                        if (spec.fence.rendered !== f.group.fence(id)) return false;
+                        if (spec.fence.asked !== 1 || f.group.fence(id).children[0] !== spec.fence.el) return false;
                         if (f.group.fence(id).getAttribute('data-member') !== id) return false;
                         if (f.group.fence(id).children[0].textContent !== 'fence of ' + id) return false;
                         if (f.group.member(id).el().parentNode.parentNode.getAttribute('data-member') !== id) return false;
                     }
-                    if (f.trailing.rendered !== f.group.fence(null) || f.group.fence(null).getAttribute('data-member') !== null) return false;
+                    if (f.group.fence(null).children[0] !== f.trailing.el || f.group.fence(null).getAttribute('data-member') !== null) return false;
                     return f.group.member('nope') === null && f.group.fence('nope') === null;
                 })()"""), "a group is its members in order, a fence above each and one trailing, each handed to the domain");
     }
@@ -220,10 +221,12 @@ class RelGridGroupTest extends JsModuleTestBase {
                     if (!/duplicate member id/.test(threw([memberSpec('a', []), memberSpec('a', [])]))) return false;
                     if (!/has no id/.test(threw([memberSpec('', [])]))) return false;
                     var bad = memberSpec('x', []); bad.fence = { dispose: function () {} };
-                    if (!/must render/.test(threw([bad]))) return false;
+                    if (!/must answer fenceElement/.test(threw([bad]))) return false;
+                    var worse = memberSpec('x', []); worse.fence = { fenceElement: function () { return 'not an element'; } };
+                    if (!/must answer an element/.test(threw([worse]))) return false;
                     var noGrid = memberSpec('y', []); noGrid.grid = null;
                     return /has no grid options/.test(threw([noGrid]));
-                })()"""), "an unfilled fence is hidden; ids are required and unique; a fence must render");
+                })()"""), "an unfilled fence is hidden; ids are required and unique; a fence must answer its element");
     }
 
     @Test
@@ -474,22 +477,25 @@ class RelGridGroupTest extends JsModuleTestBase {
     }
 
     @Test
-    void aFenceTellsTheGroupThroughItsHandleAndAnUnknownTellIsRefused() {
+    void aFenceTellsTheGroupThroughTheHostAndAnUnknownTellIsRefused() {
         assertTrue(evalBool("""
                 (() => {
                     var errors = [];
                     console.error = function () { errors.push(Array.prototype.slice.call(arguments).join(' ')); };
                     var f = groupFixture();
                     var fence = f.spec('b').fence;
-                    if (!fence.handle || typeof fence.handle.tell !== 'function' || fence.handle.folded() !== false) return false;
-                    // The domain's control, pressed: it TELLS, unasked, with a protocol value.
-                    if (fence.handle.tell(new RelGridGroupFold('b', true)) !== true) return false;
-                    if (!f.group.folded('b') || fence.handle.folded() !== true) return false;
+                    // The domain's control, pressed: it TELLS, unasked, with a protocol value —
+                    // through the closure the HOST wired into it, onto the group's own verb.
+                    // A fence has no handle: it reads nothing of the group, and is told
+                    // what it needs through onFolded.
+                    var tell = function (m) { return f.group.tell(m); };          // what a host builds a fence with
+                    if (fence.handle !== undefined) return false;
+                    if (tell(new RelGridGroupFold('b', true)) !== true) return false;
+                    if (!f.group.folded('b')) return false;
                     if (f.folds.join('|') !== 'b folded' || fence.told.join(',') !== 'true') return false;
-                    // The trailing fence's handle reads no member: folded() is false, and it may still tell.
-                    if (f.trailing.handle.folded() !== false) return false;
-                    if (f.trailing.handle.tell(new RelGridGroupFold('a', true)) !== true || !f.group.folded('a')) return false;
-                    // The host's tell is the same road.
+                    // The same road from the trailing fence's control: it names any member.
+                    if (tell(new RelGridGroupFold('a', true)) !== true || !f.group.folded('a')) return false;
+                    // The host's tell IS the road.
                     if (f.group.tell(new RelGridGroupFold('b', false)) !== true || f.group.folded('b')) return false;
                     // A member that is not here, and a kind that is not understood: recorded and refused.
                     if (f.group.tell(new RelGridGroupFold('nope', true)) !== false) return false;
@@ -499,7 +505,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     var g = groupFixture({ specs: [memberSpec('x', [['mapo', 'tofu', 480]])] });
                     delete g.spec('x').fence.onFolded;
                     return g.group.fold('x', true) === true && g.folds.join('|') === 'x folded';
-                })()"""), "tell is the channel's other direction: a fence's handle and the host's verb land on the same fold");
+                })()"""), "tell is the channel's other direction: a fence's control reaches it through the host, and lands on the same fold");
     }
     @Test
     void oneCursorIsTheActiveMembersAndFocusMovesIt() {

@@ -51,6 +51,7 @@ class OutletsTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", DOM_STUB);
+        for (String m : DishPolicyTest.PARTY) loadModule(m);
         loadModule(GRID_DIR + "protocol/RelGridProtocolModule.js");
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(BENCH_DIR + "SalesStore.js");
@@ -105,20 +106,19 @@ class OutletsTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var s = ledger();
-                    var h = createOutletRelation(s, 'harbour'), d = createOutletRelation(s, 'downtown');
+                    var h = createOutletRelation(s, 'harbour', { branch: ownBranch() }), d = createOutletRelation(s, 'downtown', { branch: ownBranch() });
                     if (h.pks().join(',') !== s.dishes().join(',') || h.columns().join(',') !== 'dish,sold,revenue,lastSale') return false;
                     if (h.readOnlyColumns().join(',') !== 'dish,sold,revenue,lastSale') return false;   // a book is read
                     if (h.name() !== 'Harbour' || h.outlet() !== 'harbour') return false;
-                    var el = makeEl('td');
-                    var c = h.cellFor('fish', 'revenue'); c.render(el);
-                    if (h.cellFor('fish', 'revenue') !== c) return false;                  // once per identity
+                    var c = h.cellFor('fish', 'revenue'), el = c.cellElement();   // the cell's own element, as the grid asks for it
+                    if (h.cellFor('fish', 'revenue') !== c || c.cellElement() !== el) return false;   // once per identity
                     if (el.textContent !== '348.00') return false;             // 29 × 12, formatted for reading
-                    var dl = makeEl('td'); d.cellFor('fish', 'revenue').render(dl);
+                    var dl = d.cellFor('fish', 'revenue').cellElement();
                     s.sell('harbour', 'fish', 2);
                     if (el.textContent !== '372.00') return false;             // Harbour's cell moved
                     if (dl.textContent !== '204.00') return false;             // Downtown's did not
                     if (h.totals().sold !== 92) return false;
-                    try { createOutletRelation(s, 'nowhere'); return false; } catch (e) { if (!/unknown outlet/.test(String(e))) return false; }
+                    try { createOutletRelation(s, 'nowhere', { branch: ownBranch() }); return false; } catch (e) { if (!/unknown outlet/.test(String(e))) return false; }
                     h.dispose();
                     s.sell('harbour', 'fish', 1);
                     return el.textContent === '372.00' && h.cellCount() === 0;   // disposed: deaf, and empty
@@ -130,13 +130,14 @@ class OutletsTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var s = ledger();
-                    var f = createOutletFence(s, 'harbour'), host = makeEl('div');
-                    f.render(host);
+                    var f = createOutletFence(s, 'harbour', { branch: ownBranch() }), host = makeEl('div');
+                    host.appendChild(f.fenceElement());                          // placed, as the group places it
+                    if (f.fenceElement() !== host.children[0]) return false;     // a noun: the same element every time
                     if (byClass(host, 'wb-fence-name')[0].textContent !== 'Harbour') return false;
                     var totals = byClass(host, 'wb-fence-totals')[0];
                     if (totals.textContent !== '90 sold \\u00b7 1092.50 taken') return false;
-                    var g = createLedgerFence(s), ghost = makeEl('div');
-                    g.render(ghost);
+                    var g = createLedgerFence(s, { branch: ownBranch() }), ghost = makeEl('div');
+                    ghost.appendChild(g.fenceElement());
                     if (byClass(ghost, 'wb-fence-name')[0].textContent !== 'All outlets') return false;
                     var all = byClass(ghost, 'wb-fence-totals')[0], before = all.textContent;
                     s.sell('harbour', 'fish', 2);
@@ -150,36 +151,37 @@ class OutletsTest extends JsModuleTestBase {
                 })()"""), "an outlet's fence shows its totals and follows them; the ledger's follows every outlet");
     }
     @Test
-    void theFenceToggleTellsTheGroupAndDrawsItselfFromWhatItIsTold() {
+    void theFenceToggleTellsThroughTheHostsClosureAndDrawsItselfFromWhatItIsTold() {
         assertTrue(evalBool("""
                 (() => {
                     var s = ledger();
-                    // A handle as the group would give one: it records what it is told and holds the state.
-                    var state = false, told = [];
-                    var handle = { tell: function (m) { told.push(m); state = m.folded; return true; }, folded: function () { return state; } };
-                    var f = createOutletFence(s, 'airport'), host = makeEl('div');
-                    f.render(host, handle);
+                    // The closure a HOST builds a fence with: onto the group's tell. It records what it is told.
+                    var told = [];
+                    var tell = function (m) { told.push(m); return true; };
+                    var f = createOutletFence(s, 'airport', { branch: ownBranch(), tell: tell }), host = makeEl('div');
+                    host.appendChild(f.fenceElement());
                     var toggle = byClass(host, 'wb-fence-fold')[0];
                     if (!toggle || toggle.textContent !== '▾' || toggle.getAttribute('aria-expanded') !== 'true') return false;
-                    // Pressed: a RelGridGroupFold for THIS outlet, the other way round from what the handle says.
+                    // Pressed: a RelGridGroupFold for THIS outlet, the other way round from what the fence was last told.
                     toggle.dispatch('click', {});
                     if (told.length !== 1 || !(told[0] instanceof RelGridGroupFold)) return false;
                     if (told[0].member !== 'airport' || told[0].folded !== true) return false;
                     // The fence draws from what it is TOLD, not from having pressed: nothing changed yet...
-                    if (toggle.textContent !== '▾') return false;
+                    if (toggle.textContent !== '▾' || f.folded() !== false) return false;
                     f.onFolded(true);                                            // ...until the group says so
                     if (toggle.textContent !== '▸' || toggle.getAttribute('aria-expanded') !== 'false') return false;
                     if (toggle.getAttribute('aria-label') !== 'Unfold Airport') return false;
-                    // Pressed again: the handle says folded, so the fence asks to unfold.
+                    // Pressed again: told it is folded, the fence asks to unfold.
                     toggle.dispatch('click', {});
                     if (told[1].folded !== false) return false;
                     f.onFolded(false);
                     if (toggle.textContent !== '▾') return false;
-                    // A fence rendered with no handle at all still draws, unfolded, and its press is inert.
-                    var g = createOutletFence(s, 'harbour'), ghost = makeEl('div');
-                    g.render(ghost);
+                    // A fence told it starts folded draws so; one built with no tell at all still draws, and its press is inert.
+                    var g = createOutletFence(s, 'harbour', { branch: ownBranch(), folded: true }), ghost = makeEl('div');
+                    ghost.appendChild(g.fenceElement());
+                    if (byClass(ghost, 'wb-fence-fold')[0].textContent !== '▸' || g.folded() !== true) return false;
                     byClass(ghost, 'wb-fence-fold')[0].dispatch('click', {});
-                    return byClass(ghost, 'wb-fence-fold')[0].textContent === '▾';
-                })()"""), "the toggle tells the group through its handle and paints itself only from onFolded");
+                    return byClass(ghost, 'wb-fence-fold')[0].textContent === '▸' && told.length === 2;
+                })()"""), "the toggle tells through the host's closure and paints itself only from what it is told");
     }
 }

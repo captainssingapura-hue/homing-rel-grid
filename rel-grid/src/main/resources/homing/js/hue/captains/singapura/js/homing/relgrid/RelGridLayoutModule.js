@@ -37,15 +37,17 @@
 // under it reads as unavailable, and it takes the focus so no key reaches the
 // table beneath. Inside it the layout mints a PANEL on request — a golden
 // rectangle at the golden section of what the person sees of the host's box —
-// and hands it over as it hands a slot to a cell: the box is the grid's, what goes in it is the
-// domain's, and the layout never reads what was drawn.
+// and PLACES the domain's element in it, as it places a cell's element in a
+// slot: the box is the grid's, what is in it is the domain's, and the layout
+// never reads what was drawn. The panel is a branch of its own under the
+// mask's, so it can come down while the wash holds.
 //
 //   new RelGridLayout({ container, branch, label?, showHeader?, overflow?, onCellClick?,
 //                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   revealSlot(i, j)                          the least scroll that shows a slot
 //   openOverlay(i, j) / closeOverlay()        the editor's anchor, over a slot
-//   openMask() / openPanel() / closeMask()    the mask, and the canvas in it
+//   openMask() / openPanel(el) / closePanel() / closeMask()    the mask, and the domain's element placed in it
 //   openGroup(i, j, n) / placeGroups()        a merged cell's host, over n slots
 //
 // A MERGED CELL is the layout's third overlay: a host laid over n slots of a
@@ -359,6 +361,7 @@ class RelGridLayout {
         this._slotsBranch = null;                             // the current arrangement's slots
         this._overlayBranch = null;
         this._maskBranch = null;
+        this._panelBranch = null;
         this._mergedBranch = null;
         this._onCellClick = opts.onCellClick || null;         // (i, j, mods)
         this._onCellDblClick = opts.onCellDblClick || null;   // (i, j)
@@ -727,15 +730,20 @@ class RelGridLayout {
     }
 
     /**
-     * Mint the panel — the domain's canvas — inside the mask, mounting the
-     * mask first if it is not up. Sized by the golden rule over the wrapper's
-     * box as it is NOW, and centred on it; minted once per mask, so a second
-     * call answers the same element. The focus moves into it, and the domain
-     * may move it further in.
+     * Mint the panel inside the mask, mounting the mask first if it is not
+     * up, and PLACE the domain's element in it. Sized by the golden rule over
+     * the wrapper's box as it is NOW, and centred on it; minted once per
+     * mask, so a second call places into the same box. The focus moves into
+     * it, and the domain may move it further in.
      */
-    openPanel() {
+    openPanel(element) {
         var mask = this.openMask();
-        if (this._panel) return this._panel;
+        if (this._panel) {
+            if (element && element.parentNode !== this._panel) this._panel.appendChild(element);
+            return this._panel;
+        }
+        var pb = this._panelBranch = this._maskBranch.createBranch("panel");
+        pb.activate(this);
         // Centred on what the person can SEE of the host's box, sized by the
         // golden rule over that, and placed in the wrapper's coordinates so it
         // scrolls with the table like everything else the wrapper holds.
@@ -743,7 +751,7 @@ class RelGridLayout {
                ? { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight } : null;
         var seen = _hrgVisibleBox(this._wrap.getBoundingClientRect(), this._container.getBoundingClientRect(), vp);
         var box = _hrgGoldenBox(seen.width, seen.height);
-        var el = this._maskBranch.createElement("panel", "div");
+        var el = pb.createElement("panel", "div");
         el.className = "hrg-panel";
         el.setAttribute("tabindex", "-1");
         var st = el.style;
@@ -754,16 +762,24 @@ class RelGridLayout {
             st.setProperty("height", box.height + "px");
         }
         mask.appendChild(el);
+        if (element) el.appendChild(element);
         this._panel = el;
         if (el.focus) el.focus({ preventScroll: true });   // it is already in view; a scroll would move the table
         return el;
     }
 
-    /** Take the mask down, panel and all — their branch dissolved. Whatever the domain drew goes with it. */
+    /** Take the panel down — its branch dissolved — and leave the wash up. The domain's element goes out with it, alive. */
+    closePanel() {
+        if (this._panelBranch) { this._panelBranch.dissolve(); this._panelBranch = null; }
+        this._panel = null;
+        return this;
+    }
+
+    /** Take the mask down, panel and all — their branch dissolved. */
     closeMask() {
+        this.closePanel();
         if (this._maskBranch) { this._maskBranch.dissolve(); this._maskBranch = null; }
         this._mask = null;
-        this._panel = null;
         return this;
     }
 

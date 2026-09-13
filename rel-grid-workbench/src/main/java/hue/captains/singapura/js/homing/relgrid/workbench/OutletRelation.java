@@ -16,12 +16,14 @@ import java.util.List;
  * <b>fences</b> the Outlets bench puts between its tables: an outlet's name
  * and published totals above each, the ledger's below the last.
  *
- * <p>A fence is a domain object handed a host, as a cell is. The outlet's
- * fence carries a fold toggle: pressed, it <i>tells</i> the group a
- * {@code RelGridGroupFold} through the handle it was given — the channel's
- * other direction — and draws itself from {@code onFolded}. Imports the stock
- * text cell and the protocol's group kind, and nothing of the grid or the
- * group.</p>
+ * <p>A fence is a noun, as a cell is: it owns its element, minted on the
+ * branch it was handed, and answers {@code fenceElement()} to whoever places
+ * it. The outlet's fence carries a fold toggle: pressed, it <i>tells</i> a
+ * {@code RelGridGroupFold} down the closure the host built it with — the
+ * channel's other direction, host-wired — and draws itself from what it is
+ * told: {@code folded} at construction, then every {@code onFolded}. Imports
+ * the stock text cell and the protocol's group kind, and nothing of the grid
+ * or the group.</p>
  */
 public record OutletRelation() implements DomModule<OutletRelation> {
 

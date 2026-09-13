@@ -8,6 +8,5 @@ hue.captains.singapura.js.homing.relgrid.RelGridModule [max-effective-lines] mod
 hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("left", "-9999px");
 hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("position", "fixed");
 hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("top", "0");
-hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var input = document.createElement("input");
 hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var s = document.createElement("style");
 hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [view-doctrine] DOM lookup (Owned References): if (document.getElementById(_HRG_STOCK_STYLE_ID)) return;

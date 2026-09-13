@@ -22,9 +22,9 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  *
  * <p>N members, N+1 slots: one above each member, addressed by that member,
  * and one trailing, addressed by nothing ({@link #fence(String)} with null).
- * Each is handed to the domain's {@link RelGridFenceContract fence cell} as a
- * table hands a slot to a cell; a slot nobody fills takes no height. The
- * group knows no caption.</p>
+ * In each the group places the domain's {@link RelGridFenceContract fence
+ * cell}'s own element, as a table places a cell's element in a slot; a slot
+ * nobody fills takes no height. The group knows no caption.</p>
  *
  * <h2>Its branch</h2>
  *

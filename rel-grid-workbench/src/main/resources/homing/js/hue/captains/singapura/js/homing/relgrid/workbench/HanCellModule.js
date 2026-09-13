@@ -31,12 +31,14 @@
 // everything else left. Measured, not assumed: a pair of halves left at
 // their min-content width grew to a full em each and overflowed the square.
 //
-// The contract, the display half of it:
+// A NOUN: the square is the cell's own element, minted on the branch it was
+// handed — a DomOpsParty branch of its own, its owner's gift — and the grid
+// places it. The contract, the display half of it:
 //
-//   render(host)        mount once into the element the grid minted
+//   cellElement()       the square, minted once; the grid places it
 //   set(glyph)          the OWNER changed it; repaint
 //   onSelect(mode)      'none' | 'shallow' | 'deep' — pure lifecycle
-//   dispose()           the owner's, never the grid's
+//   dispose()           the owner's, never the grid's; dissolves the branch
 //
 // A NARROW cell is a half-square: the leading or trailing column's, half as
 // wide as a square and as tall as one, holding one squeezed mark at the same
@@ -54,7 +56,13 @@
 // is never asked, so Enter on a square does nothing and the grid stays
 // shallow. Editing is the text editor's.
 //
-//   new HanCell({ glyph?, narrow? })
+// The ink is three spans the cell mints once and keeps — a mark for a
+// character or a run, and two halves for punctuation — and a paint ATTACHES
+// the ones the slot's kind needs and detaches the rest. Nothing is re-minted
+// and nothing is wiped: a slot changes kind as the article moves under it,
+// and the spans simply change places.
+//
+//   new HanCell({ branch, glyph?, narrow?, span? })
 // =============================================================================
 
 var _HAN_STYLE_ID = "bench-han-style";
@@ -111,8 +119,13 @@ class HanCell {
 
     constructor(opts) {
         opts = opts || {};
+        if (!opts.branch) throw new Error("[HanCell] opts.branch is required: the cell's own");
+        this._branch = opts.branch;
+        this._branch.activate(this);
         this._el = null;
         this._ink = null;
+        this._mark = null;         // one character, or a run
+        this._halves = null;       // two half-width boxes, for marks
         this._glyph = (typeof opts.glyph === "string" && opts.glyph.length) ? opts.glyph : null;
         this._narrow = opts.narrow === true;
         this._span = (opts.span > 1) ? Math.floor(opts.span) : 1;
@@ -122,49 +135,62 @@ class HanCell {
     /** How many squares this cell reaches over — read by a grid built with mergedCells. */
     colSpan() { return this._span; }
 
+    _detach(child) { if (child.parentNode) child.parentNode.removeChild(child); }
+
     /**
-     * A character is the square's text. A mark, or a pair of marks, is one
-     * half-width box each, side by side; a lone mark leaves its right half
-     * empty. Ink is rebuilt rather than patched, because a slot changes kind
-     * as the article moves under it.
+     * A character is the square's text, in the mark. A mark, or a pair of
+     * marks, is one half-width box each, side by side; a lone mark leaves its
+     * right half empty. The spans are attached or detached, never rebuilt,
+     * because a slot changes kind as the article moves under it.
      */
     _paint() {
         if (!this._ink) return;
-        var ink = this._ink, el = this._el;
-        while (ink.children.length) ink.removeChild(ink.children[0]);
+        var ink = this._ink, el = this._el, mark = this._mark, halves = this._halves;
         // The reach: a run's box is as wide as its squares; anything else is one.
         // The number itself is the grid's business (colSpan); the class is enough
         // for the drawing, which is sized from the height and not the reach.
         _hanSetClass(el, "han-run", this._span > 1);
         var g = this._glyph;
-        if (g == null) { ink.textContent = ""; _hanSetClass(ink, "han-punct", false); return; }
-        var marks = Array.from(g);
-        if (this._span > 1 || (marks.length === 1 && !hanIsPunct(marks[0]))) {
-            ink.textContent = g;
+        if (g == null) {
+            this._detach(mark); this._detach(halves[0]); this._detach(halves[1]);
             _hanSetClass(ink, "han-punct", false);
             return;
         }
-        ink.textContent = "";
+        var marks = Array.from(g);
+        if (this._span > 1 || (marks.length === 1 && !hanIsPunct(marks[0]))) {
+            this._detach(halves[0]); this._detach(halves[1]);
+            mark.textContent = g;
+            ink.appendChild(mark);
+            _hanSetClass(ink, "han-punct", false);
+            return;
+        }
+        this._detach(mark);
         _hanSetClass(ink, "han-punct", true);
-        for (var k = 0; k < marks.length; k++) {
-            var half = document.createElement("span");
-            half.className = hanIsOpener(marks[k]) ? "han-half han-open" : "han-half";
-            half.textContent = marks[k];
-            ink.appendChild(half);
+        for (var k = 0; k < 2; k++) {
+            if (k >= marks.length) { this._detach(halves[k]); continue; }
+            halves[k].className = hanIsOpener(marks[k]) ? "han-half han-open" : "han-half";
+            halves[k].textContent = marks[k];
+            ink.appendChild(halves[k]);
         }
     }
 
-    render(host) {
-        this._el = host;
+    /** The square, minted once on the cell's branch with its ink; the grid places it. */
+    cellElement() {
+        if (this._el) return this._el;
         _hanEnsureStyle();
-        _hanAddClass(host, "han-glyph");
-        if (this._narrow) _hanAddClass(host, "han-narrow");
-        var ink = document.createElement("span");
+        var b = this._branch;
+        var el = b.createElement("cell", "div");
+        _hanAddClass(el, "han-glyph");
+        if (this._narrow) _hanAddClass(el, "han-narrow");
+        var ink = b.createElement("ink", "span");
         ink.className = "han-ink";
-        host.appendChild(ink);
+        el.appendChild(ink);
+        this._mark = b.createElement("mark", "span");
+        this._halves = [b.createElement("half-0", "span"), b.createElement("half-1", "span")];
+        this._el = el;
         this._ink = ink;
         this._paint();
-        return this;
+        return el;
     }
 
     /** The owner changed it — and, for a run, how far it reaches. */
@@ -184,5 +210,8 @@ class HanCell {
     dispose() {
         this._el = null;
         this._ink = null;
+        this._mark = null;
+        this._halves = null;
+        this._branch.dissolve();
     }
 }

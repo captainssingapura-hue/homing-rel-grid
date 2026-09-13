@@ -35,8 +35,12 @@ class DishClipboardTest extends JsModuleTestBase {
             }
             function bench(role) {
                 var store = createDishStore();
-                return { store: store, rel: createDishRelation(store, { role: role || 'follower' }) };
+                return { store: store, rel: createDishRelation(store, { role: role || 'follower', branch: ownBranch() }) };
             }
+            // What the grid hands a domain with its question: a mask whose panel(element)
+            // PLACES the domain's element in the grid's box — here, a host of the test's.
+            function maskOf(host) { return { panel: function (el) { host.appendChild(el); return true; } }; }
+
             // Find the panel's parts by class, wherever they sit.
             function byClass(root, c) {
                 var out = [];
@@ -52,6 +56,7 @@ class DishClipboardTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", DOM_STUB);
+        for (String m : DishPolicyTest.PARTY) loadModule(m);
         loadModule(PROTOCOL);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");
@@ -162,9 +167,11 @@ class DishClipboardTest extends JsModuleTestBase {
                 var host = makeEl('div');
                 var chosen = null, answer = 'unsettled';
                 var q = new RelGridCopyRequested(blocks([[['mapo', 'coq', 'fish'], ['ingredient', 'stars']]]));
-                dishCopyPanel(P.rel, q, host, { onChosen: function (f, n) { chosen = f + ':' + n; } })
+                var branch = testBranch();
+                dishCopyPanel(P.rel, q, maskOf(host), { branch: branch, onChosen: function (f, n) { chosen = f + ':' + n; } })
                     .then(function (c) { answer = c; });
                 var root = host.children[0];
+                if (branch.branchCount !== 1) throw new Error('the panel mints on a branch of its own for the session');
                 var opts = byClass(root, 'wb-copy-opt');
                 """);
         assertTrue(evalBool("""
@@ -193,8 +200,10 @@ class DishClipboardTest extends JsModuleTestBase {
                     if (typeof answer.html !== 'string' || answer.html.indexOf('\\u2605') < 0) return false;
                     // And a second click cannot settle it again.
                     opts[0].dispatch('click', {});
-                    return chosen === 'html:6';
-                })()"""), "the promise settles once, with the chosen format's content");
+                    // Settled, the session's branch is dissolved: its elements are out of the
+                    // box, and the box is the grid's to take down.
+                    return chosen === 'html:6' && branch.branchCount === 0 && host.children.length === 0;
+                })()"""), "the promise settles once, with the chosen format's content, and the panel's branch dissolves");
     }
 
     @Test
@@ -203,21 +212,21 @@ class DishClipboardTest extends JsModuleTestBase {
                 var K = bench();
                 var kHost = makeEl('div'), kAnswer = 'unsettled', kChosen = null;
                 var kq = new RelGridCopyRequested(blocks([[['mapo'], ['price']]]));
-                dishCopyPanel(K.rel, kq, kHost, { onChosen: function (f) { kChosen = f; } }).then(function (c) { kAnswer = c; });
+                dishCopyPanel(K.rel, kq, maskOf(kHost), { branch: testBranch(), onChosen: function (f) { kChosen = f; } }).then(function (c) { kAnswer = c; });
                 kHost.children[0].dispatch('keydown', { key: 'c' });
                 """);
         assertTrue(evalBool("kChosen === 'csv' && kAnswer instanceof RelGridClipboardContent && kAnswer.text === 'price\\n' + K.store.get('mapo', 'price')"),
                 "C chooses CSV");
         act("""
                 var eHost = makeEl('div'), eAnswer = 'unsettled', eChosen = null;
-                dishCopyPanel(K.rel, kq, eHost, { onChosen: function (f) { eChosen = f; } }).then(function (c) { eAnswer = c; });
+                dishCopyPanel(K.rel, kq, maskOf(eHost), { branch: testBranch(), onChosen: function (f) { eChosen = f; } }).then(function (c) { eAnswer = c; });
                 eHost.children[0].dispatch('keydown', { key: 'Escape' });
                 """);
         assertTrue(evalBool("eChosen === null && eAnswer === undefined"),
                 "Escape answers absence: nothing chosen, and the grid will write nothing");
         act("""
                 var xHost = makeEl('div'), xAnswer = 'unsettled';
-                dishCopyPanel(K.rel, kq, xHost, {}).then(function (c) { xAnswer = c; });
+                dishCopyPanel(K.rel, kq, maskOf(xHost), { branch: testBranch() }).then(function (c) { xAnswer = c; });
                 byClass(xHost, 'wb-copy-cancel')[0].dispatch('click', {});
                 """);
         assertTrue(evalBool("xAnswer === undefined"), "and so does the Cancel button");
@@ -229,7 +238,7 @@ class DishClipboardTest extends JsModuleTestBase {
                 var T = bench();
                 var tHost = makeEl('div'), tAnswer = 'unsettled';
                 var tq = new RelGridCopyRequested(blocks([[['mapo'], ['ingredient']]]));
-                dishCopyPanel(T.rel, tq, tHost, {}).then(function (c) { tAnswer = c; });
+                dishCopyPanel(T.rel, tq, maskOf(tHost), { branch: testBranch() }).then(function (c) { tAnswer = c; });
                 var box = byClass(tHost, 'wb-copy-foot')[0].children[0].children[0];
                 box.checked = false;
                 box.dispatch('change', {});

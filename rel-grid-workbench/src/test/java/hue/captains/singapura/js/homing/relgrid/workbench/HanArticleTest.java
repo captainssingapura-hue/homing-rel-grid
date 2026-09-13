@@ -31,12 +31,10 @@ class HanArticleTest extends JsModuleTestBase {
                          + (row.trail ? '{' + row.trail.glyph + '}' : '');
                 }).join('|');
             }
-            function mount(rel, pk, col) { var c = rel.cellFor(pk, col); if (!c._el) c.render(makeEl('div')); return c; }
-            // What a square shows: its text, or its half-boxes' texts joined.
-            function inkOf(c) {
-                var ink = c._ink;
-                return ink.children.length ? ink.children.map(function (h) { return h.textContent; }).join('') : ink.textContent;
-            }
+            // A cell is a NOUN: asked for its square, as the grid would ask; nothing rendered into it.
+            function mount(rel, pk, col) { var c = rel.cellFor(pk, col); c.cellElement(); return c; }
+            // What a square shows: the spans attached to its ink — a mark, or half-boxes — joined; nothing when none.
+            function inkOf(c) { return c._ink.children.map(function (h) { return h.textContent; }).join(''); }
             function shown(rel, pk, col) { return inkOf(mount(rel, pk, col)); }
             // The policy stub's elements have no style; a run's cell sets a custom property on its.
             var _mk = makeEl;
@@ -52,6 +50,7 @@ class HanArticleTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", DishPolicyTest.DOM_STUB);
+        for (String m : DishPolicyTest.PARTY) loadModule(m);
         loadModule(BENCH_DIR + "HanLayout.js");
         loadModule(BENCH_DIR + "HanStore.js");
         loadModule(BENCH_DIR + "HanCellModule.js");
@@ -200,7 +199,7 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore(POEM);
-                    var rel = createHanRelation(store, { cols: 9, capacity: 12 });
+                    var rel = createHanRelation(store, { cols: 9, capacity: 12, branch: ownBranch() });
                     // Identities are the CAPACITY; what is presented is the prefix in use.
                     if (rel.pks().length !== 12 || rel.pks()[11] !== 'r11') return false;
                     if (rel.presented().join(',') !== 'r0,r1,r2,r3') return false;
@@ -225,10 +224,10 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore('甲，。乙。');
-                    var rel = createHanRelation(store, { cols: 9 });
-                    // A character: the square's own text, no halves.
+                    var rel = createHanRelation(store, { cols: 9, branch: ownBranch() });
+                    // A character: the mark span alone, no halves.
                     var han = mount(rel, 'r0', 'c0');
-                    if (han._ink.textContent !== '甲' || han._ink.children.length !== 0) return false;
+                    if (inkOf(han) !== '甲' || han._ink.children.length !== 1) return false;
                     if (/han-punct/.test(han._ink.className)) return false;
                     // A pair: two half-boxes, one mark each, and the square marked as punctuation.
                     var pair = mount(rel, 'r0', 'c1');
@@ -241,10 +240,11 @@ class HanArticleTest extends JsModuleTestBase {
                     store.set('「甲');
                     if (!/han-open/.test(han._ink.children[0].className)) return false;
                     // And a square changes KIND as the article moves under it: the pair's
-                    // square now holds a character, and its ink is text again.
-                    return pair._ink.textContent === '甲' && pair._ink.children.length === 0
+                    // square now holds a character, and its ink is the mark again — the halves
+                    // detached, nothing re-minted.
+                    return inkOf(pair) === '甲' && pair._ink.children.length === 1
                         && !/han-punct/.test(pair._ink.className);
-                })()"""), "the square draws a pair as halves, a character as text, and rebuilds when its kind changes");
+                })()"""), "the square draws a pair as halves, a character as its mark, and swaps its spans when its kind changes");
     }
 
     @Test
@@ -252,7 +252,7 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore('一二三四五六七八九。乙');
-                    var rel = createHanRelation(store, { cols: 9 });
+                    var rel = createHanRelation(store, { cols: 9, branch: ownBranch() });
                     if (rel.presentedColumns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8,trail') return false;
                     // The trailing cell: narrow, and showing the squeezed mark as one half-box.
                     var t = mount(rel, 'r0', 'trail');
@@ -323,11 +323,11 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore('善哉what也');
-                    var rel = createHanRelation(store, { cols: 9 });
+                    var rel = createHanRelation(store, { cols: 9, branch: ownBranch() });
                     var run = mount(rel, 'r0', 'c2');
                     // The cell answers the reach the grid asks about, and draws itself that wide.
                     if (run.colSpan() !== 2 || !/han-run/.test(run._el.className)) return false;
-                    if (run._ink.textContent !== 'what' || run._ink.children.length !== 0) return false;
+                    if (inkOf(run) !== 'what' || run._ink.children.length !== 1) return false;
                     // The covered square has a cell of its own, showing nothing, reaching over nothing.
                     var cov = mount(rel, 'r0', 'c3');
                     if (cov.colSpan() !== 1 || shown(rel, 'r0', 'c3') !== '' || /han-run/.test(cov._el.className)) return false;
@@ -349,8 +349,8 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore(POEM);
-                    var a = createHanRelation(store, { cols: 9 });
-                    var b = createHanRelation(store, { cols: 9 });
+                    var a = createHanRelation(store, { cols: 9, branch: ownBranch() });
+                    var b = createHanRelation(store, { cols: 9, branch: ownBranch() });
                     // Mount a few cells on both, as two grids would have.
                     ['r0','r1','r2','r3'].forEach(function (r) { for (var k = 0; k < 9; k++) { mount(a, r, 'c' + k); mount(b, r, 'c' + k); } });
 
@@ -364,7 +364,7 @@ class HanArticleTest extends JsModuleTestBase {
                     if (a.rows() !== 5 || a.presented().join(',') !== 'r0,r1,r2,r3,r4') return false;
                     if (shown(a, 'r0', 'c8') !== '寒' || shown(a, 'r1', 'c0') !== '山') return false;
                     if (shown(b, 'r2', 'c0') !== '江') return false;             // line 2 is row 2 now
-                    if (mount(b, 'r4', 'c0')._ink.textContent !== '夜') return false;
+                    if (shown(b, 'r4', 'c0') !== '夜') return false;
 
                     // DELETE: take 山 out — the article shrinks back to four rows, and the cell
                     // the fifth row had is left alive with nothing in it.

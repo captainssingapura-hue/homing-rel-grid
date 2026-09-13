@@ -4,7 +4,9 @@
 // puts between its tables. DOMAIN CODE; the words "grid" and "group" do not
 // appear in it, and nothing in it could tell either anything.
 //
-//   createOutletRelation(store, outletId)
+//   createOutletRelation(store, outletId, { branch })
+//     · branch is the relation's OWN — unactivated when handed; it activates, and
+//       dispose() dissolves — and every cell is given a sub-branch of it to own;
 //     · pks() are the dishes; columns() are the ledger's four; every column is
 //       declared read-only — sales are the only thing that move a book;
 //     · cellFor(pk, col) builds a text cell ONCE per identity and keeps it,
@@ -13,19 +15,23 @@
 //       values change — a sale at another outlet is not this book's business,
 //       and the table that placed these cells is never told.
 //
-//   createOutletFence(store, outletId)     what goes in the slot ABOVE an outlet's table:
+//   createOutletFence(store, outletId, { branch, tell, folded? })
+//                                          what goes in the slot ABOVE an outlet's table:
 //                                          a FOLD TOGGLE, its name, and its published
 //                                          totals — kept current by the store, the way
 //                                          a cell is
-//   createLedgerFence(store)               the slot below the last: every outlet together
+//   createLedgerFence(store, { branch })   the slot below the last: every outlet together
 //
-// A fence is a domain object handed a host, exactly as a cell is; what it
-// draws, and whether it carries a control, is decided here and nowhere else.
-// The toggle is the first control that TELLS: pressed, it sends the group a
-// RelGridGroupFold through the handle the fence was given — the channel's
-// other direction, an answer nobody asked for — and the group folds the
-// member below. The fence is told onFolded(on) whenever that member folds
-// by any road, and draws its toggle from that, never from its own memory.
+// A fence is a NOUN, exactly as a cell is: it owns its element, minted on the
+// branch it was handed, and answers fenceElement() once to whoever places
+// it; what it draws, and whether it carries a control, is decided here and
+// nowhere else. The toggle is the first control that TELLS: pressed, it sends
+// a RelGridGroupFold down the tell closure the HOST built the fence with —
+// the channel's other direction, an answer nobody asked for — and whatever
+// is at the other end folds the member below. The fence is told onFolded(on)
+// whenever that member folds by any road, and draws its toggle from what it
+// was last told — folded at construction, then every onFolded — never from
+// what it did itself.
 // =============================================================================
 
 var _WB_FENCE_STYLE_ID = "bench-fence-style";
@@ -62,8 +68,12 @@ function _wbOutletName(store, id) {
     return id;
 }
 
-function createOutletRelation(store, outletId) {
+function createOutletRelation(store, outletId, opts) {
+    opts = opts || {};
     if (!_wbOutletName(store, outletId) || !store.totals(outletId)) throw new Error("[OutletRelation] unknown outlet: " + outletId);
+    if (!opts.branch) throw new Error("[OutletRelation] opts.branch is required: the relation's own");
+    var branch = opts.branch, cellSeq = 0;
+    branch.activate({ toString: function () { return "OutletRelation " + outletId; } });   // its own: unactivated when handed
     var cells = new Map();
     var unsubscribe = store.subscribe(function (outlet, pk, col, v) {
         if (outlet !== outletId || pk === null) return;
@@ -79,7 +89,8 @@ function createOutletRelation(store, outletId) {
         cellFor: function (pk, col) {
             var k = pk + " " + col, c = cells.get(k);
             if (!c) {
-                c = new RelGridTextCell({ value: _wbOutletShown(col, store.get(outletId, pk, col)) });
+                c = new RelGridTextCell({ branch: branch.createBranch("c" + (++cellSeq)),
+                                          value: _wbOutletShown(col, store.get(outletId, pk, col)) });
                 cells.set(k, c);
             }
             return c;
@@ -92,71 +103,91 @@ function createOutletRelation(store, outletId) {
             unsubscribe();
             cells.forEach(function (c) { if (typeof c.dispose === "function") c.dispose(); });
             cells.clear();
+            branch.dissolve();
         }
     };
 }
 
-/** The slot above an outlet's table: a fold toggle, its name, and its totals kept current. */
-function createOutletFence(store, outletId) {
-    var name = _wbOutletName(store, outletId), totals = null, toggle = null, unsubscribe = null;
-    function paint(folded) {
+/**
+ * The slot above an outlet's table: a fold toggle, its name, and its totals
+ * kept current. tell(message) is the host's closure — pressed, the toggle
+ * sends a RelGridGroupFold down it; a fence built without one has an inert
+ * toggle. folded is what the fence is told it is at first (false by default).
+ */
+function createOutletFence(store, outletId, opts) {
+    opts = opts || {};
+    if (!opts.branch) throw new Error("[OutletFence] opts.branch is required: the fence's own");
+    var b = opts.branch, tell = (typeof opts.tell === "function") ? opts.tell : null;
+    var name = _wbOutletName(store, outletId), state = opts.folded === true;
+    var root = null, totals = null, toggle = null, unsubscribe = null;
+    var owner = { toString: function () { return "OutletFence " + outletId; } };
+    b.activate(owner);
+    function paint() {
         if (!toggle) return;
-        toggle.textContent = folded ? "\u25B8" : "\u25BE";                 // ▸ folded · ▾ shown
-        toggle.setAttribute("aria-expanded", folded ? "false" : "true");
-        toggle.setAttribute("aria-label", (folded ? "Unfold " : "Fold ") + name);
+        toggle.textContent = state ? "\u25B8" : "\u25BE";                  // ▸ folded · ▾ shown
+        toggle.setAttribute("aria-expanded", state ? "false" : "true");
+        toggle.setAttribute("aria-label", (state ? "Unfold " : "Fold ") + name);
     }
     return {
-        render: function (host, handle) {
+        /** The fence's element, minted once on its branch; whoever holds the slot places it. */
+        fenceElement: function () {
+            if (root) return root;
             _wbFenceEnsureStyle();
-            var root = document.createElement("div");
+            root = b.createElement("fence", "div");
             root.className = "wb-fence";
-            toggle = document.createElement("button");
+            toggle = b.createElement("fold", "button");
             toggle.className = "wb-fence-fold";
             toggle.type = "button";
             toggle.addEventListener("click", function () {
-                // Pressed: TELL the group, unasked. What it is now is asked of the
-                // handle, not remembered here; what it becomes comes back as onFolded.
-                if (handle) handle.tell(new RelGridGroupFold(outletId, !handle.folded()));
+                // Pressed: TELL, unasked, the other way round from what this fence was
+                // last told it is; what it becomes comes back as onFolded.
+                if (tell) tell(new RelGridGroupFold(outletId, !state));
             });
-            paint(handle ? handle.folded() : false);
-            var n = document.createElement("span");
+            paint();
+            var n = b.createElement("name", "span");
             n.className = "wb-fence-name";
             n.textContent = name;
-            totals = document.createElement("span");
+            totals = b.createElement("totals", "span");
             totals.className = "wb-fence-totals";
             totals.textContent = _wbTotalsLine(store.totals(outletId));
             root.appendChild(toggle); root.appendChild(n); root.appendChild(totals);
-            host.appendChild(root);
             unsubscribe = store.subscribe(function (outlet, pk, col, v) {
                 if (outlet === outletId && pk === null && col === "totals") totals.textContent = _wbTotalsLine(v);
             });
+            return root;
         },
         /** The member below folded or unfolded — by this toggle, the host's verb, or a fold-all. */
-        onFolded: function (folded) { paint(folded); },
-        dispose: function () { if (unsubscribe) unsubscribe(); unsubscribe = null; }
+        onFolded: function (folded) { state = folded === true; paint(); },
+        folded: function () { return state; },
+        dispose: function () { if (unsubscribe) unsubscribe(); unsubscribe = null; root = null; toggle = null; b.dissolve(); }
     };
 }
 
 /** The slot below the last table: the ledger — every outlet together. */
-function createLedgerFence(store) {
-    var totals = null, unsubscribe = null;
+function createLedgerFence(store, opts) {
+    opts = opts || {};
+    if (!opts.branch) throw new Error("[LedgerFence] opts.branch is required: the fence's own");
+    var b = opts.branch, root = null, totals = null, unsubscribe = null;
+    var owner = { toString: function () { return "LedgerFence"; } };
+    b.activate(owner);
     return {
-        render: function (host) {
+        fenceElement: function () {
+            if (root) return root;
             _wbFenceEnsureStyle();
-            var root = document.createElement("div");
+            root = b.createElement("fence", "div");
             root.className = "wb-fence wb-fence-ledger";
-            var n = document.createElement("span");
+            var n = b.createElement("name", "span");
             n.className = "wb-fence-name";
             n.textContent = "All outlets";
-            totals = document.createElement("span");
+            totals = b.createElement("totals", "span");
             totals.className = "wb-fence-totals";
             totals.textContent = _wbTotalsLine(store.totals(null));
             root.appendChild(n); root.appendChild(totals);
-            host.appendChild(root);
             unsubscribe = store.subscribe(function (outlet, pk, col) {
                 if (pk === null && col === "totals") totals.textContent = _wbTotalsLine(store.totals(null));
             });
+            return root;
         },
-        dispose: function () { if (unsubscribe) unsubscribe(); unsubscribe = null; }
+        dispose: function () { if (unsubscribe) unsubscribe(); unsubscribe = null; root = null; b.dissolve(); }
     };
 }

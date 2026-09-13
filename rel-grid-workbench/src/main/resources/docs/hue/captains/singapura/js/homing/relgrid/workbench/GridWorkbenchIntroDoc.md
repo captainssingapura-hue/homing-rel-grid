@@ -88,8 +88,9 @@ only ever been proved against the one thing it was written for.
   rating arrives as **stars**, because that is what you saw. Choose **TSV** and it arrives as
   a number, because that is what a spreadsheet can add up.
 - Look at what the panel is. Its **box** is the grid's — a golden rectangle, sized to what you
-  can see of the table's host and centred on it — and its **content** is the bench's, drawn
-  by the same relation that owns the cells. The grid handed over identities (which dishes,
+  can see of the table's host and centred on it — and its **content** is the bench's: an
+  element minted on the bench's own branch and handed over, `mask.panel(element)`, for the
+  grid to place in the box, the way a cell's element is placed in a slot. The grid handed over identities (which dishes,
   which columns) and got back finished text; it composed nothing, read nothing, and wrote
   what it was given. The readout under the table says what was chosen and how much was
   written; the first half is the bench remembering, the second half is the grid reporting.
@@ -385,10 +386,11 @@ agreeing through the surface every host already uses, and reaches into no member
   callbacks — verbatim but for the container and the branch, which the group gives it: a
   sub-branch of the group's own. The member's cursor, selection, copy, handover and the domain
   its ask reaches are its own. The group observes; it does not route.
-- **Fences, not captions.** N members, N+1 slots — one above each member, one trailing — each
-  handed to the domain the way a table hands a slot to a cell: `render(host)`, and
-  `dispose()` is the owner's. What goes in it is the domain's: a name, a published total, a
-  picture, a control. A slot nobody fills takes no height. The group knows no caption.
+- **Fences, not captions.** N members, N+1 slots — one above each member, one trailing — in
+  each the domain's fence is placed the way a cell is placed in a slot: `fenceElement()`
+  once, an element the fence owns on a branch of the domain's, and `dispose()` is the
+  owner's. What is in it is the domain's: a name, a published total, a picture, a control. A
+  slot nobody fills takes no height. The group knows no caption.
 - **What is shared: column geometry**, the one thing separate tables cannot agree on by
   themselves. The group applies its widths to every member, hears any member's resize report,
   applies it to the siblings through their own `setColumnWidth`, and reports once. A sibling
@@ -421,8 +423,10 @@ agreeing through the surface every host already uses, and reaches into no member
   `onFolded(folded)` is told when the member below it changes, by whatever road.
 - **`tell` is the channel's other direction.** The grid asks and the domain answers; a control the
   domain drew in a fence has nobody to answer, so it *tells*, unasked — a protocol value,
-  `RelGridGroupFold { member, folded }`, through the handle the fence was given, applied as the
-  host's verb would be. An unknown kind is recorded and refused, never dropped.
+  `RelGridGroupFold { member, folded }`, down a closure the host wired into the fence at
+  construction onto the group's own `tell`, applied as the host's verb would be. A fence has no
+  handle and no way to the group of its own. An unknown kind is recorded and refused, never
+  dropped.
 
 **Outlets** (in Replicating Tables): the six dishes sold at three outlets, one book each over a
 shared ledger, every column read-only. Drag a header edge on Downtown, or Alt+←/→ on any of

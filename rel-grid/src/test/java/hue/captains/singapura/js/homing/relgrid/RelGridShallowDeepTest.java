@@ -291,6 +291,14 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     cell.takeControl = function () { return undefined; };
                     if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
 
+                    // One whose editor is not an element breaks it the same way.
+                    cell.takeControl = function () { return new Promise(function () {}); };
+                    var editor = cell.editorElement;
+                    cell.editorElement = function () { return undefined; };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+                    cell.editorElement = function () { throw new Error('nope'); };
+                    if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;
+                    cell.editorElement = editor;
                     // One that throws in either stage is refused, not fatal.
                     cell.mayTakeControl = function () { throw new Error('nope'); };
                     if (f.grid.takeControlAtCursor() !== false || f.grid.isDeep()) return false;

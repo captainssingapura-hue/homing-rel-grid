@@ -41,11 +41,12 @@
 //
 // FENCES. Between every two members, and around the ends, the group mints a
 // SLOT — N+1 of them for N members, each addressed by the member below it
-// and the last by the group — and hands it to the domain the way a table
-// hands a slot to a cell: render(host, handle), and dispose() is the owner's.
-// What goes in it is the domain's — a title, a total, an illustration, a
-// control — and a slot nobody fills takes no height. The group knows no
-// caption; it knows a slot.
+// and the last by the group — and PLACES the domain's fence in it the way a
+// table places a cell's element in a slot: fenceElement() once, and
+// dispose() is the owner's. What is in it is the domain's — a title, a
+// total, an illustration, a control — minted on the domain's own branch, and
+// a slot nobody fills takes no height. The group knows no caption; it knows
+// a slot.
 //
 // FOLD is the group's own state: which members show their table. A folded
 // member's BOX is hidden — its fence stays — and the table inside is
@@ -84,10 +85,11 @@
 //
 // TELL is the channel's other direction. The grid asks and the domain
 // answers; here the domain SAYS, unasked: a control the domain drew in a
-// fence was pressed. The handle a fence is given — { tell(message),
-// folded() } — carries a protocol value the same way an answer does, and
-// tell() on the group takes the same values from a host. RelGridGroupFold is
-// the first kind; an unknown one is recorded and refused, never dropped.
+// fence was pressed. tell(message) on the group carries a protocol value the
+// same way an answer does; a fence has no handle and no way to the group of
+// its own — the HOST wires a closure onto tell into the fence it builds, so
+// the domain talks to the host and the host to the group. RelGridGroupFold
+// is the first kind; an unknown one is recorded and refused, never dropped.
 //
 // WHAT IS SHARED, AND HOW. Column geometry is the one thing separate tables
 // cannot agree on by themselves, so it is the group's: it applies its widths
@@ -289,26 +291,23 @@ class RelGridGroup {
     // ── minting ────────────────────────────────────────────────────────────
 
     /**
-     * The slot above a member (or the trailing one): the domain's, once it has
-     * a cell. The cell is handed the host and a HANDLE — the channel's other
-     * direction, and what it may read of the member below: nothing else.
+     * The slot above a member (or the trailing one): the group's box, with the
+     * domain's fence PLACED in it once it has one — fenceElement(), the noun,
+     * asked once. The fence is handed nothing and reads nothing.
      */
     _mintFence(id, cell, k) {
-        var self = this;
         var host = this._branch.createElement("fence-" + k, "div");   // by position: an id is the domain's, and any string
         host.className = "hrg-fence" + (cell ? "" : " hrg-fence-empty");
         host.setAttribute("tabindex", "-1");                    // a Tab stop by the group's hand, not the browser's
         if (id !== null) host.setAttribute("data-member", String(id));
         this._root.appendChild(host);
         if (cell) {
-            if (typeof cell.render !== "function")
-                throw new Error("[RelGridGroup] a fence cell must render(host)" + (id !== null ? " — member '" + id + "'" : ""));
-            var handle = {
-                tell:   function (message) { return self.tell(message); },
-                folded: function () { return id !== null && self._folded[id] === true; }
-            };
-            try { cell.render(host, handle); }
-            catch (e) { console.error("[RelGridGroup] fence.render threw:", e); }
+            if (typeof cell.fenceElement !== "function")
+                throw new Error("[RelGridGroup] a fence cell must answer fenceElement()" + (id !== null ? " — member '" + id + "'" : ""));
+            var el = cell.fenceElement();
+            if (!el || typeof el !== "object" || typeof el.appendChild !== "function")
+                throw new Error("[RelGridGroup] fenceElement() must answer an element" + (id !== null ? " — member '" + id + "'" : ""));
+            host.appendChild(el);
         }
         return { id: id, host: host, cell: cell };
     }

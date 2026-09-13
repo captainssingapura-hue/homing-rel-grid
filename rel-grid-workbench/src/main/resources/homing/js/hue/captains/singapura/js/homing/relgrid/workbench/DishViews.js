@@ -18,7 +18,7 @@
 //       .viewFor(key)                         a profile's View over the store NOW: pks
 //       .choose(key)                          hold it, and answer its View
 //       .describe()                           one line for the status: the explanation
-//   dishViewPanel(views, question, host, { onChosen? })
+//   dishViewPanel(views, question, mask, { branch, onChosen? })
 //       → Promise<RelGridView | undefined>
 //
 // THE EXPLANATION IS HERE, NOT IN THE GRID. The grid holds nothing about why
@@ -30,9 +30,12 @@
 // That is the model, not a gap: re-asking is a gesture.
 //
 // The panel is the grid's BOX and this file's CONTENT, exactly as the copy
-// panel is. A list; ↑ ↓ move, Enter or a click chooses, 1–9 choose by
-// number, Escape cancels. The choice settles the promise once — a View for a
-// profile, nothing for cancel — and the grid takes the panel down.
+// panel is: an element minted on a branch of its own for the session and
+// HANDED to the grid — mask.panel(element) — which places it in the box. A
+// list; ↑ ↓ move, Enter or a click chooses, 1–9 choose by number, Escape
+// cancels. The choice settles the promise once — a View for a profile,
+// nothing for cancel — the session's branch is dissolved, and the grid
+// takes its box down.
 // =============================================================================
 
 var _WB_VIEW_STYLE_ID = "bench-view-style";
@@ -175,15 +178,21 @@ function createDishViews(store, opts) {
     };
 }
 
+var _wbViewSeq = 0;
+
 /**
- * The choice, drawn on the grid's panel: the profiles as a list, the held
+ * The choice, handed to the grid's panel: the profiles as a list, the held
  * one marked, each with its rule and how many dishes it shows right now.
  * Settles ONCE — a View for the chosen profile, nothing for Cancel or Escape
- * — and the grid takes the panel down.
+ * — dissolves its own branch, and the grid takes the box down.
  */
-function dishViewPanel(views, question, host, opts) {
+function dishViewPanel(views, question, mask, opts) {
     opts = opts || {};
+    if (!opts.branch) throw new Error("[DishViews] opts.branch is required: the panel's own");
     _wbViewEnsureStyle();
+    var b = opts.branch.createBranch("view-" + (++_wbViewSeq));   // this session's, dissolved with it
+    b.activate({ toString: function () { return "dishViewPanel"; } });
+    var mint = function (name, tag) { return b.createElement(name, tag); };
 
     return new Promise(function (resolve) {
         var settled = false;
@@ -191,6 +200,7 @@ function dishViewPanel(views, question, host, opts) {
             if (settled) return;
             settled = true;
             resolve(answer);
+            b.dissolve();                                     // the elements go; the grid's box follows
         }
         function choose(key) {
             if (settled) return;
@@ -199,41 +209,41 @@ function dishViewPanel(views, question, host, opts) {
             settle(new RelGridView(pks));
         }
 
-        var root = document.createElement("div");
+        var root = mint("root", "div");
         root.className = "wb-view";
         root.tabIndex = -1;
 
-        var head = document.createElement("div");
+        var head = mint("head", "div");
         head.className = "wb-view-head";
-        var title = document.createElement("span");
+        var title = mint("title", "span");
         title.className = "wb-view-title";
         title.textContent = "Arrange the dishes";
-        var sub = document.createElement("span");
+        var sub = mint("sub", "span");
         sub.className = "wb-view-sub";
         sub.textContent = "the grid handed the order of its rows over, and is waiting";
         head.appendChild(title); head.appendChild(sub);
         root.appendChild(head);
 
-        var list = document.createElement("ul");
+        var list = mint("list", "ul");
         list.className = "wb-view-list";
         var items = [], profiles = views.profiles(), heldKey = views.held();
         profiles.forEach(function (p, idx) {
-            var li = document.createElement("li");
+            var li = mint("item-" + p.key, "li");
             li.className = "wb-view-item" + (p.key === heldKey ? " wb-view-held" : "");
             li.tabIndex = -1;
             li.profile = p.key;                                  // a property, so a test can read it back
             li.setAttribute("role", "option");
             li.setAttribute("aria-selected", p.key === heldKey ? "true" : "false");
-            var num = document.createElement("span");
+            var num = mint("num-" + p.key, "span");
             num.className = "wb-view-num";
             num.textContent = String(idx + 1);
-            var label = document.createElement("span");
+            var label = mint("label-" + p.key, "span");
             label.className = "wb-view-label";
             label.textContent = p.label;
-            var rule = document.createElement("span");
+            var rule = mint("rule-" + p.key, "span");
             rule.className = "wb-view-rule";
             rule.textContent = p.rule;
-            var count = document.createElement("span");
+            var count = mint("count-" + p.key, "span");
             count.className = "wb-view-count";
             count.textContent = views.viewFor(p.key).length + " dishes";
             li.appendChild(num); li.appendChild(label); li.appendChild(rule); li.appendChild(count);
@@ -243,14 +253,14 @@ function dishViewPanel(views, question, host, opts) {
         });
         root.appendChild(list);
 
-        var foot = document.createElement("div");
+        var foot = mint("foot", "div");
         foot.className = "wb-view-foot";
-        var note = document.createElement("span");
+        var note = mint("note", "span");
         note.textContent = "a reading of the store now; an edit later changes a cell, not the order";
-        var keys = document.createElement("span");
+        var keys = mint("keys", "span");
         keys.className = "wb-view-keys";
         keys.textContent = "1–9  ↑↓  Enter  Esc";
-        var cancel = document.createElement("button");
+        var cancel = mint("cancel", "button");
         cancel.className = "wb-view-cancel";
         cancel.type = "button";
         cancel.textContent = "Cancel";
@@ -285,7 +295,7 @@ function dishViewPanel(views, question, host, opts) {
             }
         });
 
-        host.appendChild(root);
+        mask.panel(root);                                     // the grid places it in its box
         var start = items[Math.max(0, items.map(function (li) { return li.profile; }).indexOf(heldKey))];
         if (start && start.focus) start.focus();
     });

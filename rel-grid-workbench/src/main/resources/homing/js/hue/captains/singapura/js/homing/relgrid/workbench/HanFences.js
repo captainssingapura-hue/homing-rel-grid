@@ -1,12 +1,13 @@
 // =============================================================================
 // HanFences — what the Articles bench puts BETWEEN its poems: a title above
 // each, an illustration where a zero-row member stands, a colophon after the
-// last. DOMAIN CODE; a fence is a domain object handed a host, as a cell is,
-// and nothing here knows what minted the host.
+// last. DOMAIN CODE; a fence is a NOUN, as a cell is: it owns its element,
+// minted on the branch it was handed, and answers fenceElement() once to
+// whoever places it — and nothing here knows what placed it.
 //
-//   createHanTitleFence({ title, author })   the title band above a poem
-//   createHanOrnamentFence({ glyph, note })  an illustration: one large faint glyph and a note
-//   createHanColophonFence(text)             a closing line
+//   createHanTitleFence({ branch, title, author })   the title band above a poem
+//   createHanOrnamentFence({ branch, glyph, note })  an illustration: one large faint glyph and a note
+//   createHanColophonFence({ branch, text })         a closing line
 //
 // Drawn to sit over the squares' width: the same serif as the squares, and
 // the same grey as their hairlines, so the fences read as the manuscript's
@@ -35,48 +36,50 @@ function _wbHanfEnsureStyle() {
     document.head.appendChild(s);
 }
 
-function _wbHanfEl(cls, text) {
-    var el = document.createElement("div");
-    el.className = cls;
-    if (text != null) el.textContent = text;
-    return el;
+/** A fence over a branch of its own: minted once on first ask, dissolved on dispose. */
+function _wbHanfFence(opts, kind, build) {
+    opts = opts || {};
+    if (!opts.branch) throw new Error("[HanFences] opts.branch is required: the fence's own");
+    var b = opts.branch, root = null;
+    b.activate({ toString: function () { return "HanFence " + kind; } });
+    var el = function (name, cls, text) {
+        var x = b.createElement(name, "span");
+        x.className = cls;
+        if (text != null) x.textContent = text;
+        return x;
+    };
+    return {
+        fenceElement: function () {
+            if (root) return root;
+            _wbHanfEnsureStyle();
+            root = b.createElement("fence", "div");
+            root.className = "wb-hanf " + kind;
+            build(root, el);
+            return root;
+        },
+        dispose: function () { root = null; b.dissolve(); }
+    };
 }
 
 function createHanTitleFence(opts) {
     opts = opts || {};
-    return {
-        render: function (host) {
-            _wbHanfEnsureStyle();
-            var root = _wbHanfEl("wb-hanf wb-hanf-title");
-            var t = document.createElement("span"); t.className = "wb-hanf-t"; t.textContent = opts.title || "";
-            var a = document.createElement("span"); a.className = "wb-hanf-a"; a.textContent = opts.author || "";
-            root.appendChild(t); root.appendChild(a);
-            host.appendChild(root);
-        },
-        dispose: function () {}
-    };
+    return _wbHanfFence(opts, "wb-hanf-title", function (root, el) {
+        root.appendChild(el("title", "wb-hanf-t", opts.title || ""));
+        root.appendChild(el("author", "wb-hanf-a", opts.author || ""));
+    });
 }
 
 function createHanOrnamentFence(opts) {
     opts = opts || {};
-    return {
-        render: function (host) {
-            _wbHanfEnsureStyle();
-            var root = _wbHanfEl("wb-hanf wb-hanf-orn");
-            root.appendChild(_wbHanfEl("wb-hanf-g", opts.glyph || "✿"));
-            if (opts.note) root.appendChild(_wbHanfEl("wb-hanf-n", opts.note));
-            host.appendChild(root);
-        },
-        dispose: function () {}
-    };
+    return _wbHanfFence(opts, "wb-hanf-orn", function (root, el) {
+        root.appendChild(el("glyph", "wb-hanf-g", opts.glyph || "\u273F"));
+        if (opts.note) root.appendChild(el("note", "wb-hanf-n", opts.note));
+    });
 }
 
-function createHanColophonFence(text) {
-    return {
-        render: function (host) {
-            _wbHanfEnsureStyle();
-            host.appendChild(_wbHanfEl("wb-hanf wb-hanf-colophon", text || ""));
-        },
-        dispose: function () {}
-    };
+function createHanColophonFence(opts) {
+    opts = opts || {};
+    return _wbHanfFence(opts, "wb-hanf-colophon", function (root) {
+        root.textContent = opts.text || "";
+    });
 }
