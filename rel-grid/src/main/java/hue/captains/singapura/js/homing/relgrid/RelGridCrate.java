@@ -30,11 +30,15 @@ public final class RelGridCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(RelGridViewMapsModule.INSTANCE,     StandardJsModuleType.PURE_LOGIC),
-                CrateEntry.of(RelGridHeaderDragModule.INSTANCE,   StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridLayoutModule.INSTANCE,       StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridCellsModule.INSTANCE,        StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridStockCellsModule.INSTANCE,   StandardJsModuleType.PRIMITIVE),
-                CrateEntry.of(RelGridModule.INSTANCE, StandardJsModuleType.PRIMITIVE));
+                // PURE_LOGIC touches no DOM; everything else is undeclared, i.e. a
+                // CONSUMER under the full DOM-owner discipline. Nothing here is a
+                // structural primitive: a grid is a component a widget composes, not
+                // a pane the shell is made of.
+                CrateEntry.of(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                CrateEntry.of(RelGridHeaderDragModule.INSTANCE),
+                CrateEntry.of(RelGridLayoutModule.INSTANCE),
+                CrateEntry.of(RelGridCellsModule.INSTANCE),
+                CrateEntry.of(RelGridStockCellsModule.INSTANCE),
+                CrateEntry.of(RelGridModule.INSTANCE));
     }
 }

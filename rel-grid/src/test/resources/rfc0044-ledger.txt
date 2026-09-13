@@ -1,0 +1,26 @@
+# RFC 0044 ledger for crate 'homing-rel-grid': pre-existing violations, one fingerprint per line.
+# It can only shrink. Regenerate with -Dhoming.conformance.record=true, deliberately — never to silence a fresh violation.
+hue.captains.singapura.js.homing.relgrid.RelGridHeaderDragModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var guide = document.createElement("div");
+hue.captains.singapura.js.homing.relgrid.RelGridHeaderDragModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var handle = document.createElement("span");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [max-effective-lines] module exceeds the 250 effective-line limit — split it
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [no-literal-color] literal colour (use a theme token var(--...), not a baked hex/rgb): "  box-shadow:0 12px 36px rgba(0,0,0,0.32);}",
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._colgroup = document.createElement("colgroup");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._colgroup.appendChild(document.createElement("col"));
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._headerRow = document.createElement("tr");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._table = document.createElement("table");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._tbody = document.createElement("tbody");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._thead = document.createElement("thead");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._wrap = document.createElement("div");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var el = document.createElement("div");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var s = document.createElement("style");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var td = document.createElement("td");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var th = document.createElement("th");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var tr = document.createElement("tr");
+hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [view-doctrine] DOM lookup (Owned References): if (document.getElementById(_HRG_STYLE_ID)) return;
+hue.captains.singapura.js.homing.relgrid.RelGridModule [max-effective-lines] module exceeds the 250 effective-line limit — split it
+hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("left", "-9999px");
+hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("position", "fixed");
+hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("top", "0");
+hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var input = document.createElement("input");
+hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var s = document.createElement("style");
+hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [view-doctrine] DOM lookup (Owned References): if (document.getElementById(_HRG_STOCK_STYLE_ID)) return;

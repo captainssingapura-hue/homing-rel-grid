@@ -85,6 +85,14 @@
             <version>${homing.core.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The grid's test sources: the RFC 0044 rule sweep and its ledger. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <!-- A JS test runtime, for the bench's own domain tests (store, relation, roles). -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>

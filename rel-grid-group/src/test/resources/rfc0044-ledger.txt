@@ -1,0 +1,7 @@
+# RFC 0044 ledger for crate 'rel-grid-group': pre-existing violations, one fingerprint per line.
+# It can only shrink. Regenerate with -Dhoming.conformance.record=true, deliberately — never to silence a fresh violation.
+hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule [max-effective-lines] module exceeds the 250 effective-line limit — split it
+hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): this._root = document.createElement("div");
+hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var box = document.createElement("div");
+hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var host = document.createElement("div");
+hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var s = document.createElement("style");

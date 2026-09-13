@@ -2,10 +2,13 @@ package hue.captains.singapura.js.homing.relgrid.group;
 
 import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
+import hue.captains.singapura.js.homing.relgrid.RelGridConformanceSweep;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,5 +34,15 @@ class RelGridGroupCrateConformanceTest {
                 "the group requires the grid's crate and the protocol's, and nothing else");
         assertEquals(false, RelGridCrate.INSTANCE.requires().contains(RelGridGroupCrate.INSTANCE),
                 "and the dependency runs one way only");
+    }
+
+    /**
+     * RFC 0044 — the rule sweep, under each module's declared type, against the
+     * committed ledger of pre-existing violations. A NEW finding fails; so does a
+     * ledger line no longer found, so the ledger only ever shrinks.
+     */
+    @Test
+    void ruleSweepAgainstTheLedger() throws IOException {
+        RelGridConformanceSweep.assertLedger(RelGridGroupCrate.INSTANCE, Path.of("src/test/resources/rfc0044-ledger.txt"));
     }
 }
