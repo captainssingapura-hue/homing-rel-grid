@@ -115,6 +115,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     fence: trailing,
                     columnWidths: opts.columnWidths,
                     header: opts.header,
+                    stickyHeader: opts.stickyHeader,
                     folded: opts.folded,
                     onColumnResized: function (c, px) { reports.push(c + ' ' + px); },
                     onFolded: function (id, on) { folds.push(id + (on ? ' folded' : ' unfolded')); },
@@ -123,7 +124,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                 function root() { return container.children[0]; }
                 function kinds() { return root().children.map(function (el) { return el.className.split(' ')[0]; }).join(' '); }
                 // The group's own header, when it has one: its box, and the table in it.
-                function headerBox() { var b = root().children[0]; return (b && b.className === 'hrg-group-header') ? b : null; }
+                function headerBox() { var b = root().children[0]; return (b && has(b, 'hrg-group-header')) ? b : null; }
                 function headerTable() { var b = headerBox(); return b ? b.children[0].children[0] : null; }
                 function has(el, c) { return (el.className || '').split(' ').indexOf(c) >= 0; }
                 // container > group > (fence | member)*; member > wrap > table
@@ -290,6 +291,38 @@ class RelGridGroupTest extends JsModuleTestBase {
                     // Anything else is a mistake.
                     try { groupFixture({ header: 'first' }); return false; } catch (e) { return /'group' or 'each'/.test(String(e)); }
                 })()"""), "header:'group' is one table of the group's above every fence; header:'each' is every member's own");
+    }
+
+    @Test
+    void aStickyGroupHeaderIsTheBoxAndEveryMemberRevealsClearOfIt() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = groupFixture({ stickyHeader: true }), box = f.headerBox();
+                    // The BOX sticks, not the header's cells: a cell sticks only within its own
+                    // table, and that table is one row tall. Members show no header at all.
+                    if (!box || !f.has(box, 'hrg-group-header-sticky')) return false;
+                    var ht = f.headerTable(), th = null;
+                    for (var k = 0; k < ht.children.length; k++) if (ht.children[k].tagName === 'thead') th = ht.children[k].children[0].children[0];
+                    if (css.hasClass(th, hrg_sticky)) return false;
+                    if (!groupFixture().has(groupFixture().headerBox(), 'hrg-group-header') || groupFixture().has(groupFixture().headerBox(), 'hrg-group-header-sticky')) return false;
+                    if (groupFixture({ header: 'each', stickyHeader: true }).headerBox() !== null) return false;   // 'each': the group adds nothing
+                    // Geometry: the group's container scrolls; the header box is 30px tall; member
+                    // a's rows sit at 200 + 20i less what is scrolled. Scrolled by hand to 120, row 0
+                    // is 80..100 — twenty above the port, and thirty more under the stuck header.
+                    // Up from row 1 to it must clear both: a plain group would move 20, this 50.
+                    var port = f.container;
+                    port.scrollTop = 0; port.scrollLeft = 0; port.clientHeight = 200; port.clientWidth = 300;
+                    port.scrollHeight = 2000; port.scrollWidth = 300;
+                    port.getBoundingClientRect = function () { return { top: 100, bottom: 300, left: 0, right: 300, width: 300, height: 200 }; };
+                    box._rt = 0; box._rb = 30;
+                    for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) (function (td, i) {
+                        td.getBoundingClientRect = function () { var top = 200 + 20 * i - port.scrollTop; return { top: top, bottom: top + 20, left: 0, right: 100, width: 100, height: 20 }; };
+                    })(f.tdOf('a', i, j), i);
+                    f.click('a', 1, 0); f.tableOf('a').focus();
+                    port.scrollTop = 120;
+                    f.key('a', 'ArrowUp');
+                    return port.scrollTop === 70 && f.cursorOf('a') === 'mapo/ingredient';    // 80 - (100 + 30) = -50
+                })()"""), "stickyHeader sticks the group's header box, and a member's cursor is revealed clear of it");
     }
 
     @Test

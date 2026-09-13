@@ -7,10 +7,13 @@
 // cursor walks out of the visible band and the grid looks dead. Native
 // scrollIntoView({block:'nearest'}) has the right SEMANTICS — the least
 // movement, and none when the slot already shows — but it takes no inset,
-// and a sticky band (a group's header, one day) would park an upward move
-// underneath it. So the same arithmetic is done here, in every ancestor that
-// actually scrolls and then in the window. Ported from episode 1, where the
-// inset carried the sticky header; here it is zero until something is sticky.
+// and a sticky band — the grid's own header, a group's header above it —
+// would park an upward move underneath it. So the same arithmetic is done
+// here, in every ancestor that actually scrolls and then in the window, with
+// the INSET the caller names: the height of what is stuck at the top of the
+// port the slot scrolls in. The innermost port that scrolls claims it; the
+// ports outside it, and the window, get none — the band is stuck in the
+// first, not in them.
 //
 // The follow is NOT what focus() does. focus() takes the focus WITHOUT
 // scrolling — a table taller than its pane would otherwise be pulled into
@@ -18,7 +21,8 @@
 // scrolls to the CURSOR, the one slot a person is looking at, by the least
 // amount. The two are different questions with different answers.
 //
-//   relGridRevealSlot(el)          the least scroll, in every port and then the window, that shows el
+//   relGridRevealSlot(el, inset?)  the least scroll, in every port and then the window, that shows el —
+//                                  clear of inset px stuck at the top of the innermost port
 //   relGridHasKeyboard(root)       does root, or something in it, hold the focus?
 //   relGridWithin(el, ancestor)    is el inside ancestor, or it?
 // =============================================================================
@@ -67,9 +71,9 @@ function _hrgRevealInWindow(el, topInset) {
  * scrolls, innermost first, and then the window. Nothing moves when it
  * already shows; nothing at all where there is no geometry.
  */
-function relGridRevealSlot(el) {
+function relGridRevealSlot(el, inset) {
     if (!el || !el.getBoundingClientRect || typeof document === "undefined") return;
-    var inset = 0;                                        // a sticky band's height, when there is one
+    inset = (inset > 0) ? inset : 0;                      // a sticky band's height, when there is one
     var node = el.parentNode;
     while (node && node !== document.body && node !== document.documentElement) {
         if (node.getBoundingClientRect && _hrgScrolls(node)) {

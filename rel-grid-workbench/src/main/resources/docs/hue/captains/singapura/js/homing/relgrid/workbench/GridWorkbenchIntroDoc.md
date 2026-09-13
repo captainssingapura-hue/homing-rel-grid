@@ -433,7 +433,9 @@ agreeing through the surface every host already uses, and reaches into no member
   dropped.
 
 **Outlets** (in Replicating Tables): the six dishes sold at three outlets, one book each over a
-shared ledger, every column read-only. Drag a header edge on Downtown, or Alt+←/→ on any of
+shared ledger, every column read-only. The group's one header **sticks** — shorten the pane and
+scroll the books under it; arrow up to a row hidden beneath it and the port moves the header's
+height, no more. Drag a header edge on Downtown, or Alt+←/→ on any of
 the three — Airport and Harbour have no header at all — and every table follows, the group's
 line under them reporting the widths once. *Trade at Harbour*: Harbour's cells move, Harbour's
 fence moves, the ledger's fence moves, and no other book hears a thing — the path is store →

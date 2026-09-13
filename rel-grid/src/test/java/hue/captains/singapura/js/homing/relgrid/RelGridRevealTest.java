@@ -87,6 +87,42 @@ class RelGridRevealTest extends JsModuleTestBase {
     }
 
     @Test
+    void aStickyHeaderAndAHostsBandAreClearedByTheReveal() {
+        assertTrue(evalBool("""
+                (() => {
+                    // Map 12: a header that sticks is chrome the host asks for, on the header
+                    // cells; and a slot revealed under it is not revealed — the follow clears it.
+                    var plain = fixture(), s = fixture({ header: { sticky: true } });
+                    if (css.hasClass(plain.thAt(0), hrg_sticky) || !css.hasClass(s.thAt(0), hrg_sticky) || !css.hasClass(s.thAt(1), hrg_sticky)) return false;
+                    if (!css.hasClass(s.thAt(0), hrg_th)) return false;                  // still a header cell
+                    // The header row is 20px tall (the stub's rect). Scrolled by hand to 40: row 2
+                    // sits at the port's top, under the header. Up to row 1 — 80..100, twenty above
+                    // the port — must clear the header too: 40 more than a plain grid moves.
+                    var port = ported(s);
+                    s.click(2, 0); s.table().focus();
+                    port.scrollTop = 40;
+                    s.key('ArrowUp');
+                    if (port.scrollTop !== 0) return false;                             // 80 - (100 + 20) = -40
+                    var p = ported(plain);
+                    plain.click(2, 0); plain.table().focus();
+                    p.scrollTop = 40;
+                    plain.key('ArrowUp');
+                    if (p.scrollTop !== 20) return false;                               // 80 - 100 = -20: no header to clear
+                    // A band the HOST keeps above the table — a group's header — is named as a
+                    // function, asked when the follow needs it, and cleared the same way.
+                    var band = 10, h = fixture({ stickyInset: function () { return band; } });
+                    var hp = ported(h);
+                    h.click(2, 0); h.table().focus();
+                    hp.scrollTop = 40;
+                    h.key('ArrowUp');
+                    if (hp.scrollTop !== 10) return false;                              // 80 - (100 + 10) = -30
+                    // A band of nothing is nothing: the plain 20 again.
+                    band = 0; hp.scrollTop = 40; h.click(2, 0); h.key('ArrowUp');
+                    return hp.scrollTop === 20;
+                })()"""), "the follow clears the grid's own sticky header and any band the host keeps above it");
+    }
+
+    @Test
     void whatDoesNotFollowClicksSelectAllAndArrangements() {
         assertTrue(evalBool("""
                 (() => {

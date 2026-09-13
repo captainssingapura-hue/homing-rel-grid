@@ -28,6 +28,9 @@
 //       header?,            // 'group' (default): ONE header, the group's, at the top above every
 //                           // fence, and no member shows its own; 'each': every member keeps
 //                           // its own header option, and the group adds none
+//       stickyHeader?,      // true: the group's header stays at the top of whatever scrolls the
+//                           // group, and every member reveals its cursor clear of it. 'group'
+//                           // mode only — in 'each' mode a member's own header option says
 //       folded?,            // the ids folded at first — [] by default
 //       onColumnResized?,   // (column, px) — ONE report per change, however many members moved
 //       onFolded?,          // (id, folded) — a REPORT: a member's box was folded or unfolded
@@ -93,6 +96,7 @@ class RelGridGroup {
         var headerMode = (opts.header === "each") ? "each" : "group";
         if (opts.header !== undefined && opts.header !== "each" && opts.header !== "group")
             throw new Error("[RelGridGroup] header must be 'group' or 'each', not " + JSON.stringify(opts.header));
+        var sticky = headerMode === "group" && opts.stickyHeader === true;
         this._folded = {};                                      // id → true while folded
         var f0 = opts.folded || [];
         for (var i = 0; i < f0.length; i++) this._folded[f0[i]] = true;
@@ -119,7 +123,7 @@ class RelGridGroup {
             if (!mv.grid) throw new Error("[RelGridGroup] member '" + mv.id + "' has no grid options");
         }
         this._mint = new RelGridGroupMint({
-            branch: this._branch, root: this._root, headerMode: headerMode,
+            branch: this._branch, root: this._root, headerMode: headerMode, sticky: sticky,
             hooks: {
                 onResized:  function (id, column, px) { self._onMemberResized(id, column, px); },
                 onReleased: function (id) { self._level(id); },

@@ -127,6 +127,23 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
         }
     }
 
+    /**
+     * STICKY: a header cell that stays at the top of whatever scrolls the table,
+     * over the rows passing under it. On the cell, not the row or the band —
+     * that is what every browser sticks. Above a merged cell's host (30), under
+     * the frame (40), the editor (50) and the mask (60). A host with a band of
+     * its own above the table says how tall in {@code --hrg-sticky-top}, so the
+     * header sticks under the band rather than under nothing.
+     */
+    public record hrg_sticky() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                position: sticky;
+                top: var(--hrg-sticky-top, 0px);
+                z-index: 35;
+                """;
+        }
+    }
+
     /** The resize HANDLE: a real element on the header's right edge, so the pointer shows col-resize and the drag has a target. */
     public record hrg_resize_handle() implements CssClass<RelGridStyles> {
         @Override public String body() { return """
@@ -373,7 +390,7 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
         return List.of(
                 // looks
                 new hrg_wrap(), new hrg_frame(), new hrg_lit(),
-                new hrg_table(), new hrg_th(), new hrg_resize_handle(), new hrg_col(), new hrg_resize_guide(),
+                new hrg_table(), new hrg_th(), new hrg_sticky(), new hrg_resize_handle(), new hrg_col(), new hrg_resize_guide(),
                 new hrg_td(), new hrg_merge(), new hrg_edit(), new hrg_mask(), new hrg_panel(), new hrg_scratch(),
                 // states, after the looks they qualify
                 new hrg_fixed(), new hrg_ov_ellipsis(), new hrg_ov_clip(), new hrg_ov_wrap(),

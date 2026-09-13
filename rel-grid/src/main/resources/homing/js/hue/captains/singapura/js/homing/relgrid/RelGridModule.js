@@ -31,7 +31,11 @@
 //                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
 //                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
-//       header?,          // { show?, labels? } — display only
+//       header?,          // { show?, labels?, sticky? } — display only. sticky: the header
+//                         // stays at the top of whatever scrolls the table, and the cursor
+//                         // is revealed clear of it (map 12: grid chrome, the host's, read once)
+//       stickyInset?,     // () → px: a band the HOST keeps stuck above the table — a group's
+//                         // header — that a revealed slot must clear. Geometry, asked when needed
 //       overflow?,        // wrap | clip | ellipsis — what a slot does with content
 //                         // too wide for it. Default ellipsis.
 //       columnView?,      // a subset of relation.columns() — the column axis IS listed. A
@@ -146,7 +150,8 @@ class RelGrid {
         });
         this._layout = new RelGridLayout({
             branch: opts.branch, container: opts.container, label: opts.label || null,
-            showHeader: head.show !== false, overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
+            showHeader: head.show !== false, stickyHeader: head.sticky === true, stickyInset: opts.stickyInset || null,
+            overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._gestures.onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._gestures.onDblClick(i, j); },
             onCellDown:     function (i, j, mods) { self._gestures.onDown(i, j, mods); },

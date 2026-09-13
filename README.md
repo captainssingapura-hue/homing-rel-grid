@@ -32,6 +32,7 @@ are the domain's operations; they never change an arrangement, so the grid has n
 - a cursor that is an identity while presented and a position when not
 - **shallow and deep, enforced by the grid**: a click or an arrow moves the cursor and the cell is only told; Enter or a double-click hands the cell control until it calls `release()`; the grid never learns commit from cancel
 - column widths — held by identity, applied by position, in place; bounded at normalisation; snapshot and restore; persisted by nobody here
+- a header that shows or not, and **sticks** or not (map 12: grid chrome, the host's, read once) — on the header cells, with the cursor revealed clear of it; a group's header sticks as a box and hands its height to every member as the band its cursor clears
 
 Not here, by decision: sort and filter (the relation's, answered with a View), selection ranges, and remembering widths — later rounds and the domain's half.
 
