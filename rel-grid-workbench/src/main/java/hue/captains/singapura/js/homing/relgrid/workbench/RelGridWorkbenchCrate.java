@@ -61,6 +61,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(HanCellStyles.INSTANCE,     StandardJsModuleType.GENERATED_CSS),
                 CrateEntry.of(HanFenceStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
                 CrateEntry.of(OutletFenceStyles.INSTANCE, StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(GamesStyles.INSTANCE,       StandardJsModuleType.GENERATED_CSS),
                 // Replicating Tables: a persisted store, a relation with a role and
                 // a cell manager, three editors with different rights, and their
                 // followers. The grid is on none of the edit path.
@@ -68,6 +69,8 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(DishStarsCellModule.INSTANCE),
                 CrateEntry.of(DishRelation.INSTANCE),
                 CrateEntry.of(DishClipboardFormats.INSTANCE, StandardJsModuleType.PURE_LOGIC),   // strings in, strings out: no DOM
+                CrateEntry.of(GamesStore.INSTANCE,           StandardJsModuleType.PURE_LOGIC),   // the catalogue, parsed: no DOM
+                CrateEntry.of(GamesConditions.INSTANCE,      StandardJsModuleType.PURE_LOGIC),   // conditions in, keys out: no DOM
                 CrateEntry.of(DishClipboard.INSTANCE),
                 CrateEntry.of(DishViews.INSTANCE),
                 CrateEntry.of(DishChefWidget.INSTANCE),
@@ -92,6 +95,10 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(HanArticlesWidget.INSTANCE),
                 // Endless Table: a window over a million rows, and the widget that measures it.
                 CrateEntry.of(EndlessRelation.INSTANCE),
-                CrateEntry.of(EndlessWidget.INSTANCE));
+                CrateEntry.of(EndlessWidget.INSTANCE),
+                // Games Catalogue: header cells of the relation's own, sorting and filtering for itself.
+                CrateEntry.of(GamesHeaderCells.INSTANCE),
+                CrateEntry.of(GamesRelation.INSTANCE),
+                CrateEntry.of(GamesWidget.INSTANCE));
     }
 }

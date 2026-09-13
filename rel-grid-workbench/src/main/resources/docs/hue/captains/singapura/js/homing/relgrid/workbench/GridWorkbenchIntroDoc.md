@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid. Three benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own, and each with a specimen that stacks tables in a group — and **Endless Table**, the stress bench for the two branches.
+A studio of its own, for benching the Relation Grid. Four benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own, and each with a specimen that stacks tables in a group — **Endless Table**, the stress bench for the two branches, and **Games Catalogue**, where a relation sorts and filters for itself from header cells of its own.
 
 ---
 
@@ -498,6 +498,43 @@ at the grid's own edges; and the relation, not the grid, is the authority on wha
 stranger is refused at `cellFor`, before anything moves. The domain's side is one rule: a row is
 freed once it is outside two Views, the one answered last and the one being answered, with no
 host between. The record is RFC 0050 · Episode 2-ext8 in the studio.
+
+## Games Catalogue
+
+The fourth bench, and the first whose **header cells are the relation's**. Seven hundred and
+twenty-four releases from 1990 to 2020 — every FIFA, Madden, NBA 2K, PES, Need for Speed, Call
+of Duty and Just Dance a row a year, as a real catalogue has them — in one table, sorted and
+filtered from its header. The grid placed the relation's header cells in its header slots exactly
+as it places cells in its body slots, captures nothing on them but its own resize handle, and
+knows nothing of sorting: when the relation's View changes, this widget — the common parent —
+tells the grid so, unasked, and the grid asks `view()` again.
+
+### What to try
+
+Switch the workspace kind to **Games Catalogue**.
+
+- **Click a header** to sort by it — up, then down, then not at all. The caret is the header
+  cell's; so is the click. The rows reorder on the same slots, the cursor stays on its game, the
+  header stays put.
+- **Shift-click** another header to sort by it *after* the first; the small numbers say which key
+  is which. A plain click anywhere replaces them all.
+- **Open a column's ▾.** Text columns take a *contains*; year, sales and score take a range with
+  either end open; platform and type offer their values with counts. Every keystroke changes the
+  View at once; the popover is the header cell's, on its own branch, gone when it closes.
+- **Sort by score, then scroll to the bottom.** The unrated are last — and they are last when
+  you sort the other way too. A missing score is not a low score; the relation says so, and the
+  grid never knew there was a score.
+- **The presets** set the relation's conditions as data — the same data a header cell sets one
+  click at a time — which is what map 13's remembered arrangement will be made of.
+
+### What it is built from
+
+A store that reads the catalogue with numbers as numbers and blanks as null; **conditions as pure
+logic** — sort keys and filters as a value, every function answering a new one, the judgements
+named where they are made; a header cell that is a noun; and a relation that composes the three
+and answers `view()`. Nothing here is the grid's, and nothing here is yet *provided*: this bench is
+the demonstration a provided layer will be extracted from — a decorator that wraps any relation
+and gives it this header, and the parts a domain composes for itself.
 
 ## Adding a bench
 
