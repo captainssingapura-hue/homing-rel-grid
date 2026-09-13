@@ -10,10 +10,12 @@ import java.util.List;
  * <p>An ordered list of the relation's own pks, and nothing else: not values,
  * not a sorted copy of anything, not a promise about how the order was
  * reached. The grid places exactly these rows in exactly this order (map 1,
- * law 1) and reorders nothing; a pk the relation never declared is an error
- * the grid records and does not apply. The list may be shorter than the root
- * — a View may filter — and it may be empty, in which case the presented
- * space is empty and the cursor is nowhere (map 14, law 100).</p>
+ * law 1) and reorders nothing; an identity the relation does not own — it
+ * refuses one by throwing from {@code cellFor}, and the grid asks before
+ * anything moves — refuses the View whole: recorded, not applied. The list
+ * may be shorter than the last — a View may filter — and it may be empty, in
+ * which case the presented space is empty and the cursor is nowhere (map 14,
+ * law 100).</p>
  *
  * <p>The alternative answer is <b>absence</b>: the promise resolves with
  * nothing, and the rows stay as they were.</p>

@@ -144,7 +144,7 @@ learns whether it committed or cancelled — only that it ended.
 
 The path of an edit is **cell → store → every relation → each relation's own cells**, and the
 path of a sale is **store → every relation → each relation's own cells**. The grid is on
-neither. It was handed a relation at construction — `pks()`, `columns()`,
+neither. It was handed a relation at construction — `view()`, `columns()`,
 `cellFor(pk, column)` — and has not been spoken to since. There is no `subscribe`, no
 `updateCell`, no commit callback, no list of editable columns, and the grid's own build fails if
 any of its modules so much as mentions a value.

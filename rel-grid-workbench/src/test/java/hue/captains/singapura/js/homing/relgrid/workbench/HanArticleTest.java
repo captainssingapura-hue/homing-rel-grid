@@ -200,10 +200,13 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var store = createHanStore(POEM);
-                    var rel = createHanRelation(store, { cols: 9, capacity: 12, branch: testBranch() });
-                    // Identities are the CAPACITY; what is presented is the prefix in use.
-                    if (rel.pks().length !== 12 || rel.pks()[11] !== 'r11') return false;
-                    if (rel.presented().join(',') !== 'r0,r1,r2,r3') return false;
+                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    // One root: the View is the rows in use, answered — there is no capacity to list.
+                    if (typeof rel.pks !== 'undefined' || typeof rel.capacity !== 'undefined') return false;
+                    if (rel.view().join(',') !== 'r0,r1,r2,r3' || rel.presented().join(',') !== 'r0,r1,r2,r3') return false;
+                    if (rel.view({ by: 1 }) !== null) return false;                  // an article has nowhere to move
+                    // A row the layout does not have is a stranger, refused where a relation refuses.
+                    try { rel.cellFor('r4', 'c0'); return false; } catch (e) { if (!/no such row: r4/.test(String(e))) return false; }
                     // The two half-square columns are declared always and presented only in use.
                     if (rel.columns().join(',') !== 'lead,c0,c1,c2,c3,c4,c5,c6,c7,c8,trail') return false;
                     if (rel.presentedColumns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8') return false;

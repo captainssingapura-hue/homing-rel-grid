@@ -220,7 +220,9 @@ public final class RelGridTestDom {
                 // grid's. Activated here, as a relation activates its own.
                 var cellsBranch = hostBranch(), cellSeq = 0, mints = 0;
                 var relation = {
-                    pks:     function () { return Object.keys(data); },
+                    // ONE ROOT: the View is answered, never listed — the whole of it here, and a
+                    // movement goes nowhere, so nothing is the answer and the rows stay.
+                    view:    function (intent) { return intent ? null : Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
                     cellFor: function (pk, col) {
                         // The relation is the authority on its own identity space: an identity

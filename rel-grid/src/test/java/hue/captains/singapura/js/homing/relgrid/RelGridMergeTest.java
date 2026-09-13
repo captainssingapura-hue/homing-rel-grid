@@ -23,7 +23,7 @@ class RelGridMergeTest extends JsModuleTestBase {
                 opts = opts || {};
                 var asked = [], taken = [], spans = { 'r0 b': 3 };          // r0/b reaches over c and d
                 var relation = {
-                    pks:     function () { return ['r0', 'r1']; },
+                    view:    function (intent) { return intent ? null : ['r0', 'r1']; },
                     columns: function () { return ['a', 'b', 'c', 'd', 'e']; },
                     cellFor: function (pk, col) {
                         asked.push(pk + ' ' + col);
@@ -199,7 +199,7 @@ class RelGridMergeTest extends JsModuleTestBase {
                     var g2 = spanning({ mergedCells: true });
                     g2.grid.destroy();
                     var moved = false;
-                    var relation = { pks: function () { return ['r0']; }, columns: function () { return ['a', 'b', 'c']; },
+                    var relation = { view: function (intent) { return intent ? null : ['r0']; }, columns: function () { return ['a', 'b', 'c']; },
                                      cellFor: function (pk, col) { var el = makeEl('div'); el.textContent = col;
                                                                     return { cellElement: function () { return el; }, onSelect: function () {}, dispose: function () {},
                                                                              colSpan: function () { return col === 'a' ? 2 : 1; } }; } };

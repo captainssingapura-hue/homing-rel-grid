@@ -7,7 +7,8 @@
 //   createOutletRelation(store, outletId, { branch })
 //     · branch is the relation's OWN — unactivated when handed; it activates, and
 //       dispose() dissolves — and every cell is given a sub-branch of it to own;
-//     · pks() are the dishes; columns() are the ledger's four; every column is
+//     · view() answers the dishes — one root, and a book has nowhere to move;
+//       columns() are the ledger's four; every column is
 //       declared read-only — sales are the only thing that move a book;
 //     · cellFor(pk, col) builds a text cell ONCE per identity and keeps it,
 //       showing the ledger's value formatted for reading;
@@ -61,12 +62,13 @@ function createOutletRelation(store, outletId, opts) {
         if (c) c.set(_wbOutletShown(col, v));
     });
     return {
-        pks:     function () { return store.dishes(); },
+        view:    function (intent) { return intent ? null : store.dishes(); },   // one root: the whole book; a movement goes nowhere
         columns: function () { return store.columns(); },
         // A book is read, never edited: every column is a constraint, so the
         // table never asks any cell here whether it may take control.
         readOnlyColumns: function () { return store.columns(); },
         cellFor: function (pk, col) {
+            if (store.dishes().indexOf(pk) < 0) throw new Error("[OutletRelation] no such dish: " + pk);   // a stranger is refused here
             var k = pk + " " + col, c = cells.get(k);
             if (!c) {
                 c = new RelGridTextCell({ branch: branch.createBranch("c" + (++cellSeq)),

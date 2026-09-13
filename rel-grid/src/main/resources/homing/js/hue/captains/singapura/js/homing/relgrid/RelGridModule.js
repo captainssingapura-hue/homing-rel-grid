@@ -22,16 +22,20 @@
 //                         // activates it, as the owner does, and everything the grid mints —
 //                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
 //                         // Dissolving it is the host's. Never a cell's element.
-//       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
+//       relation,         // { view(intent?), columns(), cellFor(pk, column) } — and nothing else.
+//                         // ONE ROOT: view() answers the rows to PRESENT now, in order — the whole
+//                         // of a static relation, a window of an endless one. The grid asks it at
+//                         // construction and holds what it answered, and no other list; there is
+//                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
+//                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
 //       overflow?,        // wrap | clip | ellipsis — what a slot does with content
 //                         // too wide for it. Default ellipsis.
-//       rowView?,         // the rows to PRESENT at first, in order. Default: relation.pks().
-//                         // The row axis has no base (RelGridViewMaps): what is presented
-//                         // is the View and nothing else; later remaps go through viewMaps().
 //       columnView?,      // a subset of relation.columns() — the column axis IS listed. A
-//                         // relation may declare columns it shows only sometimes.
+//                         // relation may declare columns it shows only sometimes. (There is
+//                         // no rowView: what is presented is what relation.view() answers,
+//                         // and later remaps go through viewMaps().)
 //       minColumnWidth?,  // the floor a width request is bounded to. Default 40, the
 //                         // narrowest a column stays grabbable at; never below 8. A host
 //                         // whose columns are half-squares says 24.
@@ -54,8 +58,8 @@
 //       clipboard?        // { write(content) → thenable } — the writer; the stock one by default
 //   });
 //
-// THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
-// columns and cells. It never asks for, holds, pushes or writes a value, and
+// THE ROOT PRINCIPLE, AS CODE: this file asks the relation for its View, its
+// columns and its cells. It never asks for, holds, pushes or writes a value, and
 // RelGridValueFreeTest holds every grid module to that.
 //
 // THE ARRANGEMENT CYCLE: every presented identity is ensured first — asked of
@@ -96,8 +100,11 @@ class RelGrid {
         if (!opts.branch)    throw new Error("[RelGrid] opts.branch is required");
         if (!opts.relation)  throw new Error("[RelGrid] opts.relation is required");
         var r = opts.relation;
-        if (typeof r.pks !== "function" || typeof r.columns !== "function" || typeof r.cellFor !== "function")
-            throw new Error("[RelGrid] relation must expose pks(), columns() and cellFor(pk, column)");
+        if (typeof r.view !== "function" || typeof r.columns !== "function" || typeof r.cellFor !== "function")
+            throw new Error("[RelGrid] relation must expose view(), columns() and cellFor(pk, column)");
+        if (opts.rowView) throw new Error("[RelGrid] there is no rowView: what is presented is what relation.view() answers");
+        var start = r.view();                    // the rows to present now — the relation's answer, held as the View
+        if (!Array.isArray(start)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + start);
         var self = this;
         opts.branch.activate(this);              // the grid's own: the party refuses one that is already somebody's
         this._relation = r;
@@ -118,7 +125,7 @@ class RelGrid {
         this._merge = opts.mergedCells === true;   // honour colSpan() at all
         this._selection = new RelGridSelection();  // POSITIONS, and nothing else
         this._maps = new RelGridViewMaps({
-            rowView: opts.rowView || r.pks(), columns: r.columns(),
+            rowView: start, columns: r.columns(),
             columnView: opts.columnView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });

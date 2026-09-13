@@ -3,11 +3,17 @@
 The Relation Grid — RFC 0050 · Episode 2 — as its own project.
 
 A grid that **captures intents and arranges cells, and holds no value.** A relation is
-identities, columns and a cell manager:
+a View answered on request, columns and a cell manager — one root, never an enumeration:
 
 ```
-pks()   columns()   cellFor(pk, column)
+view(intent?)   columns()   cellFor(pk, column)
 ```
+
+`view()` answers the rows to present now — the whole of a static relation, a window of an
+endless one — and the grid holds exactly that: the row axis is the View and has no base.
+`view({ by: n })` is the same seam asked to move: keys back, or nothing, and the rows stay.
+Membership is the relation's: `cellFor` throws for an identity it does not own, and the grid
+asks for every identity before a slot moves, so a stranger refuses a View whole.
 
 The domain owns every cell for its whole life and updates it directly. Edit, commit and update
 are the domain's operations; they never change an arrangement, so the grid has no part in them.

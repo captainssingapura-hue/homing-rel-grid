@@ -65,7 +65,9 @@ function createDishRelation(store, opts) {
     });
 
     return {
-        pks:     function () { return store.pks(); },
+        // ONE ROOT: the View is answered, never listed. The whole store, in its own
+        // order; a movement goes nowhere, so the answer is nothing and the rows stay.
+        view:    function (intent) { return intent ? null : store.pks(); },
         columns: function () { return store.columns(); },
         // THE COLUMN CONSTRAINT (map 16, law 112). sold moves only by selling
         // and popularity is derived from it, so no cell in either column is
@@ -79,6 +81,9 @@ function createDishRelation(store, opts) {
             return out;
         },
         cellFor: function (pk, col) {
+            // The relation is the authority on what it owns: a stranger is refused here,
+            // and the grid — which keeps no list — refuses the View whole on it.
+            if (store.pks().indexOf(pk) < 0) throw new Error('[DishRelation] no such dish: ' + pk);
             var k = pk + ' ' + col, c = cells.get(k);
             if (!c) {
                 // The cell KIND is the domain's choice, made per column and

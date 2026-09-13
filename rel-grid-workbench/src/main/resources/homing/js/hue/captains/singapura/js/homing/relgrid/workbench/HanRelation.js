@@ -3,24 +3,30 @@
 // HanLayout into rows of square slots, and a CELL MANAGER that owns one
 // HanCell per slot. DOMAIN CODE; the word "grid" does not appear in it.
 //
-//   createHanRelation(store, { branch, cols?, capacity? })
+//   createHanRelation(store, { branch, cols? })
 //
 //   · branch is the relation's OWN — unactivated when handed; it activates,
 //     and dispose() dissolves — and every cell is given a sub-branch of it to
 //     own. The grid that places the cells never sees it.
-//   · pks() are ROWS — all of them, up to the CAPACITY, 'r0'…'r{capacity-1}';
-//     columns() are 'lead', the squares 'c0'…'c{cols-1}', and 'trail' — the
-//     two HALF-SQUARE columns declared always and shown only when some row
-//     squeezes a mark into one. Identity here is POSITIONAL — a square — and
-//     a glyph is what a square currently shows. That is the right way round
-//     for a manuscript grid: the squares stay put, the ink moves.
-//   · presented() is the rows the layout USES right now — a prefix of pks();
-//     presentedColumns() is the columns in use — the squares, and whichever
-//     half-squares the layout put a mark in. A root relation's identity set
-//     is read once, when a grid is built over it, and stays; what an article
-//     does as it grows and shrinks is change which rows and columns are
-//     SHOWN, and that is a view, not a new relation. The owner hands both to
+//   · view() answers the ROWS the layout uses right now, 'r0'…'r{rows-1}' —
+//     ONE ROOT: the View is answered, never listed, so there is no capacity
+//     to declare and no prefix of it to present. A movement goes nowhere: an
+//     article is the whole of itself, so the answer is nothing and the rows
+//     stay. columns() are 'lead', the squares 'c0'…'c{cols-1}', and 'trail'
+//     — the two HALF-SQUARE columns declared always and shown only when some
+//     row squeezes a mark into one. Identity here is POSITIONAL — a square —
+//     and a glyph is what a square currently shows. That is the right way
+//     round for a manuscript grid: the squares stay put, the ink moves.
+//   · presented() is view()'s answer by its domain name, for the owner's own
+//     use; presentedColumns() is the columns in use — the squares, and
+//     whichever half-squares the layout put a mark in. What an article does
+//     as it grows and shrinks is change which rows and columns are SHOWN,
+//     and that is a view, not a new relation: the owner hands both to
 //     whoever arranges, as the row view and the column view.
+//   · A row the layout does not have, and never had a cell made for, is a
+//     STRANGER, refused at cellFor: rows come and go with the text, the rows
+//     there now are owned, and so is every cell already made — a row that
+//     shrank away leaves its cells alive and showing nothing.
 //   · narrowColumns() names the two, so the owner can give them their width.
 //   · cellFor(pk, col) builds a HanCell once per slot and keeps it. Display
 //     cells: the article is edited as text, and nothing here commits. A run
@@ -40,7 +46,6 @@ function createHanRelation(store, opts) {
     var branch = opts.branch, cellSeq = 0;
     branch.activate({ toString: function () { return "HanRelation"; } });         // its own: unactivated when handed
     var cols = (opts.cols > 0) ? opts.cols : 9;
-    var capacity = (opts.capacity > 0) ? opts.capacity : 200;   // rows the article may grow to
     var cells = new Map();
     var layout = hanLayout(store.text(), cols);
     var squares = [];
@@ -66,17 +71,15 @@ function createHanRelation(store, opts) {
         });
     });
 
+    function presented() {
+        var out = [];
+        for (var r = 0; r < layout.rows.length; r++) out.push("r" + r);
+        return out;
+    }
+
     return {
-        pks: function () {
-            var out = [];
-            for (var r = 0; r < capacity; r++) out.push("r" + r);
-            return out;
-        },
-        presented: function () {
-            var out = [], n = Math.min(layout.rows.length, capacity);
-            for (var r = 0; r < n; r++) out.push("r" + r);
-            return out;
-        },
+        view:      function (intent) { return intent ? null : presented(); },
+        presented: presented,
         columns: function () { return columns.slice(); },
         presentedColumns: function () {
             var out = layout.usesLead ? ["lead"] : [];
@@ -88,6 +91,11 @@ function createHanRelation(store, opts) {
         cellFor: function (pk, col) {
             var key = pk + " " + col, cell = cells.get(key);
             if (!cell) {
+                // What this relation OWNS: the rows the layout has now, and every cell it
+                // has already made — a row the text shrank away leaves its cells alive,
+                // showing nothing, and they are still its own. Anything else is a stranger.
+                if (!/^r\d+$/.test(pk) || Number(pk.slice(1)) >= layout.rows.length)
+                    throw new Error("[HanRelation] no such row: " + pk);
                 var s = slotOf(pk, col);
                 cell = new HanCell({ branch: branch.createBranch("c" + (++cellSeq)),
                                      glyph: s ? s.glyph : null, span: s ? s.span : 1,
@@ -99,7 +107,6 @@ function createHanRelation(store, opts) {
         rows:      function () { return layout.rows.length; },
         spanKey:   function () { return layout.spanKey; },
         cols:      function () { return cols; },
-        capacity:  function () { return capacity; },
         glyphs:    function () { return layout.glyphs; },
         layout:    function () { return layout; },
         cellCount: function () { return cells.size; },
