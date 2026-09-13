@@ -30,7 +30,10 @@
 //                           // its own header option, and the group adds none
 //       stickyHeader?,      // true: the group's header stays at the top of whatever scrolls the
 //                           // group, and every member reveals its cursor clear of it. 'group'
-//                           // mode only — in 'each' mode a member's own header option says
+//                           // mode only: in 'each' mode NO header sticks — a member's own
+//                           // header.sticky is overridden, as its header is in 'group' mode —
+//                           // so a stack of tables never shows a header stuck to a table
+//                           // that is scrolling away. The group's header sticks, or none does.
 //       folded?,            // the ids folded at first — [] by default
 //       onColumnResized?,   // (column, px) — ONE report per change, however many members moved
 //       onFolded?,          // (id, folded) — a REPORT: a member's box was folded or unfolded

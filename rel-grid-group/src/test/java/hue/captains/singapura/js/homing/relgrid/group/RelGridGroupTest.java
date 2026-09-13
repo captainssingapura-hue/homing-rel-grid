@@ -306,6 +306,13 @@ class RelGridGroupTest extends JsModuleTestBase {
                     if (css.hasClass(th, hrg_sticky)) return false;
                     if (!groupFixture().has(groupFixture().headerBox(), 'hrg-group-header') || groupFixture().has(groupFixture().headerBox(), 'hrg-group-header-sticky')) return false;
                     if (groupFixture({ header: 'each', stickyHeader: true }).headerBox() !== null) return false;   // 'each': the group adds nothing
+                    // 'each': no header sticks, whatever a member's own spec says — the group's
+                    // header sticks, or none does, so no header is ever stuck to a table scrolling away.
+                    var e = groupFixture({ header: 'each', stickyHeader: true,
+                                           specs: [memberSpec('a', [['mapo', 'tofu', 480]], { header: { sticky: true } }), memberSpec('b', [['fish', 'cod', 560]])] });
+                    var eth = e.theadOf('a').children[0].children[0];
+                    if (css.hasClass(eth, hrg_sticky) || !css.hasClass(eth, hrg_th)) return false;
+                    if (e.spec('a').grid.header.sticky !== true) return false;   // the host's spec is untouched: the group amended its own copy
                     // Geometry: the group's container scrolls; the header box is 30px tall; member
                     // a's rows sit at 200 + 20i less what is scrolled. Scrolled by hand to 120, row 0
                     // is 80..100 — twenty above the port, and thirty more under the stuck header.
