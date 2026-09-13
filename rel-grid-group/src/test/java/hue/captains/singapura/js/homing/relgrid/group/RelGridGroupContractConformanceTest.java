@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class RelGridGroupContractConformanceTest extends JsModuleTestBase {
 
-    private static final String GROUP = "/homing/js/hue/captains/singapura/js/homing/relgrid/group/RelGridGroupModule.js";
+    private static final String GROUP_DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/group/";
+    private static final String[] GROUP = { "RelGridGroupMintModule.js", "RelGridGroupWalkModule.js", "RelGridGroupModule.js" };
 
     @BeforeEach
     void setup() {
@@ -35,7 +36,7 @@ class RelGridGroupContractConformanceTest extends JsModuleTestBase {
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
-        loadModule(GROUP);
+        for (String m : GROUP) loadModule(GROUP_DIR + m);
     }
 
     private TreeSet<String> prototypeMethods(String className) {

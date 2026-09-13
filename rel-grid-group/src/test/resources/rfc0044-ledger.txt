@@ -1,3 +1,2 @@
 # RFC 0044 ledger for crate 'rel-grid-group': pre-existing violations, one fingerprint per line.
 # It can only shrink. Regenerate with -Dhoming.conformance.record=true, deliberately — never to silence a fresh violation.
-hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule [max-effective-lines] module exceeds the 250 effective-line limit — split it

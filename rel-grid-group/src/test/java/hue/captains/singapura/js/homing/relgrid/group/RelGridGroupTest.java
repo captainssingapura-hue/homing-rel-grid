@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class RelGridGroupTest extends JsModuleTestBase {
 
-    private static final String GROUP = "/homing/js/hue/captains/singapura/js/homing/relgrid/group/RelGridGroupModule.js";
+    private static final String GROUP_DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/group/";
+    private static final String[] GROUP = { "RelGridGroupMintModule.js", "RelGridGroupWalkModule.js", "RelGridGroupModule.js" };
 
     /** The grid's DOM, plus real attributes: the group addresses its boxes and fences by data-member. */
     static final String ATTRIBUTES = """
@@ -182,7 +183,7 @@ class RelGridGroupTest extends JsModuleTestBase {
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
-        loadModule(GROUP);
+        for (String m : GROUP) loadModule(GROUP_DIR + m);
         js.eval("js", FIXTURE);
     }
 

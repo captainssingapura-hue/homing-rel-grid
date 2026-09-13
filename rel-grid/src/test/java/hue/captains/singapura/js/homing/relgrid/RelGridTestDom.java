@@ -32,8 +32,11 @@ public final class RelGridTestDom {
             "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
 
     public static final String[] MODULES = {
-            "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
-            "RelGridStockCellsModule.js", "RelGridModule.js" };
+            "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
+            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridLayoutModule.js",
+            "RelGridCellsModule.js", "RelGridStockCellsModule.js",
+            "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
+            "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
     public static final String SELECTION =

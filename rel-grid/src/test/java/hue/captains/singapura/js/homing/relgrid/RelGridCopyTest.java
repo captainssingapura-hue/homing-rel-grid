@@ -394,7 +394,7 @@ class RelGridCopyTest extends JsModuleTestBase {
                         write:     function (items) { got = { items: items }; return Promise.resolve(); },
                         writeText: function (t) { got = { text: t }; return Promise.resolve(); }
                     }};
-                    var w = _hrgStockClipboard({ navigator: modern, ClipboardItem: FakeItem, Blob: FakeBlob });
+                    var w = createRelGridClipboard({ navigator: modern, ClipboardItem: FakeItem, Blob: FakeBlob });
                     var rich = new RelGridClipboardContent('a\\tb', '<b>a</b>');
                     var plain = new RelGridClipboardContent('a\\tb', undefined);
                     w.write(rich);
@@ -407,10 +407,10 @@ class RelGridCopyTest extends JsModuleTestBase {
                     if (got.text !== 'a\\tb') return false;
                     // Without ClipboardItem the rich content still goes, as text.
                     got = null;
-                    _hrgStockClipboard({ navigator: modern, ClipboardItem: null, Blob: FakeBlob }).write(rich);
+                    createRelGridClipboard({ navigator: modern, ClipboardItem: null, Blob: FakeBlob }).write(rich);
                     if (got.text !== 'a\\tb') return false;
                     // And with no clipboard at all — an insecure origin — a rejection, not a silence.
-                    var out = _hrgStockClipboard({ navigator: {}, ClipboardItem: null, Blob: null }).write(plain);
+                    var out = createRelGridClipboard({ navigator: {}, ClipboardItem: null, Blob: null }).write(plain);
                     return !!out && typeof out.then === 'function';
                 })()"""), "the stock writer sends both forms as one item when it can, and the plain one otherwise");
     }
@@ -445,7 +445,7 @@ class RelGridCopyTest extends JsModuleTestBase {
                 var FakeBlob = function (parts, o) { this.parts = parts; this.type = o.type; };
                 var FakeItem = function (m) { this.m = m; };
                 var branch = hostBranch();                                     // the grid's, which the grid activated
-                var W = _hrgStockClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc, branch: branch });
+                var W = createRelGridClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc, branch: branch });
                 var outcome = 'pending';
                 W.write(new RelGridClipboardContent('a\\tb', '<b>a</b>')).then(function () { outcome = 'written'; },
                                                                                 function (e) { outcome = 'failed: ' + e.message; });
@@ -463,7 +463,7 @@ class RelGridCopyTest extends JsModuleTestBase {
                 })()"""), "denied the async API, the writer copies through the command, both forms, and cleans up");
         act("""
                 // Both roads closed: a rejection that says so, never a silence.
-                var noDoc = _hrgStockClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null, branch: hostBranch() });
+                var noDoc = createRelGridClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null, branch: hostBranch() });
                 var outcome2 = 'pending';
                 noDoc.write(new RelGridClipboardContent('x', undefined)).then(function () { outcome2 = 'written'; },
                                                                               function (e) { outcome2 = e.message; });
