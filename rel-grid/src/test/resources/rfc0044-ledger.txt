@@ -1,12 +1,4 @@
 # RFC 0044 ledger for crate 'homing-rel-grid': pre-existing violations, one fingerprint per line.
 # It can only shrink. Regenerate with -Dhoming.conformance.record=true, deliberately — never to silence a fresh violation.
 hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [max-effective-lines] module exceeds the 250 effective-line limit — split it
-hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [no-literal-color] literal colour (use a theme token var(--...), not a baked hex/rgb): "  box-shadow:0 12px 36px rgba(0,0,0,0.32);}",
-hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var s = document.createElement("style");
-hue.captains.singapura.js.homing.relgrid.RelGridLayoutModule [view-doctrine] DOM lookup (Owned References): if (document.getElementById(_HRG_STYLE_ID)) return;
 hue.captains.singapura.js.homing.relgrid.RelGridModule [max-effective-lines] module exceeds the 250 effective-line limit — split it
-hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("left", "-9999px");
-hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("position", "fixed");
-hue.captains.singapura.js.homing.relgrid.RelGridModule [no-inline-style] inline style write (use a typed css class via css.addClass, not element.style): ta.style.setProperty("top", "0");
-hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [use-dom-ops-party] raw DOM factory (use branch.createElement via the DomOpsParty, not document.create*): var s = document.createElement("style");
-hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule [view-doctrine] DOM lookup (Owned References): if (document.getElementById(_HRG_STOCK_STYLE_ID)) return;

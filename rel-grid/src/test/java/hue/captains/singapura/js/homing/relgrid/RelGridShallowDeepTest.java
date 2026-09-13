@@ -27,6 +27,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
         for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.SELECTION);
         loadModule(RelGridTestDom.PROTOCOL);
@@ -116,8 +117,8 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
                     if (f.wrap().children[0] !== f.table()) return false;
                     if (ov.children[0].tagName !== 'input') return false;
                     // Placed at the slot and sized to at least it.
-                    if (ov.style.getPropertyValue('left') === '') return false;
-                    if (ov.style.getPropertyValue('width') === '') return false;
+                    if (ov.style.getPropertyValue('--hrg-left') === '') return false;
+                    if (ov.style.getPropertyValue('--hrg-width') === '') return false;
                     // The cell's own element is untouched — still showing what it showed.
                     if (host.children.length !== 0 || host.textContent !== 'tofu') return false;
                     // And a resize cannot move the column out from under it.

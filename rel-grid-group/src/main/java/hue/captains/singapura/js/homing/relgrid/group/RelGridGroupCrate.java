@@ -2,6 +2,7 @@ package hue.captains.singapura.js.homing.relgrid.group;
 
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
+import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 
@@ -25,6 +26,7 @@ public final class RelGridGroupCrate implements Crate {
 
     @Override
     public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(RelGridGroupModule.INSTANCE));   // undeclared = CONSUMER: a component, not a pane
+        return List.of(CrateEntry.of(RelGridGroupModule.INSTANCE),     // undeclared = CONSUMER: a component, not a pane
+                       CrateEntry.of(RelGridGroupStyles.INSTANCE, StandardJsModuleType.GENERATED_CSS));
     }
 }

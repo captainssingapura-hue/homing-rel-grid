@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
+import hue.captains.singapura.js.homing.core.ModuleImports;
 
 import java.util.List;
 
@@ -20,7 +21,12 @@ public record RelGridHeaderDragModule() implements DomModule<RelGridHeaderDragMo
 
     public static final RelGridHeaderDragModule INSTANCE = new RelGridHeaderDragModule();
 
-    @Override public ImportsFor<RelGridHeaderDragModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridHeaderDragModule> imports() {
+        return ImportsFor.<RelGridHeaderDragModule>builder()
+                .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_resize_handle(), new RelGridStyles.hrg_resize_guide()),
+                        RelGridStyles.INSTANCE))
+                .build();
+    }
 
     @Override public ExportsOf<RelGridHeaderDragModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridHeaderDrag()));

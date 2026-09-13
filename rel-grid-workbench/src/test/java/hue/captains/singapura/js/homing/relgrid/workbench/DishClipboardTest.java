@@ -57,6 +57,7 @@ class DishClipboardTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", DOM_STUB);
         for (String m : DishPolicyTest.PARTY) loadModule(m);
+        js.eval("js", DishPolicyTest.STYLES);
         loadModule(PROTOCOL);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");

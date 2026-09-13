@@ -52,33 +52,15 @@
 // A cell that cannot edit marks its element hrg-text-ro — the predicate map
 // 16 argues for (law 116): an uneditable cell has no resting affordance to be
 // missing, so the property has to be named. Whether it is painted is the
-// theme's business; the stock cell ships one muted rule as a default.
+// theme's business; the stock cell ships one muted rule as a default. And it
+// honours what the slot asks of its text: nowrap is inherited, the ellipsis
+// is read from --hrg-text-overflow — the grid's published property — because
+// the text is this element's, and the slot only clips.
 // =============================================================================
 
-var _HRG_STOCK_STYLE_ID = "homing-rel-grid-stock-style";
-var _HRG_STOCK_STYLE_CSS = [
-    ".hrg-text-ro{color:var(--color-text-muted);}",
-    // Fills the anchor the grid laid over the slot — OUTSIDE the table — so
-    // this cell has nothing to say about layout at all.
-    ".hrg-text-edit{box-sizing:border-box;width:100%;height:100%;border:0;",
-    "  padding:0 6px;font:13px sans-serif;background:transparent;",
-    "  color:var(--color-text-primary);}"
-].join("\n");
-
-function _hrgStockEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById(_HRG_STOCK_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _HRG_STOCK_STYLE_ID;
-    s.textContent = _HRG_STOCK_STYLE_CSS;
-    document.head.appendChild(s);
-}
-
-function _hrgStockAddClass(el, name) {
-    var cur = el.className || "", parts = cur.split(/\s+/);
-    for (var i = 0; i < parts.length; i++) if (parts[i] === name) return;
-    el.className = cur ? cur + " " + name : name;
-}
+// THE LOOKS ARE TYPED — RelGridStockStyles, the cell's own group, applied
+// through the css manager: hrg_text on the element, hrg_text_ro when it
+// cannot edit, hrg_text_edit on the editor.
 
 class RelGridTextCell {
 
@@ -113,7 +95,8 @@ class RelGridTextCell {
     cellElement() {
         if (!this._el) {
             this._el = this._branch.createElement("cell", "div");
-            if (!this._onCommit) { _hrgStockEnsureStyle(); _hrgStockAddClass(this._el, "hrg-text-ro"); }
+            css.addClass(this._el, hrg_text);
+            if (!this._onCommit) css.addClass(this._el, hrg_text_ro);
             this._paint();
         }
         return this._el;
@@ -149,9 +132,8 @@ class RelGridTextCell {
      */
     editorElement() {
         if (!this._input) {
-            _hrgStockEnsureStyle();
             this._input = this._branch.createElement("editor", "input");
-            this._input.className = "hrg-text-edit";
+            css.addClass(this._input, hrg_text_edit);
         }
         return this._input;
     }

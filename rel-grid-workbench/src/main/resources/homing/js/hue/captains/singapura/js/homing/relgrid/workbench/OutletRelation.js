@@ -34,27 +34,7 @@
 // what it did itself.
 // =============================================================================
 
-var _WB_FENCE_STYLE_ID = "bench-fence-style";
-var _WB_FENCE_CSS = [
-    ".wb-fence{display:flex;align-items:baseline;gap:12px;padding:10px 10px 4px;font:12px sans-serif;",
-    "  color:var(--color-text-primary);}",
-    ".wb-fence-name{font-size:14px;font-weight:600;}",
-    // The toggle: a triangle, down while the book shows and right while it is folded.
-    ".wb-fence-fold{border:0;background:transparent;cursor:pointer;padding:0 4px;margin:0;",
-    "  font:inherit;font-size:11px;line-height:1;color:var(--color-text-muted);width:1.4em;text-align:center;}",
-    ".wb-fence-fold:hover{color:var(--color-accent);}",
-    ".wb-fence-totals{color:var(--color-text-muted);font-size:11px;font-variant-numeric:tabular-nums;}",
-    ".wb-fence.wb-fence-ledger{border-top:2px solid var(--color-border);margin-top:6px;padding-top:8px;}"
-].join("\n");
-
-function _wbFenceEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById && document.getElementById(_WB_FENCE_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _WB_FENCE_STYLE_ID;
-    s.textContent = _WB_FENCE_CSS;
-    document.head.appendChild(s);
-}
+// THE LOOKS ARE TYPED — OutletFenceStyles, applied through the css manager.
 
 function _wbMoney(n) { return (Math.round(n * 100) / 100).toFixed(2); }
 function _wbOutletShown(col, v) {
@@ -132,11 +112,10 @@ function createOutletFence(store, outletId, opts) {
         /** The fence's element, minted once on its branch; whoever holds the slot places it. */
         fenceElement: function () {
             if (root) return root;
-            _wbFenceEnsureStyle();
             root = b.createElement("fence", "div");
-            root.className = "wb-fence";
+            css.addClass(root, wb_fence);
             toggle = b.createElement("fold", "button");
-            toggle.className = "wb-fence-fold";
+            css.addClass(toggle, wb_fence_fold, wb_fence_fold_hot);
             toggle.type = "button";
             toggle.addEventListener("click", function () {
                 // Pressed: TELL, unasked, the other way round from what this fence was
@@ -145,10 +124,10 @@ function createOutletFence(store, outletId, opts) {
             });
             paint();
             var n = b.createElement("name", "span");
-            n.className = "wb-fence-name";
+            css.addClass(n, wb_fence_name);
             n.textContent = name;
             totals = b.createElement("totals", "span");
-            totals.className = "wb-fence-totals";
+            css.addClass(totals, wb_fence_totals);
             totals.textContent = _wbTotalsLine(store.totals(outletId));
             root.appendChild(toggle); root.appendChild(n); root.appendChild(totals);
             unsubscribe = store.subscribe(function (outlet, pk, col, v) {
@@ -173,14 +152,13 @@ function createLedgerFence(store, opts) {
     return {
         fenceElement: function () {
             if (root) return root;
-            _wbFenceEnsureStyle();
             root = b.createElement("fence", "div");
-            root.className = "wb-fence wb-fence-ledger";
+            css.addClass(root, wb_fence, wb_fence_ledger);
             var n = b.createElement("name", "span");
-            n.className = "wb-fence-name";
+            css.addClass(n, wb_fence_name);
             n.textContent = "All outlets";
             totals = b.createElement("totals", "span");
-            totals.className = "wb-fence-totals";
+            css.addClass(totals, wb_fence_totals);
             totals.textContent = _wbTotalsLine(store.totals(null));
             root.appendChild(n); root.appendChild(totals);
             unsubscribe = store.subscribe(function (outlet, pk, col) {

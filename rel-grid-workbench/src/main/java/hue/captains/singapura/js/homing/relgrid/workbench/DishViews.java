@@ -42,6 +42,13 @@ public record DishViews() implements DomModule<DishViews> {
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridView()),
                         RelGridProtocolModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new DishViewStyles.wb_view(), new DishViewStyles.wb_view_head(),
+                        new DishViewStyles.wb_view_title(), new DishViewStyles.wb_view_sub(), new DishViewStyles.wb_view_list(),
+                        new DishViewStyles.wb_view_item(), new DishViewStyles.wb_view_item_end(), new DishViewStyles.wb_view_item_hot(),
+                        new DishViewStyles.wb_view_held(), new DishViewStyles.wb_view_tick(), new DishViewStyles.wb_view_num(),
+                        new DishViewStyles.wb_view_label(), new DishViewStyles.wb_view_rule(), new DishViewStyles.wb_view_count(),
+                        new DishViewStyles.wb_view_foot(), new DishViewStyles.wb_view_keys(), new DishViewStyles.wb_view_cancel()),
+                        DishViewStyles.INSTANCE))
                 .build();
     }
 

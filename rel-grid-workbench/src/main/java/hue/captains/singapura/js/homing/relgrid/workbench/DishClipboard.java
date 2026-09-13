@@ -38,6 +38,12 @@ public record DishClipboard() implements DomModule<DishClipboard> {
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridClipboardContent()),
                         RelGridProtocolModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new DishCopyStyles.wb_copy(), new DishCopyStyles.wb_copy_head(),
+                        new DishCopyStyles.wb_copy_title(), new DishCopyStyles.wb_copy_sub(), new DishCopyStyles.wb_copy_opts(),
+                        new DishCopyStyles.wb_copy_opt(), new DishCopyStyles.wb_copy_opt_hot(), new DishCopyStyles.wb_copy_hint(),
+                        new DishCopyStyles.wb_copy_preview(), new DishCopyStyles.wb_copy_foot(), new DishCopyStyles.wb_copy_label(),
+                        new DishCopyStyles.wb_copy_check(), new DishCopyStyles.wb_copy_keys(), new DishCopyStyles.wb_copy_cancel()),
+                        DishCopyStyles.INSTANCE))
                 .build();
     }
 

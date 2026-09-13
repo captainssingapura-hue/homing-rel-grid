@@ -52,6 +52,7 @@ class OutletsTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", DOM_STUB);
         for (String m : DishPolicyTest.PARTY) loadModule(m);
+        js.eval("js", DishPolicyTest.STYLES);
         loadModule(GRID_DIR + "protocol/RelGridProtocolModule.js");
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(BENCH_DIR + "SalesStore.js");

@@ -30,46 +30,7 @@
 // never learns which.
 // =============================================================================
 
-var _WB_COPY_STYLE_ID = "bench-copy-style";
-// Laid out for the SMALLEST box the grid will mint — 320 × 198 — because a
-// wide, short table binds the panel's height at a fifth of a short host, and
-// a panel that only works in a generous box is not a panel for a bench.
-var _WB_COPY_CSS = [
-    ".wb-copy{display:flex;flex-direction:column;gap:6px;height:100%;box-sizing:border-box;",
-    "  padding:10px 14px;font:12px sans-serif;outline:none;}",
-    ".wb-copy-head{display:flex;align-items:baseline;gap:8px;white-space:nowrap;overflow:hidden;}",
-    ".wb-copy-title{font-size:14px;font-weight:600;}",
-    ".wb-copy-sub{color:var(--color-text-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;}",
-    ".wb-copy-opts{display:flex;gap:6px;}",
-    ".wb-copy-opt{flex:1 1 0;padding:5px 0;border:1px solid var(--color-border);border-radius:5px;",
-    "  background:var(--color-surface);color:var(--color-text-primary);cursor:pointer;",
-    "  font:inherit;font-weight:600;letter-spacing:0.5px;text-align:center;}",
-    ".wb-copy-opt:hover,.wb-copy-opt:focus{border-color:var(--color-accent);outline:none;",
-    "  box-shadow:0 0 0 2px color-mix(in srgb, var(--color-accent) 35%, transparent);}",
-    // One line, for whichever format is under the focus or the pointer.
-    ".wb-copy-hint{color:var(--color-text-muted);font-size:11px;white-space:nowrap;overflow:hidden;",
-    "  text-overflow:ellipsis;}",
-    ".wb-copy-preview{flex:1 1 auto;min-height:0;overflow:hidden;margin:0;padding:4px 8px;",
-    "  border:1px dashed var(--color-border);border-radius:4px;",
-    "  font:10px/1.35 monospace;white-space:pre;color:var(--color-text-muted);}",
-    ".wb-copy-foot{display:flex;align-items:center;gap:10px;color:var(--color-text-muted);font-size:10px;",
-    "  white-space:nowrap;}",
-    ".wb-copy-foot label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--color-text-primary);",
-    "  font-size:11px;}",
-    ".wb-copy-foot input{margin:0;}",
-    ".wb-copy-keys{flex:1 1 auto;text-align:right;overflow:hidden;text-overflow:ellipsis;}",
-    ".wb-copy-cancel{font:inherit;font-size:11px;padding:2px 9px;border:1px solid var(--color-border);",
-    "  border-radius:4px;background:transparent;color:var(--color-text-primary);cursor:pointer;}"
-].join("\n");
-
-function _wbCopyEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById(_WB_COPY_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _WB_COPY_STYLE_ID;
-    s.textContent = _WB_COPY_CSS;
-    document.head.appendChild(s);
-}
+// THE LOOKS ARE TYPED — DishCopyStyles, applied through the css manager.
 
 var _WB_COPY_FORMATS = [
     { key: "tsv",  label: "TSV",  hint: "tab-separated — pastes into a spreadsheet",  hotkey: "t" },
@@ -175,7 +136,6 @@ function dishCopyPanel(relation, question, mask, opts) {
     opts = opts || {};
     if (!opts.branch) throw new Error("[DishClipboard] opts.branch is required: the panel's own");
     var blocks = question.blocks, cells = _wbBlocksCells(blocks);
-    _wbCopyEnsureStyle();
     var b = opts.branch.createBranch("copy-" + (++_wbCopySeq));   // this session's, dissolved with it
     b.activate({ toString: function () { return "dishCopyPanel"; } });
     var mint = function (name, tag) { return b.createElement(name, tag); };
@@ -196,29 +156,30 @@ function dishCopyPanel(relation, question, mask, opts) {
         }
 
         var root = mint("root", "div");
-        root.className = "wb-copy";
+        css.addClass(root, wb_copy);
         root.tabIndex = -1;
 
         var head = mint("head", "div");
-        head.className = "wb-copy-head";
+        css.addClass(head, wb_copy_head);
         var title = mint("title", "span");
-        title.className = "wb-copy-title";
+        css.addClass(title, wb_copy_title);
         title.textContent = "Copy " + cells + (cells === 1 ? " cell" : " cells");
         var sub = mint("sub", "span");
-        sub.className = "wb-copy-sub";
+        css.addClass(sub, wb_copy_sub);
         sub.textContent = blocks.length + (blocks.length === 1 ? " range" : " ranges")
                         + " · " + relation.role() + "’s table · the grid is waiting";
         head.appendChild(title); head.appendChild(sub);
         root.appendChild(head);
 
         var opts_ = mint("formats", "div");
-        opts_.className = "wb-copy-opts";
+        css.addClass(opts_, wb_copy_opts);
         var buttons = [];
         var hint = mint("hint", "div");
-        hint.className = "wb-copy-hint";
+        css.addClass(hint, wb_copy_hint);
         var preview = mint("preview", "pre");
-        preview.className = "wb-copy-preview";
+        css.addClass(preview, wb_copy_preview);
         var headersBox = mint("headers", "input");
+        css.addClass(headersBox, wb_copy_check);
         headersBox.type = "checkbox";
         headersBox.checked = true;
         var shown = "tsv";                              // the format the preview shows
@@ -235,7 +196,7 @@ function dishCopyPanel(relation, question, mask, opts) {
 
         _WB_COPY_FORMATS.forEach(function (f, idx) {
             var btn = mint("format-" + f.key, "button");
-            btn.className = "wb-copy-opt";
+            css.addClass(btn, wb_copy_opt, wb_copy_opt_hot);
             btn.type = "button";
             btn.format = f.key;                           // a property, so a test can read it back
             btn.textContent = f.label;
@@ -250,17 +211,18 @@ function dishCopyPanel(relation, question, mask, opts) {
         root.appendChild(preview);
 
         var foot = mint("foot", "div");
-        foot.className = "wb-copy-foot";
+        css.addClass(foot, wb_copy_foot);
         var label = mint("headers-label", "label");
+        css.addClass(label, wb_copy_label);
         label.appendChild(headersBox);
         var lt = mint("headers-text", "span"); lt.textContent = "column headers";
         label.appendChild(lt);
         headersBox.addEventListener("change", function () { showPreview(shown); });
         var keys = mint("keys", "span");
-        keys.className = "wb-copy-keys";
+        css.addClass(keys, wb_copy_keys);
         keys.textContent = "T·C·H  ←→  Enter  Esc";
         var cancel = mint("cancel", "button");
-        cancel.className = "wb-copy-cancel";
+        css.addClass(cancel, wb_copy_cancel);
         cancel.type = "button";
         cancel.textContent = "Cancel";
         cancel.addEventListener("click", function () { settle(undefined); });

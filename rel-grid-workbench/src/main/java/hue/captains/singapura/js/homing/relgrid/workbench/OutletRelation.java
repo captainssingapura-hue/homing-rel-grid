@@ -38,6 +38,9 @@ public record OutletRelation() implements DomModule<OutletRelation> {
         return ImportsFor.<OutletRelation>builder()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridGroupFold()), RelGridProtocolModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new OutletFenceStyles.wb_fence(), new OutletFenceStyles.wb_fence_name(),
+                        new OutletFenceStyles.wb_fence_fold(), new OutletFenceStyles.wb_fence_fold_hot(),
+                        new OutletFenceStyles.wb_fence_totals(), new OutletFenceStyles.wb_fence_ledger()), OutletFenceStyles.INSTANCE))
                 .build();
     }
 

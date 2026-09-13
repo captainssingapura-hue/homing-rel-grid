@@ -38,6 +38,7 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                 .add(new ModuleImports<>(List.of(new RelGridLayoutModule.RelGridLayout()),     RelGridLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridCellsModule.RelGridCells()),       RelGridCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridSelectionModule.RelGridSelection()), RelGridSelectionModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_scratch()), RelGridStyles.INSTANCE))
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridRange(),
                                 new RelGridProtocolModule.RelGridSelectionChanged(),

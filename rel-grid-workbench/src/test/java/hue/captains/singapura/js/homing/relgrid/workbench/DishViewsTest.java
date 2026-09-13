@@ -56,6 +56,7 @@ class DishViewsTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", DOM_STUB);
         for (String m : DishPolicyTest.PARTY) loadModule(m);
+        js.eval("js", DishPolicyTest.STYLES);
         loadModule(PROTOCOL);
         loadModule(BENCH_DIR + "DishStore.js");
         loadModule(BENCH_DIR + "DishViews.js");

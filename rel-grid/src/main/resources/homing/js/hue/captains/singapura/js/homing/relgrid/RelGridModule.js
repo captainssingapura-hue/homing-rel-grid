@@ -284,13 +284,9 @@ function _hrgStockClipboard(env) {
         var scratch = env.branch.createBranch("copy-scratch");
         scratch.activate(writer);
         var ta = scratch.createElement("scratch", "textarea");
+        css.addClass(ta, hrg_scratch);                        // off-screen, by its class
         ta.textContent = content.text;
         ta.setAttribute("aria-hidden", "true");
-        if (ta.style && ta.style.setProperty) {
-            ta.style.setProperty("position", "fixed");
-            ta.style.setProperty("left", "-9999px");
-            ta.style.setProperty("top", "0");
-        }
         // Selecting the textarea takes the focus, and this runs AFTER the grid
         // has already handed the focus back to the table — so what was focused
         // is put back, or the person is left typing into nothing.

@@ -175,6 +175,8 @@ class RelGridGroupTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
+        js.eval("js", RelGridTestDom.handles(RelGridGroupStyles.INSTANCE));
         for (String m : RelGridTestDom.PARTY) loadModule(m);
         js.eval("js", ATTRIBUTES);
         loadModule(RelGridTestDom.PROTOCOL);
@@ -514,13 +516,22 @@ class RelGridGroupTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var f = groupFixture();
-                    // Every member has a cursor of its own; the group presents the first's.
+                    // Every member has a cursor of its own; the group presents the first's. The
+                    // others are DORMANT — painted so, and their slots inherit the transparency.
                     if (f.group.active() !== 'a') return false;
                     if (!f.has(f.boxOf('a'), 'hrg-active') || f.has(f.boxOf('b'), 'hrg-active')) return false;
+                    if (f.has(f.boxOf('a'), 'hrg-dormant') || !f.has(f.boxOf('b'), 'hrg-dormant') || !f.has(f.boxOf('c'), 'hrg-dormant')) return false;
                     if (f.group.member('b').cursor() === null) return false;              // b's is there, unshown
                     // The focus arriving in a table — observed at the root, never asked of the table — moves it.
                     f.tableOf('c').dispatch('focusin', {});
                     if (f.group.active() !== 'c' || f.has(f.boxOf('a'), 'hrg-active') || !f.has(f.boxOf('c'), 'hrg-active')) return false;
+                    if (!f.has(f.boxOf('a'), 'hrg-dormant') || f.has(f.boxOf('c'), 'hrg-dormant')) return false;
+                    // A fence as the stop: EVERY member is dormant while it is, and the active one wakes after.
+                    f.group.fence('b').dispatch('focusin', {});
+                    if (!f.has(f.root(), 'hrg-on-fence') || !f.has(f.boxOf('c'), 'hrg-dormant')) return false;
+                    if (!f.has(f.group.fence('b'), 'hrg-fence-cursor') || !f.has(f.group.fence('b'), 'hrg-lit')) return false;
+                    f.tableOf('c').dispatch('focusin', {});
+                    if (f.has(f.root(), 'hrg-on-fence') || f.has(f.boxOf('c'), 'hrg-dormant')) return false;
                     // The host's verb moves it and gives the table the focus.
                     if (f.group.activate('b') !== true) return false;
                     if (f.group.active() !== 'b' || document.activeElement !== f.tableOf('b')) return false;

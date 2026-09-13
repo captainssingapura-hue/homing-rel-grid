@@ -1,5 +1,7 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
+import hue.captains.singapura.js.homing.relgrid.RelGridStockStyles;
+import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,10 @@ class DishPolicyTest extends JsModuleTestBase {
 
     private static final String GRID_DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
     private static final String BENCH_DIR = GRID_DIR + "workbench/";
+
+    /** The typed classes every domain module of the bench imports as handles, as the server would emit them. */
+    static final String STYLES = RelGridTestDom.handles(RelGridStockStyles.INSTANCE, DishStarsStyles.INSTANCE,
+            HanCellStyles.INSTANCE, HanFenceStyles.INSTANCE, OutletFenceStyles.INSTANCE, DishCopyStyles.INSTANCE, DishViewStyles.INSTANCE);
 
     /** The DomOpsParty — the real one, from homing-core-js: every cell, fence and panel mints on a branch of it. */
     static final String[] PARTY = {
@@ -54,8 +60,39 @@ class DishPolicyTest extends JsModuleTestBase {
                     focus: function () { var p = __focused; if (p === this) return; __focused = this; if (p) p.dispatch('blur', {}); },
                     select: function () {},
                     remove: function () { if (this.parentNode) this.parentNode.removeChild(this); } };
+                // What the css manager drives: a classList over the className string.
+                el.classList = {
+                    _parts: function () { return el.className ? el.className.split(/\s+/).filter(Boolean) : []; },
+                    _set: function (parts) { el.className = parts.join(' '); },
+                    add: function (c) { var p = this._parts(); if (p.indexOf(c) < 0) { p.push(c); this._set(p); } },
+                    remove: function (c) { this._set(this._parts().filter(function (x) { return x !== c; })); },
+                    contains: function (c) { return this._parts().indexOf(c) >= 0; },
+                    toggle: function (c, force) {
+                        var on = (force === undefined) ? !this.contains(c) : !!force;
+                        if (on) this.add(c); else this.remove(c);
+                        return on;
+                    }
+                };
                 return el;
             }
+            // The css manager, as the server injects it into a module that imports typed classes.
+            var css = (function () {
+                function name(c) {
+                    if (!c || typeof c.name !== 'string') throw new Error('Invalid CSS class handle: ' + JSON.stringify(c));
+                    return c.name;
+                }
+                return {
+                    cls: function (n) { return { name: n, toString: function () { return n; } }; },
+                    addClass: function (el) { for (var k = 1; k < arguments.length; k++) el.classList.add(name(arguments[k])); },
+                    removeClass: function (el) { for (var k = 1; k < arguments.length; k++) el.classList.remove(name(arguments[k])); },
+                    toggleClass: function (el, c, force) {
+                        return arguments.length === 3 ? el.classList.toggle(name(c), force) : el.classList.toggle(name(c));
+                    },
+                    setClass: function (el) { el.className = Array.prototype.slice.call(arguments, 1).map(name).join(' '); },
+                    hasClass: function (el, c) { return el.classList.contains(name(c)); },
+                    className: name
+                };
+            })();
             var document = {
                 head: makeEl('head'), body: makeEl('body'),
                 createElement: function (t) { return makeEl(t); },
@@ -111,6 +148,7 @@ class DishPolicyTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", DOM_STUB);
         for (String m : PARTY) loadModule(m);
+        js.eval("js", STYLES);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");
         loadModule(BENCH_DIR + "DishStore.js");
@@ -332,7 +370,7 @@ class DishPolicyTest extends JsModuleTestBase {
                         &&  ro.test(cls(mgr, 'calories'))                               // not the manager's
                         &&  ro.test(cls(mgr, 'popularity'))                             // nobody's
                         &&  ro.test(cls(fol, 'price'))                                  // a follower's anything
-                        && document.getElementById('homing-rel-grid-stock-style') !== null;
+                        && /\\bhrg-text\\b/.test(cls(fol, 'price'));                    // and every text cell wears its typed look
                 })()"""), "law 116: an uneditable cell has no affordance to be missing, so it names the property");
     }
 }

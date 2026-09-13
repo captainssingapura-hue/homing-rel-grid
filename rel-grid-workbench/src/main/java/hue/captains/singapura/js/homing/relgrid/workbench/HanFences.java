@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
+import hue.captains.singapura.js.homing.core.ModuleImports;
 
 import java.util.List;
 
@@ -22,7 +23,14 @@ public record HanFences() implements DomModule<HanFences> {
 
     public static final HanFences INSTANCE = new HanFences();
 
-    @Override public ImportsFor<HanFences> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<HanFences> imports() {
+        return ImportsFor.<HanFences>builder()
+                .add(new ModuleImports<>(List.of(new HanFenceStyles.wb_hanf(), new HanFenceStyles.wb_hanf_title(),
+                        new HanFenceStyles.wb_hanf_t(), new HanFenceStyles.wb_hanf_a(), new HanFenceStyles.wb_hanf_orn(),
+                        new HanFenceStyles.wb_hanf_g(), new HanFenceStyles.wb_hanf_n(), new HanFenceStyles.wb_hanf_colophon()),
+                        HanFenceStyles.INSTANCE))
+                .build();
+    }
 
     @Override public ExportsOf<HanFences> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new createHanTitleFence(), new createHanOrnamentFence(), new createHanColophonFence()));

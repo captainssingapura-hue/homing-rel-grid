@@ -72,7 +72,7 @@ class RelGridHeaderDrag {
         if (!branch) throw new Error("[RelGridHeaderDrag] wire(th, j, branch): the header's branch is required");
         var self = this;
         var handle = branch.createElement("handle-" + j, "span");
-        handle.className = "hrg-resize-handle";
+        css.addClass(handle, hrg_resize_handle);
         th.appendChild(handle);
         handle.addEventListener("mousedown", function (e) {
             var rect = th.getBoundingClientRect ? th.getBoundingClientRect() : null;
@@ -102,7 +102,7 @@ class RelGridHeaderDrag {
             var span = _hrgSeenSpan(boxes[k]);
             if (span.height <= 0) continue;                    // out of view: no segment
             var guide = branch.createElement("segment-" + k, "div");
-            guide.className = "hrg-resize-guide";
+            css.addClass(guide, hrg_resize_guide);
             guide.style.setProperty("--hrg-guide-top", span.top + "px");
             guide.style.setProperty("--hrg-guide-h", span.height + "px");
             guide.style.setProperty("--hrg-guide-x", atX + "px");

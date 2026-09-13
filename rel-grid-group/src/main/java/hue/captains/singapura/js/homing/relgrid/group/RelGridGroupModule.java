@@ -6,6 +6,7 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.relgrid.RelGridModule;
+import hue.captains.singapura.js.homing.relgrid.RelGridStyles;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 
 import java.util.List;
@@ -35,6 +36,13 @@ public record RelGridGroupModule() implements DomModule<RelGridGroupModule> {
         return ImportsFor.<RelGridGroupModule>builder()
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridGroupFold()), RelGridProtocolModule.INSTANCE))
+                // The looks, typed: the group's own, and the grid's hrg_lit so a fence lights under the focus.
+                .add(new ModuleImports<>(List.of(
+                        new RelGridGroupStyles.hrg_group(), new RelGridGroupStyles.hrg_member(), new RelGridGroupStyles.hrg_group_header(),
+                        new RelGridGroupStyles.hrg_fence(), new RelGridGroupStyles.hrg_fence_empty(), new RelGridGroupStyles.hrg_folded(),
+                        new RelGridGroupStyles.hrg_fence_folded(), new RelGridGroupStyles.hrg_active(), new RelGridGroupStyles.hrg_dormant(),
+                        new RelGridGroupStyles.hrg_fence_cursor(), new RelGridGroupStyles.hrg_on_fence()), RelGridGroupStyles.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_lit()), RelGridStyles.INSTANCE))
                 .build();
     }
 

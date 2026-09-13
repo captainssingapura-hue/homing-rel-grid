@@ -30,6 +30,9 @@ public record HanCellModule() implements DomModule<HanCellModule> {
         // What a mark is, is the engine's to say; the cell only draws it.
         return ImportsFor.<HanCellModule>builder()
                 .add(new ModuleImports<>(List.of(new HanLayout.hanIsPunct(), new HanLayout.hanIsOpener()), HanLayout.INSTANCE))
+                .add(new ModuleImports<>(List.of(new HanCellStyles.han_glyph(), new HanCellStyles.han_ink(), new HanCellStyles.han_punct(),
+                        new HanCellStyles.han_half(), new HanCellStyles.han_open(), new HanCellStyles.han_narrow(),
+                        new HanCellStyles.han_run()), HanCellStyles.INSTANCE))
                 .build();
     }
 

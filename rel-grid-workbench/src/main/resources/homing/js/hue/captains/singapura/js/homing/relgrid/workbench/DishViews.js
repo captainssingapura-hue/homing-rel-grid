@@ -38,41 +38,7 @@
 // takes its box down.
 // =============================================================================
 
-var _WB_VIEW_STYLE_ID = "bench-view-style";
-var _WB_VIEW_CSS = [
-    ".wb-view{display:flex;flex-direction:column;gap:6px;height:100%;box-sizing:border-box;",
-    "  padding:10px 14px;font:12px sans-serif;outline:none;}",
-    ".wb-view-head{display:flex;align-items:baseline;gap:8px;white-space:nowrap;overflow:hidden;}",
-    ".wb-view-title{font-size:14px;font-weight:600;}",
-    ".wb-view-sub{color:var(--color-text-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;}",
-    // The list fills what the head and foot leave, and scrolls if the box is short.
-    ".wb-view-list{flex:1 1 auto;min-height:0;overflow-y:auto;margin:0;padding:0;list-style:none;",
-    "  border:1px solid var(--color-border);border-radius:5px;}",
-    ".wb-view-item{display:flex;align-items:baseline;gap:8px;padding:4px 10px;cursor:pointer;",
-    "  border-bottom:1px solid var(--color-border);outline:none;}",
-    ".wb-view-item:last-child{border-bottom:0;}",
-    ".wb-view-item:hover,.wb-view-item:focus{background:color-mix(in srgb, var(--color-accent) 12%, transparent);}",
-    ".wb-view-item.wb-view-held .wb-view-label::after{content:' \\2713';color:var(--color-accent);}",
-    ".wb-view-num{width:1.2em;color:var(--color-text-muted);font-size:11px;}",
-    ".wb-view-label{flex:0 0 auto;font-weight:600;}",
-    ".wb-view-rule{flex:1 1 auto;color:var(--color-text-muted);font-size:11px;white-space:nowrap;",
-    "  overflow:hidden;text-overflow:ellipsis;}",
-    ".wb-view-count{flex:0 0 auto;color:var(--color-text-muted);font-size:11px;font-variant-numeric:tabular-nums;}",
-    ".wb-view-foot{display:flex;align-items:center;gap:10px;color:var(--color-text-muted);font-size:10px;",
-    "  white-space:nowrap;}",
-    ".wb-view-keys{flex:1 1 auto;text-align:right;overflow:hidden;text-overflow:ellipsis;}",
-    ".wb-view-cancel{font:inherit;font-size:11px;padding:2px 9px;border:1px solid var(--color-border);",
-    "  border-radius:4px;background:transparent;color:var(--color-text-primary);cursor:pointer;}"
-].join("\n");
-
-function _wbViewEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById && document.getElementById(_WB_VIEW_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _WB_VIEW_STYLE_ID;
-    s.textContent = _WB_VIEW_CSS;
-    document.head.appendChild(s);
-}
+// THE LOOKS ARE TYPED — DishViewStyles, applied through the css manager.
 
 // ── the profiles ──────────────────────────────────────────────────────────
 //
@@ -189,7 +155,6 @@ var _wbViewSeq = 0;
 function dishViewPanel(views, question, mask, opts) {
     opts = opts || {};
     if (!opts.branch) throw new Error("[DishViews] opts.branch is required: the panel's own");
-    _wbViewEnsureStyle();
     var b = opts.branch.createBranch("view-" + (++_wbViewSeq));   // this session's, dissolved with it
     b.activate({ toString: function () { return "dishViewPanel"; } });
     var mint = function (name, tag) { return b.createElement(name, tag); };
@@ -210,41 +175,43 @@ function dishViewPanel(views, question, mask, opts) {
         }
 
         var root = mint("root", "div");
-        root.className = "wb-view";
+        css.addClass(root, wb_view);
         root.tabIndex = -1;
 
         var head = mint("head", "div");
-        head.className = "wb-view-head";
+        css.addClass(head, wb_view_head);
         var title = mint("title", "span");
-        title.className = "wb-view-title";
+        css.addClass(title, wb_view_title);
         title.textContent = "Arrange the dishes";
         var sub = mint("sub", "span");
-        sub.className = "wb-view-sub";
+        css.addClass(sub, wb_view_sub);
         sub.textContent = "the grid handed the order of its rows over, and is waiting";
         head.appendChild(title); head.appendChild(sub);
         root.appendChild(head);
 
         var list = mint("list", "ul");
-        list.className = "wb-view-list";
+        css.addClass(list, wb_view_list);
         var items = [], profiles = views.profiles(), heldKey = views.held();
         profiles.forEach(function (p, idx) {
-            var li = mint("item-" + p.key, "li");
-            li.className = "wb-view-item" + (p.key === heldKey ? " wb-view-held" : "");
+            var li = mint("item-" + p.key, "li"), held = p.key === heldKey;
+            css.addClass(li, wb_view_item, wb_view_item_end, wb_view_item_hot);
+            if (held) css.addClass(li, wb_view_held);
             li.tabIndex = -1;
             li.profile = p.key;                                  // a property, so a test can read it back
             li.setAttribute("role", "option");
             li.setAttribute("aria-selected", p.key === heldKey ? "true" : "false");
             var num = mint("num-" + p.key, "span");
-            num.className = "wb-view-num";
+            css.addClass(num, wb_view_num);
             num.textContent = String(idx + 1);
             var label = mint("label-" + p.key, "span");
-            label.className = "wb-view-label";
+            css.addClass(label, wb_view_label);
+            if (held) css.addClass(label, wb_view_tick);       // the tick is the label's
             label.textContent = p.label;
             var rule = mint("rule-" + p.key, "span");
-            rule.className = "wb-view-rule";
+            css.addClass(rule, wb_view_rule);
             rule.textContent = p.rule;
             var count = mint("count-" + p.key, "span");
-            count.className = "wb-view-count";
+            css.addClass(count, wb_view_count);
             count.textContent = views.viewFor(p.key).length + " dishes";
             li.appendChild(num); li.appendChild(label); li.appendChild(rule); li.appendChild(count);
             li.addEventListener("click", function () { choose(p.key); });
@@ -254,14 +221,14 @@ function dishViewPanel(views, question, mask, opts) {
         root.appendChild(list);
 
         var foot = mint("foot", "div");
-        foot.className = "wb-view-foot";
+        css.addClass(foot, wb_view_foot);
         var note = mint("note", "span");
         note.textContent = "a reading of the store now; an edit later changes a cell, not the order";
         var keys = mint("keys", "span");
-        keys.className = "wb-view-keys";
+        css.addClass(keys, wb_view_keys);
         keys.textContent = "1–9  ↑↓  Enter  Esc";
         var cancel = mint("cancel", "button");
-        cancel.className = "wb-view-cancel";
+        css.addClass(cancel, wb_view_cancel);
         cancel.type = "button";
         cancel.textContent = "Cancel";
         cancel.addEventListener("click", function () { settle(undefined); });

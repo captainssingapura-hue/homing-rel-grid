@@ -18,9 +18,9 @@
 // that branch directly; what comes and goes is minted on a sub-branch made
 // for it and dissolved with it — the slots of one arrangement, an overlay,
 // the mask, the merged cells' hosts, a drag's guide — so a rebuild releases
-// exactly what it replaces and nothing is ever removed by hand. An injected
-// stylesheet with theme tokens only, under the hrg- prefix so this grid and
-// the live one can share a page.
+// exactly what it replaces and nothing is ever removed by hand. The looks
+// are TYPED — RelGridStyles — with theme tokens only, under the hrg- prefix
+// so this grid and the live one can share a page.
 //
 // A PRESS-DRAG over the slots is captured here too, and reported as raw
 // pointer facts — a press, each slot the pointer reaches while held, and the
@@ -114,140 +114,14 @@ function _hrgRevealInWindow(el, topInset) {
     if (d.dy || d.dx) window.scrollBy(d.dx, d.dy);
 }
 
-var _HRG_STYLE_ID = "homing-rel-grid-style";
-var _HRG_STYLE_CSS = [
-    // The positioned parent for anything that is not a cell.
-    ".hrg-wrap{position:relative;}",
-    // LIT, NOT LIFTED. The grid that holds the focus is visibly the grid that
-    // holds the focus, and it says so with light: a frame that catches it, and
-    // a cursor at full strength only then. Nothing moves — no elevation, no
-    // offset shadow, no transform — because a table that rises when clicked
-    // reads as a card. The frame is a layer OVER the table, drawn INSET,
-    // because a host that mounts the grid in a scrollport clips anything
-    // outside the box; it takes no pointer and sits under the editor (50) and
-    // the mask (60). Focus is :focus-within — the browser's own fact — so the
-    // editor's overlay and the mask's panel count as the grid holding it, and
-    // the grid keeps no fact of its own.
-    //
-    // A hint of morphism, over the semantic tokens only, so it follows any
-    // palette: an accent-tinted hairline, a catch of light on the inner
-    // top-left edge (white mixed into the raised surface, so a dark theme gets
-    // a dim catch), and a soft inner glow.
-    //
-    // LATER — themed lighting. A theme with an idiom of its own (a hard
-    // brutalist ring, a Material outline, a neumorphic relief) should be able
-    // to say so, and the way to do that in the typed CSS substrate is a grid
-    // vocabulary of tokens (--hrg-frame-rest, --hrg-frame-focus, --hrg-cursor-
-    // rest, --hrg-cursor-focus, --hrg-focus-transition) that every registered
-    // theme provides, with these values as the fallbacks. Not done here: the
-    // substrate's vocabulary is the studio's alone today (StudioVars, with
-    // every ThemeVariables in studio-base providing exactly it), so a component
-    // cannot yet contribute tokens without either a per-deployment registry
-    // wrapper or a fork of every theme. It waits on the theme design system
-    // growing a way for a component to declare a vocabulary of its own.
-    ".hrg-wrap::after{content:\"\";position:absolute;left:0;top:0;right:0;bottom:0;",
-    "  pointer-events:none;z-index:40;",
-    "  box-shadow:inset 0 0 0 1px var(--color-border);",
-    "  transition:box-shadow .18s ease;}",
-    ".hrg-wrap:focus-within::after{",
-    "  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 60%, var(--color-border)),",
-    "    inset 1px 1px 0 1px color-mix(in srgb, white 35%, var(--color-surface-raised)),",
-    "    inset 0 0 14px color-mix(in srgb, var(--color-accent) 18%, transparent);}",
-    // An editor lives HERE, not in its slot: out of the table it cannot widen a
-    // column, cannot stretch a row, and is not clipped by the slot — so a cell
-    // may open something LARGER than itself. The grid places it over the slot
-    // and sizes it to at least the slot; how much more it takes is the cell's.
-    ".hrg-edit{position:absolute;z-index:50;box-sizing:border-box;",
-    "  background:var(--color-surface);color:var(--color-text-primary);",
-    "  outline:2px solid var(--color-accent);outline-offset:-2px;}",
-    // THE MASK. Over the whole table, in the wrapper: a wash heavy enough that
-    // the rows beneath read as unavailable rather than current, and focusable
-    // so the keys stop here. It dims rather than replaces — the context stays,
-    // nothing jumps — which ext6 argued for and this is.
-    ".hrg-mask{position:absolute;left:0;top:0;right:0;bottom:0;z-index:60;outline:none;",
-    "  background:color-mix(in srgb, var(--color-surface) 64%, transparent);}",
-    // THE PANEL: the domain's canvas, sized by the grid. Raised, bordered,
-    // and scrolling inside itself if the domain draws more than fits.
-    ".hrg-panel{position:absolute;box-sizing:border-box;overflow:auto;outline:none;",
-    "  background:var(--color-surface-raised);color:var(--color-text-primary);",
-    "  border:1px solid var(--color-border);border-radius:8px;",
-    "  box-shadow:0 12px 36px rgba(0,0,0,0.32);}",
-    // What a slot does with content too wide for it. The grid decides, because
-    // it is the slot's box.
-    //
-    // Ellipsis by default, because the alternative — wrapping, which is what
-    // plain CSS does — makes one row six lines tall while its neighbours stay
-    // at one, and a grid whose rows disagree about their height reads as
-    // broken.
-    //
-    // What this does NOT do on its own is truncate. In an auto-layout table
-    // nowrap moves the give from the row to the COLUMN: the column widens to
-    // the unbroken string and the table scrolls sideways instead. The ellipsis
-    // engages only once a column has a definite width — after a resize, or
-    // under hrg-fixed. That is the honest bound of this option, and the reason
-    // a declared per-column width is the other half of the story.
-    ".hrg-ov-ellipsis .hrg-td > *{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}",
-    ".hrg-ov-clip .hrg-td > *{overflow:hidden;white-space:nowrap;}",
-    ".hrg-table{border-collapse:collapse;width:100%;",
-    "  background:var(--color-surface);color:var(--color-text-primary);",
-    "  font:13px sans-serif;user-select:none;-webkit-user-select:none;}",
-    ".hrg-table:focus{outline:none;}",
-    ".hrg-table input{user-select:text;-webkit-user-select:text;}",
-    ".hrg-th{position:relative;text-align:left;padding:6px 10px;",
-    "  background:var(--color-surface-raised);color:var(--color-text-muted);",
-    "  white-space:nowrap;",
-    "  box-shadow:inset -1px 0 0 var(--color-border),",
-    "             inset 0 -2px 0 var(--color-border);}",
-    // The resize HANDLE: a real element on the header's right edge, so the
-    // pointer shows col-resize on hover and the drag has a reliable target.
-    ".hrg-resize-handle{position:absolute;top:0;right:0;width:8px;height:100%;cursor:col-resize;}",
-    // Widths ride a custom property per <col>; hrg-fixed engages once any
-    // explicit width exists, so unsized columns keep sharing the remainder.
-    ".hrg-table.hrg-fixed{table-layout:fixed;}",
-    ".hrg-table col{width:var(--hrg-col-w,auto);}",
-    ".hrg-resize-guide{position:fixed;top:var(--hrg-guide-top);height:var(--hrg-guide-h);",
-    "  left:var(--hrg-guide-x);width:2px;background:var(--color-accent);z-index:99;",
-    "  pointer-events:none;}",
-    // position:relative makes every slot a containing block, so a cell may
-    // lay an editor OVER it instead of IN it. That matters because the table
-    // is auto-layout: anything in flow contributes its intrinsic width to the
-    // column, and an <input> or a <select> is far wider than the text it
-    // replaces — so an editor in flow moves every column while it is open.
-    // Where the editor sits is the CELL's business; giving it something to sit
-    // against is geometry, and geometry is the grid's.
-    ".hrg-td{padding:0;position:relative;border-bottom:1px solid var(--color-border);",
-    "  border-right:1px solid color-mix(in srgb, var(--color-border) 50%, transparent);",
-    "  vertical-align:middle;overflow:hidden;}",
-    // A MERGED CELL: the leading cell's host, laid over the n slots it reaches
-    // across — opaque, so the slots beneath and the lines between them are
-    // covered; no pointer, so a click lands on the exact slot beneath; and
-    // wearing the group's state, mirrored from the slots: the cursor when the
-    // cursor is on any of them, the wash when any is selected, dashed while
-    // deep, dimmed while the grid does not hold the focus — the slot's own
-    // rules, one level up. The slot marks stay, for a host that wants them.
-    ".hrg-merge{position:absolute;z-index:30;box-sizing:border-box;overflow:hidden;pointer-events:none;",
-    "  background:var(--color-surface);color:var(--color-text-primary);",
-    "  transition:outline-color .18s ease;}",
-    ".hrg-merge.hrg-sel{background:color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));}",
-    ".hrg-merge.hrg-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));outline-offset:-2px;}",
-    ".hrg-wrap:focus-within .hrg-merge.hrg-cursor{outline-color:var(--color-accent);}",
-    ".hrg-wrap.hrg-deep .hrg-merge.hrg-cursor{outline-style:dashed;}",
-    ".hrg-td.hrg-lead{border-right-color:transparent;}",
-    ".hrg-td.hrg-covered{border-right-color:transparent;}",
-    ".hrg-td.hrg-covered.hrg-group-end{border-right-color:color-mix(in srgb, var(--color-border) 50%, transparent);}",
-    // The selection: a wash on every slot the resolved list covers. A slot may
-    // wear this and the cursor at once — with an empty list the selection IS
-    // the cursor's 1x1, so the cursor's slot is always one of them.
-    ".hrg-td.hrg-sel{background:color-mix(in srgb, var(--color-accent) 12%, transparent);}",
-    // The cursor: painted on the slot, never on the cell. Solid while shallow;
-    // dashed while the cell is deep, so the handover is visible. Full accent
-    // only while the grid holds the focus; dimmed towards the border otherwise,
-    // so a cursor in a table that is NOT listening does not look like one that is.
-    ".hrg-td.hrg-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));",
-    "  outline-offset:-2px;transition:outline-color .18s ease;}",
-    ".hrg-wrap:focus-within .hrg-td.hrg-cursor{outline-color:var(--color-accent);}",
-    ".hrg-table.hrg-deep .hrg-td.hrg-cursor{outline-style:dashed;}"
-].join("\n");
+// THE LOOKS ARE TYPED — RelGridStyles, one class per thing the layout mints and
+// one per state it paints, imported here as handles and applied through the
+// css manager. Nothing here is a selector that reaches down: a state that
+// must reach every slot beneath it (the focus lighting the cursor, a cell
+// holding control dashing it, a group dimming a dormant member) is a custom
+// property the state class sets on an ancestor and the slot's class reads.
+// Geometry the layout measures rides custom properties on the element the
+// same way — never an inline style.
 
 /** Is el inside ancestor, or it? Walks parentNode: the stub's elements have no contains(). */
 function _hrgWithinEl(el, ancestor) {
@@ -261,38 +135,21 @@ function _hrgMods(e) {
     return { shift: !!e.shiftKey, ctrl: !!(e.ctrlKey || e.metaKey) };
 }
 
-function _hrgEnsureStyles() {
-    if (document.getElementById(_HRG_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _HRG_STYLE_ID;
-    s.textContent = _HRG_STYLE_CSS;
-    document.head.appendChild(s);
-}
-
-function _hrgAddClass(el, c) {
-    var parts = el.className ? el.className.split(" ") : [];
-    if (parts.indexOf(c) < 0) el.className = parts.concat(c).join(" ");
-}
-
-function _hrgRemoveClass(el, c) {
-    if (!el.className) return;
-    var parts = el.className.split(" "), kept = [];
-    for (var k = 0; k < parts.length; k++) if (parts[k] !== c) kept.push(parts[k]);
-    el.className = kept.join(" ");
-}
-
 /** wrap | clip | ellipsis — ellipsis unless the host says otherwise. */
 function _hrgOverflowClass(choice) {
-    if (choice === "wrap") return "hrg-ov-wrap";
-    if (choice === "clip") return "hrg-ov-clip";
-    return "hrg-ov-ellipsis";
+    if (choice === "wrap") return hrg_ov_wrap;
+    if (choice === "clip") return hrg_ov_clip;
+    return hrg_ov_ellipsis;
 }
 
-function _hrgHasClass(el, c) {
-    if (!el.className) return false;
-    var parts = el.className.split(" ");
-    for (var k = 0; k < parts.length; k++) if (parts[k] === c) return true;
-    return false;
+/** Four measured numbers onto an element, as the custom properties its class reads. */
+function _hrgPlace(el, r) {
+    var st = el.style;
+    if (!r || !st || !st.setProperty) return;
+    st.setProperty("--hrg-left",   r.left + "px");
+    st.setProperty("--hrg-top",    r.top + "px");
+    st.setProperty("--hrg-width",  r.width + "px");
+    st.setProperty("--hrg-height", r.height + "px");
 }
 
 var _HRG_PHI = (1 + Math.sqrt(5)) / 2;          // φ ≈ 1.618
@@ -355,7 +212,6 @@ class RelGridLayout {
         opts = opts || {};
         if (!opts.container) throw new Error("[RelGridLayout] opts.container is required");
         if (!opts.branch) throw new Error("[RelGridLayout] opts.branch is required");
-        _hrgEnsureStyles();
         this._container = opts.container;
         this._branch = opts.branch;                           // the grid's own; the host dissolves it
         this._slotsBranch = null;                             // the current arrangement's slots
@@ -370,7 +226,7 @@ class RelGridLayout {
         this._onDragEnd = opts.onDragEnd || null;             // () — released
         this._press = null;                                   // the slot a button went down on
         this._table = this._branch.createElement("table", "table");
-        this._table.className = "hrg-table";
+        css.addClass(this._table, hrg_table);
         this._table.setAttribute("tabindex", "0");            // the keyboard host
         if (opts.label) this._table.setAttribute("aria-label", opts.label);
         // The resize gesture lives in RelGridHeaderDrag; wired per <th> at render.
@@ -398,7 +254,7 @@ class RelGridLayout {
         // container > wrapper > table, so an overlay can be a sibling of the
         // table in the wrapper's coordinates.
         this._wrap = this._branch.createElement("wrap", "div");
-        this._wrap.className = "hrg-wrap";
+        css.addClass(this._wrap, hrg_wrap, hrg_frame, hrg_lit);   // positioned; framed; lit while it holds the focus
         this._wrap.appendChild(this._table);
         this._container.appendChild(this._wrap);
         this._overlay = null;
@@ -413,7 +269,7 @@ class RelGridLayout {
             this._ro = new ResizeObserver(function () { lay.placeGroups(); });
             this._ro.observe(this._table);
         }
-        _hrgAddClass(this._table, _hrgOverflowClass(opts.overflow));
+        css.addClass(this._table, _hrgOverflowClass(opts.overflow));
         this._slots = [];        // [i][j] → td
         this._cursorTd = null;   // the slot currently painted as the cursor
         this._selTds = [];       // the slots currently painted as selected
@@ -446,10 +302,12 @@ class RelGridLayout {
         var slots = this._slotsBranch = this._branch.createBranch("slots");
         slots.activate(this);
         for (var h = 0; h < headers.length; h++) {
-            this._colgroup.appendChild(slots.createElement("col-" + h, "col"));   // widths need cols regardless
+            var col = slots.createElement("col-" + h, "col");   // widths need cols regardless
+            css.addClass(col, hrg_col);
+            this._colgroup.appendChild(col);
             if (!this._headerRow) continue;
             var th = slots.createElement("th-" + h, "th");
-            th.className = "hrg-th";
+            css.addClass(th, hrg_th);
             th.textContent = headers[h];
             if (this._drag) this._drag.wire(th, h, slots);
             this._headerRow.appendChild(th);
@@ -494,7 +352,7 @@ class RelGridLayout {
             var rowSlots = [];
             for (var j = 0; j < headers.length; j++) {
                 var td = slots.createElement("td-" + i + "-" + j, "td");
-                td.className = "hrg-td";
+                css.addClass(td, hrg_td);
                 wire(td, i, j);
                 tr.appendChild(td);
                 rowSlots.push(td);
@@ -519,8 +377,7 @@ class RelGridLayout {
             if (w != null) { any = true; sum += w; if (st && st.setProperty) st.setProperty("--hrg-col-w", w + "px"); }
             else { all = false; if (st && st.removeProperty) st.removeProperty("--hrg-col-w"); }
         }
-        if (any) _hrgAddClass(this._table, "hrg-fixed");
-        else _hrgRemoveClass(this._table, "hrg-fixed");
+        css.toggleClass(this._table, hrg_fixed, any);
         // A table whose EVERY column holds a width is at least their sum, and
         // its LAST presented column is elastic: it takes whatever the box has
         // over, and never less than it holds. Left at 100% of a wider box a
@@ -532,11 +389,11 @@ class RelGridLayout {
         var ts = this._table.style;
         if (ts && ts.setProperty) {
             if (any && all && cols.length) {
-                ts.setProperty("width", "max(100%, " + sum + "px)");
+                ts.setProperty("--hrg-table-w", "max(100%, " + sum + "px)");
                 var lastSt = cols[cols.length - 1].style;
                 if (lastSt && lastSt.removeProperty) lastSt.removeProperty("--hrg-col-w");
             }
-            else if (ts.removeProperty) ts.removeProperty("width");
+            else if (ts.removeProperty) ts.removeProperty("--hrg-table-w");
         }
         this.placeGroups();                                   // the slots moved; the hosts follow
         return this;
@@ -546,15 +403,15 @@ class RelGridLayout {
     paintCursor(ij) {
         var td = ij ? this.slotAt(ij.i, ij.j) : null;
         if (this._cursorTd !== td) {
-            if (this._cursorTd) _hrgRemoveClass(this._cursorTd, "hrg-cursor");
-            if (td) _hrgAddClass(td, "hrg-cursor");
+            if (this._cursorTd) css.removeClass(this._cursorTd, hrg_cursor);
+            if (td) css.addClass(td, hrg_cursor);
             this._cursorTd = td;
         }
         // The merged cells mirror: a group wears the cursor when it is on any of its slots.
         for (var g = 0; g < this._groups.length; g++) {
             var grp = this._groups[g];
             var on = !!ij && ij.i === grp.i && ij.j >= grp.j && ij.j < grp.j + grp.n;
-            if (on) _hrgAddClass(grp.el, "hrg-cursor"); else _hrgRemoveClass(grp.el, "hrg-cursor");
+            css.toggleClass(grp.el, hrg_cursor, on);
         }
         return this;
     }
@@ -566,7 +423,7 @@ class RelGridLayout {
      * resolve, since a slot either wears the predicate or does not.
      */
     paintSelection(rects) {
-        for (var k = 0; k < this._selTds.length; k++) _hrgRemoveClass(this._selTds[k], "hrg-sel");
+        for (var k = 0; k < this._selTds.length; k++) css.removeClass(this._selTds[k], hrg_sel);
         this._selTds = [];
         var list = rects || [];
         for (var r = 0; r < list.length; r++) {
@@ -574,8 +431,8 @@ class RelGridLayout {
             for (var i = box.i0; i <= box.i1; i++) {
                 for (var j = box.j0; j <= box.j1; j++) {
                     var td = this.slotAt(i, j);
-                    if (!td || _hrgHasClass(td, "hrg-sel")) continue;    // already painted by an overlap
-                    _hrgAddClass(td, "hrg-sel");
+                    if (!td || css.hasClass(td, hrg_sel)) continue;      // already painted by an overlap
+                    css.addClass(td, hrg_sel);
                     this._selTds.push(td);
                 }
             }
@@ -587,7 +444,7 @@ class RelGridLayout {
                 var b = list[q];
                 on = b.i0 <= grp.i && grp.i <= b.i1 && b.j0 <= grp.j + grp.n - 1 && b.j1 >= grp.j;
             }
-            if (on) _hrgAddClass(grp.el, "hrg-sel"); else _hrgRemoveClass(grp.el, "hrg-sel");
+            css.toggleClass(grp.el, hrg_sel, on);
         }
         return this;
     }
@@ -600,20 +457,20 @@ class RelGridLayout {
     openGroup(i, j, n) {
         var lead = this.slotAt(i, j);
         if (!lead) return null;
-        _hrgAddClass(lead, "hrg-lead");
+        css.addClass(lead, hrg_lead);
         if (lead.style && lead.style.setProperty) lead.style.setProperty("--hrg-span", String(n));
         for (var k = 1; k < n; k++) {
             var td = this.slotAt(i, j + k);
             if (!td) break;
-            _hrgAddClass(td, "hrg-covered");
-            if (k === n - 1) _hrgAddClass(td, "hrg-group-end");
+            css.addClass(td, hrg_covered);
+            if (k === n - 1) css.addClass(td, hrg_group_end);
         }
         if (!this._mergedBranch) {
             this._mergedBranch = this._branch.createBranch("merged");
             this._mergedBranch.activate(this);
         }
         var el = this._mergedBranch.createElement("merged-" + this._groups.length, "div");
-        el.className = "hrg-merge";
+        css.addClass(el, hrg_merge);
         this._wrap.appendChild(el);
         this._groups.push({ i: i, j: j, n: n, el: el });
         return el;
@@ -639,12 +496,8 @@ class RelGridLayout {
     /** Size and place every merged cell's host over its slots, as they are now. */
     placeGroups() {
         for (var g = 0; g < this._groups.length; g++) {
-            var grp = this._groups[g], r = this._unionRect(grp.i, grp.j, grp.n), st = grp.el.style;
-            if (!r || !st || !st.setProperty) continue;
-            st.setProperty("left",   r.left + "px");
-            st.setProperty("top",    r.top + "px");
-            st.setProperty("width",  r.width + "px");
-            st.setProperty("height", r.height + "px");
+            var grp = this._groups[g];
+            _hrgPlace(grp.el, this._unionRect(grp.i, grp.j, grp.n));
         }
         return this;
     }
@@ -683,18 +536,12 @@ class RelGridLayout {
         var ov = this._overlayBranch = this._branch.createBranch("overlay");
         ov.activate(this);
         var el = ov.createElement("overlay", "div");
-        el.className = "hrg-edit";
-        var st = el.style;
-        if (st && st.setProperty) {
-            st.setProperty("left", r.left + "px");
-            st.setProperty("top", r.top + "px");
-            // EXACTLY the slot, so the overlay is an anchor rather than a thing
-            // with a size of its own. A cell that wants more room hangs it off
-            // this box as its own positioned child — which keeps the geometry
-            // the grid states exact, and leaves the cell free.
-            st.setProperty("width", r.width + "px");
-            st.setProperty("height", r.height + "px");
-        }
+        css.addClass(el, hrg_edit);
+        // EXACTLY the slot, so the overlay is an anchor rather than a thing
+        // with a size of its own. A cell that wants more room hangs it off
+        // this box as its own positioned child — which keeps the geometry
+        // the grid states exact, and leaves the cell free.
+        _hrgPlace(el, r);
         this._wrap.appendChild(el);
         this._overlay = el;
         return el;
@@ -720,7 +567,7 @@ class RelGridLayout {
         var mb = this._maskBranch = this._branch.createBranch("mask");
         mb.activate(this);
         var el = mb.createElement("mask", "div");
-        el.className = "hrg-mask";
+        css.addClass(el, hrg_mask);
         el.setAttribute("tabindex", "-1");         // focusable, and not in the tab order
         this._wrap.appendChild(el);
         this._mask = el;
@@ -752,15 +599,9 @@ class RelGridLayout {
         var seen = _hrgVisibleBox(this._wrap.getBoundingClientRect(), this._container.getBoundingClientRect(), vp);
         var box = _hrgGoldenBox(seen.width, seen.height);
         var el = pb.createElement("panel", "div");
-        el.className = "hrg-panel";
+        css.addClass(el, hrg_panel);
         el.setAttribute("tabindex", "-1");
-        var st = el.style;
-        if (st && st.setProperty) {
-            st.setProperty("left",   (seen.left + box.left) + "px");
-            st.setProperty("top",    (seen.top + box.top) + "px");
-            st.setProperty("width",  box.width + "px");
-            st.setProperty("height", box.height + "px");
-        }
+        _hrgPlace(el, { left: seen.left + box.left, top: seen.top + box.top, width: box.width, height: box.height });
         mask.appendChild(el);
         if (element) el.appendChild(element);
         this._panel = el;
@@ -788,14 +629,14 @@ class RelGridLayout {
 
     /** The table wears the deep state, so CSS and tests can see the handover. */
     setDeep(on) {
-        if (on) { _hrgAddClass(this._table, "hrg-deep"); _hrgAddClass(this._wrap, "hrg-deep"); }
-        else    { _hrgRemoveClass(this._table, "hrg-deep"); _hrgRemoveClass(this._wrap, "hrg-deep"); }
+        css.toggleClass(this._table, hrg_deep, on);
+        css.toggleClass(this._wrap, hrg_deep, on);
         return this;
     }
 
     /** And the masked state, for the same reason. */
     setMasked(on) {
-        if (on) _hrgAddClass(this._table, "hrg-masked"); else _hrgRemoveClass(this._table, "hrg-masked");
+        css.toggleClass(this._table, hrg_masked, on);
         return this;
     }
 

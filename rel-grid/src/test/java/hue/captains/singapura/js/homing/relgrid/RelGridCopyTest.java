@@ -28,6 +28,7 @@ class RelGridCopyTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        js.eval("js", RelGridTestDom.STYLES);
         for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
@@ -138,9 +139,9 @@ class RelGridCopyTest extends JsModuleTestBase {
                     if (m.parentNode !== f.wrap() || f.wrap().children[0] !== f.table()) return false;
                     if (!/hrg-panel/.test(p.className) || p.parentNode !== m) return false;
                     // Placed and sized by the grid; the content is the domain's, in the box, once.
-                    var st = p.style;
-                    if (st.getPropertyValue('left') === '' || st.getPropertyValue('top') === '') return false;
-                    if (st.getPropertyValue('width') === '' || st.getPropertyValue('height') === '') return false;
+                    var st = p.style;                                     // the geometry the grid measured, as custom properties its class reads
+                    if (st.getPropertyValue('--hrg-left') === '' || st.getPropertyValue('--hrg-top') === '') return false;
+                    if (st.getPropertyValue('--hrg-width') === '' || st.getPropertyValue('--hrg-height') === '') return false;
                     if (p.children.length !== 1 || p.children[0] !== drawn) return false;
                     // The box is never handed out: the domain must hand an element.
                     var refused = false;

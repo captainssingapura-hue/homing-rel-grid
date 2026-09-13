@@ -49,6 +49,20 @@ on dispose. What crosses between the two is an element: the grid asks a cell for
 `editorElement()`, and a domain hands `mask.panel(element)` what it drew. The host creates
 both branches and dissolves both; it activates neither side's own.
 
+## Typed looks
+
+There is no stylesheet in any module. Every class the grid, the group or a bench module wears is
+a `CssClass` record in a `CssGroup` — `RelGridStyles`, `RelGridStockStyles`, `RelGridGroupStyles`,
+and one per bench module that draws — applied through the `css` manager the server injects. The
+substrate renders one rule per class, so a state that has to reach every slot beneath it is a
+custom property the state class sets on an ancestor and the slot's class reads: `hrg_lit`
+(the wrapper under `:focus-within`) sets `--hrg-cursor-color`, `hrg_deep` sets
+`--hrg-cursor-style`, a group's `hrg_dormant` sets both cursor and selection transparent,
+`hrg_ov_ellipsis` publishes `--hrg-text-overflow` for a text cell to honour. Geometry the
+layout measures rides `--hrg-left / --hrg-top / --hrg-width / --hrg-height / --hrg-table-w`
+on the element; a column's width `--hrg-col-w` on its `<col>`. Those properties are the
+grid's published vocabulary: a host or a theme may set them on any ancestor.
+
 ## The RFC 0044 ledger
 
 Every module is a `CONSUMER` under the full DOM-owner discipline (the grid is a component

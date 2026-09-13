@@ -1,5 +1,9 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.core.CssClass;
+import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.util.CssClassName;
+
 /**
  * The headless DOM the e2 tests run on, and the fixture relation they share.
  *
@@ -34,6 +38,22 @@ public final class RelGridTestDom {
     /** The selection lives in its own module, and its own jar. */
     public static final String SELECTION =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/selection/RelGridSelectionModule.js";
+
+    /**
+     * The typed classes a served module would import as handles — {@code var hrg_table = css.cls("hrg-table");}
+     * per record of each group, exactly as the server's CssGroupContentProvider emits them.
+     */
+    public static String handles(CssGroup<?>... groups) {
+        var sb = new StringBuilder();
+        for (CssGroup<?> g : groups)
+            for (CssClass<?> c : g.cssClasses())
+                sb.append("var ").append(c.getClass().getSimpleName())
+                  .append(" = css.cls(\"").append(CssClassName.toCssName(c.getClass())).append("\");\n");
+        return sb.toString();
+    }
+
+    /** The grid's and the stock cell's handles, for every test that loads the grid's modules. */
+    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE);
 
     /** The DomOpsParty — the real one, from homing-core-js: base first, then the levels and the root singleton. */
     public static final String[] PARTY = {
@@ -96,6 +116,19 @@ public final class RelGridTestDom {
                     },
                     // What a branch's dissolve calls on every element it owns.
                     remove: function () { if (this.parentNode) this.parentNode.removeChild(this); },
+                    // What the css manager drives: a classList over the className string.
+                    classList: {
+                        _parts: function () { return el.className ? el.className.split(/\s+/).filter(Boolean) : []; },
+                        _set: function (parts) { el.className = parts.join(' '); },
+                        add: function (c) { var p = this._parts(); if (p.indexOf(c) < 0) { p.push(c); this._set(p); } },
+                        remove: function (c) { this._set(this._parts().filter(function (x) { return x !== c; })); },
+                        contains: function (c) { return this._parts().indexOf(c) >= 0; },
+                        toggle: function (c, force) {
+                            var on = (force === undefined) ? !this.contains(c) : !!force;
+                            if (on) this.add(c); else this.remove(c);
+                            return on;
+                        }
+                    },
                     // Focus moves: the element losing it is told, as in a browser.
                     focus: function () {
                         var prev = __focused; if (prev === this) return;
@@ -128,6 +161,25 @@ public final class RelGridTestDom {
                 parentNode: null
             });
             var console = console || { error: function () {} };
+            // The css manager, as the server injects it into a module that imports typed
+            // classes: handles are { name }, and every class operation goes through here.
+            var css = (function () {
+                function name(c) {
+                    if (!c || typeof c.name !== 'string') throw new Error('Invalid CSS class handle: ' + JSON.stringify(c));
+                    return c.name;
+                }
+                return {
+                    cls: function (n) { return { name: n, toString: function () { return n; } }; },
+                    addClass: function (el) { for (var k = 1; k < arguments.length; k++) el.classList.add(name(arguments[k])); },
+                    removeClass: function (el) { for (var k = 1; k < arguments.length; k++) el.classList.remove(name(arguments[k])); },
+                    toggleClass: function (el, c, force) {
+                        return arguments.length === 3 ? el.classList.toggle(name(c), force) : el.classList.toggle(name(c));
+                    },
+                    setClass: function (el) { el.className = Array.prototype.slice.call(arguments, 1).map(name).join(' '); },
+                    hasClass: function (el, c) { return el.classList.contains(name(c)); },
+                    className: name
+                };
+            })();
             // Fake timers. Armed here, fired by the test, in the order they were
             // due: the grid's mask delay and hold are driven, never waited for.
             var __timers = [], __tid = 0;

@@ -2,6 +2,7 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
+import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.core.js.CoreJsCrate;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
 import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupCrate;
@@ -52,7 +53,14 @@ public final class RelGridWorkbenchCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(WorkbenchStyles.INSTANCE),
+                // The looks, typed: generated CSS modules — the bench's chrome, and one per domain module that draws.
+                CrateEntry.of(WorkbenchStyles.INSTANCE,   StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(DishStarsStyles.INSTANCE,   StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(DishCopyStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(DishViewStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(HanCellStyles.INSTANCE,     StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(HanFenceStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(OutletFenceStyles.INSTANCE, StandardJsModuleType.GENERATED_CSS),
                 // Replicating Tables: a persisted store, a relation with a role and
                 // a cell manager, three editors with different rights, and their
                 // followers. The grid is on none of the edit path.

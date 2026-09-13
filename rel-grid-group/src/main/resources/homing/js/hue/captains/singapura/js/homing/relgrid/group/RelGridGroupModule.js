@@ -60,10 +60,11 @@
 // has one — but a person's attention is in one place, so the group presents
 // ONE: the ACTIVE member's. The active member is the one whose table last
 // held the focus (observed, never asked of the table), or the one activate()
-// named; its box wears hrg-active, and the group's sheet paints neither a
-// cursor nor a selection wash in the others. Their state is untouched — the
-// cursor and the ranges are still there — it is simply not shown until the
-// member is active again. The first member is active at first.
+// named; its box wears hrg-active, and every other member's box wears
+// hrg-dormant, which paints neither a cursor nor a selection wash in it.
+// Their state is untouched — the cursor and the ranges are still there — it
+// is simply not shown until the member is active again. The first member is
+// active at first.
 //
 // TAB walks the group: fence, table, fence, table, …, trailing fence, in
 // order, and WRAPS within the group — Shift+Tab the other way. An unfilled
@@ -117,44 +118,13 @@
 // verb here existed already.
 // =============================================================================
 
-var _HRGG_STYLE_ID = "homing-rel-grid-group-style";
-var _HRGG_STYLE_CSS = [
-    ".hrg-group{display:flex;flex-direction:column;align-items:stretch;}",
-    ".hrg-member{flex:0 0 auto;}",
-    ".hrg-group-header{flex:0 0 auto;}",
-    ".hrg-fence{flex:0 0 auto;}",
-    ".hrg-fence.hrg-fence-empty{display:none;}",
-    // A folded member: its box hidden, its table inside untouched; the fence
-    // above it wears the fact, for a domain that draws its control from it.
-    ".hrg-member.hrg-folded{display:none;}",
-    // One cursor: a member that is not active shows neither its cursor nor
-    // its selection — ext3's predicates, which are published to be styled by.
-    ".hrg-group .hrg-member:not(.hrg-active) .hrg-td.hrg-cursor,",
-    ".hrg-group .hrg-member:not(.hrg-active) .hrg-merge.hrg-cursor{outline-color:transparent;}",
-    ".hrg-group .hrg-member:not(.hrg-active) .hrg-td.hrg-sel,",
-    ".hrg-group .hrg-member:not(.hrg-active) .hrg-merge.hrg-sel{background:transparent;}",
-    // A fence that is the Tab stop itself (no control of its own to land on).
-    // A fence that is the cursor wears the cell's mark: dimmed at rest, full
-    // accent with the focus, as a slot's cursor is; and while a fence is the
-    // cursor no member shows one.
-    ".hrg-fence{outline:none;}",
-    ".hrg-fence.hrg-fence-cursor{outline:2px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));outline-offset:-2px;transition:outline-color .18s ease;}",
-    ".hrg-fence.hrg-fence-cursor:focus{outline-color:var(--color-accent);}",
-    ".hrg-group.hrg-on-fence .hrg-member .hrg-td.hrg-cursor,",
-    ".hrg-group.hrg-on-fence .hrg-member .hrg-merge.hrg-cursor{outline-color:transparent;}",
-    ".hrg-group.hrg-on-fence .hrg-member .hrg-td.hrg-sel,",
-    ".hrg-group.hrg-on-fence .hrg-member .hrg-merge.hrg-sel{background:transparent;}"
-].join("\n");
-var _hrggStyled = false;
-
-function _hrggEnsureStyles() {
-    if (_hrggStyled || typeof document === "undefined" || !document.head) return;
-    _hrggStyled = true;
-    var s = document.createElement("style");
-    s.id = _HRGG_STYLE_ID;
-    s.textContent = _HRGG_STYLE_CSS;
-    document.head.appendChild(s);
-}
+// THE LOOKS ARE TYPED — RelGridGroupStyles, applied through the css manager.
+// ONE CURSOR is kept by painting a member DORMANT: a class on its box that
+// sets the grid's own published properties (--hrg-cursor-color, --hrg-sel-
+// color) to transparent, inherited by every slot beneath — a member that is
+// not active, and every member while a fence is the stop. Nothing reaches
+// into a member's slots. A fence that is the stop wears hrg_fence_cursor,
+// and the grid's hrg_lit, so its mark lights under the focus as a slot's does.
 
 /** Is el inside ancestor (or it)? The stub's elements have no contains(). */
 function _hrggWithin(el, ancestor) {
@@ -179,16 +149,6 @@ function _hrggFirstControl(host) {
     return null;
 }
 
-function _hrggAddClass(el, c) {
-    var parts = el.className ? el.className.split(" ") : [];
-    if (parts.indexOf(c) < 0) el.className = parts.concat(c).join(" ");
-}
-function _hrggRemoveClass(el, c) {
-    var parts = el.className ? el.className.split(" ") : [], kept = [];
-    for (var k = 0; k < parts.length; k++) if (parts[k] !== c) kept.push(parts[k]);
-    el.className = kept.join(" ");
-}
-
 /** A copy of a plain options object — the member's spec is the host's; the group amends its own copy. */
 function _hrggCopy(o) {
     var out = {};
@@ -204,7 +164,6 @@ class RelGridGroup {
         if (!opts.branch) throw new Error("[RelGridGroup] opts.branch is required");
         if (!Array.isArray(opts.members) || opts.members.length === 0)
             throw new Error("[RelGridGroup] opts.members must name at least one member");
-        _hrggEnsureStyles();
         var self = this;
         this._cbResized = opts.onColumnResized || null;
         this._cbFolded = opts.onFolded || null;
@@ -222,7 +181,7 @@ class RelGridGroup {
         this._grids = [];                                       // the sub-branches the members' grids were given
 
         this._root = this._branch.createElement("root", "div");
-        this._root.className = "hrg-group";
+        css.addClass(this._root, hrg_group);
         if (opts.label) this._root.setAttribute("aria-label", opts.label);
         this._members = [];                                     // { id, box, grid, spec }, in order
         this._fences = [];                                      // N+1 of { id, host, cell }; the last id is null
@@ -283,6 +242,7 @@ class RelGridGroup {
         this._root.addEventListener("focusin", this._onFocusIn);
         this._root.addEventListener("keydown", this._onKeyDown);
         this._activate(this._members[0].id, false);
+        this._paintDormancy();                                  // every member is built now: the others dormant
         opts.container.appendChild(this._root);
 
         // Every member starts at the group's widths. Done after all are built,
@@ -299,7 +259,8 @@ class RelGridGroup {
      */
     _mintFence(id, cell, k) {
         var host = this._branch.createElement("fence-" + k, "div");   // by position: an id is the domain's, and any string
-        host.className = "hrg-fence" + (cell ? "" : " hrg-fence-empty");
+        css.addClass(host, hrg_fence, hrg_lit);                 // a stop that lights under the focus, as a slot's cursor does
+        if (!cell) css.addClass(host, hrg_fence_empty);
         host.setAttribute("tabindex", "-1");                    // a Tab stop by the group's hand, not the browser's
         if (id !== null) host.setAttribute("data-member", String(id));
         this._root.appendChild(host);
@@ -339,7 +300,7 @@ class RelGridGroup {
                               + "' declares " + JSON.stringify(cols) + ", member '" + first.id + "' " + JSON.stringify(columns));
         }
         var box = this._branch.createElement("header", "div");
-        box.className = "hrg-group-header";
+        css.addClass(box, hrg_group_header);
         this._root.appendChild(box);
         this._boxes.push(box);
         var grid = new RelGrid({
@@ -371,7 +332,7 @@ class RelGridGroup {
     _mintMember(m, k) {
         var self = this, id = m.id, spec = m.grid;
         var box = this._branch.createElement("member-" + k, "div");
-        box.className = "hrg-member";
+        css.addClass(box, hrg_member);
         box.setAttribute("data-member", String(id));
         this._root.appendChild(box);
         this._boxes.push(box);
@@ -439,16 +400,25 @@ class RelGridGroup {
     /** The cursor is on a fence: it wears the mark, and no member shows one. */
     _cursorOnFence(f) {
         if (this._cursorFence === f) return;
-        if (this._cursorFence) _hrggRemoveClass(this._cursorFence.host, "hrg-fence-cursor");
+        if (this._cursorFence) css.removeClass(this._cursorFence.host, hrg_fence_cursor);
         this._cursorFence = f;
-        _hrggAddClass(f.host, "hrg-fence-cursor");
-        _hrggAddClass(this._root, "hrg-on-fence");
+        css.addClass(f.host, hrg_fence_cursor);
+        css.addClass(this._root, hrg_on_fence);
+        this._paintDormancy();
     }
     _cursorOffFence() {
         if (!this._cursorFence) return;
-        _hrggRemoveClass(this._cursorFence.host, "hrg-fence-cursor");
-        _hrggRemoveClass(this._root, "hrg-on-fence");
+        css.removeClass(this._cursorFence.host, hrg_fence_cursor);
+        css.removeClass(this._root, hrg_on_fence);
         this._cursorFence = null;
+        this._paintDormancy();
+    }
+    /** ONE CURSOR, painted: every member but the active one is dormant, and every member is while a fence is the stop. */
+    _paintDormancy() {
+        for (var k = 0; k < this._members.length; k++) {
+            var m = this._members[k];
+            css.toggleClass(m.box, hrg_dormant, this._cursorFence !== null || m.id !== this._activeId);
+        }
     }
     _fenceAt(el) {
         for (var k = 0; k < this._fences.length; k++) if (_hrggWithin(el, this._fences[k].host)) return this._fences[k];
@@ -462,9 +432,10 @@ class RelGridGroup {
         this._cursorOffFence();                                 // a member's cursor is the group's again
         if (this._activeId !== id) {
             var was = this._entry(this._activeId);
-            if (was) _hrggRemoveClass(was.box, "hrg-active");
-            _hrggAddClass(m.box, "hrg-active");
+            if (was) css.removeClass(was.box, hrg_active);
+            css.addClass(m.box, hrg_active);
             this._activeId = id;
+            this._paintDormancy();
         }
         if (focus) {
             if (m.box.scrollIntoView) { try { m.box.scrollIntoView({ block: "nearest" }); } catch (e) { /* headless */ } }
@@ -550,8 +521,8 @@ class RelGridGroup {
     _paintFold(id, on) {
         var m = this._entry(id), f = this._fenceOf(id);
         if (!m) return;
-        if (on) { _hrggAddClass(m.box, "hrg-folded"); if (f) _hrggAddClass(f.host, "hrg-fence-folded"); }
-        else    { _hrggRemoveClass(m.box, "hrg-folded"); if (f) _hrggRemoveClass(f.host, "hrg-fence-folded"); }
+        css.toggleClass(m.box, hrg_folded, on);
+        if (f) css.toggleClass(f.host, hrg_fence_folded, on);
     }
 
     /**

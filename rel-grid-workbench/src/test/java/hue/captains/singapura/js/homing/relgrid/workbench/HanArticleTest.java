@@ -51,6 +51,7 @@ class HanArticleTest extends JsModuleTestBase {
         js = buildContext();
         js.eval("js", DishPolicyTest.DOM_STUB);
         for (String m : DishPolicyTest.PARTY) loadModule(m);
+        js.eval("js", DishPolicyTest.STYLES);
         loadModule(BENCH_DIR + "HanLayout.js");
         loadModule(BENCH_DIR + "HanStore.js");
         loadModule(BENCH_DIR + "HanCellModule.js");

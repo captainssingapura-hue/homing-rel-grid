@@ -45,39 +45,7 @@
 //   new DishStarsCell({ branch, value?, onCommit? })
 // =============================================================================
 
-var _WB_STARS_STYLE_ID = "bench-stars-style";
-var _WB_STARS_CSS = [
-    ".wb-stars{font:13px sans-serif;letter-spacing:2px;padding:0 6px;}",
-    ".wb-stars-ro{opacity:0.55;}",
-    // The PANEL. Hung off the anchor the grid placed it in — which is exactly
-    // the cell — so it is free to be much larger in both directions. Out of
-    // the table it costs the table nothing: no column widens, no row grows.
-    ".wb-stars-panel{position:absolute;top:100%;left:0;min-width:250px;",
-    "  padding:12px 14px;box-sizing:border-box;",
-    "  background:var(--color-surface-raised);color:var(--color-text-primary);",
-    "  border:1px solid var(--color-border);border-radius:6px;",
-    "  box-shadow:0 8px 24px rgba(0,0,0,0.28);outline:none;}",
-    ".wb-stars-row{display:flex;gap:8px;font-size:30px;line-height:1;cursor:pointer;}",
-    ".wb-star{user-select:none;-webkit-user-select:none;color:var(--color-text-muted);opacity:0.45;}",
-    ".wb-star-on{color:var(--color-accent);opacity:1;}",
-    ".wb-stars-hint{margin-top:10px;font:11px sans-serif;color:var(--color-text-muted);",
-    "  white-space:nowrap;}"
-].join("\n");
-
-function _wbStarsEnsureStyle() {
-    if (typeof document === "undefined" || !document.head) return;
-    if (document.getElementById(_WB_STARS_STYLE_ID)) return;
-    var s = document.createElement("style");
-    s.id = _WB_STARS_STYLE_ID;
-    s.textContent = _WB_STARS_CSS;
-    document.head.appendChild(s);
-}
-
-function _wbStarsAddClass(el, name) {
-    var cur = el.className || "", parts = cur.split(/\s+/);
-    for (var i = 0; i < parts.length; i++) if (parts[i] === name) return;
-    el.className = cur ? cur + " " + name : name;
-}
+// THE LOOKS ARE TYPED — DishStarsStyles, applied through the css manager.
 
 var _WB_STARS_MIN = 1, _WB_STARS_MAX = 5;
 
@@ -124,10 +92,9 @@ class DishStarsCell {
     /** The cell's element, minted once on its branch; the grid places it. */
     cellElement() {
         if (!this._el) {
-            _wbStarsEnsureStyle();
             this._el = this._branch.createElement("cell", "span");
-            _wbStarsAddClass(this._el, "wb-stars");
-            if (!this._onCommit) _wbStarsAddClass(this._el, "wb-stars-ro");
+            css.addClass(this._el, wb_stars);
+            if (!this._onCommit) css.addClass(this._el, wb_stars_ro);
             this._paint();
         }
         return this._el;
@@ -171,16 +138,15 @@ class DishStarsCell {
     editorElement() {
         if (this._panel) return this._panel;
         var self = this, b = this._branch;
-        _wbStarsEnsureStyle();
         var panel = b.createElement("editor", "div");
-        panel.className = "wb-stars-panel";
+        css.addClass(panel, wb_stars_panel);
         panel.tabIndex = 0;                       // a property, so no attribute is needed
         var row = b.createElement("stars", "div");
-        row.className = "wb-stars-row";
+        css.addClass(row, wb_stars_row);
         this._stars = [];
         for (var k = _WB_STARS_MIN; k <= _WB_STARS_MAX; k++) {
             var star = b.createElement("star-" + k, "span");
-            star.className = "wb-star";
+            css.addClass(star, wb_star);
             star.textContent = "★";
             // Keep the focus on the panel: a press inside must not blur it,
             // because a blur is a cancel.
@@ -195,7 +161,7 @@ class DishStarsCell {
         }
         panel.appendChild(row);
         var hint = b.createElement("hint", "div");
-        hint.className = "wb-stars-hint";
+        css.addClass(hint, wb_stars_hint);
         hint.textContent = "← → to change   ·   Enter to commit   ·   Esc to cancel";
         panel.appendChild(hint);
         this._panel = panel;
@@ -248,7 +214,7 @@ class DishStarsCell {
         if (!this._stars) return;
         for (var k = 0; k < this._stars.length; k++) {
             var on = (k + 1) <= this._draft;
-            this._stars[k].className = on ? "wb-star wb-star-on" : "wb-star";
+            css.toggleClass(this._stars[k], wb_star_on, on);
             this._stars[k].textContent = on ? "★" : "☆";
         }
     }
