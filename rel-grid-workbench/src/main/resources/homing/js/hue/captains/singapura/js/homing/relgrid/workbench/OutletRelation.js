@@ -63,6 +63,7 @@ function createOutletRelation(store, outletId, opts) {
     });
     return {
         view:    function (intent) { return intent ? null : store.dishes(); },   // one root: the whole book; a movement goes nowhere
+        labels:  function () { return { dish: "dish", sold: "sold", revenue: "revenue", lastSale: "last sale" }; },   // what a column is called: the relation's (law 86)
         columns: function () { return store.columns(); },
         // A book is read, never edited: every column is a constraint, so the
         // table never asks any cell here whether it may take control.

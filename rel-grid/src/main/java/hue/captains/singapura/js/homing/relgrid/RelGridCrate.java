@@ -45,6 +45,8 @@ public final class RelGridCrate implements Crate {
                 CrateEntry.of(RelGridLayoutModule.INSTANCE),
                 CrateEntry.of(RelGridClipboardModule.INSTANCE),
                 CrateEntry.of(RelGridWidthsModule.INSTANCE),
+                CrateEntry.of(RelGridHeadersModule.INSTANCE),
+                CrateEntry.of(RelGridSpansModule.INSTANCE),
                 CrateEntry.of(RelGridWindowModule.INSTANCE),
                 CrateEntry.of(RelGridCursorModule.INSTANCE),
                 CrateEntry.of(RelGridControlModule.INSTANCE),

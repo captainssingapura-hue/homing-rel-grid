@@ -26,8 +26,10 @@
 //   new RelGridSlots({ branch, table, colgroup, headerRow, drag, sticky?, onCellClick?,
 //                      onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd? })
 //   sticky: the header cells stay at the top of whatever scrolls the table
-//   render({ headers, rows })      the matrix for a shape: true when minted fresh, false when kept
-//   slotAt(i, j) / rows() / cols() / colAt(j)
+//   render({ headers, rows, labelled? })   the matrix for a shape: true when minted fresh, false when kept.
+//                                  labelled false: the header cells' text is somebody else's — a header
+//                                  cell the facade places — so the <th> is left empty for it
+//   slotAt(i, j) / rows() / cols() / colAt(j) / thAt(j)
 //   pressed() / release()          the press-drag's state, for the document-level release
 //   destroy()
 // =============================================================================
@@ -57,6 +59,7 @@ class RelGridSlots {
         this._tbody = null;
         this._slots = [];                       // [i][j] → td
         this._cols = [];                        // [j] → col
+        this._ths = [];                         // [j] → th, when there is a header row
         this._press = null;                     // the slot a button went down on
     }
 
@@ -112,7 +115,9 @@ class RelGridSlots {
         var slots = this._slotsBranch = this._branch.createBranch("slots");
         slots.activate(this);
         this._shape = { headers: headers.slice(), rows: rows };
+        var labelled = !(shape && shape.labelled === false);
         this._cols = [];
+        this._ths = [];
         for (var h = 0; h < headers.length; h++) {
             var col = slots.createElement("col-" + h, "col");   // widths need cols regardless
             css.addClass(col, hrg_col);
@@ -122,7 +127,8 @@ class RelGridSlots {
             var th = slots.createElement("th-" + h, "th");
             css.addClass(th, hrg_th);
             if (this._sticky) css.addClass(th, hrg_sticky);
-            th.textContent = headers[h];
+            if (labelled) th.textContent = headers[h];
+            this._ths.push(th);
             if (this._drag) this._drag.wire(th, h, slots);
             this._headerRow.appendChild(th);
         }
@@ -152,6 +158,7 @@ class RelGridSlots {
     }
 
     colAt(j) { return this._cols[j] || null; }
+    thAt(j)  { return this._ths[j] || null; }
     rows() { return this._slots.length; }
     cols() { return this._cols.length; }              // the presented columns — with rows or without, as a header alone has them
 
@@ -167,6 +174,7 @@ class RelGridSlots {
         if (this._slotsBranch) { this._slotsBranch.dissolve(); this._slotsBranch = null; }
         this._shape = null;
         this._slots = [];
+        this._ths = [];
         this._cols = [];
         this._press = null;
     }

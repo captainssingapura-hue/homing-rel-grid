@@ -35,7 +35,7 @@ public final class RelGridTestDom {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
             "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridLayoutModule.js",
             "RelGridCellsModule.js", "RelGridStockCellsModule.js",
-            "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
+            "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridHeadersModule.js", "RelGridSpansModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
             "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
@@ -216,14 +216,20 @@ public final class RelGridTestDom {
                 };
                 var cells = new Map(), asked = 0, commits = [];
                 var readOnly = opts.readOnly || null;   // the relation's COLUMN constraint
+                var shown = null;                       // a View a test moves: set, then tell the grid
                 // The DOMAIN's branch: every cell's element is minted under it, never under the
                 // grid's. Activated here, as a relation activates its own.
                 var cellsBranch = hostBranch(), cellSeq = 0, mints = 0;
                 var relation = {
                     // ONE ROOT: the View is answered, never listed — the whole of it here, and a
                     // movement goes nowhere, so nothing is the answer and the rows stay.
-                    view:    function (intent) { return intent ? null : Object.keys(data); },
+                    view:    function (intent) { return intent ? null : (shown || Object.keys(data)); },
                     columns: function () { return ['ingredient', 'calories']; },
+                    // The relation's declarations, when a test names them: labels, header cells.
+                    labels:    opts.labels ? function () { return opts.labels; } : undefined,
+                    headerFor: opts.headerFor || undefined,
+                    // What the relation presents from now on; the grid is told through the host.
+                    show:    function (keys) { shown = keys; },
                     cellFor: function (pk, col) {
                         // The relation is the authority on its own identity space: an identity
                         // it does not own is refused HERE, and the grid refuses the View whole.

@@ -14,7 +14,7 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  *                           // dissolving it is the host's. A cell's element is never on it.
  *       relation,           // RootRelationContract shape: view(intent?), columns(), cellFor(pk, column)
  *       label?,             // aria-label for the table
- *       header?,            // { show?, labels?, sticky? } — display only; sticky stays at the top of the scroll
+ *       header?,            // { show?, sticky? } — grid chrome; what a header SAYS is the relation's (labels(), headerFor)
  *       stickyInset?,       // () → px: a band the host keeps stuck above the table, which a revealed slot clears
  *       ask?,               // (question) → thenable — THE CHANNEL (ext4, ext6)
  *       onArranged?,        // (kind) — after every placement pass
@@ -108,6 +108,20 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * changes: its arrow is reported as the edge it met, its wheel is left to the
  * browser, and a table in a scrollport scrolls as it always did.</p>
  *
+ * <h2>Told, unasked</h2>
+ *
+ * <p>{@code tell(message)} is the channel's other direction to a grid, as it
+ * is to a group: a protocol value the domain sends through the host, applied
+ * as the host's verb would be, an unknown kind recorded and refused. The
+ * first kind is {@code RelGridViewChanged} — the relation's View changed
+ * underneath the grid — and the grid answers it by asking {@code view()}
+ * again and presenting what comes back, exactly as a remap: the cursor keeps
+ * its identity, the ranges go, cells that left are forgotten. The message
+ * carries nothing, so the seam stays one: the View is the answer to the
+ * question the grid then asks, never something pushed into it. The grid is
+ * still never spoken to by a relation — the host wires the closure, as it
+ * wires a fence's.</p>
+ *
  * <h2>An arrow at the edge is reported</h2>
  *
  * <p>A bare arrow with the cursor already at that edge — and, up or down, the
@@ -146,6 +160,8 @@ public interface RelGridContract {
     boolean handoverView();                         // hand the rows' arrangement to the domain; present its View. False when locked or channel-less
     // ─── the window ──────────────────────────────────────────────────────
     boolean scrollRows(int n);                      // ask the relation for the View n rows on and present it. False when locked, 0, or the rows stay
+    // ─── told, unasked ───────────────────────────────────────────────────
+    boolean tell(Object message);                   // the channel's other direction: RelGridViewChanged asks view() again. False for a stranger
     // ─── widths (map 7) ──────────────────────────────────────────────────
     boolean setColumnWidth(String column, double px);   // bounded, held by identity, applied in place; false for drift
     Object  columnWidth(String column);                 // what is held, or null

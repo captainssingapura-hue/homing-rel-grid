@@ -30,6 +30,7 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
     public record RelGridViewHandover()     implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridView()             implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridGroupFold()        implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelGridViewChanged()      implements Exportable._Class<RelGridProtocolModule> {}
 
     public static final RelGridProtocolModule INSTANCE = new RelGridProtocolModule();
 
@@ -39,6 +40,6 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
         return new ExportsOf<>(INSTANCE, List.of(
                 new RelGridRange(), new RelGridSelectionChanged(),
                 new RelGridBlock(), new RelGridCopyRequested(), new RelGridClipboardContent(),
-                new RelGridViewHandover(), new RelGridView(), new RelGridGroupFold()));
+                new RelGridViewHandover(), new RelGridView(), new RelGridGroupFold(), new RelGridViewChanged()));
     }
 }

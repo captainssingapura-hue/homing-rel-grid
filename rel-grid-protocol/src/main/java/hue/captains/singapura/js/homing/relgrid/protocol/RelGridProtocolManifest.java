@@ -39,5 +39,8 @@ public final class RelGridProtocolManifest {
             ObjectDefinition.of(RelGridView.class),
             // The group's first kind, and the first that travels the other way:
             // the domain telling the group to fold a member. No dependencies.
-            ObjectDefinition.of(RelGridGroupFold.class));
+            ObjectDefinition.of(RelGridGroupFold.class),
+            // The first told to a GRID: its View changed underneath it — ask again.
+            // Carries nothing, on purpose. No dependencies.
+            ObjectDefinition.of(RelGridViewChanged.class));
 }

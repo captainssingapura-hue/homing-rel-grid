@@ -6,6 +6,7 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 
+import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 import hue.captains.singapura.js.homing.relgrid.selection.RelGridSelectionModule;
 
 import java.util.List;
@@ -38,6 +39,9 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                 .add(new ModuleImports<>(List.of(new RelGridViewMapsModule.RelGridViewMaps()), RelGridViewMapsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLayoutModule.RelGridLayout()),     RelGridLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridCellsModule.RelGridCells()),       RelGridCellsModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridHeadersModule.RelGridHeaders()),   RelGridHeadersModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridSpansModule.RelGridSpans()),       RelGridSpansModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridViewChanged()), RelGridProtocolModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridSelectionModule.RelGridSelection()), RelGridSelectionModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridWidthsModule.RelGridWidths()),         RelGridWidthsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridWindowModule.RelGridWindow()),         RelGridWindowModule.INSTANCE))

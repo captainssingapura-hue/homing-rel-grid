@@ -81,6 +81,13 @@ function createHanRelation(store, opts) {
         view:      function (intent) { return intent ? null : presented(); },
         presented: presented,
         columns: function () { return columns.slice(); },
+        // What a column is called, when a header is shown at all: the squares by number,
+        // the half-squares by the mark they hold (law 86: the relation's, not the host's).
+        labels: function () {
+            var out = { lead: "\u2039", trail: "\u203a" };
+            for (var k = 0; k < cols; k++) out["c" + k] = String(k + 1);
+            return out;
+        },
         presentedColumns: function () {
             var out = layout.usesLead ? ["lead"] : [];
             out = out.concat(squares);
