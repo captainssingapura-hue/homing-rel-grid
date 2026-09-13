@@ -239,6 +239,7 @@ class RelGridOverlays {
     openGroup(i, j, n) {
         var lead = this._slotAt(i, j);
         if (!lead) return null;
+        var marked = [lead];                                  // remembered, to be unmarked: the slots may outlive the group
         css.addClass(lead, hrg_lead);
         if (lead.style && lead.style.setProperty) lead.style.setProperty("--hrg-span", String(n));
         for (var k = 1; k < n; k++) {
@@ -246,6 +247,7 @@ class RelGridOverlays {
             if (!td) break;
             css.addClass(td, hrg_covered);
             if (k === n - 1) css.addClass(td, hrg_group_end);
+            marked.push(td);
         }
         if (!this._mergedBranch) {
             this._mergedBranch = this._branch.createBranch("merged");
@@ -254,8 +256,16 @@ class RelGridOverlays {
         var el = this._mergedBranch.createElement("merged-" + this._groups.length, "div");
         css.addClass(el, hrg_merge);
         this._wrap.appendChild(el);
-        this._groups.push({ i: i, j: j, n: n, el: el });
+        this._groups.push({ i: i, j: j, n: n, el: el, marked: marked });
         return el;
+    }
+
+    /** The marks off a group's slots: they are plain slots again. */
+    _unmark(grp) {
+        var lead = grp.marked[0];
+        css.removeClass(lead, hrg_lead);
+        if (lead.style && lead.style.removeProperty) lead.style.removeProperty("--hrg-span");
+        for (var k = 1; k < grp.marked.length; k++) css.removeClass(grp.marked[k], hrg_covered, hrg_group_end);
     }
 
     /** The group a position is in, or null. */
@@ -276,8 +286,9 @@ class RelGridOverlays {
         return this;
     }
 
-    /** Take every merged cell's host down — their branch dissolved. Whatever cell was in one is detached with it. */
+    /** Take every merged cell's host down — their branch dissolved, their slots unmarked. Whatever cell was in one is detached with it. */
     closeGroups() {
+        for (var g = 0; g < this._groups.length; g++) this._unmark(this._groups[g]);
         if (this._mergedBranch) { this._mergedBranch.dissolve(); this._mergedBranch = null; }
         this._groups = [];
         return this;

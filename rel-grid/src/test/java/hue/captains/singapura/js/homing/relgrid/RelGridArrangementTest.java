@@ -50,19 +50,52 @@ class RelGridArrangementTest extends JsModuleTestBase {
     }
 
     @Test
-    void reapplyMintsFreshSlotsButAsksForNoCellTwice() {
+    void reapplyKeepsTheSlotsAndAsksForNoCellTwice() {
         assertTrue(evalBool("""
                 (() => {
                     var f = fixture();
-                    var before = f.cellEl('coq', 'calories'), oldBody = f.tbody();
+                    var before = f.cellEl('coq', 'calories'), oldBody = f.tbody(), oldTd = f.td(1, 1);
+                    var minted = f.branch.getBranch('slots').elementCount;
                     f.grid.reapply();
                     var after = f.cellEl('coq', 'calories');
-                    return f.tbody() !== oldBody          // slots were rebuilt
-                        && after === before               // the cell's element kept its identity
+                    return f.tbody() === oldBody          // the same shape: the same slots, nothing minted, nothing released
+                        && f.td(1, 1) === oldTd
+                        && f.branch.getBranch('slots').elementCount === minted
+                        && after === before               // the cell's element kept its identity, in its slot
+                        && after.parentNode === oldTd
                         && f.asked() === 6                // cellFor was NOT asked again
                         && f.mints() === 6                // no host re-minted
                         && f.arranged.join() === 'base,reapply';
-                })()"""), "re-arrangement re-places the same cells: created rarely, retrieved from the registry");
+                })()"""), "re-arrangement over an unchanged shape re-places the same cells into the same slots");
+    }
+
+    @Test
+    void anUnchangedShapeKeepsTheSlotsAndThePaintFollowsTheIdentities() {
+        assertTrue(evalBool("""
+                (() => {
+                    var f = fixture(), g = f.grid, maps = g.viewMaps();
+                    f.click(0, 0);                                           // the cursor on mapo / ingredient
+                    var td00 = f.td(0, 0), td20 = f.td(2, 0), slots = f.branch.getBranch('slots');
+                    if (!css.hasClass(td00, hrg_cursor)) return false;
+                    // A PERMUTATION is the same shape: the slots stay, the cells move between
+                    // them, and the cursor — an identity — is painted where its cell went.
+                    maps.setRowView(['fish', 'coq', 'mapo']);
+                    if (f.branch.getBranch('slots') !== slots || f.td(0, 0) !== td00 || f.td(2, 0) !== td20) return false;
+                    if (f.cellEl('mapo', 'ingredient').parentNode !== td20) return false;
+                    if (css.hasClass(td00, hrg_cursor) || !css.hasClass(td20, hrg_cursor)) return false;
+                    if (g.cursor().pk !== 'mapo') return false;
+                    // A selection is positions and goes with the arrangement (law 43): the
+                    // old paint came off the kept slots, and what is painted is the cursor's
+                    // own 1x1 — fish / ingredient, where that cell went.
+                    f.click(0, 0); f.click(1, 1, { shift: true });
+                    if (f.painted() !== '0,0 0,1 1,0 1,1') return false;
+                    maps.setRowView(['mapo', 'coq', 'fish']);
+                    if (f.painted() !== '2,0' || g.selectionCount() !== 0 || g.cursor().pk !== 'fish') return false;
+                    // A different NUMBER of rows is a new shape: minted fresh, the old released.
+                    maps.setRowView(['mapo', 'coq']);
+                    if (f.branch.getBranch('slots') === slots || slots.elementCount !== 0 || f.td(0, 0) === td00) return false;
+                    return f.tbody().children.length === 2;
+                })()"""), "the same shape keeps its slots and the paint follows identities; a new shape mints fresh");
     }
 
     @Test

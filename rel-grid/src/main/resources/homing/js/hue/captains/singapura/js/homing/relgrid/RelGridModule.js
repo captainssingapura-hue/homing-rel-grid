@@ -2,8 +2,9 @@
 // RelGridModule — RFC 0050 · Episode 2's facade: composes the grid and is the
 // ONLY place the two branches meet. Orchestration only — the seam is
 // RelGridViewMaps, the chrome is RelGridLayout, the registry is RelGridCells;
-// the facade reads the relation's identities and columns, threads the pieces,
-// and re-places cells into freshly minted slots on every arrangement pass.
+// the facade reads the relation's View and columns, threads the pieces, and
+// re-places cells into the slots on every arrangement pass — the same slots
+// while the shape holds, fresh ones when it changes.
 // What a gesture means is RelGridGestures; the cursor is RelGridCursor; the
 // handover of control is RelGridControl; the channel and its questions are
 // RelGridChannel; the widths are RelGridWidths; the stock clipboard writer is

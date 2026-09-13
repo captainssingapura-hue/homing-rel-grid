@@ -69,18 +69,23 @@ class RelGridBranchTest extends JsModuleTestBase {
                 (() => {
                     var f = fixture(), b = f.branch;
                     var oldTd = f.td(0, 0), oldBody = f.tbody(), host = f.cellEl('mapo', 'ingredient');
-                    var oldSlots = b.getBranch('slots');
-                    f.grid.viewMaps().setRowView(['fish', 'coq', 'mapo']);   // an arrangement: the structure is rebuilt
+                    var oldSlots = b.getBranch('slots'), minted = oldSlots.elementCount;
+                    f.grid.viewMaps().setRowView(['fish', 'coq', 'mapo']);   // the same SHAPE: the matrix is kept
                     f.grid.reapply();
-                    // The old slots branch is gone and its elements released: the old
-                    // body is out of the table, the old slot out of its row.
-                    if (b.getBranch('slots') === oldSlots || oldSlots.elementCount !== 0) return false;
-                    if (oldBody.parentNode !== null || oldTd.parentNode !== null) return false;
-                    if (f.tbody() === oldBody) return false;
-                    // The cell's element was never asked for again: the same element, in the new slot.
+                    // Nothing minted, nothing released: the branch, the body and the slot are
+                    // the ones there were; the cell's element moved to the slot its identity now maps to.
+                    if (b.getBranch('slots') !== oldSlots || oldSlots.elementCount !== minted) return false;
+                    if (f.tbody() !== oldBody || f.td(0, 0) !== oldTd) return false;
                     if (f.cellEl('mapo', 'ingredient') !== host || host.parentNode !== f.td(2, 0)) return false;
-                    return b.listBranches().sort().join(' ') === 'slots' && f.mints() === 6;   // asked once each, ever
-                })()"""), "a rebuild dissolves the last arrangement's slots; the cell hosts are the same elements, re-placed");
+                    // A new shape — fewer rows — dissolves the last shape's branch and its
+                    // elements are released: the old body out of the table, the old slot out
+                    // of its row; the cell's element rides into the new slot, never re-asked.
+                    f.grid.viewMaps().setRowView(['mapo', 'fish']);
+                    if (b.getBranch('slots') === oldSlots || oldSlots.elementCount !== 0) return false;
+                    if (oldBody.parentNode !== null || oldTd.parentNode !== null || f.tbody() === oldBody) return false;
+                    if (f.cellEl('mapo', 'ingredient') !== host || host.parentNode !== f.td(0, 0)) return false;
+                    return b.listBranches().sort().join(' ') === 'slots' && f.mints() === 6;   // asked once each: nothing left and returned
+                })()"""), "the same shape keeps its slots; a new shape dissolves them, and the cell hosts ride into the new");
     }
 
     @Test
