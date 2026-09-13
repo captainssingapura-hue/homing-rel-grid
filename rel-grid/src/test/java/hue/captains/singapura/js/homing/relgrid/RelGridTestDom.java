@@ -35,6 +35,11 @@ public final class RelGridTestDom {
     public static final String SELECTION =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/selection/RelGridSelectionModule.js";
 
+    /** The DomOpsParty — the real one, from homing-core-js: base first, then the levels and the root singleton. */
+    public static final String[] PARTY = {
+            "/homing/js/hue/captains/singapura/js/homing/core/js/DomOpsPartyBaseModule.js",
+            "/homing/js/hue/captains/singapura/js/homing/core/js/DomOpsPartyModule.js" };
+
     public static final String DOM_STUB = """
             var __focused = null;
             function makeStyle() {
@@ -89,6 +94,8 @@ public final class RelGridTestDom {
                         this.children[i] = nu; old.parentNode = null;
                         nu.parentNode = this; return old;
                     },
+                    // What a branch's dissolve calls on every element it owns.
+                    remove: function () { if (this.parentNode) this.parentNode.removeChild(this); },
                     // Focus moves: the element losing it is told, as in a browser.
                     focus: function () {
                         var prev = __focused; if (prev === this) return;
@@ -135,6 +142,14 @@ public final class RelGridTestDom {
                 return due.length;
             }
             function pendingTimers() { return __timers.length; }
+            // A branch of the real party for one grid (or group) to own — what a
+            // host would hand it. Activated, as a host's branch is; named uniquely.
+            var __branchSeq = 0, __branchOwner = { toString: function () { return 'test host'; } };
+            function testBranch() {
+                var b = domOpsParty.createBranch('t' + (++__branchSeq));
+                b.activate(__branchOwner);
+                return b;
+            }
             """;
 
     /** A relation with NO get: identities, columns, and a manager that owns its cells. */
@@ -179,8 +194,7 @@ public final class RelGridTestDom {
                         if (c) c.set(v);
                     }
                 };
-                var mints = 0;
-                var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
+                var branch = testBranch();                          // the grid's own, as a host would hand it
                 var container = makeEl('div');
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
                 var written = [], copied = [], handles = [], edges = [];
@@ -312,7 +326,9 @@ public final class RelGridTestDom {
                              return null;
                          },
                          arranged: arranged, moves: moves, started: started, ended: ended, commits: commits, resized: resized,
-                         mints: function () { return mints; }, asked: function () { return asked; } };
+                         // the cell hosts the grid minted: on its cells sub-branch, so the party counts them
+                         mints: function () { var c = branch.getBranch('cells'); return c ? c.elementCount : 0; },
+                         branch: branch, asked: function () { return asked; } };
             }
             """;
 }

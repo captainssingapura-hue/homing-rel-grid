@@ -1,7 +1,8 @@
 // =============================================================================
 // RelGridCellsModule — RFC 0050 · Episode 2's cells branch, grid side. A registry
-// keyed by identity: the host element the grid minted through the handed-in
-// branch, and the cell the domain's manager answered with. Addressed purely by
+// keyed by identity: the host element the grid minted on the branch it was
+// handed — a sub-branch of the grid's own, dissolved with the grid — and the
+// cell the domain's manager answered with. Addressed purely by
 // (pk, column); it never sees (i, j) and never touches the layout — the facade
 // hands it layout-owned slots to place into.
 //

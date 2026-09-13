@@ -28,6 +28,7 @@ class RelGridCopyTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
@@ -438,7 +439,8 @@ class RelGridCopyTest extends JsModuleTestBase {
                 };
                 var FakeBlob = function (parts, o) { this.parts = parts; this.type = o.type; };
                 var FakeItem = function (m) { this.m = m; };
-                var W = _hrgStockClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc });
+                var branch = testBranch();
+                var W = _hrgStockClipboard({ navigator: denied, ClipboardItem: FakeItem, Blob: FakeBlob, document: doc, branch: branch });
                 var outcome = 'pending';
                 W.write(new RelGridClipboardContent('a\\tb', '<b>a</b>')).then(function () { outcome = 'written'; },
                                                                                 function (e) { outcome = 'failed: ' + e.message; });
@@ -451,11 +453,12 @@ class RelGridCopyTest extends JsModuleTestBase {
                     // The selection it needed is gone again, nothing is left listening,
                     // and the focus it took to select is back where it was.
                     return doc.body.children.length === 0 && listeners.length === 0
+                        && branch.branchCount === 0                                // the scratch branch dissolved with its textarea
                         && __focused === table;
                 })()"""), "denied the async API, the writer copies through the command, both forms, and cleans up");
         act("""
                 // Both roads closed: a rejection that says so, never a silence.
-                var noDoc = _hrgStockClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null });
+                var noDoc = _hrgStockClipboard({ navigator: denied, ClipboardItem: null, Blob: null, document: null, branch: testBranch() });
                 var outcome2 = 'pending';
                 noDoc.write(new RelGridClipboardContent('x', undefined)).then(function () { outcome2 = 'written'; },
                                                                               function (e) { outcome2 = e.message; });

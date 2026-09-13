@@ -7,11 +7,15 @@
 //
 //   new RelGridGroup({
 //       container,          // where the group mounts
+//       branch,             // the group's OWN branch (DomOpsParty): its boxes and fence slots
+//                           // are minted on it, every member's grid gets a sub-branch of it,
+//                           // and dissolving it is the host's
 //       members: [{         // in order, top to bottom
 //           id,             // the member's IDENTITY — unique in the group, never empty
 //           grid,           // the ordinary RelGrid options this member is built from:
-//                           // its relation, its branch, its ask, its callbacks. Verbatim,
-//                           // but for the container (the group's box) and what is shared.
+//                           // its relation, its ask, its callbacks. Verbatim, but for the
+//                           // container (the group's box), the branch (the group's gift)
+//                           // and what is shared.
 //           fence?          // the cell for the slot ABOVE this member (see fences)
 //       }, ...],
 //       fence?,             // the cell for the trailing slot, below the last member
@@ -194,6 +198,7 @@ class RelGridGroup {
     constructor(opts) {
         opts = opts || {};
         if (!opts.container) throw new Error("[RelGridGroup] opts.container is required");
+        if (!opts.branch) throw new Error("[RelGridGroup] opts.branch is required");
         if (!Array.isArray(opts.members) || opts.members.length === 0)
             throw new Error("[RelGridGroup] opts.members must name at least one member");
         _hrggEnsureStyles();
@@ -209,8 +214,10 @@ class RelGridGroup {
         this._widths = _hrggCopy(opts.columnWidths);          // the group's, identity-keyed
         this._broadcasting = false;                             // a report of the group's own making
         this._destroyed = false;
+        this._branch = opts.branch;                             // the group's own; the host dissolves it
+        this._grids = [];                                       // the sub-branches the members' grids were given
 
-        this._root = document.createElement("div");
+        this._root = this._branch.createElement("root", "div");
         this._root.className = "hrg-group";
         if (opts.label) this._root.setAttribute("aria-label", opts.label);
         this._members = [];                                     // { id, box, grid, spec }, in order
@@ -233,11 +240,11 @@ class RelGridGroup {
         if (this._headerMode === "group") this._header = this._mintHeader(opts.members);
         for (var k = 0; k < opts.members.length; k++) {
             var m = opts.members[k];
-            this._fences.push(this._mintFence(m.id, m.fence || null));
+            this._fences.push(this._mintFence(m.id, m.fence || null, k));
             this._members.push(this._mintMember(m, k));
             if (this._folded[m.id]) this._paintFold(m.id, true);   // folded at first: the box hidden before it is seen
         }
-        this._fences.push(this._mintFence(null, opts.fence || null));
+        this._fences.push(this._mintFence(null, opts.fence || null, opts.members.length));
         for (var fk in this._folded) if (!seen[fk]) delete this._folded[fk];   // drift: an id that is no member is dropped
         // One cursor: the member whose table holds the focus is the active one,
         // observed at the root; Tab walks the stops. Neither reaches into a table.
@@ -286,9 +293,9 @@ class RelGridGroup {
      * a cell. The cell is handed the host and a HANDLE — the channel's other
      * direction, and what it may read of the member below: nothing else.
      */
-    _mintFence(id, cell) {
+    _mintFence(id, cell, k) {
         var self = this;
-        var host = document.createElement("div");
+        var host = this._branch.createElement("fence-" + k, "div");   // by position: an id is the domain's, and any string
         host.className = "hrg-fence" + (cell ? "" : " hrg-fence-empty");
         host.setAttribute("tabindex", "-1");                    // a Tab stop by the group's hand, not the browser's
         if (id !== null) host.setAttribute("data-member", String(id));
@@ -330,13 +337,13 @@ class RelGridGroup {
                 throw new Error("[RelGridGroup] one header means one column list: member '" + (specs[k] && specs[k].id)
                               + "' declares " + JSON.stringify(cols) + ", member '" + first.id + "' " + JSON.stringify(columns));
         }
-        var box = document.createElement("div");
+        var box = this._branch.createElement("header", "div");
         box.className = "hrg-group-header";
         this._root.appendChild(box);
         this._boxes.push(box);
         var grid = new RelGrid({
             container: box,
-            branch: spec.branch,                                // never asked for a cell: nothing is presented
+            branch: this._gridBranch("header"),                 // never asked for a cell: nothing is presented
             relation: {
                 pks:     function () { return []; },
                 columns: function () { return columns.slice(); },
@@ -353,15 +360,24 @@ class RelGridGroup {
         return { box: box, grid: grid };
     }
 
+    /** A sub-branch of the group's for one grid to own, remembered so destroy() dissolves it. */
+    _gridBranch(name) {
+        var b = this._branch.createBranch("grid-" + name);
+        b.activate(this);
+        this._grids.push(b);
+        return b;
+    }
+
     _mintMember(m, k) {
         var self = this, id = m.id, spec = m.grid;
-        var box = document.createElement("div");
+        var box = this._branch.createElement("member-" + k, "div");
         box.className = "hrg-member";
         box.setAttribute("data-member", String(id));
         this._root.appendChild(box);
         this._boxes.push(box);
         var g = _hrggCopy(spec);
         g.container = box;
+        g.branch = this._gridBranch(String(k));                 // the member's grid owns a sub-branch of the group's
         if (this._headerMode === "group") g.header = { show: false };   // the header is the group's, above
         g.resizeGuide = this._boxes;                            // a drag's guide: a segment down the header and each member, none across a fence
         g.onColumnResized = function (column, px) {
@@ -640,13 +656,20 @@ class RelGridGroup {
 
     el() { return this._root; }
 
-    /** Destroys every member's grid and the header's, and removes the group. Disposes no fence cell: they are the domain's. */
+    /**
+     * Destroys every member's grid and the header's, dissolves the branches
+     * they were given, and removes the group. Disposes no fence cell: they are
+     * the domain's. The root, boxes and fence slots stay the branch's: the
+     * host dissolves it.
+     */
     destroy() {
         this._destroyed = true;
         this._root.removeEventListener("focusin", this._onFocusIn);
         this._root.removeEventListener("keydown", this._onKeyDown);
         if (this._header) this._header.grid.destroy();
         for (var k = 0; k < this._members.length; k++) this._members[k].grid.destroy();
+        for (var b = 0; b < this._grids.length; b++) this._grids[b].dissolve();
+        this._grids = [];
         if (this._root.parentNode) this._root.parentNode.removeChild(this._root);
     }
 }

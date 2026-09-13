@@ -79,11 +79,9 @@ class RelGridGroupTest extends JsModuleTestBase {
             function memberSpec(id, rows, extra) {
                 extra = extra || {};
                 var sent = [], resized = [], arranged = [], ended = [];
-                var branch = { createElement: function (n, t) { return makeEl(t); } };
                 var spec = {
                     id: id,
                     grid: {
-                        branch: branch,
                         relation: relationOf(rows, { editable: !!extra.editable }),
                         ask: function (q, mask) { sent.push(q); return Promise.resolve(); },
                         onColumnResized: function (c, px) { resized.push(c + ' ' + px); },
@@ -107,8 +105,10 @@ class RelGridGroupTest extends JsModuleTestBase {
                 ];
                 var trailing = opts.trailing === undefined ? fenceCell('trailing') : opts.trailing;
                 var folds = [];
+                var branch = testBranch();
                 var group = new RelGridGroup({
                     container: container,
+                    branch: branch,
                     members: specs,
                     fence: trailing,
                     columnWidths: opts.columnWidths,
@@ -161,7 +161,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     for (var q = a; q; q = q.parentNode) if (q === group.fence(null)) return 'fence trailing' + (a === group.fence(null) ? '' : ' control');
                     return 'elsewhere';
                 }
-                return { group: group, container: container, specs: specs, trailing: trailing, reports: reports, folds: folds,
+                return { group: group, container: container, branch: branch, specs: specs, trailing: trailing, reports: reports, folds: folds,
                          tab: tab, arrow: arrow, cursorOf: cursorOf, focused: focused,
                          headerBox: headerBox, headerTable: headerTable,
                          boxOf: function (id) { return group.member(id).el().parentNode.parentNode; },
@@ -174,6 +174,7 @@ class RelGridGroupTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelGridTestDom.DOM_STUB);
+        for (String m : RelGridTestDom.PARTY) loadModule(m);
         js.eval("js", ATTRIBUTES);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
@@ -410,10 +411,12 @@ class RelGridGroupTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var f = groupFixture();
-                    var ta = f.tableOf('a');
+                    var ta = f.tableOf('a'), b = f.branch;
+                    if (b.listBranches().sort().join(' ') !== 'grid-0 grid-1 grid-2 grid-header') return false;   // a sub-branch per grid
                     f.group.destroy();
                     if (f.container.children.length !== 0) return false;
-                    if (ta.parentNode.parentNode !== null) return false;         // the member's own destroy took its wrapper out of the box
+                    if (ta.parentNode !== null || b.branchCount !== 0) return false;   // the members' branches dissolved by the group: the tables released
+                    if (b.elementCount !== 1 + 4 + 3 + 1) return false;           // root, fences, boxes, header box: still the branch's, the host's to dissolve
                     // Fence cells are the domain's: not disposed by the group.
                     for (var k = 0; k < 3; k++) if (f.spec('abc'[k]).fence.disposed !== 0) return false;
                     if (f.trailing.disposed !== 0) return false;

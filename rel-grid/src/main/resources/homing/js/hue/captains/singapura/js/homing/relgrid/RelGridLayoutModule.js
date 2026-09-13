@@ -12,8 +12,15 @@
 // handle, and the cursor is painted on the slot at the facade's direction. The
 // layout decides nothing — it reports gestures and paints answers.
 //
-// Raw DOM inside the primitive; an injected stylesheet with theme tokens only,
-// under the hrg- prefix so this grid and the live one can share a page.
+// EVERY ELEMENT IS MINTED THROUGH THE DomOpsParty, on the branch the grid was
+// handed — its own, and the host's to dissolve. What lives as long as the
+// grid (the wrapper, the table, its colgroup and header band) is minted on
+// that branch directly; what comes and goes is minted on a sub-branch made
+// for it and dissolved with it — the slots of one arrangement, an overlay,
+// the mask, the merged cells' hosts, a drag's guide — so a rebuild releases
+// exactly what it replaces and nothing is ever removed by hand. An injected
+// stylesheet with theme tokens only, under the hrg- prefix so this grid and
+// the live one can share a page.
 //
 // A PRESS-DRAG over the slots is captured here too, and reported as raw
 // pointer facts — a press, each slot the pointer reaches while held, and the
@@ -33,7 +40,7 @@
 // and hands it over as it hands a slot to a cell: the box is the grid's, what goes in it is the
 // domain's, and the layout never reads what was drawn.
 //
-//   new RelGridLayout({ container, label?, showHeader?, overflow?, onCellClick?,
+//   new RelGridLayout({ container, branch, label?, showHeader?, overflow?, onCellClick?,
 //                       onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   revealSlot(i, j)                          the least scroll that shows a slot
@@ -345,15 +352,21 @@ class RelGridLayout {
     constructor(opts) {
         opts = opts || {};
         if (!opts.container) throw new Error("[RelGridLayout] opts.container is required");
+        if (!opts.branch) throw new Error("[RelGridLayout] opts.branch is required");
         _hrgEnsureStyles();
         this._container = opts.container;
+        this._branch = opts.branch;                           // the grid's own; the host dissolves it
+        this._slotsBranch = null;                             // the current arrangement's slots
+        this._overlayBranch = null;
+        this._maskBranch = null;
+        this._mergedBranch = null;
         this._onCellClick = opts.onCellClick || null;         // (i, j, mods)
         this._onCellDblClick = opts.onCellDblClick || null;   // (i, j)
         this._onCellDown = opts.onCellDown || null;           // (i, j, mods) — a press
         this._onCellDragTo = opts.onCellDragTo || null;       // (i, j) — reached while held
         this._onDragEnd = opts.onDragEnd || null;             // () — released
         this._press = null;                                   // the slot a button went down on
-        this._table = document.createElement("table");
+        this._table = this._branch.createElement("table", "table");
         this._table.className = "hrg-table";
         this._table.setAttribute("tabindex", "0");            // the keyboard host
         if (opts.label) this._table.setAttribute("aria-label", opts.label);
@@ -363,26 +376,25 @@ class RelGridLayout {
         var lay = this;
         this._colW = null;                                    // the last positional widths applied
         this._drag = opts.onColResize
-                   ? new RelGridHeaderDrag({ table: this._table, onColResize: opts.onColResize,
+                   ? new RelGridHeaderDrag({ branch: this._branch, table: this._table, onColResize: opts.onColResize,
                                              heldWidth: function (j) { return (lay._colW && lay._colW[j] != null) ? lay._colW[j] : null; },
                                              extent: opts.resizeGuide || null })
                    : null;
-        this._colgroup = document.createElement("colgroup");
+        this._colgroup = this._branch.createElement("colgroup", "colgroup");
         this._table.appendChild(this._colgroup);
         this._showHead = opts.showHeader !== false;
         if (this._showHead) {
-            this._thead = document.createElement("thead");
-            this._headerRow = document.createElement("tr");
+            this._thead = this._branch.createElement("thead", "thead");
+            this._headerRow = this._branch.createElement("header-row", "tr");
             this._thead.appendChild(this._headerRow);
             this._table.appendChild(this._thead);
         } else {
             this._thead = null; this._headerRow = null;
         }
-        this._tbody = document.createElement("tbody");
-        this._table.appendChild(this._tbody);
+        this._tbody = null;                                   // minted with the slots, per arrangement
         // container > wrapper > table, so an overlay can be a sibling of the
         // table in the wrapper's coordinates.
-        this._wrap = document.createElement("div");
+        this._wrap = this._branch.createElement("wrap", "div");
         this._wrap.className = "hrg-wrap";
         this._wrap.appendChild(this._table);
         this._container.appendChild(this._wrap);
@@ -417,29 +429,30 @@ class RelGridLayout {
 
     /**
      * (Re)build the structure for a shape: { headers: string[], rows: n }.
-     * Slots are minted fresh; slot CONTENT IS NOT TOUCHED — whatever sits in an
-     * old slot rides the discarded subtree until the facade re-places it.
+     * Slots are minted fresh, on a branch of their own, and the last
+     * arrangement's branch is dissolved first — that is what releases its
+     * cols, headers, body and slots. Slot CONTENT IS NOT TOUCHED: whatever sits
+     * in an old slot rides the released subtree until the facade re-places it.
      */
     render(shape) {
         var headers = (shape && shape.headers) || [];
         var rows = (shape && shape.rows) || 0;
         this.closeGroups();                                   // the slots they sat over are going
 
-        while (this._colgroup.firstChild) this._colgroup.removeChild(this._colgroup.firstChild);
-        if (this._headerRow)
-            while (this._headerRow.firstChild) this._headerRow.removeChild(this._headerRow.firstChild);
+        if (this._slotsBranch) this._slotsBranch.dissolve();
+        var slots = this._slotsBranch = this._branch.createBranch("slots");
+        slots.activate(this);
         for (var h = 0; h < headers.length; h++) {
-            this._colgroup.appendChild(document.createElement("col"));   // widths need cols regardless
+            this._colgroup.appendChild(slots.createElement("col-" + h, "col"));   // widths need cols regardless
             if (!this._headerRow) continue;
-            var th = document.createElement("th");
+            var th = slots.createElement("th-" + h, "th");
             th.className = "hrg-th";
             th.textContent = headers[h];
-            if (this._drag) this._drag.wire(th, h);
+            if (this._drag) this._drag.wire(th, h, slots);
             this._headerRow.appendChild(th);
         }
 
-        var oldBody = this._tbody;
-        this._tbody = document.createElement("tbody");
+        this._tbody = slots.createElement("tbody", "tbody");
         this._slots = [];
         this._cursorTd = null;                                // the old tds go with the old body
         this._selTds = [];
@@ -474,10 +487,10 @@ class RelGridLayout {
             });
         };
         for (var i = 0; i < rows; i++) {
-            var tr = document.createElement("tr");
+            var tr = slots.createElement("tr-" + i, "tr");
             var rowSlots = [];
             for (var j = 0; j < headers.length; j++) {
-                var td = document.createElement("td");
+                var td = slots.createElement("td-" + i + "-" + j, "td");
                 td.className = "hrg-td";
                 wire(td, i, j);
                 tr.appendChild(td);
@@ -486,7 +499,7 @@ class RelGridLayout {
             this._tbody.appendChild(tr);
             this._slots.push(rowSlots);
         }
-        this._table.replaceChild(this._tbody, oldBody);
+        this._table.appendChild(this._tbody);
         return this;
     }
 
@@ -592,7 +605,11 @@ class RelGridLayout {
             _hrgAddClass(td, "hrg-covered");
             if (k === n - 1) _hrgAddClass(td, "hrg-group-end");
         }
-        var el = document.createElement("div");
+        if (!this._mergedBranch) {
+            this._mergedBranch = this._branch.createBranch("merged");
+            this._mergedBranch.activate(this);
+        }
+        var el = this._mergedBranch.createElement("merged-" + this._groups.length, "div");
         el.className = "hrg-merge";
         this._wrap.appendChild(el);
         this._groups.push({ i: i, j: j, n: n, el: el });
@@ -629,12 +646,9 @@ class RelGridLayout {
         return this;
     }
 
-    /** Take every merged cell's host down. Whatever cell was in it is detached with it. */
+    /** Take every merged cell's host down — their branch dissolved. Whatever cell was in one is detached with it. */
     closeGroups() {
-        for (var g = 0; g < this._groups.length; g++) {
-            var el = this._groups[g].el;
-            if (el.parentNode) el.parentNode.removeChild(el);
-        }
+        if (this._mergedBranch) { this._mergedBranch.dissolve(); this._mergedBranch = null; }
         this._groups = [];
         return this;
     }
@@ -663,7 +677,9 @@ class RelGridLayout {
             var a = td.getBoundingClientRect(), w = this._wrap.getBoundingClientRect();
             r = { left: a.left - w.left, top: a.top - w.top, width: a.width, height: a.height };
         }
-        var el = document.createElement("div");
+        var ov = this._overlayBranch = this._branch.createBranch("overlay");
+        ov.activate(this);
+        var el = ov.createElement("overlay", "div");
         el.className = "hrg-edit";
         var st = el.style;
         if (st && st.setProperty) {
@@ -681,10 +697,9 @@ class RelGridLayout {
         return el;
     }
 
-    /** Take it down. Whatever the cell put in it goes with it. */
+    /** Take it down — its branch dissolved. Whatever the cell put in it goes with it. */
     closeOverlay() {
-        if (this._overlay && this._overlay.parentNode)
-            this._overlay.parentNode.removeChild(this._overlay);
+        if (this._overlayBranch) { this._overlayBranch.dissolve(); this._overlayBranch = null; }
         this._overlay = null;
         return this;
     }
@@ -699,7 +714,9 @@ class RelGridLayout {
      */
     openMask() {
         if (this._mask) return this._mask;
-        var el = document.createElement("div");
+        var mb = this._maskBranch = this._branch.createBranch("mask");
+        mb.activate(this);
+        var el = mb.createElement("mask", "div");
         el.className = "hrg-mask";
         el.setAttribute("tabindex", "-1");         // focusable, and not in the tab order
         this._wrap.appendChild(el);
@@ -726,7 +743,7 @@ class RelGridLayout {
                ? { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight } : null;
         var seen = _hrgVisibleBox(this._wrap.getBoundingClientRect(), this._container.getBoundingClientRect(), vp);
         var box = _hrgGoldenBox(seen.width, seen.height);
-        var el = document.createElement("div");
+        var el = this._maskBranch.createElement("panel", "div");
         el.className = "hrg-panel";
         el.setAttribute("tabindex", "-1");
         var st = el.style;
@@ -742,10 +759,9 @@ class RelGridLayout {
         return el;
     }
 
-    /** Take the mask down, panel and all. Whatever the domain drew goes with it. */
+    /** Take the mask down, panel and all — their branch dissolved. Whatever the domain drew goes with it. */
     closeMask() {
-        if (this._mask && this._mask.parentNode)
-            this._mask.parentNode.removeChild(this._mask);
+        if (this._maskBranch) { this._maskBranch.dissolve(); this._maskBranch = null; }
         this._mask = null;
         this._panel = null;
         return this;
@@ -818,6 +834,8 @@ class RelGridLayout {
         this.closeOverlay();
         this.closeMask();
         this.closeGroups();
+        if (this._slotsBranch) { this._slotsBranch.dissolve(); this._slotsBranch = null; }
+        // The wrapper, table and header band stay the branch's: the host dissolves it.
         if (this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
         this._slots = [];
         this._cursorTd = null;

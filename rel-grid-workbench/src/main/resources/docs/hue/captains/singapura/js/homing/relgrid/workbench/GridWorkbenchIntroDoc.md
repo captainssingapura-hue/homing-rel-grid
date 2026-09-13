@@ -380,10 +380,11 @@ agreeing, at a time when the table had no public verb for any of them. It has th
 `setColumnWidths`, `setColumnView`, `onColumnResized` — so a group keeps its members
 agreeing through the surface every host already uses, and reaches into no member's layout.
 
-- **Members are identities.** A group is `{ members: [{ id, grid, fence? }] }`, each `grid` the
-  ordinary options a table alone would take — its relation, its branch, its ask, its
-  callbacks — verbatim but for the container. The member's cursor, selection, copy, handover
-  and the domain its ask reaches are its own. The group observes; it does not route.
+- **Members are identities.** A group is `{ branch, members: [{ id, grid, fence? }] }`, each
+  `grid` the ordinary options a table alone would take — its relation, its ask, its
+  callbacks — verbatim but for the container and the branch, which the group gives it: a
+  sub-branch of the group's own. The member's cursor, selection, copy, handover and the domain
+  its ask reaches are its own. The group observes; it does not route.
 - **Fences, not captions.** N members, N+1 slots — one above each member, one trailing — each
   handed to the domain the way a table hands a slot to a cell: `render(host)`, and
   `dispose()` is the owner's. What goes in it is the domain's: a name, a published total, a

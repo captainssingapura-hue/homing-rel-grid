@@ -26,6 +26,15 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  * table hands a slot to a cell; a slot nobody fills takes no height. The
  * group knows no caption.</p>
  *
+ * <h2>Its branch</h2>
+ *
+ * <p>The group is handed a DomOpsParty branch of its own — {@code branch} —
+ * and mints nothing raw: its root, the members' boxes and the fence slots are
+ * minted on it, and every member's grid (and the group's header grid) is
+ * given a sub-branch of it, so a member spec carries no branch. {@code
+ * destroy()} dissolves the sub-branches; the branch itself is the host's to
+ * dissolve, which is what releases the boxes and slots.</p>
+ *
  * <h2>What is shared: column geometry</h2>
  *
  * <p>The one thing separate tables cannot agree on by themselves. The group

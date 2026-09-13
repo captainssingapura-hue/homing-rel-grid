@@ -7,7 +7,9 @@
 //
 //   new RelGrid({
 //       container,        // where the layout mounts
-//       branch,           // the CELLS branch (DomOpsParty) — hands out cell hosts
+//       branch,           // the grid's OWN branch (DomOpsParty): everything the grid mints —
+//                         // chrome, slots, overlays, cell hosts — is on it or a sub-branch of
+//                         // it, and dissolving it is the host's
 //       relation,         // { pks(), columns(), cellFor(pk, column) } — and nothing else
 //       label?,           // aria-label
 //       header?,          // { show?, labels? } — display only
@@ -225,12 +227,19 @@ function _hrgNow()          { return Date.now(); }
  * the grid records.
  */
 function _hrgStockClipboard(env) {
-    env = env || {
-        navigator:     (typeof navigator !== "undefined") ? navigator : null,
-        ClipboardItem: (typeof ClipboardItem !== "undefined") ? ClipboardItem : null,
-        Blob:          (typeof Blob !== "undefined") ? Blob : null,
-        document:      (typeof document !== "undefined") ? document : null
+    // What the page has, unless the caller says otherwise — an explicit null
+    // is a road closed. The BRANCH is the grid's: the command road needs one
+    // element, and it is minted on a sub-branch made for the write.
+    env = env || {};
+    var given = function (k, page) { return env[k] !== undefined ? env[k] : page; };
+    env = {
+        navigator:     given("navigator",     (typeof navigator !== "undefined") ? navigator : null),
+        ClipboardItem: given("ClipboardItem", (typeof ClipboardItem !== "undefined") ? ClipboardItem : null),
+        Blob:          given("Blob",          (typeof Blob !== "undefined") ? Blob : null),
+        document:      given("document",      (typeof document !== "undefined") ? document : null),
+        branch:        env.branch || null
     };
+    var writer;
     function modern(content) {
         var cb = env.navigator ? env.navigator.clipboard : null;
         if (!cb) return Promise.reject(new Error("navigator.clipboard is absent (not a secure context?)"));
@@ -247,7 +256,7 @@ function _hrgStockClipboard(env) {
     }
     function command(content) {
         var doc = env.document;
-        if (!doc || typeof doc.execCommand !== "function" || !doc.body) return false;
+        if (!doc || typeof doc.execCommand !== "function" || !doc.body || !env.branch) return false;
         var took = false;
         // The command fires a copy event; answering it is how both forms are
         // set. Captured, so nothing on the page sees a copy it did not make.
@@ -259,8 +268,11 @@ function _hrgStockClipboard(env) {
             if (e.preventDefault) e.preventDefault();
             took = true;
         };
-        // The command needs a selection to act on; a textarea off-screen is one.
-        var ta = doc.createElement("textarea");
+        // The command needs a selection to act on; a textarea off-screen is one,
+        // minted on a branch of its own for the write and dissolved after it.
+        var scratch = env.branch.createBranch("copy-scratch");
+        scratch.activate(writer);
+        var ta = scratch.createElement("scratch", "textarea");
         ta.textContent = content.text;
         ta.setAttribute("aria-hidden", "true");
         if (ta.style && ta.style.setProperty) {
@@ -277,14 +289,14 @@ function _hrgStockClipboard(env) {
         var ran = false;
         try { ta.select(); ran = doc.execCommand("copy"); }
         catch (e) { ran = false; }
-        doc.body.removeChild(ta);
+        scratch.dissolve();                                   // the textarea goes with it
         doc.removeEventListener("copy", onCopy, true);
         if (prev && prev.focus) {
             try { prev.focus({ preventScroll: true }); } catch (e) { /* gone; nothing to restore */ }
         }
         return ran && took;
     }
-    return {
+    writer = {
         write: function (content) {
             return modern(content).then(null, function (why) {
                 if (command(content)) return;
@@ -292,6 +304,7 @@ function _hrgStockClipboard(env) {
             });
         }
     };
+    return writer;
 }
 
 class RelGrid {
@@ -315,7 +328,7 @@ class RelGrid {
         this._cbCopied      = opts.onCopied || null;
         this._cbEdge        = opts.onEdge || null;
         this._ask = (typeof opts.ask === "function") ? opts.ask : null;
-        this._clipboard = opts.clipboard || _hrgStockClipboard();
+        this._clipboard = opts.clipboard || _hrgStockClipboard({ branch: opts.branch });
 
         var head = opts.header || {};
         this._showHead = head.show !== false;
@@ -358,6 +371,7 @@ class RelGrid {
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
+            branch: opts.branch,
             container: opts.container,
             label: opts.label || null,
             showHeader: this._showHead,
@@ -375,7 +389,10 @@ class RelGrid {
                 if (c != null) self.setColumnWidth(c, px);
             }
         });
-        this._cells = new RelGridCells({ branch: opts.branch });
+        // The cell hosts on a sub-branch of the grid's own, dissolved with the grid.
+        this._cellsBranch = opts.branch.createBranch("cells");
+        this._cellsBranch.activate(this);
+        this._cells = new RelGridCells({ branch: this._cellsBranch });
 
         this._keydown = function (e) { self._onKey(e); };
         this._layout.el().addEventListener("keydown", this._keydown);
@@ -1128,6 +1145,7 @@ class RelGrid {
         this._pending = null;
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._cells.destroy();
+        this._cellsBranch.dissolve();
         this._layout.destroy();
     }
 }
