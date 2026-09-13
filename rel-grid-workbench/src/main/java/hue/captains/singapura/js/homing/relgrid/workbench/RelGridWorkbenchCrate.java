@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.js.CoreJsCrate;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
+import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import hue.captains.singapura.js.homing.server.ServerCrate;
 import hue.captains.singapura.js.homing.studio.base.StudioBaseCrate;
@@ -43,7 +44,9 @@ public final class RelGridWorkbenchCrate implements Crate {
                 // The grid under test, and the protocol it speaks: a domain answers
                 // through the protocol, so the bench depends on it directly.
                 RelGridCrate.INSTANCE,
-                RelGridProtocolCrate.INSTANCE);
+                RelGridProtocolCrate.INSTANCE,
+                // And the group the two group benches stack their tables in.
+                RelGridGroupCrate.INSTANCE);
     }
 
     @Override
@@ -62,6 +65,10 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(DishNutritionistWidget.INSTANCE),
                 CrateEntry.of(DishManagerWidget.INSTANCE),
                 CrateEntry.of(DishFollowerWidget.INSTANCE),
+                // Outlets: a ledger, a relation and fences per outlet, and the group widget.
+                CrateEntry.of(SalesStore.INSTANCE),
+                CrateEntry.of(OutletRelation.INSTANCE),
+                CrateEntry.of(OutletsWidget.INSTANCE),
                 // Han Article: an article as rows of square slots, a cell per
                 // square, an editor and its displays over one persisted string.
                 CrateEntry.of(HanLayout.INSTANCE),
@@ -70,6 +77,9 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(HanRelation.INSTANCE),
                 CrateEntry.of(HanEditorWidget.INSTANCE),
                 CrateEntry.of(HanDisplayWidget.INSTANCE),
-                CrateEntry.of(HanStressWidget.INSTANCE));
+                CrateEntry.of(HanStressWidget.INSTANCE),
+                // Articles: fences for poems, and the group widget.
+                CrateEntry.of(HanFences.INSTANCE),
+                CrateEntry.of(HanArticlesWidget.INSTANCE));
     }
 }

@@ -17,25 +17,25 @@ package hue.captains.singapura.js.homing.relgrid;
  * arms, nothing fires until a test calls {@code runTimers()}, so the mask's
  * delay and hold are driven rather than waited for.</p>
  */
-final class RelGridTestDom {
+public final class RelGridTestDom {
 
     private RelGridTestDom() {}
 
-    static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
+    public static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
 
     /** The protocol's classes are generated, and live in their own jar. */
-    static final String PROTOCOL =
+    public static final String PROTOCOL =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
 
-    static final String[] MODULES = {
+    public static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js", "RelGridLayoutModule.js", "RelGridCellsModule.js",
             "RelGridStockCellsModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
-    static final String SELECTION =
+    public static final String SELECTION =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/selection/RelGridSelectionModule.js";
 
-    static final String DOM_STUB = """
+    public static final String DOM_STUB = """
             var __focused = null;
             function makeStyle() {
                 var props = {};
@@ -54,6 +54,7 @@ final class RelGridTestDom {
                 // Dispatch with bubbling, like the real thing; blur does not bubble.
                 target.dispatch = function (t, ev) {
                     ev = ev || {};
+                    if (!ev.target) ev.target = this;                    // as a browser sets it: where it was dispatched
                     if (!ev.preventDefault) ev.preventDefault = function () {};
                     if (!ev.stopPropagation) { ev._stopped = false; ev.stopPropagation = function () { ev._stopped = true; }; }
                     var node = this;
@@ -96,10 +97,11 @@ final class RelGridTestDom {
                     },
                     select: function () {},
                     setAttribute: function () {}, getAttribute: function () { return null; },
-                    // Geometry for a header drag: _rl / _rr set by a test; 100px otherwise.
+                    // Geometry for a header drag: _rl / _rr (and _rt / _rb) set by a test; 100 x 20 otherwise.
                     getBoundingClientRect: function () {
                         var l = this._rl || 0, r = (this._rr != null) ? this._rr : l + 100;
-                        return { left: l, right: r, top: 0, bottom: 20, width: r - l, height: 20 };
+                        var t = this._rt || 0, b = (this._rb != null) ? this._rb : t + 20;
+                        return { left: l, right: r, top: t, bottom: b, width: r - l, height: b - t };
                     },
                     get firstChild() { return this.children[0] || null; },
                     get firstElementChild() { return this.children[0] || null; }
@@ -136,7 +138,7 @@ final class RelGridTestDom {
             """;
 
     /** A relation with NO get: identities, columns, and a manager that owns its cells. */
-    static final String FIXTURE = """
+    public static final String FIXTURE = """
             function fixture(opts) {
                 opts = opts || {};
                 var data = {
@@ -181,7 +183,7 @@ final class RelGridTestDom {
                 var branch = { createElement: function (n, t) { mints++; return makeEl(t); } };
                 var container = makeEl('div');
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
-                var written = [], copied = [], handles = [];
+                var written = [], copied = [], handles = [], edges = [];
                 var grid = new RelGrid({
                     container: container, branch: branch, relation: relation,
                     onArranged:      function (k) { arranged.push(k); },
@@ -190,6 +192,7 @@ final class RelGridTestDom {
                     onControlReleased: function (pk, col) { ended.push(pk + " " + col); },
                     onColumnResized: function (col, px) { resized.push(col + ' ' + px); },
                     onCopied: function (c) { copied.push(c); },
+                    onEdge: function (d) { edges.push(d); },
                     // THE CHANNEL. Every question arrives here with the mask handle; the
                     // fixture records both and, unless a test says otherwise, answers with
                     // a resolved promise — nothing for a notification, and nothing (absence)
@@ -199,7 +202,9 @@ final class RelGridTestDom {
                         return opts.ask ? opts.ask(q, mask) : Promise.resolve();
                     },
                     // The clipboard is a recorder: what the grid would have written.
-                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } }
+                    clipboard: opts.clipboard || { write: function (c) { written.push(c); return Promise.resolve(); } },
+                    // What a header drag's guide spans, when a test names it.
+                    resizeGuide: opts.resizeGuide || undefined
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 // container > WRAPPER > table. The wrapper is the grid's own, and is
@@ -272,7 +277,7 @@ final class RelGridTestDom {
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
                          wrap: wrap, overlay: overlay, mask: mask, panel: panel,
-                         sent: sent, handles: handles, written: written, copied: copied,
+                         sent: sent, handles: handles, written: written, copied: copied, edges: edges,
                          // The last COPY question, or null. (asked() is the cellFor count.)
                          copyAsked: function () {
                              for (var k = sent.length - 1; k >= 0; k--)

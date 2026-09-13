@@ -23,12 +23,19 @@
 //                         // whose columns are half-squares says 24.
 //       mergedCells?,     // true to honour a cell's colSpan(). Off by default: most
 //                         // relations have no merged cells, and the feature is kept apart.
+//       resizeGuide?,     // what a header drag's guide line spans: an element, or a LIST
+//                         // of them for a segment each. Default the table; a host stacking
+//                         // several tables names each table's box, so the line breaks
+//                         // at whatever sits between them.
 //       onArranged?,      // (kind) after every placement pass
 //       onCursorMoved?,   // (pk, column)
 //       onControlTaken?,  // (pk, column) — the cell took control of this one
 //       onControlReleased?, // (pk, column) — and gave it back
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
 //       onCopied?,        // (content) — a REPORT: this was written to the clipboard
+//       onEdge?,          // (direction) — a REPORT: a bare arrow went nowhere, the cursor being
+//                         // already at that edge — 'up' | 'down' | 'left' | 'right'. The grid
+//                         // itself does nothing with it; a host stacking tables steps over.
 //       ask?,             // (question, mask) — THE CHANNEL. See below.
 //       clipboard?        // { write(content) → thenable } — the writer; navigator.clipboard by default
 //   });
@@ -104,6 +111,14 @@
 // CAN explain — is a later round; the two compose because the grid will pass
 // what it holds with either question and the domain answers with its own
 // conditions applied as well.
+//
+// THE VIEWPORT FOLLOWS THE CURSOR. A keyboard move, an extension, and a
+// programmatic selectCell scroll the least amount that shows the slot the
+// person is now looking at — the cursor, or the range's far corner — in
+// every port that scrolls; a click, Ctrl+A and an arrangement move nothing,
+// because none of them is a place the person went. A grid the keyboard has
+// left does not move the page: the follow is gated on the grid holding the
+// focus, except for selectCell, which a host calls on purpose.
 //
 // THE ROOT PRINCIPLE, AS CODE: this file asks the relation for identities,
 // columns and cells. It never asks for, holds, pushes or writes a value, and
@@ -298,6 +313,7 @@ class RelGrid {
         this._cbReleased    = opts.onControlReleased || null;
         this._cbResized     = opts.onColumnResized || null;
         this._cbCopied      = opts.onCopied || null;
+        this._cbEdge        = opts.onEdge || null;
         this._ask = (typeof opts.ask === "function") ? opts.ask : null;
         this._clipboard = opts.clipboard || _hrgStockClipboard();
 
@@ -346,6 +362,7 @@ class RelGrid {
             label: opts.label || null,
             showHeader: this._showHead,
             overflow: opts.overflow || null,
+            resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._onDblClick(i, j); },
             onCellDown:     function (i, j, mods) { self._onDown(i, j, mods); },
@@ -562,10 +579,28 @@ class RelGrid {
         }
     }
 
+    /** The edge a bare arrow would cross, or null when there is room to move. */
+    _edgeOf(key) {
+        var p = this._cursorPos;
+        if (!p) return null;
+        if (key === "ArrowUp"    && p.i === 0) return "up";
+        if (key === "ArrowDown"  && p.i === this._maps.rows() - 1) return "down";
+        if (key === "ArrowLeft"  && p.j === 0) return "left";
+        if (key === "ArrowRight" && p.j === this._maps.cols() - 1) return "right";
+        return null;
+    }
+
     _move(di, dj) {
         if (!this._cursorPos) return;
         var p = this._cursorPos;
         this._setCursor(this._clampI(p.i + di), this._clampJ(dj ? this._stepJ(p.i, p.j, dj) : p.j));
+        this._follow(this._cursorPos);
+    }
+
+    /** The viewport follows a position the person went to — when the grid has the keyboard. */
+    _follow(pos, regardless) {
+        if (!pos) return;
+        if (regardless || this._layout.hasKeyboard()) this._layout.revealSlot(pos.i, pos.j);
     }
 
     _clampI(i) { return Math.max(0, Math.min(this._maps.rows() - 1, i)); }
@@ -787,6 +822,7 @@ class RelGrid {
         var di = (key === "ArrowUp") ? -1 : (key === "ArrowDown") ? 1 : 0;
         var dj = (key === "ArrowLeft") ? -1 : (key === "ArrowRight") ? 1 : 0;
         this._extendTo(from.i + di, dj ? this._stepJ(from.i, from.j, dj) : from.j);
+        this._follow(this._selection.far());               // the range's far corner is where the person went
     }
 
     /**
@@ -899,12 +935,24 @@ class RelGrid {
         else if (e.shiftKey && arrow) this._extendBy(key);
         else if (arrow) {
             var self = this;
-            this._bareMove(function () {
-                if      (key === "ArrowUp")    self._move(-1, 0);
-                else if (key === "ArrowDown")  self._move(1, 0);
-                else if (key === "ArrowLeft")  self._move(0, -1);
-                else                           self._move(0, 1);
-            });
+            // A bare arrow with the cursor already at that edge goes nowhere in
+            // this table — and is REPORTED, so a host that stacks tables may
+            // step over the edge. The key is still the grid's: consumed.
+            var edge = this._edgeOf(key);
+            if (edge) {
+                this._bareMove(function () {});      // a bare move still clears the ranges (law 39)
+                if (this._cbEdge) {
+                    try { this._cbEdge(edge); }
+                    catch (e) { console.error("[RelGrid] onEdge threw:", e); }
+                }
+            } else {
+                this._bareMove(function () {
+                    if      (key === "ArrowUp")    self._move(-1, 0);
+                    else if (key === "ArrowDown")  self._move(1, 0);
+                    else if (key === "ArrowLeft")  self._move(0, -1);
+                    else                           self._move(0, 1);
+                });
+            }
         }
         else if (key === "Enter")      this.takeControlAtCursor();
         else return;                           // not ours; let it bubble
@@ -1015,6 +1063,7 @@ class RelGrid {
         if (!at) return false;
         var moved = false, self = this;
         this._bareMove(function () { moved = self._setCursor(at.i, at.j); });
+        this._follow(at, true);                             // a host asked for this cell: show it, keyboard or not
         return moved;
     }
 

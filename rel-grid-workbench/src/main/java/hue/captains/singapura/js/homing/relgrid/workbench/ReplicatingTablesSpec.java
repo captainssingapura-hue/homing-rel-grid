@@ -75,7 +75,13 @@ public final class ReplicatingTablesSpec implements WorkspaceSpec {
                         .withGroup(WidgetGroup.of("Replicas"))
                         .withDescription(WidgetDescription.of(
                                 "A read-only replica over the same store. Dock several; every "
-                              + "one moves on every commit and every sale, and none of their grids is told."))
+                              + "one moves on every commit and every sale, and none of their grids is told.")),
+                WidgetEntry.of(OutletsWidget.class, WidgetLabel.of("Outlets"))
+                        .withIcon(new WidgetIcon.Emoji("🏪"))
+                        .withGroup(WidgetGroup.of("Groups"))
+                        .withDescription(WidgetDescription.of(
+                                "Sales at three outlets, one table each, stacked in a group that shares "
+                              + "only column widths. Trade at one outlet and only its book moves."))
         );
     }
 

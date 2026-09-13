@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own.
+A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own, and each with a specimen that stacks tables in a group.
 
 ---
 
@@ -369,6 +369,78 @@ typographic refinements a real manuscript grid has — compressing a run of mark
 into the margin rather than a column. And for merged cells, what a later case may ask: a merged
 cell whose contents want the pointer (today the host passes clicks through to the squares), and
 CSS anchor positioning in place of measuring, once every browser has it.
+
+## Groups · a table that does not know it is in one
+
+Two specimens stack several tables down one page, and they exist to prove one sentence: **a
+table in a group is wired exactly as it would be alone, and cannot tell the difference.** The
+studio's federation (E2-ext2) drew a group as one grid over many relations, with every identity
+qualified by its member; that was the price of keeping members' widths, order and hidden set
+agreeing, at a time when the table had no public verb for any of them. It has them now —
+`setColumnWidths`, `setColumnView`, `onColumnResized` — so a group keeps its members
+agreeing through the surface every host already uses, and reaches into no member's layout.
+
+- **Members are identities.** A group is `{ members: [{ id, grid, fence? }] }`, each `grid` the
+  ordinary options a table alone would take — its relation, its branch, its ask, its
+  callbacks — verbatim but for the container. The member's cursor, selection, copy, handover
+  and the domain its ask reaches are its own. The group observes; it does not route.
+- **Fences, not captions.** N members, N+1 slots — one above each member, one trailing — each
+  handed to the domain the way a table hands a slot to a cell: `render(host)`, and
+  `dispose()` is the owner's. What goes in it is the domain's: a name, a published total, a
+  picture, a control. A slot nobody fills takes no height. The group knows no caption.
+- **What is shared: column geometry**, the one thing separate tables cannot agree on by
+  themselves. The group applies its widths to every member, hears any member's resize report,
+  applies it to the siblings through their own `setColumnWidth`, and reports once. A sibling
+  that refused because a cell of its held control is levelled the moment it is free. **One
+  header, or one each**: with `header: 'group'` (the default) the group mints a table of its own
+  at the very top, above the first fence — a grid over the members' columns that presents nothing,
+  the illustration's trick — whose header band carries the labels and the resize handles and is
+  levelled with the rest, and every member is built with none; the members' columns must agree,
+  checked once. With `header: 'each'` the group adds no table and every member keeps its own.
+- **An illustration is a member with nothing to present**: a relation with an empty row view
+  that keeps its identity and its fence. No special row, no special cell, nothing the table
+  knows — which is what map 24 predicted, one abstraction lower than it expected.
+- **One cursor.** Every member keeps a cursor of its own — a table alone always has one — and the
+  group presents one: the *active* member's, the one whose table last held the focus (observed at
+  the group's root, never asked of the table) or the one `activate(id)` named. The others show
+  neither cursor nor selection until they are active again; their state is untouched. **Tab** walks
+  the group — fence, table, fence, table, …, trailing fence — and wraps within it, Shift+Tab the
+  other way; an unfilled fence, a folded table and a table with nothing to present are skipped.
+  A fence stop is the fence itself: it takes the focus and wears the cursor's own mark while no
+  table shows one — one mark down the whole group — and **Enter** on it presses its first control,
+  the fold toggle here, so no button ever needs a focus ring of its own.
+  **Arrows step over an edge**, one stop at a time and never wrapping: the table reports a bare
+  arrow that went nowhere — `onEdge`, the one report it gained for groups — and the group moves
+  up to the fence above or down to the fence below; from a fence, Down enters the table below
+  on its first row and Up the table above on its last, in the column the cursor left. Tab is the
+  same walk from wherever the focus is: the fast-forward.
+- **Fold is the group's own state**, applied to a member's *box*: hidden, its fence staying, the
+  table inside untouched — cursor, selection, cells, view all as they were, and it never learns.
+  `fold`, `foldAll`, `folded` are the host's verbs; `onFolded` the report; a fence that offers
+  `onFolded(folded)` is told when the member below it changes, by whatever road.
+- **`tell` is the channel's other direction.** The grid asks and the domain answers; a control the
+  domain drew in a fence has nobody to answer, so it *tells*, unasked — a protocol value,
+  `RelGridGroupFold { member, folded }`, through the handle the fence was given, applied as the
+  host's verb would be. An unknown kind is recorded and refused, never dropped.
+
+**Outlets** (in Replicating Tables): the six dishes sold at three outlets, one book each over a
+shared ledger, every column read-only. Drag a header edge on Downtown, or Alt+←/→ on any of
+the three — Airport and Harbour have no header at all — and every table follows, the group's
+line under them reporting the widths once. *Trade at Harbour*: Harbour's cells move, Harbour's
+fence moves, the ledger's fence moves, and no other book hears a thing — the path is store →
+that outlet's relation → its own cells, with neither the table nor the group on it. The ▾ on a
+fence is the domain's toggle: pressed, it tells the group to fold the book below, and paints
+itself only from what the group tells back — so *fold all* from the host turns every ▾ to ▸ too.
+Trade at a folded outlet and its hidden cells move all the same; unfold it and the book is
+current, its cursor where it was. This is the specimen the live-feed round will feed.
+
+**Articles** (in Han Article): 楓橋夜泊, an illustration, 靜夜思 — three members, the poems
+ordinary displays over their own articles, the illustration a zero-row member whose fence draws
+a moon and a note. Titles and the colophon are fences too. The group's widths are the squares'.
+
+Not built, and deliberately so far: the group's own ask channel and handover, cursor crossing
+between members, and a selection that spans them. Each is a later round; none will be applied
+to a member's rows.
 
 ## Adding a bench
 
