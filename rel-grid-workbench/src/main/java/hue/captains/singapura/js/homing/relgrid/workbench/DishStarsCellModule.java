@@ -34,6 +34,7 @@ public record DishStarsCellModule() implements DomModule<DishStarsCellModule> {
 
     @Override public ImportsFor<DishStarsCellModule> imports() {
         return ImportsFor.<DishStarsCellModule>builder()
+                .add(new ModuleImports<>(List.of(new DishClipboardFormats.dishStarsHtml()), DishClipboardFormats.INSTANCE))
                 .add(new ModuleImports<>(List.of(new DishStarsStyles.wb_stars(), new DishStarsStyles.wb_stars_ro(),
                         new DishStarsStyles.wb_stars_panel(), new DishStarsStyles.wb_stars_row(), new DishStarsStyles.wb_star(),
                         new DishStarsStyles.wb_star_on(), new DishStarsStyles.wb_stars_hint()), DishStarsStyles.INSTANCE))

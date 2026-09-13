@@ -111,15 +111,13 @@ class DishStarsCell {
 
     /**
      * What this cell is worth on a clipboard that takes HTML: the stars a
-     * person SAW, not the number underneath. A literal colour rather than a
-     * theme token, because the clipboard leaves the page and a token means
-     * nothing in a spreadsheet. Not on the cell contract — the grid never
-     * asks it; the domain's copier does (map 6 law 48).
+     * person SAW, not the number underneath — composed by the formats module,
+     * which is where a clipboard's markup lives. Not on the cell contract —
+     * the grid never asks it; the domain's copier does (map 6 law 48).
      */
     clipboardHtml() {
         if (this._value == null) return "—";
-        return '<span style="color:#e0a300;letter-spacing:2px" title="' + this._value + ' of 5">'
-             + this._starsFor(this._value) + "</span>";
+        return dishStarsHtml(this._value, this._starsFor(this._value));
     }
 
     onSelect(mode) { this._mode = mode; }

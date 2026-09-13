@@ -60,6 +60,7 @@ class DishClipboardTest extends JsModuleTestBase {
         js.eval("js", DishPolicyTest.STYLES);
         loadModule(PROTOCOL);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
+        loadModule(BENCH_DIR + "DishClipboardFormats.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");
         loadModule(BENCH_DIR + "DishStore.js");
         loadModule(BENCH_DIR + "DishRelation.js");

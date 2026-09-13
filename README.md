@@ -65,13 +65,16 @@ grid's published vocabulary: a host or a theme may set them on any ancestor.
 
 ## The RFC 0044 ledger
 
-Every module is a `CONSUMER` under the full DOM-owner discipline (the grid is a component
-a widget composes, not a pane the shell is made of — nothing here is a primitive). Each
-crate's conformance test sweeps its modules under the homing rule set and grades them
-against `src/test/resources/rfc0044-ledger.txt`, a committed list of the violations that
-were there before the sweep began. A finding not in the ledger fails the build; so does a
-ledger line whose violation is gone. The ledger only shrinks. To rewrite it — deliberately,
-after fixing what it lists, never to silence a fresh violation:
+Every module that draws is a `CONSUMER` under the full DOM-owner discipline (the grid is a
+component a widget composes, not a pane the shell is made of — nothing here is a primitive);
+the ones that compute — the view maps, the selection, the protocol, the clipboard's
+formats — are `PURE_LOGIC` and may touch no DOM at all. Each crate's conformance test
+sweeps its modules under the homing rule set and grades them against
+`src/test/resources/rfc0044-ledger.txt`, a committed list of the violations that were there
+before the sweep began. A finding not in the ledger fails the build; so does a ledger line
+whose violation is gone. The ledger only shrinks — and every ledger is empty now: the 102
+findings the sweep began with are gone, and any new one fails the build. To rewrite a
+ledger — deliberately, never to silence a fresh violation:
 
 ```bash
 mvn install -Dhoming.conformance.record=true

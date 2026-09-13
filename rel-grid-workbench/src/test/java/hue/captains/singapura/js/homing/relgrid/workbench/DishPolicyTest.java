@@ -150,6 +150,8 @@ class DishPolicyTest extends JsModuleTestBase {
         for (String m : PARTY) loadModule(m);
         js.eval("js", STYLES);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
+        loadModule(GRID_DIR + "protocol/RelGridProtocolModule.js");   // the formats answer with the protocol's content record
+        loadModule(BENCH_DIR + "DishClipboardFormats.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");
         loadModule(BENCH_DIR + "DishStore.js");
         loadModule(BENCH_DIR + "DishRelation.js");

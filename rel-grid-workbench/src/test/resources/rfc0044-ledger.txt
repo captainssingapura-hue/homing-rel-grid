@@ -1,11 +1,2 @@
 # RFC 0044 ledger for crate 'rel-grid-workbench': pre-existing violations, one fingerprint per line.
 # It can only shrink. Regenerate with -Dhoming.conformance.record=true, deliberately — never to silence a fresh violation.
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [no-literal-color] literal colour (use a theme token var(--...), not a baked hex/rgb): out.push('<th style="text-align:left;padding:2px 8px;border-bottom:1px solid #999">'
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [view-doctrine] HTML tag literal (Pure-Component Views): out.push("<tbody>");
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [view-doctrine] HTML tag literal (Pure-Component Views): out.push("<thead><tr>");
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [view-doctrine] HTML tag literal (Pure-Component Views): out.push("<tr>");
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [view-doctrine] HTML tag literal (Pure-Component Views): out.push('<td style="padding:2px 8px' + (numeric ? ";text-align:right" : "") + '">'
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [view-doctrine] HTML tag literal (Pure-Component Views): out.push('<th style="text-align:left;padding:2px 8px;border-bottom:1px solid #999">'
-hue.captains.singapura.js.homing.relgrid.workbench.DishClipboard [view-doctrine] HTML tag literal (Pure-Component Views): var out = ['<table style="border-collapse:collapse;font:13px sans-serif">'];
-hue.captains.singapura.js.homing.relgrid.workbench.DishStarsCellModule [no-literal-color] literal colour (use a theme token var(--...), not a baked hex/rgb): return '<span style="color:#e0a300;letter-spacing:2px" title="' + this._value + ' of 5">'
-hue.captains.singapura.js.homing.relgrid.workbench.DishStarsCellModule [view-doctrine] HTML tag literal (Pure-Component Views): return '<span style="color:#e0a300;letter-spacing:2px" title="' + this._value + ' of 5">'

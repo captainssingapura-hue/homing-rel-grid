@@ -67,6 +67,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(DishStore.INSTANCE),
                 CrateEntry.of(DishStarsCellModule.INSTANCE),
                 CrateEntry.of(DishRelation.INSTANCE),
+                CrateEntry.of(DishClipboardFormats.INSTANCE, StandardJsModuleType.PURE_LOGIC),   // strings in, strings out: no DOM
                 CrateEntry.of(DishClipboard.INSTANCE),
                 CrateEntry.of(DishViews.INSTANCE),
                 CrateEntry.of(DishChefWidget.INSTANCE),
