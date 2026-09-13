@@ -1,6 +1,6 @@
 # The Grid Workbenches
 
-A studio of its own, for benching the Relation Grid. Two benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own, and each with a specimen that stacks tables in a group.
+A studio of its own, for benching the Relation Grid. Three benches so far: **Replicating Tables** and **Han Article** — the second with a stress table of its own, and each with a specimen that stacks tables in a group — and **Endless Table**, the stress bench for the two branches.
 
 ---
 
@@ -450,6 +450,52 @@ a moon and a note. Titles and the colophon are fences too. The group's widths ar
 Not built, and deliberately so far: the group's own ask channel and handover, cursor crossing
 between members, and a selection that spans them. Each is a later round; none will be applied
 to a member's rows.
+
+## Endless Table
+
+The third bench, and the one that reached the root. A grid over a relation of **a million
+rows**, showing a window of twenty, and never told there are more: the relation answers its View
+as a window — `view()` is twenty rows from where the window stands — and moves it when asked,
+`view({ by: n })`, clamped at its ends, where it answers nothing and the rows stay. That is
+episode 2's one seam, *intent in, keys out*, taken for a second vocabulary; and it made the two
+kinds of relation one, since a static relation is a window with nowhere to go. There is no
+`pks()` any more, on any bench.
+
+### What to try
+
+Switch the workspace kind to **Endless Table**. The table is exactly the window; nothing scrolls
+natively.
+
+- **Wheel** over the table. A hundred pixels is six rows against these rows; one line back is
+  one row. Every tick asks the relation, and the grid arranges what comes back on the same
+  twenty rows of slots.
+- **Click the bottom row, press ↓.** The window moves one row under the cursor — its cell is one
+  row in now — and the arrow steps onto the new row. At the true end the arrow is reported as the
+  edge it met, exactly as a static table reports it.
+- **PageUp / PageDown**, and the buttons: a row, a page, the ends, and three **bursts** — three
+  hundred rows one at a time, a hundred pages, a hundred random jumps across the million.
+- **Edit** any cell but *id* (Enter), then scroll away and back. The row was freed in between —
+  the readout's *rows freed* says so — and the value is the relation's, kept by identity, so it
+  comes back.
+
+### The readouts
+
+The lower line is the bench's self-check, on the **party's numbers and never the DOM's**, after
+every step: the grid's branch holds a *constant* count on the slots it started with — nothing
+minted, nothing released, however far the window travels; the domain's branch holds at most two
+windows of rows; the grid's registry is exactly the window; every slot holds exactly one cell;
+and the step's cost. A burst reports its average. The claim of the two branches, read off two
+numbers: on the day this was written, 481 steps at 0.12–0.25 ms each with the grid's count at
+141 throughout.
+
+### What it asked of the grid, and got
+
+The registry that never forgot now forgets what leaves the View; the slot matrix is kept while
+its shape holds; the maps have no base and check nothing in O(N); the window moves by the seam
+at the grid's own edges; and the relation, not the grid, is the authority on what it owns — a
+stranger is refused at `cellFor`, before anything moves. The domain's side is one rule: a row is
+freed once it is outside two Views, the one answered last and the one being answered, with no
+host between. The record is RFC 0050 · Episode 2-ext8 in the studio.
 
 ## Adding a bench
 

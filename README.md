@@ -24,7 +24,7 @@ are the domain's operations; they never change an arrangement, so the grid has n
 |---|---|
 | `rel-grid` | the grid — `RelGrid`, the facade, composing: its seam (`RelGridViewMaps`), the layout (`RelGridLayout` over `RelGridSlots`, `RelGridOverlays`, `RelGridReveal`, `RelGridHeaderDrag`), the cells registry, the cursor, the gestures, the handover of control, the ask channel, the widths, the window (the relation's seam asked to move), the stock clipboard writer — one module each, every one under 250 effective lines — and a stock cell that is deliberately domain-side. Plain JS classes with no runtime dependency on anything; packaged as homing `DomModule`s for this stack. |
 | `rel-grid-group` | the group — `RelGridGroup`: an ordered list of tables, each an ordinary `RelGrid` that does not know it is in one, with a fence (a slot the domain fills) between every two and around the ends. Its minting (`RelGridGroupMint`) and its one cursor (`RelGridGroupWalk`) are modules of their own. Shares column geometry through the members' public verbs; depends on `rel-grid`, never the reverse. |
-| `rel-grid-workbench` | a solo studio of benches that try to make the grid fail. `GridWorkbenchServer` on 8083. |
+| `rel-grid-workbench` | a solo studio of benches that try to make the grid fail — Replicating Tables, Han Article, and the Endless Table, a window of twenty over a million rows measured through the party. `GridWorkbenchServer` on 8083. |
 
 ## What is here, round 1
 
