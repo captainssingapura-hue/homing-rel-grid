@@ -239,6 +239,7 @@ class RelGridGestures {
         if (e.deltaMode === 1)      rows = dy;
         else if (e.deltaMode === 2) rows = dy * this._maps.rows();
         else                        rows = dy / this._rowHeight();
+        if (rows * this._wheelRest < 0) this._wheelRest = 0;   // a change of direction owes nothing to the last one
         this._wheelRest += rows;
         var whole = Math.trunc(this._wheelRest);
         this._wheelRest -= whole;

@@ -144,6 +144,8 @@ class RelGridWindowTest extends JsModuleTestBase {
                     if (w.wheel(30, 0) !== true || w.shown() !== 'r6,r7,r8,r9,r10') return false;
                     // A sub-row tick, once the window has moved under the wheel, is consumed and carried.
                     if (w.wheel(5, 0) !== true || w.shown() !== 'r6,r7,r8,r9,r10') return false;
+                    // A change of direction drops what was carried: one line back is one row back.
+                    if (w.wheel(-1, 1) !== true || w.shown() !== 'r5,r6,r7,r8,r9') return false;
                     // Back past the start: clamped by the relation.
                     if (w.wheel(-50, 1) !== true || w.shown() !== 'r0,r1,r2,r3,r4') return false;
                     // At the start, up answers nothing: not consumed — the browser scrolls what it will.

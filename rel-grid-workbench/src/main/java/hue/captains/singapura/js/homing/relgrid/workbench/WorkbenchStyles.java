@@ -92,6 +92,20 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
         }
     }
 
+    /** A host exactly the table's size — the endless table's window: nothing scrolls natively, the wheel is the window's. */
+    public record wb_window_host() implements CssClass<WorkbenchStyles> {
+        @Override public String body() { return """
+                flex: 0 0 auto;
+                align-self: flex-start;
+                max-width: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                border: 1px solid var(--color-border);
+                border-radius: 6px;
+                """;
+        }
+    }
+
     /** The Han Article's editor: plain text, as wide as the squares below it, in the same face. */
     public record wb_han_text() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
@@ -125,7 +139,7 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     @Override
     public List<CssClass<WorkbenchStyles>> cssClasses() {
-        return List.of(new wb_root(), new wb_host(), new wb_han_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_status());
+        return List.of(new wb_root(), new wb_host(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_status());
     }
 
     @Override

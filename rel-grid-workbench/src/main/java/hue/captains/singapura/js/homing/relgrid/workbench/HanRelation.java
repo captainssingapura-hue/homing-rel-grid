@@ -13,10 +13,10 @@ import java.util.List;
  * article laid out by {@link HanLayout} into rows of square slots, and a cell
  * manager that owns one {@link HanCellModule.HanCell} per slot. Identity is
  * positional — the square — and the glyph is what the square shows; on every
- * change the relation re-lays the article out and sets its own cells. It
- * declares a capacity of rows and presents the prefix in use; it declares the
- * two half-square columns, leading and trailing, and presents whichever the
- * layout has put a mark in. Nothing here mentions a grid, and nothing here
+ * change the relation re-lays the article out and sets its own cells. Its
+ * View is the rows the layout uses now — one root, no capacity to list; it
+ * declares the two half-square columns, leading and trailing, and presents
+ * whichever the layout has put a mark in. Nothing here mentions a grid, and nothing here
  * commits: the cells are displays.
  */
 public record HanRelation() implements DomModule<HanRelation> {

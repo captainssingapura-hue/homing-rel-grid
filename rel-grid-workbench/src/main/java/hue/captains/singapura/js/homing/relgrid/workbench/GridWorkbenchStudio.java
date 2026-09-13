@@ -40,7 +40,10 @@ public record GridWorkbenchStudio() implements Studio<GridWorkbenchHome> {
             // Han Article: a WYSIWYG Chinese article in strictly square cells,
             // nine to a row — the bench that will ask the grid for half-width
             // punctuation columns.
-            HanArticleSpec.INSTANCE
+            HanArticleSpec.INSTANCE,
+            // Endless Table: the stress bench for the two branches — a window
+            // of twenty over a million rows, measured through the party.
+            EndlessTableSpec.INSTANCE
     );
 
     public static final GridWorkbenchStudio INSTANCE = new GridWorkbenchStudio();
