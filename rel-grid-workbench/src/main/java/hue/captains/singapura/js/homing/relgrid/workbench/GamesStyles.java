@@ -177,13 +177,20 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
         }
     }
 
-    /** A checkbox row: "then by", "(select all)", and every value. */
+    /**
+     * A checkbox row: "then by", "(select all)", and every value. A flex item of
+     * the list, which is a column with a ceiling — so it must NOT shrink: with
+     * overflow hidden its minimum height is nothing, and a row that may shrink
+     * is shrunk to fit the ceiling instead of the list scrolling. flex none.
+     */
     public record wb_gmenu_check() implements CssClass<GamesStyles> {
         @Override public String body() { return """
+                flex: 0 0 auto;
                 display: flex;
                 align-items: center;
                 gap: 6px;
                 padding: 3px 8px;
+                line-height: 18px;
                 border-radius: 4px;
                 cursor: pointer;
                 white-space: nowrap;
