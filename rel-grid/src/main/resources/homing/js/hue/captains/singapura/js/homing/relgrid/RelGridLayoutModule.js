@@ -29,7 +29,7 @@
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   render({ headers, rows }) / setColWidths(widths) / slotAt(i, j) / rows() / cols()
 //   paintCursor(ij) / paintSelection(rects) / setDeep(on) / setMasked(on)
-//   focus() / revealSlot(i, j) / hasKeyboard() / el()
+//   focus() / revealSlot(i, j) / hasKeyboard() / el() / rowHeight()
 //   openOverlay(i, j) / closeOverlay() / overlay()
 //   openMask() / openPanel(el) / closePanel() / closeMask() / mask() / panel()
 //   openGroup(i, j, n) / groupAt(i, j) / placeGroups() / closeGroups() / groups()
@@ -157,6 +157,13 @@ class RelGridLayout {
         }
         this.placeGroups();                                   // the slots moved; the hosts follow
         return this;
+    }
+
+    /** One row's height as laid out — the first slot's — or a nominal 24 where there is no geometry. */
+    rowHeight() {
+        var td = this.slotAt(0, 0);
+        var h = (td && td.getBoundingClientRect) ? td.getBoundingClientRect().height : 0;
+        return h > 0 ? h : 24;
     }
 
     /** Paint the cursor on one slot ({ i, j }) or on none (null). A diff, not a sweep. */

@@ -27,8 +27,18 @@
 // Alt+Enter hands the rows' arrangement over; Enter offers the cell control.
 // A key is consumed only when it did something.
 //
-//   new RelGridGestures({ grid, maps, selection, cursor, locked, afterSelection, stepJ, stepWidth, onEdge? })
-//   onDown / onDragTo / onDragEnd / onClick / onDblClick / onKey    the layout's reports
+// THE WINDOW. A bare arrow at the top or bottom edge first asks the grid to
+// move the window one row — the relation answers a View, or nothing. A View
+// moves the rows under the cursor, whose cell is still its cell, one row in
+// from the edge; the arrow then steps onto the new row. Nothing is the edge,
+// reported as before. PageUp/PageDown ask for the window's height of rows;
+// the wheel asks for the rows its delta is worth, the remainder carried to
+// the next tick. Whatever the relation answers nothing to is not the grid's:
+// the key bubbles, the wheel scrolls what the browser will — a static table
+// in a scrollport scrolls as it always did.
+//
+//   new RelGridGestures({ grid, maps, selection, cursor, locked, afterSelection, stepJ, stepWidth, rowHeight, onEdge? })
+//   onDown / onDragTo / onDragEnd / onClick / onDblClick / onKey / onWheel    the layout's reports
 //   bareMove(fn) / extendTo(i, j) / press(i, j, mods)              the routes, for the surface's twins
 // =============================================================================
 
@@ -43,7 +53,10 @@ class RelGridGestures {
         this._afterSelection = opts.afterSelection;   // () — paint, and tell the domain
         this._stepJ = opts.stepJ;                 // (i, j, dj): one horizontal step, over a merged cell entirely
         this._stepWidth = opts.stepWidth;         // (column, dir): one Alt+arrow of the cursor's column
+        this._rowHeight = opts.rowHeight;         // () → px: one row, for a wheel that speaks pixels
         this._onEdge = opts.onEdge || null;
+        this._wheelRest = 0;                      // the part of a row the wheel has not yet moved
+        this._scrolls = false;                    // has the relation ever moved the window? then the page holds still under the wheel
         this._pressAt = null;                     // the slot a button went down on, with its modifiers
         this._dragged = false;
         this._swallowClick = false;
@@ -178,11 +191,17 @@ class RelGridGestures {
         // Shift+arrow: extension. The cursor stays here too (law 39).
         else if (e.shiftKey && arrow) this._extendBy(key);
         else if (arrow) {
-            // A bare arrow with the cursor already at that edge goes nowhere in
-            // this table — and is REPORTED, so a host that stacks tables may
-            // step over the edge. The key is still the grid's: consumed.
+            // A bare arrow with the cursor already at that edge: up or down, the
+            // relation is asked to move the window one row, and a View back moves
+            // the rows under the cursor — one row in from the edge now — so the
+            // arrow steps onto the new row. Nothing back, or a side edge, goes
+            // nowhere in this table — and is REPORTED, so a host that stacks
+            // tables may step over the edge. The key is still the grid's: consumed.
             var edge = this._cursor.edgeOf(key);
-            if (edge) {
+            var di = (key === "ArrowDown") ? 1 : (key === "ArrowUp") ? -1 : 0;
+            if (edge && di && grid.scrollRows(di)) {
+                this.bareMove(function () { self._cursor.move(di, 0); });
+            } else if (edge) {
                 this.bareMove(function () {});      // a bare move still clears the ranges (law 39)
                 if (this._onEdge) {
                     try { this._onEdge(edge); }
@@ -198,7 +217,37 @@ class RelGridGestures {
             }
         }
         else if (key === "Enter")      grid.takeControlAtCursor();
+        // PageUp/PageDown: the window's height of rows. Consumed only when the
+        // relation moved the window; a static table leaves the key to the browser.
+        else if (key === "PageDown" || key === "PageUp") {
+            if (!grid.scrollRows(key === "PageDown" ? this._maps.rows() : -this._maps.rows())) return;
+        }
         else return;                           // not ours; let it bubble
+        if (e.preventDefault) e.preventDefault();
+    }
+
+    /**
+     * The wheel: its delta as whole rows — lines as they are, pixels against a
+     * row's height, pages as the window — and the grid asked to move by them.
+     * Consumed when the window moved; left to the browser when the relation
+     * answered nothing. A part-row remainder is carried to the next tick, and
+     * once the window has moved under the wheel the page holds still for it.
+     */
+    onWheel(e) {
+        if (this._locked()) return;            // inert; the browser scrolls what it will
+        var dy = Number(e.deltaY) || 0, rows;
+        if (e.deltaMode === 1)      rows = dy;
+        else if (e.deltaMode === 2) rows = dy * this._maps.rows();
+        else                        rows = dy / this._rowHeight();
+        this._wheelRest += rows;
+        var whole = Math.trunc(this._wheelRest);
+        this._wheelRest -= whole;
+        if (!whole) {
+            if (this._scrolls && e.preventDefault) e.preventDefault();
+            return;
+        }
+        if (!this._grid.scrollRows(whole)) return;
+        this._scrolls = true;
         if (e.preventDefault) e.preventDefault();
     }
 }

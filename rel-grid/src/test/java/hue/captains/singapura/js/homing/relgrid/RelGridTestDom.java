@@ -35,7 +35,7 @@ public final class RelGridTestDom {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
             "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridLayoutModule.js",
             "RelGridCellsModule.js", "RelGridStockCellsModule.js",
-            "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
+            "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
             "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */

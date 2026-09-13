@@ -40,6 +40,7 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                 .add(new ModuleImports<>(List.of(new RelGridCellsModule.RelGridCells()),       RelGridCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridSelectionModule.RelGridSelection()), RelGridSelectionModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridWidthsModule.RelGridWidths()),         RelGridWidthsModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridWindowModule.RelGridWindow()),         RelGridWindowModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridCursorModule.RelGridCursor()),         RelGridCursorModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridControlModule.RelGridControl()),       RelGridControlModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridChannelModule.RelGridChannel()),       RelGridChannelModule.INSTANCE))

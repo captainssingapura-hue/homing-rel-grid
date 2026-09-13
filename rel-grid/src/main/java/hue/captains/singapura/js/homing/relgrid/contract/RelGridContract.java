@@ -96,13 +96,25 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * drops unknown columns as drift and is idempotent. The grid persists nothing —
  * {@code onColumnResized} is a report, and keeping it is the host's (map 9).</p>
  *
+ * <h2>The window moves by the same seam</h2>
+ *
+ * <p>A bare arrow at the top or bottom edge, the wheel, PageUp and PageDown
+ * ask the relation for the View n rows on — {@code view({ by: n })} — and the
+ * grid presents what comes back on the same slots. {@code scrollRows(n)} is
+ * the programmatic twin: true when the window moved; false when locked, when
+ * n is 0, and when the relation answered nothing or the same rows — the rows
+ * stay. A static relation answers nothing every time, so nothing about it
+ * changes: its arrow is reported as the edge it met, its wheel is left to the
+ * browser, and a table in a scrollport scrolls as it always did.</p>
+ *
  * <h2>An arrow at the edge is reported</h2>
  *
- * <p>A bare arrow with the cursor already at that edge goes nowhere in this
- * table, and {@code onEdge(direction)} says so — {@code 'up' | 'down' |
- * 'left' | 'right'}. The grid does nothing else with it; the key is still
- * consumed. A host that stacks several tables steps over the edge; a table
- * alone hears nothing and loses nothing.</p>
+ * <p>A bare arrow with the cursor already at that edge — and, up or down, the
+ * relation having answered nothing — goes nowhere in this table, and
+ * {@code onEdge(direction)} says so — {@code 'up' | 'down' | 'left' |
+ * 'right'}. The grid does nothing else with it; the key is still consumed. A
+ * host that stacks several tables steps over the edge; a table alone hears
+ * nothing and loses nothing.</p>
  *
  * <p>There is no {@code updateCell}, {@code flushNow}, {@code sortBy},
  * {@code filterRows}, {@code commitEdit} or {@code cancelEdit}. The first two
@@ -131,6 +143,8 @@ public interface RelGridContract {
     boolean copy();                                 // ask what the selection is worth; write the answer. False when locked or channel-less
     // ─── the view handover ───────────────────────────────────────────────
     boolean handoverView();                         // hand the rows' arrangement to the domain; present its View. False when locked or channel-less
+    // ─── the window ──────────────────────────────────────────────────────
+    boolean scrollRows(int n);                      // ask the relation for the View n rows on and present it. False when locked, 0, or the rows stay
     // ─── widths (map 7) ──────────────────────────────────────────────────
     boolean setColumnWidth(String column, double px);   // bounded, held by identity, applied in place; false for drift
     Object  columnWidth(String column);                 // what is held, or null

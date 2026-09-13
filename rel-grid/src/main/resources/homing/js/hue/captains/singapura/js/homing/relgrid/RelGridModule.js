@@ -7,7 +7,8 @@
 // while the shape holds, fresh ones when it changes.
 // What a gesture means is RelGridGestures; the cursor is RelGridCursor; the
 // handover of control is RelGridControl; the channel and its questions are
-// RelGridChannel; the widths are RelGridWidths; the stock clipboard writer is
+// RelGridChannel; the widths are RelGridWidths; the window — the relation's
+// seam asked to move — is RelGridWindow; the stock clipboard writer is
 // RelGridClipboard. Each holds its own state and is handed only what it needs.
 //
 // TWO INDEPENDENT BRANCHES. The grid mints its own chrome on its own
@@ -53,8 +54,9 @@
 //       onColumnResized?, // (column, px) — a REPORT of what is now held; the grid keeps nothing
 //       onCopied?,        // (content) — a REPORT: this was written to the clipboard
 //       onEdge?,          // (direction) — a REPORT: a bare arrow went nowhere, the cursor being
-//                         // already at that edge — 'up' | 'down' | 'left' | 'right'. The grid
-//                         // itself does nothing with it; a host stacking tables steps over.
+//                         // already at that edge — 'up' | 'down' | 'left' | 'right' — and, up
+//                         // or down, the relation asked for the View a row on answered nothing.
+//                         // The grid itself does nothing with it; a host stacking tables steps over.
 //       ask?,             // (question, mask) — THE CHANNEL: see RelGridChannel.
 //       clipboard?        // { write(content) → thenable } — the writer; the stock one by default
 //   });
@@ -92,9 +94,17 @@
 // OUT of the group; Enter anywhere in a group offers control to the LEADING
 // cell. Spans are read on every arrangement. Behind mergedCells.
 //
+// THE WINDOW MOVES BY THE SAME SEAM. An arrow at the top or bottom edge, the
+// wheel, PageUp and PageDown ask the relation for the View n rows on —
+// view({ by: n }) — and present what comes back; nothing back means the rows
+// stay, the arrow is reported as the edge it met, and the wheel is left to the
+// browser. A static relation answers nothing and behaves as it always did; an
+// endless one answers a window, arranged on the same slots. scrollRows(n) is
+// the programmatic twin.
+//
 // LOCKED while a cell is deep OR a question is pending — the two are exclusive
 // (law 228) — every intent is refused, not deferred (law 221): keys, clicks,
-// drags, the handover, a resize, and the programmatic twins of each.
+// drags, the handover, a resize, the window, and the programmatic twins of each.
 // =============================================================================
 
 class RelGrid {
@@ -150,6 +160,7 @@ class RelGrid {
             }
         });
         this._cells = new RelGridCells();       // the domain's elements, by identity; the grid mints none
+        this._window = new RelGridWindow({ relation: r, maps: this._maps });
         this._widths = new RelGridWidths({ maps: this._maps, minColumnWidth: opts.minColumnWidth });
         this._cursor = new RelGridCursor({
             maps: this._maps, layout: this._layout, cells: this._cells,
@@ -174,10 +185,13 @@ class RelGrid {
             afterSelection: function () { self._afterSelection(); },
             stepJ: function (i, j, dj) { return self._stepJ(i, j, dj); },
             stepWidth: function (column, dir) { self.setColumnWidth(column, self._widths.stepped(column, dir)); },
+            rowHeight: function () { return self._layout.rowHeight(); },
             onEdge: opts.onEdge
         });
         this._keydown = function (e) { self._gestures.onKey(e); };
+        this._wheel = function (e) { self._gestures.onWheel(e); };
         this._layout.el().addEventListener("keydown", this._keydown);
+        this._layout.el().addEventListener("wheel", this._wheel, { passive: false });
         this._arrange("base");
     }
 
@@ -327,6 +341,19 @@ class RelGrid {
         return this._channel.handoverView();
     }
 
+    // ── the window: the same seam, asked to move ───────────────────────────
+
+    /**
+     * Ask the relation for the View n rows on (negative: back) and present it.
+     * The twin of the wheel and of an arrow at the window's edge. False when
+     * locked, when n is 0, and when the relation answers nothing or the same
+     * rows — the rows stay; that is how a static relation answers every time.
+     */
+    scrollRows(n) {
+        if (this._locked()) return false;
+        return this._window.move(n);
+    }
+
     // ── deep: the grid hands control to the cell, and takes it back ────────
 
     /** May the cursor's cell take control right now? Public, because a feature must be able to ask WITHOUT opening anything. */
@@ -408,6 +435,7 @@ class RelGrid {
         this._control.destroy();               // a late settle must not resume a dead grid
         this._channel.destroy();
         this._layout.el().removeEventListener("keydown", this._keydown);
+        this._layout.el().removeEventListener("wheel", this._wheel);
         this._cells.destroy();
         this._layout.destroy();
     }
