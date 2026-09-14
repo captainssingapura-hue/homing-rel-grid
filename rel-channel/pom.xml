@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>VOID-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-channel</artifactId>
+
+    <description>
+        The ask channel's CORE (RFC 0050 · Episode 2, ext4 and ext6; Episode
+        3-ext1), the family's and not the grid's: one function the host gave, a
+        NOTIFICATION handed over and never waited on, a QUESTION waited on
+        with the person stopped — the mask session with its delay and its
+        hold, the panel handle, one question at a time — and nothing else.
+        What is asked and what is answered are the customers' business: the
+        grid's channel keeps its selection, copy and view handover over this
+        core, and the tree's keeps its fold and unfold.
+
+        The SURFACE is what the mask needs of a presentation — openMask,
+        closeMask, setMasked, openPanel, closePanel, focus — six functions a
+        layout has. No DOM is touched here but through them; no payload is
+        read. A crate of its own so that both presentations reach it without
+        either reaching the other.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- One dependency = a working JS test runtime (GraalVM polyglot
+             rides along from the fixtures module). -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ssjs-test-fixtures</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

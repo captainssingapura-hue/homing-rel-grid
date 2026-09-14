@@ -1,25 +1,14 @@
 // =============================================================================
-// RelGridChannelModule — RFC 0050 · Episode 2's ASK CHANNEL (ext4, ext6): one
-// function the host gave, typed questions down, typed answers up — and the
-// three customers the grid has for it.
+// RelGridChannelModule — RFC 0050 · Episode 2's ASK CHANNEL (ext4, ext6), the
+// grid's side: the three CUSTOMERS the grid has for it, over the core in
+// rel-channel. The core is one function the host gave, a notification handed
+// over and never waited on, a question waited on with the person stopped —
+// the mask session with its delay and its hold, the panel handle, one at a
+// time (laws 220–225, 229). What is asked and what an answer means is here.
 //
-// A NOTIFICATION expects no answer: the grid hands it over, does not wait,
-// does not mask, and learns nothing — but a thenable that rejects is
-// recorded, because a lost failure is worse than a slow one (law 229). The
-// selection is one.
-//
-// A QUESTION is waited on, and the person is stopped until it is answered
-// (ext6). The interval is dangerous — an answer describes the state it was
-// asked about — so while a question is pending the grid is LOCKED (every
-// intent refused, law 221) and MASKED: a wash that reads as unavailable,
-// holding the focus (law 220). Delayed, so a fast answer shows none, and held
-// briefly once up, so it never strobes (law 224). The second argument to ask
-// is the MASK HANDLE: mask.panel(element) PLACES the domain's element in the
-// panel — a golden box the grid mints — as a cell's element is placed in a
-// slot; handing one over mounts the mask at once, and the grid invents no
-// progress (law 225). The panel comes down the moment the answer comes; the
-// wash holds its time. One at a time. Copy and the view handover are the
-// two.
+// The layout IS the core's surface: openMask, closeMask, setMasked,
+// openPanel, closePanel, focus — the six the mask needs — and nothing else
+// of it is reached from the core.
 //
 // The payloads are value objects GENERATED from Java records (ext5), so a
 // shape cannot drift from its declaration. The grid mints them and never
@@ -32,132 +21,34 @@
 //   isPending() / destroy()
 // =============================================================================
 
-var _HRG_MASK_DELAY = 200;                // a question answered sooner shows no mask
-var _HRG_MASK_HOLD = 250;                 // and one that showed stays at least this long
-
-function _hrgLater(fn, ms)  { return setTimeout(fn, ms); }
-function _hrgCancel(handle) { clearTimeout(handle); }
-function _hrgNow()          { return Date.now(); }
-
 class RelGridChannel {
 
     constructor(opts) {
-        this._ask = opts.ask || null;
-        this._layout = opts.layout;
+        this._core = new RelChannel({ ask: opts.ask || null, surface: opts.layout, tag: "[RelGrid]" });
         this._maps = opts.maps;
         this._selection = opts.selection;
         this._cursorPos = opts.cursorPos;         // () → { i, j } | null
         this._clipboard = opts.clipboard;
         this._onCopied = opts.onCopied || null;
-        this._pending = null;                     // the question outstanding, while one is
-        this._destroyed = false;
     }
 
-    has()       { return !!this._ask; }
-    isPending() { return !!this._pending; }
+    has()       { return this._core.has(); }
+    isPending() { return this._core.isPending(); }
 
     /** Cancel a late clock; a settle after this does nothing. */
-    destroy() {
-        this._destroyed = true;
-        if (this._pending && this._pending.timer) _hrgCancel(this._pending.timer);
-        this._pending = null;
-    }
-
-    // ── the two kinds ──────────────────────────────────────────────────────
-
-    _notify(question) {
-        if (!this._ask) return;
-        var out;
-        try { out = this._ask(question); }
-        catch (e) { console.error("[RelGrid] ask threw:", e); return; }
-        if (out && typeof out.then === "function")
-            out.then(null, function (e) { console.error("[RelGrid] ask rejected:", e); });
-    }
-
-    /** apply(answer) runs when the answer comes — before the mask comes down, because what it does may not wait on a hold. */
-    _pend(question, apply) {
-        if (!this._ask || this._pending) return false;
-        var self = this;
-        var session = { question: question, mounted: false, shownAt: 0, timer: null };
-        this._pending = session;
-        var handle = {
-            panel: function (element) {
-                if (!element || typeof element !== "object" || typeof element.appendChild !== "function")
-                    throw new Error("[RelGrid] mask.panel(element): the domain hands its own element; the box is the grid's");
-                if (self._pending !== session) return false;
-                self._mount(session);
-                self._layout.openPanel(element);
-                return true;
-            }
-        };
-        var out;
-        try { out = this._ask(question, handle); }
-        catch (e) {
-            console.error("[RelGrid] ask threw:", e);
-            this._settle(session, undefined, apply);
-            return true;                       // the gesture was taken; the domain failed it
-        }
-        var p = (out && typeof out.then === "function") ? out : Promise.resolve(out);
-        if (!session.mounted)
-            session.timer = _hrgLater(function () {
-                session.timer = null;
-                if (self._pending === session) self._mount(session);
-            }, _HRG_MASK_DELAY);
-        p.then(function (answer) { self._settle(session, answer, apply); },
-               function (e) {
-                   console.error("[RelGrid] ask rejected:", e);
-                   self._settle(session, undefined, apply);
-               });
-        return true;
-    }
-
-    /** The mask goes up: once per session, whether the domain asked or the clock did. */
-    _mount(session) {
-        if (session.mounted) return;
-        session.mounted = true;
-        session.shownAt = _hrgNow();
-        if (session.timer) { _hrgCancel(session.timer); session.timer = null; }
-        this._layout.openMask();
-        this._layout.setMasked(true);
-    }
-
-    /**
-     * The answer came — or did not. Apply first; then the panel at once, and
-     * the wash when it has been up long enough. A settle after destroy, or
-     * for a session that is not the current one, does nothing.
-     */
-    _settle(session, answer, apply) {
-        if (this._destroyed || this._pending !== session) return;
-        this._pending = null;
-        if (session.timer) { _hrgCancel(session.timer); session.timer = null; }
-        try { apply(answer); }
-        catch (e) { console.error("[RelGrid] applying an answer threw:", e); }
-        if (!session.mounted) return;          // nothing to take down
-        this._layout.closePanel();             // the answer came: the domain's box goes at once; the wash holds
-        var self = this, up = _hrgNow() - session.shownAt;
-        if (up >= _HRG_MASK_HOLD) this._unmask();
-        else _hrgLater(function () { self._unmask(); }, _HRG_MASK_HOLD - up);
-    }
-
-    /** Down, unless a new question has taken the mask over in the meantime. */
-    _unmask() {
-        if (this._destroyed || this._pending) return;
-        this._layout.closeMask();
-        this._layout.setMasked(false);
-        this._layout.focus();                  // the keyboard host takes the keys again
-    }
+    destroy() { this._core.destroy(); }
 
     // ── the customers ──────────────────────────────────────────────────────
 
     /** The selection changed: told, never asked. rects are the resolved rectangles. */
     selectionChanged(rects) {
-        if (!this._ask) return;
+        if (!this._core.has()) return;
         var ranges = [];
         for (var k = 0; k < rects.length; k++) {
             var r = rects[k];
             ranges.push(new RelGridRange(r.i0, r.j0, r.i1, r.j1));
         }
-        this._notify(new RelGridSelectionChanged(ranges));
+        this._core.notify(new RelGridSelectionChanged(ranges));
     }
 
     /**
@@ -179,7 +70,7 @@ class RelGridChannel {
     /** Ask what the selection is worth on a clipboard, and write the answer. True when asked. */
     copy() {
         var self = this;
-        return this._pend(new RelGridCopyRequested(this._blocks()), function (answer) { self._applyCopy(answer); });
+        return this._core.ask(new RelGridCopyRequested(this._blocks()), function (answer) { self._applyCopy(answer); });
     }
 
     /** Content is written and reported; absence writes nothing (law 49). */
@@ -204,7 +95,7 @@ class RelGridChannel {
     /** Hand the arrangement of the rows to the domain. True when asked. */
     handoverView() {
         var self = this;
-        return this._pend(new RelGridViewHandover(), function (answer) { self._applyView(answer); });
+        return this._core.ask(new RelGridViewHandover(), function (answer) { self._applyView(answer); });
     }
 
     /**

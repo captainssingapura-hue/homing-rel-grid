@@ -27,6 +27,10 @@ public final class RelGridTestDom {
 
     public static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
 
+    /** The ask channel's core, in its own jar: the grid's channel is its customers. */
+    public static final String CHANNEL =
+            "/homing/js/hue/captains/singapura/js/homing/relchannel/RelChannelModule.js";
+
     /** The protocol's classes are generated, and live in their own jar. */
     public static final String PROTOCOL =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
