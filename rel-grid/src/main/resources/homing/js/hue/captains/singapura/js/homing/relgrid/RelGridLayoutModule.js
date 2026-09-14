@@ -30,7 +30,7 @@
 //   stickyHeader: the header cells stay at the top of whatever scrolls the table, and a
 //                 revealed slot clears them; stickyInset: () → px of a band the HOST keeps stuck
 //                 above the table — a group's header — that a revealed slot must clear too
-//   render({ headers, rows }) / setColWidths(widths) / slotAt(i, j) / rows() / cols()
+//   render({ headers, rows, labelled? }) / setColWidths(widths) / slotAt(i, j) / headerSlotAt(j) / rows() / cols()
 //   paintCursor(ij) / paintSelection(rects) / setDeep(on) / setMasked(on)
 //   focus() / revealSlot(i, j) / hasKeyboard() / el() / rowHeight()
 //   openOverlay(i, j) / closeOverlay() / overlay()
@@ -276,6 +276,8 @@ class RelGridLayout {
 
     el() { return this._table; }
     slotAt(i, j) { return this._slots.slotAt(i, j); }
+    /** The header slot — the <th> — at a column position, or null: where a header cell is placed. */
+    headerSlotAt(j) { return this._slots.thAt(j); }
     rows() { return this._slots.rows(); }
     cols() { return this._slots.cols(); }
 

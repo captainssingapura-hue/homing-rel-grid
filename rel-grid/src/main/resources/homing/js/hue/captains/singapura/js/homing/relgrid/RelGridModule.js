@@ -8,15 +8,19 @@
 // What a gesture means is RelGridGestures; the cursor is RelGridCursor; the
 // handover of control is RelGridControl; the channel and its questions are
 // RelGridChannel; the widths are RelGridWidths; the window — the relation's
-// seam asked to move — is RelGridWindow; the stock clipboard writer is
-// RelGridClipboard. Each holds its own state and is handed only what it needs.
+// seam asked to move — is RelGridWindow; the merged cells are RelGridSpans;
+// the stock clipboard writer is RelGridClipboard. Each holds its own state and
+// is handed only what it needs.
 //
 // TWO INDEPENDENT BRANCHES. The grid mints its own chrome on its own
 // DomOpsParty branch and nothing else; the domain mints its cells on a
 // branch of its own and the grid never sees it. A cell is a NOUN: the grid
 // asks cellFor(pk, column) for it, asks it once for cellElement(), and
 // PLACES that element in the slot its identity maps to — that is the whole
-// of what crosses. Nothing is rendered into anything; nothing is read back.
+// of what crosses. A HEADER CELL is a noun the same way: headerFor(column),
+// headerElement() once, placed in the <th>; the grid captures nothing on it
+// but its own resize handle. Nothing is rendered into anything; nothing is
+// read back.
 //
 //   new RelGrid({
 //       container,        // where the layout mounts
@@ -24,16 +28,19 @@
 //                         // activates it, as the owner does, and everything the grid mints —
 //                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
 //                         // Dissolving it is the host's. Never a cell's element.
-//       relation,         // { view(intent?), columns(), cellFor(pk, column) } — and nothing else.
+//       relation,         // { view(intent?), columns(), cellFor(pk, column) } — and, optionally,
+//                         // readOnlyColumns(), labels(), headerFor(column). See RootRelationContract.
 //                         // ONE ROOT: view() answers the rows to PRESENT now, in order — the whole
 //                         // of a static relation, a window of an endless one. The grid asks it at
 //                         // construction and holds what it answered, and no other list; there is
 //                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
 //                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
-//       header?,          // { show?, labels?, sticky? } — display only. sticky: the header
-//                         // stays at the top of whatever scrolls the table, and the cursor
-//                         // is revealed clear of it (map 12: grid chrome, the host's, read once)
+//       header?,          // { show?, sticky? } — grid chrome, the host's, read once (map 12).
+//                         // sticky: the header stays at the top of whatever scrolls the table,
+//                         // and the cursor is revealed clear of it. What a header SAYS is the
+//                         // relation's: labels(), or a header cell from headerFor(column), placed
+//                         // in the <th> as a cell is placed in a <td> (law 86). No labels here.
 //       stickyInset?,     // () → px: a band the HOST keeps stuck above the table — a group's
 //                         // header — that a revealed slot must clear. Geometry, asked when needed
 //       overflow?,        // wrap | clip | ellipsis — what a slot does with content
@@ -90,13 +97,9 @@
 // maps put the rows back, and the caller — a host's remap, or the channel's
 // settle — hears it. Half a View is not a View.
 //
-// MERGED CELLS — a matrix that stays whole, and a cell laid over part of it.
-// Every position keeps its slot and its own cell. A cell that answers
-// colSpan() > 1 is a LEADING cell: the layout mints a host over the n slots it
-// reaches across and the cell is placed THERE; the host mirrors the state of
-// the slots beneath. A vertical move passes through; a horizontal move jumps
-// OUT of the group; Enter anywhere in a group offers control to the LEADING
-// cell. Spans are read on every arrangement. Behind mergedCells.
+// MERGED CELLS are RelGridSpans, behind mergedCells: a leading cell placed in
+// a host over the slots it reaches across, a horizontal step out of the
+// group, deep to the leading cell.
 //
 // THE WINDOW MOVES BY THE SAME SEAM. An arrow at the top or bottom edge, the
 // wheel, PageUp and PageDown ask the relation for the View n rows on —
@@ -132,8 +135,12 @@ class RelGrid {
         this._cbResized  = opts.onColumnResized || null;
         this._destroyed = false;
         var head = opts.header || {};
-        var labels = head.labels || {};
+        if (head.labels) throw new Error("[RelGrid] header.labels is gone: what a column is called is the relation's — labels(), or headerFor(column) (map 12, law 86)");
+        // What a column is CALLED: the relation's, read once (structure). A relation that
+        // answers header cells says it in the cell; a plain one in labels(); else the name.
+        var labels = (typeof r.labels === "function") ? (r.labels() || {}) : {};
         this._labelOf = function (c) { return Object.prototype.hasOwnProperty.call(labels, c) ? labels[c] : c; };
+        this._headerFor = (typeof r.headerFor === "function") ? function (c) { return r.headerFor(c); } : null;
         // The column constraint: read ONCE, here, because it is structure and
         // not a question about a moment. Absent means no constraint.
         var readOnly = new Set();
@@ -141,7 +148,6 @@ class RelGrid {
             var declared = r.readOnlyColumns() || [];
             for (var d = 0; d < declared.length; d++) readOnly.add(declared[d]);
         }
-        this._merge = opts.mergedCells === true;   // honour colSpan() at all
         this._selection = new RelGridSelection();  // POSITIONS, and nothing else
         this._maps = new RelGridViewMaps({
             rowView: start, columns: r.columns(),
@@ -165,11 +171,13 @@ class RelGrid {
             }
         });
         this._cells = new RelGridCells();       // the domain's elements, by identity; the grid mints none
+        this._headers = new RelGridHeaders();   // the domain's header cells, by column; the grid mints none
+        this._spans = new RelGridSpans({ on: opts.mergedCells === true, layout: this._layout, cells: this._cells, maps: this._maps });
         this._window = new RelGridWindow({ relation: r, maps: this._maps });
         this._widths = new RelGridWidths({ maps: this._maps, minColumnWidth: opts.minColumnWidth });
         this._cursor = new RelGridCursor({
             maps: this._maps, layout: this._layout, cells: this._cells,
-            stepJ: function (i, j, dj) { return self._stepJ(i, j, dj); },
+            stepJ: function (i, j, dj) { return self._spans.stepJ(i, j, dj); },
             onMoved: opts.onCursorMoved
         });
         this._control = new RelGridControl({
@@ -188,7 +196,7 @@ class RelGrid {
             grid: this, maps: this._maps, selection: this._selection, cursor: this._cursor,
             locked: function () { return self._locked(); },
             afterSelection: function () { self._afterSelection(); },
-            stepJ: function (i, j, dj) { return self._stepJ(i, j, dj); },
+            stepJ: function (i, j, dj) { return self._spans.stepJ(i, j, dj); },
             stepWidth: function (column, dir) { self.setColumnWidth(column, self._widths.stepped(column, dir)); },
             rowHeight: function () { return self._layout.rowHeight(); },
             onEdge: opts.onEdge
@@ -210,6 +218,8 @@ class RelGrid {
         for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
         // One ask per identity per presentation — and every ask BEFORE a slot moves:
         // a refusal here leaves the pass with nothing changed, and the maps undo the View.
+        // The header cells first, one per presented column, when the relation answers them.
+        if (this._headerFor) for (j = 0; j < maps.cols(); j++) this._headers.ensure(maps.columnAt(j), this._headerFor);
         for (i = 0; i < maps.rows(); i++) {
             for (j = 0; j < maps.cols(); j++) {
                 id = maps.resolve(i, j);
@@ -217,17 +227,22 @@ class RelGrid {
                 ids.push(id);
             }
         }
-        this._layout.render({ headers: headers, rows: maps.rows() });
+        this._layout.render({ headers: headers, rows: maps.rows(), labelled: !this._headerFor });
         this._layout.setColWidths(this._widths.positional());   // widths ride identity onto the new positions
+        // The header cells into the header slots; whatever column left the view is forgotten.
+        if (this._headerFor) {
+            for (j = 0; j < maps.cols(); j++) this._headers.place(maps.columnAt(j), this._layout.headerSlotAt(j));
+            this._headers.detachAbsent(function (col) { return maps.colOf(col) >= 0; });
+        }
         // One appendChild per cell, per pass.
         for (i = 0; i < maps.rows(); i++) {
             for (j = 0; j < maps.cols(); j++) {
                 id = ids[i * maps.cols() + j];
                 this._cells.place(id.pk, id.column, this._layout.slotAt(i, j));
-                if (this._merge) this._markSpan(i, j, id);
+                this._spans.mark(i, j, id);
             }
         }
-        if (this._merge) this._layout.placeGroups();          // every cell is in; measure the hosts
+        this._spans.settle();                                 // every cell is in; measure the hosts
         this._cursor.resolve(this._control.isDeep());         // first: a cell the cursor leaves is told while it is still known
         this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree, forgotten
         this._selection.clear();                              // law 43: every range goes with the presented space
@@ -238,48 +253,8 @@ class RelGrid {
         }
     }
 
-    /**
-     * A leading cell's reach, read afresh on every pass: only a finite span
-     * above one counts, clamped to the row's end, and a cell that throws or
-     * answers nonsense is a plain cell. The layout marks the slots; the cell
-     * draws itself.
-     */
-    _markSpan(i, j, id) {
-        var entry = this._cells.get(id.pk, id.column), cell = entry && entry.cell;
-        if (!cell || typeof cell.colSpan !== "function") return;
-        if (this._layout.groupAt(i, j)) return;               // inside an earlier group: a plain cell
-        var n;
-        try { n = Number(cell.colSpan()); } catch (e) { console.error("[RelGrid] cell.colSpan threw:", e); return; }
-        if (!isFinite(n) || n <= 1) return;
-        n = Math.min(Math.floor(n), this._maps.cols() - j);
-        if (n <= 1) return;
-        var host = this._layout.openGroup(i, j, n);
-        if (host) this._cells.place(id.pk, id.column, host);  // the leading cell lives in the host
-    }
-
-    /** The merged cell a position is in, or null: { i, j, n }. */
-    _groupAt(i, j) { return this._merge ? this._layout.groupAt(i, j) : null; }
-
-    /** One horizontal step from a position: out of a merged cell entirely, and one slot otherwise. */
-    _stepJ(i, j, dj) {
-        var grp = this._groupAt(i, j);
-        if (!grp) return j + dj;
-        return dj > 0 ? grp.j + grp.n : grp.j - 1;
-    }
-
-    /**
-     * Where deep goes from the cursor: the cursor's own identity, or — inside
-     * a merged cell — the LEADING cell's, since that is the cell with anything
-     * in it, and the editor opens over the whole group.
-     */
-    _deepAt() {
-        var id = this._cursor.id(), at = this._cursor.pos();
-        if (!id || !at) return null;
-        var grp = this._groupAt(at.i, at.j);
-        if (!grp) return { id: id, i: at.i, j: at.j };
-        var lead = this._maps.resolve(grp.i, grp.j);
-        return lead ? { id: lead, i: grp.i, j: grp.j } : null;
-    }
+    /** Where deep goes from the cursor: its own cell, or a merged cell's leading cell. */
+    _deepAt() { return this._spans.deepAt(this._cursor.id(), this._cursor.pos()); }
 
     /** Ask what is selected, paint it, and tell the domain. The only reader of the list there is. */
     _afterSelection() {
@@ -312,7 +287,7 @@ class RelGrid {
             // A host may answer the report by changing the geometry the grid sits in
             // — sizing its container to the widths now held is the common case — and
             // the merged cells' hosts were measured before it did. Measure again.
-            if (this._merge) this._layout.placeGroups();
+            this._spans.settle();
         }
         return true;
     }
@@ -344,6 +319,26 @@ class RelGrid {
     handoverView() {
         if (this._locked() || !this._channel.has()) return false;
         return this._channel.handoverView();
+    }
+
+    // ── told, unasked: the channel's other direction ───────────────────────
+
+    /**
+     * The domain saying, unasked, through the host. A protocol value by kind:
+     * RelGridViewChanged — the View changed underneath the grid — is answered
+     * by asking view() again and presenting the answer, as any remap; an
+     * unknown kind is recorded and refused. Whether anything was done.
+     */
+    tell(message) {
+        if (this._destroyed) return false;
+        if (message instanceof RelGridViewChanged) {
+            var keys = this._relation.view();
+            if (!Array.isArray(keys)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + keys);
+            this._maps.setRowView(keys);                      // → arrange("rows")
+            return true;
+        }
+        console.error("[RelGrid] told something it does not understand:", message);
+        return false;
     }
 
     // ── the window: the same seam, asked to move ───────────────────────────
@@ -442,6 +437,7 @@ class RelGrid {
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._layout.el().removeEventListener("wheel", this._wheel);
         this._cells.destroy();
+        this._headers.destroy();
         this._layout.destroy();
     }
 }

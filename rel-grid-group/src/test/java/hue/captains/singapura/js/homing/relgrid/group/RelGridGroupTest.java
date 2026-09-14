@@ -46,6 +46,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                 var relation = {
                     view:    function (intent) { return intent ? null : Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
+                    labels:  opts.labels ? function () { return opts.labels; } : undefined,   // law 86: the relation's
                     cellFor: function (pk, col) {
                         var k = pk + ' ' + col, c = cells.get(k);
                         if (!c) {
@@ -84,7 +85,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                 var spec = {
                     id: id,
                     grid: {
-                        relation: relationOf(rows, { editable: !!extra.editable }),
+                        relation: relationOf(rows, { editable: !!extra.editable, labels: extra.labels }),
                         ask: function (q, mask) { sent.push(q); return Promise.resolve(); },
                         onColumnResized: function (c, px) { resized.push(c + ' ' + px); },
                         onArranged: function (k) { arranged.push(k); },
@@ -278,7 +279,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                     if (thead.children[0].children[0].textContent !== 'ingredient') return false;
                     if (f.theadOf('a') !== null || f.theadOf('b') !== null || f.theadOf('c') !== null) return false;
                     // Labels come from the first member.
-                    var l = groupFixture({ specs: [memberSpec('a', [['mapo', 'tofu', 480]], { header: { labels: { ingredient: 'Dish' } } }), memberSpec('b', [['fish', 'cod', 560]])] });
+                    var l = groupFixture({ specs: [memberSpec('a', [['mapo', 'tofu', 480]], { labels: { ingredient: 'Dish' } }), memberSpec('b', [['fish', 'cod', 560]])] });
                     var lt = l.headerTable(), lthead = null;
                     for (var q = 0; q < lt.children.length; q++) if (lt.children[q].tagName === 'thead') lthead = lt.children[q];
                     if (lthead.children[0].children[0].textContent !== 'Dish') return false;

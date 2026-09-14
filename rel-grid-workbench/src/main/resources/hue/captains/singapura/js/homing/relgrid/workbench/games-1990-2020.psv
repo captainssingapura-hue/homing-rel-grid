@@ -1,0 +1,732 @@
+# Popular video games, 1990–2020 — the Games Catalogue bench's dataset.
+# One row per release: annual series (FIFA, Madden, NBA 2K, PES, Need for Speed, Call of Duty,
+# Assassin's Creed, Just Dance, F1) get a row each year, as a real catalogue has them.
+# sales: approximate lifetime units in millions, all platforms, as commonly reported — a bench's
+# figures, not a source; blank where free-to-play or not reported. score: Metacritic, where one
+# exists; blank before 1996 and for titles never scored. Absence is deliberate — a sort has to say
+# what it does with it. platform: the lead platform at release. type: the genre, one per game.
+id|title|series|year|platform|type|developer|publisher|sales|score
+g001|Super Mario World|Super Mario|1990|SNES|Platformer|Nintendo EAD|Nintendo|20.6|
+g002|F-Zero|F-Zero|1990|SNES|Racing|Nintendo EAD|Nintendo|2.9|
+g003|John Madden Football|Madden NFL|1990|Genesis|Sports|EA|EA|0.5|
+g004|The Secret of Monkey Island|Monkey Island|1990|PC|Adventure|Lucasfilm Games|Lucasfilm Games||
+g005|Sonic the Hedgehog|Sonic|1991|Genesis|Platformer|Sonic Team|Sega|15.0|
+g006|Street Fighter II|Street Fighter|1991|Arcade|Fighting|Capcom|Capcom|6.3|
+g007|The Legend of Zelda: A Link to the Past|Zelda|1991|SNES|Action-adventure|Nintendo EAD|Nintendo|4.6|
+g008|Final Fantasy IV|Final Fantasy|1991|SNES|RPG|Square|Square|1.4|
+g009|Civilization|Civilization|1991|PC|Strategy|MicroProse|MicroProse|0.9|
+g010|Lemmings|Lemmings|1991|Amiga|Puzzle|DMA Design|Psygnosis|15.0|
+g011|Monkey Island 2: LeChuck's Revenge|Monkey Island|1991|PC|Adventure|LucasArts|LucasArts||
+g012|Sonic the Hedgehog 2|Sonic|1992|Genesis|Platformer|Sega Technical Institute|Sega|6.0|
+g013|Super Mario Kart|Mario Kart|1992|SNES|Racing|Nintendo EAD|Nintendo|8.8|
+g014|Mortal Kombat|Mortal Kombat|1992|Arcade|Fighting|Midway|Midway|6.0|
+g015|Wolfenstein 3D|Wolfenstein|1992|PC|Shooter|id Software|Apogee|0.3|
+g016|Final Fantasy V|Final Fantasy|1992|SNES|RPG|Square|Square|2.4|
+g017|Dune II|Dune|1992|PC|Strategy|Westwood Studios|Virgin Games||
+g018|Madden NFL '93|Madden NFL|1992|Genesis|Sports|EA|EA|1.0|
+g019|Doom|Doom|1993|PC|Shooter|id Software|id Software|3.5|
+g020|Myst|Myst|1993|Mac|Adventure|Cyan|Broderbund|6.0|
+g021|Mortal Kombat II|Mortal Kombat|1993|Arcade|Fighting|Midway|Midway|4.8|
+g022|Secret of Mana|Mana|1993|SNES|RPG|Square|Square|1.8|
+g023|Kirby's Adventure|Kirby|1993|NES|Platformer|HAL Laboratory|Nintendo|1.8|
+g024|Day of the Tentacle|Maniac Mansion|1993|PC|Adventure|LucasArts|LucasArts||
+g025|Virtua Fighter|Virtua Fighter|1993|Arcade|Fighting|Sega AM2|Sega||
+g026|The Legend of Zelda: Link's Awakening|Zelda|1993|Game Boy|Action-adventure|Nintendo EAD|Nintendo|3.8|
+g027|Mega Man X|Mega Man|1993|SNES|Platformer|Capcom|Capcom|1.2|
+g028|SimCity 2000|SimCity|1993|PC|Simulation|Maxis|Maxis|4.2|
+g029|NHL 94|NHL|1993|Genesis|Sports|EA Canada|EA Sports|1.5|
+g030|FIFA International Soccer|FIFA|1993|Genesis|Sports|Extended Play Productions|EA Sports|0.6|
+g031|Madden NFL 94|Madden NFL|1993|Genesis|Sports|Visual Concepts|EA Sports|1.5|
+g032|Super Metroid|Metroid|1994|SNES|Action-adventure|Nintendo R&D1|Nintendo|1.4|
+g033|Donkey Kong Country|Donkey Kong|1994|SNES|Platformer|Rare|Nintendo|9.3|
+g034|Final Fantasy VI|Final Fantasy|1994|SNES|RPG|Square|Square|3.5|
+g035|EarthBound|Mother|1994|SNES|RPG|Ape|Nintendo|0.6|
+g036|Doom II|Doom|1994|PC|Shooter|id Software|GT Interactive|2.0|
+g037|Warcraft: Orcs & Humans|Warcraft|1994|PC|Strategy|Blizzard|Blizzard|0.3|
+g038|Sonic the Hedgehog 3|Sonic|1994|Genesis|Platformer|Sonic Team|Sega|1.8|
+g039|Sonic & Knuckles|Sonic|1994|Genesis|Platformer|Sonic Team|Sega|1.2|
+g040|Tekken|Tekken|1994|Arcade|Fighting|Namco|Namco|1.4|
+g041|The Need for Speed|Need for Speed|1994|3DO|Racing|EA Canada|EA|1.5|
+g042|Earthworm Jim|Earthworm Jim|1994|Genesis|Platformer|Shiny Entertainment|Playmates||
+g043|X-COM: UFO Defense|XCOM|1994|PC|Strategy|Mythos Games|MicroProse|0.5|
+g044|The Elder Scrolls: Arena|The Elder Scrolls|1994|PC|RPG|Bethesda|Bethesda||
+g045|Theme Park|Theme|1994|PC|Simulation|Bullfrog|EA|1.0|
+g046|FIFA Soccer 95|FIFA|1994|Genesis|Sports|Extended Play Productions|EA Sports|1.0|
+g047|Madden NFL 95|Madden NFL|1994|Genesis|Sports|Visual Concepts|EA Sports|1.6|
+g048|Chrono Trigger|Chrono|1995|SNES|RPG|Square|Square|2.7|
+g049|Super Mario World 2: Yoshi's Island|Yoshi|1995|SNES|Platformer|Nintendo EAD|Nintendo|4.1|
+g050|Donkey Kong Country 2|Donkey Kong|1995|SNES|Platformer|Rare|Nintendo|5.2|
+g051|Command & Conquer|Command & Conquer|1995|PC|Strategy|Westwood Studios|Virgin Interactive|3.0|
+g052|Warcraft II: Tides of Darkness|Warcraft|1995|PC|Strategy|Blizzard|Blizzard|3.0|
+g053|Rayman|Rayman|1995|PS1|Platformer|Ubisoft|Ubisoft|4.0|
+g054|Tekken 2|Tekken|1995|Arcade|Fighting|Namco|Namco|5.7|
+g055|Street Fighter Alpha|Street Fighter|1995|Arcade|Fighting|Capcom|Capcom||
+g056|Mortal Kombat 3|Mortal Kombat|1995|Arcade|Fighting|Midway|Midway|3.6|
+g057|Full Throttle|Full Throttle|1995|PC|Adventure|LucasArts|LucasArts|1.0|
+g058|Worms|Worms|1995|Amiga|Strategy|Team17|Ocean||
+g059|Wipeout|Wipeout|1995|PS1|Racing|Psygnosis|Psygnosis||
+g060|FIFA Soccer 96|FIFA|1995|PS1|Sports|Extended Play Productions|EA Sports|1.5|
+g061|Madden NFL 96|Madden NFL|1995|PS1|Sports|Tiburon|EA Sports|1.4|
+g062|Super Mario 64|Super Mario|1996|N64|Platformer|Nintendo EAD|Nintendo|11.9|94
+g063|Pokémon Red and Blue|Pokémon|1996|Game Boy|RPG|Game Freak|Nintendo|31.4|
+g064|Mario Kart 64|Mario Kart|1996|N64|Racing|Nintendo EAD|Nintendo|9.9|83
+g065|Resident Evil|Resident Evil|1996|PS1|Survival horror|Capcom|Capcom|2.8|91
+g066|Quake|Quake|1996|PC|Shooter|id Software|GT Interactive|1.8|94
+g067|Tomb Raider|Tomb Raider|1996|PS1|Action-adventure|Core Design|Eidos|7.0|91
+g068|Crash Bandicoot|Crash Bandicoot|1996|PS1|Platformer|Naughty Dog|Sony|6.8|
+g069|Diablo|Diablo|1996|PC|Action RPG|Blizzard North|Blizzard|2.5|94
+g070|Civilization II|Civilization|1996|PC|Strategy|MicroProse|MicroProse|3.0|94
+g071|Command & Conquer: Red Alert|Command & Conquer|1996|PC|Strategy|Westwood Studios|Virgin Interactive|3.0|
+g072|Duke Nukem 3D|Duke Nukem|1996|PC|Shooter|3D Realms|GT Interactive|3.5|89
+g073|Kirby Super Star|Kirby|1996|SNES|Platformer|HAL Laboratory|Nintendo|1.0|
+g074|Wave Race 64|Wave Race|1996|N64|Racing|Nintendo EAD|Nintendo|1.9|
+g075|Broken Sword: The Shadow of the Templars|Broken Sword|1996|PC|Adventure|Revolution|Virgin Interactive|1.0|
+g076|The Elder Scrolls II: Daggerfall|The Elder Scrolls|1996|PC|RPG|Bethesda|Bethesda||
+g077|FIFA 97|FIFA|1996|PS1|Sports|EA Canada|EA Sports|2.0|
+g078|Madden NFL 97|Madden NFL|1996|PS1|Sports|Tiburon|EA Sports|1.8|
+g079|Final Fantasy VII|Final Fantasy|1997|PS1|RPG|Square|Sony|13.6|92
+g080|GoldenEye 007|James Bond|1997|N64|Shooter|Rare|Nintendo|8.1|96
+g081|Gran Turismo|Gran Turismo|1997|PS1|Racing|Polyphony Digital|Sony|10.9|96
+g082|Castlevania: Symphony of the Night|Castlevania|1997|PS1|Action-adventure|Konami|Konami|1.3|93
+g083|Star Fox 64|Star Fox|1997|N64|Shooter|Nintendo EAD|Nintendo|4.0|88
+g084|Tekken 3|Tekken|1997|Arcade|Fighting|Namco|Namco|8.4|96
+g085|Grand Theft Auto|Grand Theft Auto|1997|PC|Action-adventure|DMA Design|BMG Interactive|1.0|68
+g086|Age of Empires|Age of Empires|1997|PC|Strategy|Ensemble Studios|Microsoft|3.0|83
+g087|Fallout|Fallout|1997|PC|RPG|Interplay|Interplay|0.6|89
+g088|Quake II|Quake|1997|PC|Shooter|id Software|Activision|1.0|89
+g089|Riven|Myst|1997|PC|Adventure|Cyan|Broderbund|1.5|83
+g090|Crash Bandicoot 2: Cortex Strikes Back|Crash Bandicoot|1997|PS1|Platformer|Naughty Dog|Sony|7.6|
+g091|Tomb Raider II|Tomb Raider|1997|PS1|Action-adventure|Core Design|Eidos|8.0|85
+g092|Theme Hospital|Theme|1997|PC|Simulation|Bullfrog|EA|4.0|
+g093|Street Fighter III|Street Fighter|1997|Arcade|Fighting|Capcom|Capcom||
+g094|Mortal Kombat 4|Mortal Kombat|1997|Arcade|Fighting|Midway|Midway|1.0|
+g095|Need for Speed II|Need for Speed|1997|PS1|Racing|EA Canada|EA|1.7|
+g096|FIFA: Road to World Cup 98|FIFA|1997|PS1|Sports|EA Canada|EA Sports|2.5|
+g097|Madden NFL 98|Madden NFL|1997|PS1|Sports|Tiburon|EA Sports|2.2|
+g098|The Legend of Zelda: Ocarina of Time|Zelda|1998|N64|Action-adventure|Nintendo EAD|Nintendo|7.6|99
+g099|Half-Life|Half-Life|1998|PC|Shooter|Valve|Sierra|9.3|96
+g100|StarCraft|StarCraft|1998|PC|Strategy|Blizzard|Blizzard|9.5|88
+g101|Metal Gear Solid|Metal Gear|1998|PS1|Stealth|Konami|Konami|6.0|94
+g102|Resident Evil 2|Resident Evil|1998|PS1|Survival horror|Capcom|Capcom|5.0|89
+g103|Pokémon Yellow|Pokémon|1998|Game Boy|RPG|Game Freak|Nintendo|14.6|85
+g104|Banjo-Kazooie|Banjo-Kazooie|1998|N64|Platformer|Rare|Nintendo|3.7|92
+g105|Spyro the Dragon|Spyro|1998|PS1|Platformer|Insomniac|Sony|4.8|
+g106|Crash Bandicoot: Warped|Crash Bandicoot|1998|PS1|Platformer|Naughty Dog|Sony|7.1|91
+g107|Baldur's Gate|Baldur's Gate|1998|PC|RPG|BioWare|Interplay|2.0|91
+g108|Fallout 2|Fallout|1998|PC|RPG|Black Isle|Interplay|0.6|86
+g109|Grim Fandango|Grim Fandango|1998|PC|Adventure|LucasArts|LucasArts|0.5|94
+g110|Unreal|Unreal|1998|PC|Shooter|Epic MegaGames|GT Interactive|1.5|83
+g111|Thief: The Dark Project|Thief|1998|PC|Stealth|Looking Glass|Eidos|0.5|92
+g112|Soulcalibur|Soulcalibur|1998|Arcade|Fighting|Namco|Namco|1.5|98
+g113|Sonic Adventure|Sonic|1998|Dreamcast|Platformer|Sonic Team|Sega|2.5|87
+g114|F-Zero X|F-Zero|1998|N64|Racing|Nintendo EAD|Nintendo|1.1|85
+g115|1080° Snowboarding|1080|1998|N64|Sports|Nintendo EAD|Nintendo|2.0|
+g116|Dance Dance Revolution|DDR|1998|Arcade|Rhythm|Konami|Konami||
+g117|Need for Speed III: Hot Pursuit|Need for Speed|1998|PS1|Racing|EA Canada|EA|3.0|88
+g118|FIFA 99|FIFA|1998|PS1|Sports|EA Canada|EA Sports|2.5|
+g119|Madden NFL 99|Madden NFL|1998|PS1|Sports|Tiburon|EA Sports|2.4|
+g120|Super Smash Bros.|Super Smash Bros.|1999|N64|Fighting|HAL Laboratory|Nintendo|5.5|79
+g121|Pokémon Gold and Silver|Pokémon|1999|Game Boy Color|RPG|Game Freak|Nintendo|23.7|
+g122|Final Fantasy VIII|Final Fantasy|1999|PS1|RPG|Square|Square|8.6|90
+g123|Gran Turismo 2|Gran Turismo|1999|PS1|Racing|Polyphony Digital|Sony|9.4|93
+g124|Tony Hawk's Pro Skater|Tony Hawk|1999|PS1|Sports|Neversoft|Activision|3.0|92
+g125|Counter-Strike|Counter-Strike|1999|PC|Shooter|Valve|Sierra|4.2|88
+g126|Quake III Arena|Quake|1999|PC|Shooter|id Software|Activision|1.0|93
+g127|Unreal Tournament|Unreal|1999|PC|Shooter|Epic Games|GT Interactive|1.0|92
+g128|Age of Empires II: The Age of Kings|Age of Empires|1999|PC|Strategy|Ensemble Studios|Microsoft|2.0|92
+g129|Command & Conquer: Tiberian Sun|Command & Conquer|1999|PC|Strategy|Westwood Studios|EA|1.5|80
+g130|Homeworld|Homeworld|1999|PC|Strategy|Relic|Sierra|0.5|93
+g131|Heroes of Might and Magic III|Heroes of Might and Magic|1999|PC|Strategy|New World Computing|3DO|0.5|87
+g132|RollerCoaster Tycoon|RollerCoaster Tycoon|1999|PC|Simulation|Chris Sawyer|Hasbro Interactive|4.0|
+g133|SimCity 3000|SimCity|1999|PC|Simulation|Maxis|EA|5.0|
+g134|Planescape: Torment|Planescape|1999|PC|RPG|Black Isle|Interplay|0.4|91
+g135|Chrono Cross|Chrono|1999|PS1|RPG|Square|Square|1.5|94
+g136|System Shock 2|System Shock|1999|PC|Shooter|Irrational Games|EA|0.1|92
+g137|Donkey Kong 64|Donkey Kong|1999|N64|Platformer|Rare|Nintendo|5.3|90
+g138|Crash Team Racing|Crash Bandicoot|1999|PS1|Racing|Naughty Dog|Sony|4.5|88
+g139|Silent Hill|Silent Hill|1999|PS1|Survival horror|Konami|Konami|2.0|86
+g140|Resident Evil 3: Nemesis|Resident Evil|1999|PS1|Survival horror|Capcom|Capcom|3.5|91
+g141|Worms Armageddon|Worms|1999|PC|Strategy|Team17|Hasbro Interactive|1.0|
+g142|Pokémon Snap|Pokémon|1999|N64|Simulation|HAL Laboratory|Nintendo|3.6|77
+g143|Tekken Tag Tournament|Tekken|1999|Arcade|Fighting|Namco|Namco|3.2|85
+g144|NBA 2K|NBA 2K|1999|Dreamcast|Sports|Visual Concepts|Sega Sports|1.5|93
+g145|Need for Speed: High Stakes|Need for Speed|1999|PS1|Racing|EA Canada|EA|2.0|82
+g146|FIFA 2000|FIFA|1999|PS1|Sports|EA Canada|EA Sports|3.0|80
+g147|Madden NFL 2000|Madden NFL|1999|PS1|Sports|Tiburon|EA Sports|2.7|88
+g148|The Sims|The Sims|2000|PC|Simulation|Maxis|EA|16.0|92
+g149|Diablo II|Diablo|2000|PC|Action RPG|Blizzard North|Blizzard|4.0|88
+g150|Tony Hawk's Pro Skater 2|Tony Hawk|2000|PS1|Sports|Neversoft|Activision|4.7|98
+g151|The Legend of Zelda: Majora's Mask|Zelda|2000|N64|Action-adventure|Nintendo EAD|Nintendo|3.4|95
+g152|Final Fantasy IX|Final Fantasy|2000|PS1|RPG|Square|Square|5.3|94
+g153|Perfect Dark|Perfect Dark|2000|N64|Shooter|Rare|Rare|3.2|97
+g154|Deus Ex|Deus Ex|2000|PC|RPG|Ion Storm|Eidos|1.0|90
+g155|Baldur's Gate II: Shadows of Amn|Baldur's Gate|2000|PC|RPG|BioWare|Interplay|2.0|95
+g156|Command & Conquer: Red Alert 2|Command & Conquer|2000|PC|Strategy|Westwood Studios|EA|1.5|86
+g157|Shogun: Total War|Total War|2000|PC|Strategy|Creative Assembly|EA|1.0|84
+g158|Hitman: Codename 47|Hitman|2000|PC|Stealth|IO Interactive|Eidos|0.5|73
+g159|Paper Mario|Paper Mario|2000|N64|RPG|Intelligent Systems|Nintendo|1.4|93
+g160|SSX|SSX|2000|PS2|Sports|EA Canada|EA Sports BIG|2.0|93
+g161|Midnight Club: Street Racing|Midnight Club|2000|PS2|Racing|Angel Studios|Rockstar|1.5|76
+g162|Resident Evil Code: Veronica|Resident Evil|2000|Dreamcast|Survival horror|Capcom|Capcom|1.1|94
+g163|Pokémon Crystal|Pokémon|2000|Game Boy Color|RPG|Game Freak|Nintendo|6.4|
+g164|Need for Speed: Porsche Unleashed|Need for Speed|2000|PC|Racing|Eden Studios|EA|1.0|84
+g165|NBA 2K1|NBA 2K|2000|Dreamcast|Sports|Visual Concepts|Sega Sports|1.0|91
+g166|FIFA 2001|FIFA|2000|PS2|Sports|EA Canada|EA Sports|3.0|80
+g167|Madden NFL 2001|Madden NFL|2000|PS2|Sports|Tiburon|EA Sports|3.5|91
+g168|Grand Theft Auto III|Grand Theft Auto|2001|PS2|Action-adventure|DMA Design|Rockstar|17.3|97
+g169|Halo: Combat Evolved|Halo|2001|Xbox|Shooter|Bungie|Microsoft|6.4|97
+g170|Super Smash Bros. Melee|Super Smash Bros.|2001|GameCube|Fighting|HAL Laboratory|Nintendo|7.4|92
+g171|Final Fantasy X|Final Fantasy|2001|PS2|RPG|Square|Square|8.5|92
+g172|Metal Gear Solid 2: Sons of Liberty|Metal Gear|2001|PS2|Stealth|Konami|Konami|7.0|96
+g173|Gran Turismo 3: A-Spec|Gran Turismo|2001|PS2|Racing|Polyphony Digital|Sony|14.9|95
+g174|Silent Hill 2|Silent Hill|2001|PS2|Survival horror|Konami|Konami|1.5|89
+g175|Devil May Cry|Devil May Cry|2001|PS2|Action|Capcom|Capcom|2.2|94
+g176|Ico|Ico|2001|PS2|Action-adventure|Team Ico|Sony|1.2|90
+g177|Jak and Daxter: The Precursor Legacy|Jak and Daxter|2001|PS2|Platformer|Naughty Dog|Sony|3.5|90
+g178|Animal Crossing|Animal Crossing|2001|N64|Simulation|Nintendo EAD|Nintendo|3.1|87
+g179|Luigi's Mansion|Luigi's Mansion|2001|GameCube|Action-adventure|Nintendo EAD|Nintendo|3.6|78
+g180|Pikmin|Pikmin|2001|GameCube|Strategy|Nintendo EAD|Nintendo|1.6|89
+g181|Civilization III|Civilization|2001|PC|Strategy|Firaxis|Infogrames|2.0|90
+g182|Max Payne|Max Payne|2001|PC|Shooter|Remedy|Gathering of Developers|7.0|89
+g183|Sonic Adventure 2|Sonic|2001|Dreamcast|Platformer|Sonic Team|Sega|1.7|89
+g184|Tekken 4|Tekken|2001|Arcade|Fighting|Namco|Namco|3.3|79
+g185|Conker's Bad Fur Day|Conker|2001|N64|Platformer|Rare|Rare|0.6|92
+g186|Golden Sun|Golden Sun|2001|GBA|RPG|Camelot|Nintendo|1.7|91
+g187|Advance Wars|Wars|2001|GBA|Strategy|Intelligent Systems|Nintendo|1.0|92
+g188|Tony Hawk's Pro Skater 3|Tony Hawk|2001|PS2|Sports|Neversoft|Activision|4.5|97
+g189|SSX Tricky|SSX|2001|PS2|Sports|EA Canada|EA Sports BIG|2.4|91
+g190|Bejeweled|Bejeweled|2001|PC|Puzzle|PopCap|PopCap|25.0|
+g191|Mario Kart: Super Circuit|Mario Kart|2001|GBA|Racing|Intelligent Systems|Nintendo|5.9|93
+g192|Pro Evolution Soccer|Pro Evolution Soccer|2001|PS2|Sports|Konami|Konami|1.5|
+g193|NBA 2K2|NBA 2K|2001|PS2|Sports|Visual Concepts|Sega Sports|1.0|90
+g194|FIFA Football 2002|FIFA|2001|PS2|Sports|EA Canada|EA Sports|3.5|84
+g195|Madden NFL 2002|Madden NFL|2001|PS2|Sports|Tiburon|EA Sports|4.0|93
+g196|Grand Theft Auto: Vice City|Grand Theft Auto|2002|PS2|Action-adventure|Rockstar North|Rockstar|17.5|95
+g197|The Legend of Zelda: The Wind Waker|Zelda|2002|GameCube|Action-adventure|Nintendo EAD|Nintendo|4.6|96
+g198|Metroid Prime|Metroid|2002|GameCube|Action-adventure|Retro Studios|Nintendo|2.8|97
+g199|Super Mario Sunshine|Super Mario|2002|GameCube|Platformer|Nintendo EAD|Nintendo|6.3|92
+g200|Warcraft III: Reign of Chaos|Warcraft|2002|PC|Strategy|Blizzard|Blizzard|3.0|92
+g201|The Elder Scrolls III: Morrowind|The Elder Scrolls|2002|PC|RPG|Bethesda|Bethesda|4.0|89
+g202|Battlefield 1942|Battlefield|2002|PC|Shooter|DICE|EA|3.0|89
+g203|Kingdom Hearts|Kingdom Hearts|2002|PS2|Action RPG|Square|Square|6.4|85
+g204|Ratchet & Clank|Ratchet & Clank|2002|PS2|Platformer|Insomniac|Sony|3.0|88
+g205|Sly Cooper and the Thievius Raccoonus|Sly Cooper|2002|PS2|Platformer|Sucker Punch|Sony|1.4|86
+g206|Tom Clancy's Splinter Cell|Splinter Cell|2002|Xbox|Stealth|Ubisoft Montreal|Ubisoft|3.0|93
+g207|Age of Mythology|Age of Empires|2002|PC|Strategy|Ensemble Studios|Microsoft|1.0|89
+g208|Medieval: Total War|Total War|2002|PC|Strategy|Creative Assembly|Activision|1.0|88
+g209|Neverwinter Nights|Neverwinter Nights|2002|PC|RPG|BioWare|Infogrames|2.0|91
+g210|Soulcalibur II|Soulcalibur|2002|Arcade|Fighting|Namco|Namco|3.0|92
+g211|Mortal Kombat: Deadly Alliance|Mortal Kombat|2002|PS2|Fighting|Midway|Midway|3.5|81
+g212|Pokémon Ruby and Sapphire|Pokémon|2002|GBA|RPG|Game Freak|Nintendo|16.2|82
+g213|Metroid Fusion|Metroid|2002|GBA|Action-adventure|Nintendo R&D1|Nintendo|1.6|92
+g214|RollerCoaster Tycoon 2|RollerCoaster Tycoon|2002|PC|Simulation|Chris Sawyer|Infogrames|2.0|74
+g215|Tony Hawk's Pro Skater 4|Tony Hawk|2002|PS2|Sports|Neversoft|Activision|3.0|94
+g216|Need for Speed: Hot Pursuit 2|Need for Speed|2002|PS2|Racing|Black Box|EA|4.0|89
+g217|Pro Evolution Soccer 2|Pro Evolution Soccer|2002|PS2|Sports|Konami|Konami|1.8|
+g218|NBA 2K3|NBA 2K|2002|PS2|Sports|Visual Concepts|Sega Sports|1.0|89
+g219|FIFA Football 2003|FIFA|2002|PS2|Sports|EA Canada|EA Sports|4.0|83
+g220|Madden NFL 2003|Madden NFL|2002|PS2|Sports|Tiburon|EA Sports|4.5|93
+g221|Call of Duty|Call of Duty|2003|PC|Shooter|Infinity Ward|Activision|4.5|91
+g222|Star Wars: Knights of the Old Republic|Star Wars|2003|Xbox|RPG|BioWare|LucasArts|3.0|94
+g223|Prince of Persia: The Sands of Time|Prince of Persia|2003|PS2|Action-adventure|Ubisoft Montreal|Ubisoft|2.0|92
+g224|Mario Kart: Double Dash!!|Mario Kart|2003|GameCube|Racing|Nintendo EAD|Nintendo|7.0|87
+g225|Beyond Good & Evil|Beyond Good & Evil|2003|PS2|Action-adventure|Ubisoft Montpellier|Ubisoft|0.5|87
+g226|Final Fantasy X-2|Final Fantasy|2003|PS2|RPG|Square Enix|Square Enix|5.4|85
+g227|Command & Conquer: Generals|Command & Conquer|2003|PC|Strategy|EA Pacific|EA|1.5|84
+g228|Rise of Nations|Rise of Nations|2003|PC|Strategy|Big Huge Games|Microsoft|1.0|89
+g229|SimCity 4|SimCity|2003|PC|Simulation|Maxis|EA|2.0|84
+g230|Tales of Symphonia|Tales|2003|GameCube|RPG|Namco Tales Studio|Namco|1.6|86
+g231|Viewtiful Joe|Viewtiful Joe|2003|GameCube|Action|Clover Studio|Capcom|0.6|93
+g232|Sonic Heroes|Sonic|2003|GameCube|Platformer|Sonic Team|Sega|3.4|72
+g233|SSX 3|SSX|2003|PS2|Sports|EA Canada|EA Sports BIG|1.8|93
+g234|Tony Hawk's Underground|Tony Hawk|2003|PS2|Sports|Neversoft|Activision|2.5|90
+g235|Need for Speed: Underground|Need for Speed|2003|PS2|Racing|Black Box|EA|7.2|85
+g236|Pro Evolution Soccer 3|Pro Evolution Soccer|2003|PS2|Sports|Konami|Konami|2.5|92
+g237|ESPN NBA Basketball|NBA 2K|2003|PS2|Sports|Visual Concepts|Sega Sports|1.0|88
+g238|FIFA Football 2004|FIFA|2003|PS2|Sports|EA Canada|EA Sports|4.5|86
+g239|Madden NFL 2004|Madden NFL|2003|PS2|Sports|Tiburon|EA Sports|5.0|93
+g240|Half-Life 2|Half-Life|2004|PC|Shooter|Valve|Valve|12.0|96
+g241|World of Warcraft|Warcraft|2004|PC|MMORPG|Blizzard|Blizzard|14.0|93
+g242|Grand Theft Auto: San Andreas|Grand Theft Auto|2004|PS2|Action-adventure|Rockstar North|Rockstar|27.5|95
+g243|Halo 2|Halo|2004|Xbox|Shooter|Bungie|Microsoft|8.5|95
+g244|Metal Gear Solid 3: Snake Eater|Metal Gear|2004|PS2|Stealth|Konami|Konami|4.0|91
+g245|Doom 3|Doom|2004|PC|Shooter|id Software|Activision|3.5|87
+g246|The Sims 2|The Sims|2004|PC|Simulation|Maxis|EA|13.0|90
+g247|Far Cry|Far Cry|2004|PC|Shooter|Crytek|Ubisoft|2.5|89
+g248|Fable|Fable|2004|Xbox|RPG|Lionhead|Microsoft|3.0|85
+g249|Rome: Total War|Total War|2004|PC|Strategy|Creative Assembly|Activision|1.5|92
+g250|Burnout 3: Takedown|Burnout|2004|PS2|Racing|Criterion|EA|3.0|94
+g251|Gran Turismo 4|Gran Turismo|2004|PS2|Racing|Polyphony Digital|Sony|11.8|89
+g252|Ninja Gaiden|Ninja Gaiden|2004|Xbox|Action|Team Ninja|Tecmo|1.5|91
+g253|Pokémon FireRed and LeafGreen|Pokémon|2004|GBA|RPG|Game Freak|Nintendo|12.0|81
+g254|The Legend of Zelda: The Minish Cap|Zelda|2004|GBA|Action-adventure|Capcom|Nintendo|1.8|89
+g255|Dragon Quest VIII|Dragon Quest|2004|PS2|RPG|Level-5|Square Enix|4.9|89
+g256|Counter-Strike: Source|Counter-Strike|2004|PC|Shooter|Valve|Valve|3.0|88
+g257|Battlefield Vietnam|Battlefield|2004|PC|Shooter|DICE|EA|1.0|84
+g258|RollerCoaster Tycoon 3|RollerCoaster Tycoon|2004|PC|Simulation|Frontier|Atari|1.5|81
+g259|Need for Speed: Underground 2|Need for Speed|2004|PS2|Racing|Black Box|EA|11.0|82
+g260|Pro Evolution Soccer 4|Pro Evolution Soccer|2004|PS2|Sports|Konami|Konami|3.0|90
+g261|ESPN NBA 2K5|NBA 2K|2004|PS2|Sports|Visual Concepts|Sega Sports|1.5|88
+g262|FIFA Football 2005|FIFA|2004|PS2|Sports|EA Canada|EA Sports|5.0|78
+g263|Madden NFL 2005|Madden NFL|2004|PS2|Sports|Tiburon|EA Sports|5.5|91
+g264|Resident Evil 4|Resident Evil|2005|GameCube|Survival horror|Capcom|Capcom|10.0|96
+g265|God of War|God of War|2005|PS2|Action|Santa Monica Studio|Sony|4.6|94
+g266|Shadow of the Colossus|Ico|2005|PS2|Action-adventure|Team Ico|Sony|2.7|91
+g267|Civilization IV|Civilization|2005|PC|Strategy|Firaxis|2K|3.0|94
+g268|Age of Empires III|Age of Empires|2005|PC|Strategy|Ensemble Studios|Microsoft|2.0|81
+g269|Battlefield 2|Battlefield|2005|PC|Shooter|DICE|EA|2.3|91
+g270|Call of Duty 2|Call of Duty|2005|Xbox 360|Shooter|Infinity Ward|Activision|5.9|89
+g271|Kingdom Hearts II|Kingdom Hearts|2005|PS2|Action RPG|Square Enix|Square Enix|4.7|87
+g272|Devil May Cry 3|Devil May Cry|2005|PS2|Action|Capcom|Capcom|2.3|84
+g273|Psychonauts|Psychonauts|2005|Xbox|Platformer|Double Fine|Majesco|0.4|88
+g274|Guitar Hero|Guitar Hero|2005|PS2|Rhythm|Harmonix|RedOctane|1.5|91
+g275|Mario Kart DS|Mario Kart|2005|DS|Racing|Nintendo EAD|Nintendo|23.6|91
+g276|Nintendogs|Nintendogs|2005|DS|Simulation|Nintendo EAD|Nintendo|23.9|83
+g277|Brain Age|Brain Age|2005|DS|Puzzle|Nintendo SPD|Nintendo|19.0|77
+g278|Animal Crossing: Wild World|Animal Crossing|2005|DS|Simulation|Nintendo EAD|Nintendo|11.8|86
+g279|Forza Motorsport|Forza|2005|Xbox|Racing|Turn 10|Microsoft|1.0|92
+g280|Tekken 5|Tekken|2005|Arcade|Fighting|Namco|Namco|6.0|88
+g281|F.E.A.R.|F.E.A.R.|2005|PC|Shooter|Monolith|Vivendi|1.0|88
+g282|Grand Theft Auto: Liberty City Stories|Grand Theft Auto|2005|PSP|Action-adventure|Rockstar Leeds|Rockstar|8.0|88
+g283|Need for Speed: Most Wanted|Need for Speed|2005|PS2|Racing|Black Box|EA|16.0|83
+g284|Pro Evolution Soccer 5|Pro Evolution Soccer|2005|PS2|Sports|Konami|Konami|3.5|89
+g285|NBA 2K6|NBA 2K|2005|Xbox 360|Sports|Visual Concepts|2K Sports|1.5|84
+g286|Football Manager 2006|Football Manager|2005|PC|Sports|Sports Interactive|Sega|0.8|84
+g287|FIFA 06|FIFA|2005|PS2|Sports|EA Canada|EA Sports|5.5|80
+g288|Madden NFL 06|Madden NFL|2005|PS2|Sports|Tiburon|EA Sports|6.0|86
+g289|Wii Sports|Wii Sports|2006|Wii|Sports|Nintendo EAD|Nintendo|82.9|76
+g290|The Elder Scrolls IV: Oblivion|The Elder Scrolls|2006|PC|RPG|Bethesda|2K|9.5|94
+g291|The Legend of Zelda: Twilight Princess|Zelda|2006|Wii|Action-adventure|Nintendo EAD|Nintendo|8.9|95
+g292|Gears of War|Gears of War|2006|Xbox 360|Shooter|Epic Games|Microsoft|6.0|94
+g293|New Super Mario Bros.|Super Mario|2006|DS|Platformer|Nintendo EAD|Nintendo|30.8|89
+g294|Pokémon Diamond and Pearl|Pokémon|2006|DS|RPG|Game Freak|Nintendo|17.7|85
+g295|Okami|Okami|2006|PS2|Action-adventure|Clover Studio|Capcom|1.5|93
+g296|Company of Heroes|Company of Heroes|2006|PC|Strategy|Relic|THQ|2.0|93
+g297|Medieval II: Total War|Total War|2006|PC|Strategy|Creative Assembly|Sega|1.5|88
+g298|Final Fantasy XII|Final Fantasy|2006|PS2|RPG|Square Enix|Square Enix|6.1|92
+g299|Persona 3|Persona|2006|PS2|RPG|Atlus|Atlus|1.0|86
+g300|Dead Rising|Dead Rising|2006|Xbox 360|Action|Capcom|Capcom|2.0|85
+g301|Guitar Hero II|Guitar Hero|2006|PS2|Rhythm|Harmonix|RedOctane|5.0|92
+g302|Wii Play|Wii|2006|Wii|Party|Nintendo EAD|Nintendo|28.0|58
+g303|Roblox|Roblox|2006|PC|Sandbox|Roblox Corporation|Roblox Corporation||
+g304|Battlefield 2142|Battlefield|2006|PC|Shooter|DICE|EA|1.5|80
+g305|Call of Duty 3|Call of Duty|2006|Xbox 360|Shooter|Treyarch|Activision|7.0|82
+g306|Need for Speed: Carbon|Need for Speed|2006|Xbox 360|Racing|Black Box|EA|7.0|78
+g307|Pro Evolution Soccer 6|Pro Evolution Soccer|2006|PS2|Sports|Konami|Konami|3.5|88
+g308|NBA 2K7|NBA 2K|2006|Xbox 360|Sports|Visual Concepts|2K Sports|1.5|85
+g309|Football Manager 2007|Football Manager|2006|PC|Sports|Sports Interactive|Sega|0.9|83
+g310|FIFA 07|FIFA|2006|Xbox 360|Sports|EA Canada|EA Sports|6.0|84
+g311|Madden NFL 07|Madden NFL|2006|Xbox 360|Sports|Tiburon|EA Sports|7.0|82
+g312|Halo 3|Halo|2007|Xbox 360|Shooter|Bungie|Microsoft|14.5|94
+g313|BioShock|BioShock|2007|Xbox 360|Shooter|2K Boston|2K|4.0|96
+g314|Super Mario Galaxy|Super Mario|2007|Wii|Platformer|Nintendo EAD|Nintendo|12.8|97
+g315|Portal|Portal|2007|PC|Puzzle|Valve|Valve|4.0|90
+g316|Team Fortress 2|Team Fortress|2007|PC|Shooter|Valve|Valve||92
+g317|Mass Effect|Mass Effect|2007|Xbox 360|RPG|BioWare|Microsoft|3.0|91
+g318|Assassin's Creed|Assassin's Creed|2007|Xbox 360|Action-adventure|Ubisoft Montreal|Ubisoft|8.0|81
+g319|Uncharted: Drake's Fortune|Uncharted|2007|PS3|Action-adventure|Naughty Dog|Sony|4.8|88
+g320|The Witcher|The Witcher|2007|PC|RPG|CD Projekt Red|Atari|2.0|81
+g321|Crysis|Crysis|2007|PC|Shooter|Crytek|EA|3.0|91
+g322|Rock Band|Rock Band|2007|Xbox 360|Rhythm|Harmonix|MTV Games|4.0|92
+g323|Guitar Hero III: Legends of Rock|Guitar Hero|2007|PS2|Rhythm|Neversoft|Activision|16.0|85
+g324|God of War II|God of War|2007|PS2|Action|Santa Monica Studio|Sony|4.2|93
+g325|Wii Fit|Wii|2007|Wii|Sports|Nintendo EAD|Nintendo|22.7|80
+g326|Command & Conquer 3: Tiberium Wars|Command & Conquer|2007|PC|Strategy|EA Los Angeles|EA|1.5|85
+g327|Skate|Skate|2007|Xbox 360|Sports|EA Black Box|EA|2.0|86
+g328|Forza Motorsport 2|Forza|2007|Xbox 360|Racing|Turn 10|Microsoft|4.0|90
+g329|Tekken 6|Tekken|2007|Arcade|Fighting|Namco Bandai|Namco Bandai|3.5|79
+g330|The Legend of Zelda: Phantom Hourglass|Zelda|2007|DS|Action-adventure|Nintendo EAD|Nintendo|4.8|90
+g331|Mario & Sonic at the Olympic Games|Mario & Sonic|2007|Wii|Sports|Sega|Sega|11.0|67
+g332|Call of Duty 4: Modern Warfare|Call of Duty|2007|Xbox 360|Shooter|Infinity Ward|Activision|15.7|94
+g333|Need for Speed: ProStreet|Need for Speed|2007|Xbox 360|Racing|Black Box|EA|5.5|72
+g334|Pro Evolution Soccer 2008|Pro Evolution Soccer|2007|PS3|Sports|Konami|Konami|4.0|75
+g335|NBA 2K8|NBA 2K|2007|Xbox 360|Sports|Visual Concepts|2K Sports|2.0|80
+g336|Football Manager 2008|Football Manager|2007|PC|Sports|Sports Interactive|Sega|1.0|84
+g337|FIFA 08|FIFA|2007|Xbox 360|Sports|EA Canada|EA Sports|6.5|83
+g338|Madden NFL 08|Madden NFL|2007|Xbox 360|Sports|Tiburon|EA Sports|7.5|84
+g339|Grand Theft Auto IV|Grand Theft Auto|2008|Xbox 360|Action-adventure|Rockstar North|Rockstar|25.0|98
+g340|Metal Gear Solid 4: Guns of the Patriots|Metal Gear|2008|PS3|Stealth|Kojima Productions|Konami|6.0|94
+g341|Fallout 3|Fallout|2008|Xbox 360|RPG|Bethesda|Bethesda|12.0|93
+g342|Super Smash Bros. Brawl|Super Smash Bros.|2008|Wii|Fighting|Sora|Nintendo|13.3|93
+g343|Mario Kart Wii|Mario Kart|2008|Wii|Racing|Nintendo EAD|Nintendo|37.4|82
+g344|Left 4 Dead|Left 4 Dead|2008|PC|Shooter|Valve|Valve|3.0|89
+g345|Dead Space|Dead Space|2008|Xbox 360|Survival horror|EA Redwood Shores|EA|2.0|89
+g346|LittleBigPlanet|LittleBigPlanet|2008|PS3|Platformer|Media Molecule|Sony|5.7|95
+g347|Braid|Braid|2008|Xbox 360|Puzzle|Number None|Number None|0.5|93
+g348|Street Fighter IV|Street Fighter|2008|Arcade|Fighting|Capcom|Capcom|3.4|94
+g349|Far Cry 2|Far Cry|2008|Xbox 360|Shooter|Ubisoft Montreal|Ubisoft|2.9|85
+g350|Devil May Cry 4|Devil May Cry|2008|PS3|Action|Capcom|Capcom|3.0|84
+g351|Burnout Paradise|Burnout|2008|PS3|Racing|Criterion|EA|3.0|88
+g352|Persona 4|Persona|2008|PS2|RPG|Atlus|Atlus|1.1|90
+g353|Pokémon Platinum|Pokémon|2008|DS|RPG|Game Freak|Nintendo|7.1|83
+g354|Rock Band 2|Rock Band|2008|Xbox 360|Rhythm|Harmonix|MTV Games|3.0|92
+g355|Spore|Spore|2008|PC|Simulation|Maxis|EA|3.0|84
+g356|Call of Duty: World at War|Call of Duty|2008|Xbox 360|Shooter|Treyarch|Activision|15.7|84
+g357|Need for Speed: Undercover|Need for Speed|2008|Xbox 360|Racing|Black Box|EA|5.2|64
+g358|Pro Evolution Soccer 2009|Pro Evolution Soccer|2008|PS3|Sports|Konami|Konami|4.0|79
+g359|NBA 2K9|NBA 2K|2008|Xbox 360|Sports|Visual Concepts|2K Sports|2.0|82
+g360|Football Manager 2009|Football Manager|2008|PC|Sports|Sports Interactive|Sega|1.0|84
+g361|FIFA 09|FIFA|2008|Xbox 360|Sports|EA Canada|EA Sports|7.0|85
+g362|Madden NFL 09|Madden NFL|2008|Xbox 360|Sports|Tiburon|EA Sports|7.0|83
+g363|Uncharted 2: Among Thieves|Uncharted|2009|PS3|Action-adventure|Naughty Dog|Sony|6.7|96
+g364|Assassin's Creed II|Assassin's Creed|2009|Xbox 360|Action-adventure|Ubisoft Montreal|Ubisoft|9.0|91
+g365|Batman: Arkham Asylum|Batman: Arkham|2009|Xbox 360|Action-adventure|Rocksteady|Eidos|4.3|92
+g366|Demon's Souls|Souls|2009|PS3|Action RPG|FromSoftware|Sony|1.7|89
+g367|Dragon Age: Origins|Dragon Age|2009|PC|RPG|BioWare|EA|3.2|91
+g368|Borderlands|Borderlands|2009|Xbox 360|Shooter|Gearbox|2K|4.5|84
+g369|Left 4 Dead 2|Left 4 Dead|2009|PC|Shooter|Valve|Valve|3.0|89
+g370|New Super Mario Bros. Wii|Super Mario|2009|Wii|Platformer|Nintendo EAD|Nintendo|30.3|87
+g371|Wii Sports Resort|Wii Sports|2009|Wii|Sports|Nintendo EAD|Nintendo|33.1|80
+g372|Pokémon HeartGold and SoulSilver|Pokémon|2009|DS|RPG|Game Freak|Nintendo|12.7|87
+g373|The Sims 3|The Sims|2009|PC|Simulation|Maxis|EA|10.0|86
+g374|Empire: Total War|Total War|2009|PC|Strategy|Creative Assembly|Sega|1.5|90
+g375|Minecraft|Minecraft|2009|PC|Sandbox|Mojang|Mojang|238.0|93
+g376|Plants vs. Zombies|Plants vs. Zombies|2009|PC|Strategy|PopCap|PopCap|1.5|88
+g377|Angry Birds|Angry Birds|2009|Mobile|Puzzle|Rovio|Rovio||
+g378|Bayonetta|Bayonetta|2009|Xbox 360|Action|PlatinumGames|Sega|1.4|90
+g379|Halo 3: ODST|Halo|2009|Xbox 360|Shooter|Bungie|Microsoft|6.3|83
+g380|Final Fantasy XIII|Final Fantasy|2009|PS3|RPG|Square Enix|Square Enix|7.7|83
+g381|Just Dance|Just Dance|2009|Wii|Rhythm|Ubisoft Paris|Ubisoft|4.3|49
+g382|Forza Motorsport 3|Forza|2009|Xbox 360|Racing|Turn 10|Microsoft|5.5|92
+g383|The Legend of Zelda: Spirit Tracks|Zelda|2009|DS|Action-adventure|Nintendo EAD|Nintendo|2.9|87
+g384|Grand Theft Auto: Chinatown Wars|Grand Theft Auto|2009|DS|Action-adventure|Rockstar Leeds|Rockstar|1.5|93
+g385|Call of Duty: Modern Warfare 2|Call of Duty|2009|Xbox 360|Shooter|Infinity Ward|Activision|25.0|94
+g386|Need for Speed: Shift|Need for Speed|2009|Xbox 360|Racing|Slightly Mad Studios|EA|5.0|84
+g387|Pro Evolution Soccer 2010|Pro Evolution Soccer|2009|PS3|Sports|Konami|Konami|4.5|78
+g388|NBA 2K10|NBA 2K|2009|Xbox 360|Sports|Visual Concepts|2K Sports|2.5|82
+g389|Football Manager 2010|Football Manager|2009|PC|Sports|Sports Interactive|Sega|1.0|84
+g390|FIFA 10|FIFA|2009|Xbox 360|Sports|EA Canada|EA Sports|10.0|91
+g391|Madden NFL 10|Madden NFL|2009|Xbox 360|Sports|Tiburon|EA Sports|6.5|85
+g392|Red Dead Redemption|Red Dead|2010|Xbox 360|Action-adventure|Rockstar San Diego|Rockstar|15.0|95
+g393|Mass Effect 2|Mass Effect|2010|Xbox 360|RPG|BioWare|EA|4.0|96
+g394|StarCraft II: Wings of Liberty|StarCraft|2010|PC|Strategy|Blizzard|Blizzard|6.0|93
+g395|Halo: Reach|Halo|2010|Xbox 360|Shooter|Bungie|Microsoft|9.5|91
+g396|Super Mario Galaxy 2|Super Mario|2010|Wii|Platformer|Nintendo EAD|Nintendo|7.4|97
+g397|God of War III|God of War|2010|PS3|Action|Santa Monica Studio|Sony|5.2|92
+g398|Civilization V|Civilization|2010|PC|Strategy|Firaxis|2K|8.0|90
+g399|Fallout: New Vegas|Fallout|2010|Xbox 360|RPG|Obsidian|Bethesda|11.6|84
+g400|Heavy Rain|Heavy Rain|2010|PS3|Adventure|Quantic Dream|Sony|5.3|87
+g401|Limbo|Limbo|2010|Xbox 360|Puzzle|Playdead|Playdead|1.0|90
+g402|Super Meat Boy|Super Meat Boy|2010|Xbox 360|Platformer|Team Meat|Team Meat|1.0|90
+g403|Donkey Kong Country Returns|Donkey Kong|2010|Wii|Platformer|Retro Studios|Nintendo|6.5|87
+g404|Pokémon Black and White|Pokémon|2010|DS|RPG|Game Freak|Nintendo|15.6|87
+g405|Metal Gear Solid: Peace Walker|Metal Gear|2010|PSP|Stealth|Kojima Productions|Konami|2.4|89
+g406|Xenoblade Chronicles|Xenoblade|2010|Wii|RPG|Monolith Soft|Nintendo|0.9|92
+g407|Sonic Colors|Sonic|2010|Wii|Platformer|Sonic Team|Sega|2.2|78
+g408|Battlefield: Bad Company 2|Battlefield|2010|Xbox 360|Shooter|DICE|EA|8.5|88
+g409|BioShock 2|BioShock|2010|Xbox 360|Shooter|2K Marin|2K|3.0|88
+g410|Kinect Sports|Kinect|2010|Xbox 360|Sports|Rare|Microsoft|6.0|73
+g411|Dance Central|Dance Central|2010|Xbox 360|Rhythm|Harmonix|MTV Games|2.5|82
+g412|Cut the Rope|Cut the Rope|2010|Mobile|Puzzle|ZeptoLab|Chillingo||
+g413|Ni no Kuni: Wrath of the White Witch|Ni no Kuni|2010|PS3|RPG|Level-5|Namco Bandai|1.4|85
+g414|Gran Turismo 5|Gran Turismo|2010|PS3|Racing|Polyphony Digital|Sony|11.9|84
+g415|Skate 3|Skate|2010|Xbox 360|Sports|EA Black Box|EA|3.0|80
+g416|Just Dance 2|Just Dance|2010|Wii|Rhythm|Ubisoft Paris|Ubisoft|9.4|74
+g417|F1 2010|F1|2010|Xbox 360|Racing|Codemasters|Codemasters|2.0|84
+g418|Call of Duty: Black Ops|Call of Duty|2010|Xbox 360|Shooter|Treyarch|Activision|30.0|87
+g419|Need for Speed: Hot Pursuit|Need for Speed|2010|Xbox 360|Racing|Criterion|EA|8.0|88
+g420|Pro Evolution Soccer 2011|Pro Evolution Soccer|2010|PS3|Sports|Konami|Konami|4.5|79
+g421|NBA 2K11|NBA 2K|2010|Xbox 360|Sports|Visual Concepts|2K Sports|5.0|89
+g422|Football Manager 2011|Football Manager|2010|PC|Sports|Sports Interactive|Sega|1.0|82
+g423|FIFA 11|FIFA|2010|Xbox 360|Sports|EA Canada|EA Sports|15.0|89
+g424|Madden NFL 11|Madden NFL|2010|Xbox 360|Sports|Tiburon|EA Sports|6.5|84
+g425|The Elder Scrolls V: Skyrim|The Elder Scrolls|2011|PC|RPG|Bethesda|Bethesda|30.0|94
+g426|Portal 2|Portal|2011|PC|Puzzle|Valve|Valve|4.0|95
+g427|Dark Souls|Souls|2011|PS3|Action RPG|FromSoftware|Namco Bandai|2.4|89
+g428|Batman: Arkham City|Batman: Arkham|2011|Xbox 360|Action-adventure|Rocksteady|Warner Bros.|12.5|94
+g429|The Legend of Zelda: Skyward Sword|Zelda|2011|Wii|Action-adventure|Nintendo EAD|Nintendo|3.7|93
+g430|Uncharted 3: Drake's Deception|Uncharted|2011|PS3|Action-adventure|Naughty Dog|Sony|6.8|92
+g431|Terraria|Terraria|2011|PC|Sandbox|Re-Logic|Re-Logic|44.0|83
+g432|The Witcher 2: Assassins of Kings|The Witcher|2011|PC|RPG|CD Projekt Red|CD Projekt|1.7|88
+g433|Deus Ex: Human Revolution|Deus Ex|2011|PC|RPG|Eidos Montreal|Square Enix|2.2|90
+g434|Bastion|Bastion|2011|Xbox 360|Action RPG|Supergiant Games|Warner Bros.|3.0|86
+g435|The Binding of Isaac|The Binding of Isaac|2011|PC|Roguelike|Edmund McMillen|Edmund McMillen|3.0|84
+g436|Mortal Kombat (2011)|Mortal Kombat|2011|PS3|Fighting|NetherRealm|Warner Bros.|4.0|86
+g437|Mario Kart 7|Mario Kart|2011|3DS|Racing|Nintendo EAD|Nintendo|18.9|85
+g438|Super Mario 3D Land|Super Mario|2011|3DS|Platformer|Nintendo EAD|Nintendo|12.8|90
+g439|Minecraft (release)|Minecraft|2011|PC|Sandbox|Mojang|Mojang||93
+g440|Total War: Shogun 2|Total War|2011|PC|Strategy|Creative Assembly|Sega|1.0|90
+g441|Battlefield 3|Battlefield|2011|PC|Shooter|DICE|EA|15.0|89
+g442|Dead Space 2|Dead Space|2011|Xbox 360|Survival horror|Visceral Games|EA|4.0|90
+g443|Rayman Origins|Rayman|2011|PS3|Platformer|Ubisoft Montpellier|Ubisoft|2.0|87
+g444|Forza Motorsport 4|Forza|2011|Xbox 360|Racing|Turn 10|Microsoft|4.5|91
+g445|Just Dance 3|Just Dance|2011|Wii|Rhythm|Ubisoft Paris|Ubisoft|9.9|75
+g446|F1 2011|F1|2011|Xbox 360|Racing|Codemasters|Codemasters|1.5|82
+g447|Temple Run|Temple Run|2011|Mobile|Runner|Imangi Studios|Imangi Studios||
+g448|Call of Duty: Modern Warfare 3|Call of Duty|2011|Xbox 360|Shooter|Infinity Ward|Activision|30.7|88
+g449|Assassin's Creed: Revelations|Assassin's Creed|2011|Xbox 360|Action-adventure|Ubisoft Montreal|Ubisoft|7.0|80
+g450|Need for Speed: The Run|Need for Speed|2011|Xbox 360|Racing|Black Box|EA|3.0|68
+g451|Pro Evolution Soccer 2012|Pro Evolution Soccer|2011|PS3|Sports|Konami|Konami|4.0|77
+g452|NBA 2K12|NBA 2K|2011|Xbox 360|Sports|Visual Concepts|2K Sports|5.5|90
+g453|Football Manager 2012|Football Manager|2011|PC|Sports|Sports Interactive|Sega|1.0|84
+g454|FIFA 12|FIFA|2011|Xbox 360|Sports|EA Canada|EA Sports|15.0|90
+g455|Madden NFL 12|Madden NFL|2011|Xbox 360|Sports|Tiburon|EA Sports|6.0|82
+g456|Journey|Journey|2012|PS3|Adventure|thatgamecompany|Sony|3.0|92
+g457|Mass Effect 3|Mass Effect|2012|Xbox 360|RPG|BioWare|EA|6.0|93
+g458|Dishonored|Dishonored|2012|PC|Stealth|Arkane|Bethesda|4.0|91
+g459|XCOM: Enemy Unknown|XCOM|2012|PC|Strategy|Firaxis|2K|3.0|89
+g460|Far Cry 3|Far Cry|2012|Xbox 360|Shooter|Ubisoft Montreal|Ubisoft|10.0|88
+g461|Borderlands 2|Borderlands|2012|Xbox 360|Shooter|Gearbox|2K|22.0|89
+g462|Diablo III|Diablo|2012|PC|Action RPG|Blizzard|Blizzard|30.0|88
+g463|Counter-Strike: Global Offensive|Counter-Strike|2012|PC|Shooter|Valve|Valve|25.0|83
+g464|Fez|Fez|2012|Xbox 360|Puzzle|Polytron|Polytron|1.0|89
+g465|Spelunky|Spelunky|2012|Xbox 360|Roguelike|Mossmouth|Mossmouth|1.0|90
+g466|The Walking Dead|The Walking Dead|2012|PC|Adventure|Telltale Games|Telltale Games|8.5|89
+g467|Hotline Miami|Hotline Miami|2012|PC|Action|Dennaton Games|Devolver Digital|1.0|85
+g468|FTL: Faster Than Light|FTL|2012|PC|Strategy|Subset Games|Subset Games|2.0|84
+g469|Fire Emblem Awakening|Fire Emblem|2012|3DS|Strategy|Intelligent Systems|Nintendo|2.4|92
+g470|Pokémon Black 2 and White 2|Pokémon|2012|DS|RPG|Game Freak|Nintendo|8.5|80
+g471|New Super Mario Bros. U|Super Mario|2012|Wii U|Platformer|Nintendo EAD|Nintendo|5.8|84
+g472|Animal Crossing: New Leaf|Animal Crossing|2012|3DS|Simulation|Nintendo EAD|Nintendo|13.0|88
+g473|Kid Icarus: Uprising|Kid Icarus|2012|3DS|Shooter|Sora|Nintendo|1.3|83
+g474|Halo 4|Halo|2012|Xbox 360|Shooter|343 Industries|Microsoft|9.5|87
+g475|Forza Horizon|Forza|2012|Xbox 360|Racing|Playground Games|Microsoft|3.0|85
+g476|Sleeping Dogs|Sleeping Dogs|2012|Xbox 360|Action-adventure|United Front Games|Square Enix|1.8|80
+g477|Candy Crush Saga|Candy Crush|2012|Mobile|Puzzle|King|King||
+g478|Clash of Clans|Clash|2012|Mobile|Strategy|Supercell|Supercell||74
+g479|Just Dance 4|Just Dance|2012|Wii|Rhythm|Ubisoft Paris|Ubisoft|8.0|77
+g480|F1 2012|F1|2012|Xbox 360|Racing|Codemasters|Codemasters|1.5|81
+g481|Call of Duty: Black Ops II|Call of Duty|2012|Xbox 360|Shooter|Treyarch|Activision|29.6|83
+g482|Assassin's Creed III|Assassin's Creed|2012|Xbox 360|Action-adventure|Ubisoft Montreal|Ubisoft|12.5|85
+g483|Need for Speed: Most Wanted (2012)|Need for Speed|2012|Xbox 360|Racing|Criterion|EA|6.5|85
+g484|Pro Evolution Soccer 2013|Pro Evolution Soccer|2012|PS3|Sports|Konami|Konami|3.5|76
+g485|NBA 2K13|NBA 2K|2012|Xbox 360|Sports|Visual Concepts|2K Sports|6.0|90
+g486|Football Manager 2013|Football Manager|2012|PC|Sports|Sports Interactive|Sega|1.0|84
+g487|FIFA 13|FIFA|2012|Xbox 360|Sports|EA Canada|EA Sports|14.5|88
+g488|Madden NFL 13|Madden NFL|2012|Xbox 360|Sports|Tiburon|EA Sports|6.5|81
+g489|Grand Theft Auto V|Grand Theft Auto|2013|PS3|Action-adventure|Rockstar North|Rockstar|140.0|97
+g490|The Last of Us|The Last of Us|2013|PS3|Action-adventure|Naughty Dog|Sony|17.0|95
+g491|BioShock Infinite|BioShock|2013|Xbox 360|Shooter|Irrational Games|2K|11.0|94
+g492|Super Mario 3D World|Super Mario|2013|Wii U|Platformer|Nintendo EAD|Nintendo|5.9|93
+g493|The Legend of Zelda: A Link Between Worlds|Zelda|2013|3DS|Action-adventure|Nintendo EAD|Nintendo|4.2|91
+g494|Pokémon X and Y|Pokémon|2013|3DS|RPG|Game Freak|Nintendo|16.6|87
+g495|Fire Emblem: Awakening (NA)|Fire Emblem|2013|3DS|Strategy|Intelligent Systems|Nintendo||92
+g496|Tomb Raider (2013)|Tomb Raider|2013|Xbox 360|Action-adventure|Crystal Dynamics|Square Enix|14.5|86
+g497|Papers, Please|Papers, Please|2013|PC|Puzzle|Lucas Pope|3909|5.0|85
+g498|Rayman Legends|Rayman|2013|Wii U|Platformer|Ubisoft Montpellier|Ubisoft|4.0|92
+g499|Gone Home|Gone Home|2013|PC|Adventure|Fullbright|Fullbright|0.7|86
+g500|Total War: Rome II|Total War|2013|PC|Strategy|Creative Assembly|Sega|2.0|76
+g501|SimCity (2013)|SimCity|2013|PC|Simulation|Maxis|EA|2.0|64
+g502|Gran Turismo 6|Gran Turismo|2013|PS3|Racing|Polyphony Digital|Sony|5.2|81
+g503|Forza Motorsport 5|Forza|2013|Xbox One|Racing|Turn 10|Microsoft|2.5|79
+g504|Battlefield 4|Battlefield|2013|PC|Shooter|DICE|EA|7.0|81
+g505|Age of Empires II: HD Edition|Age of Empires|2013|PC|Strategy|Hidden Path|Microsoft|3.0|68
+g506|Just Dance 2014|Just Dance|2013|Wii|Rhythm|Ubisoft Paris|Ubisoft|6.6|73
+g507|F1 2013|F1|2013|Xbox 360|Racing|Codemasters|Codemasters|1.2|79
+g508|Call of Duty: Ghosts|Call of Duty|2013|Xbox 360|Shooter|Infinity Ward|Activision|28.8|78
+g509|Assassin's Creed IV: Black Flag|Assassin's Creed|2013|PS4|Action-adventure|Ubisoft Montreal|Ubisoft|15.0|84
+g510|Need for Speed Rivals|Need for Speed|2013|PS4|Racing|Ghost Games|EA|4.0|80
+g511|Pro Evolution Soccer 2014|Pro Evolution Soccer|2013|PS3|Sports|Konami|Konami|3.0|77
+g512|NBA 2K14|NBA 2K|2013|Xbox 360|Sports|Visual Concepts|2K Sports|7.0|86
+g513|Football Manager 2014|Football Manager|2013|PC|Sports|Sports Interactive|Sega|1.0|81
+g514|FIFA 14|FIFA|2013|Xbox 360|Sports|EA Canada|EA Sports|15.0|87
+g515|Madden NFL 25|Madden NFL|2013|Xbox 360|Sports|Tiburon|EA Sports|5.5|76
+g516|Mario Kart 8|Mario Kart|2014|Wii U|Racing|Nintendo EAD|Nintendo|8.5|88
+g517|Super Smash Bros. for Wii U|Super Smash Bros.|2014|Wii U|Fighting|Sora|Nintendo|5.4|92
+g518|Dark Souls II|Souls|2014|PS3|Action RPG|FromSoftware|Namco Bandai|2.5|91
+g519|Dragon Age: Inquisition|Dragon Age|2014|PS4|RPG|BioWare|EA|6.0|85
+g520|Destiny|Destiny|2014|PS4|Shooter|Bungie|Activision|11.0|76
+g521|Titanfall|Titanfall|2014|Xbox One|Shooter|Respawn|EA|3.0|86
+g522|Wolfenstein: The New Order|Wolfenstein|2014|PC|Shooter|MachineGames|Bethesda|3.0|81
+g523|Far Cry 4|Far Cry|2014|PS4|Shooter|Ubisoft Montreal|Ubisoft|7.0|85
+g524|Middle-earth: Shadow of Mordor|Middle-earth|2014|PS4|Action-adventure|Monolith|Warner Bros.|5.0|84
+g525|Bayonetta 2|Bayonetta|2014|Wii U|Action|PlatinumGames|Nintendo|1.0|91
+g526|Donkey Kong Country: Tropical Freeze|Donkey Kong|2014|Wii U|Platformer|Retro Studios|Nintendo|2.0|83
+g527|Pokémon Omega Ruby and Alpha Sapphire|Pokémon|2014|3DS|RPG|Game Freak|Nintendo|14.5|83
+g528|Shovel Knight|Shovel Knight|2014|PC|Platformer|Yacht Club Games|Yacht Club Games|2.7|85
+g529|The Sims 4|The Sims|2014|PC|Simulation|Maxis|EA|20.0|70
+g530|Hearthstone|Hearthstone|2014|PC|Card|Blizzard|Blizzard||88
+g531|Forza Horizon 2|Forza|2014|Xbox One|Racing|Playground Games|Microsoft|3.0|86
+g532|The Elder Scrolls Online|The Elder Scrolls|2014|PC|MMORPG|ZeniMax Online|Bethesda|18.0|71
+g533|Alien: Isolation|Alien|2014|PS4|Survival horror|Creative Assembly|Sega|2.5|81
+g534|Just Dance 2015|Just Dance|2014|Wii|Rhythm|Ubisoft Paris|Ubisoft|5.0|72
+g535|F1 2014|F1|2014|Xbox 360|Racing|Codemasters|Codemasters|1.0|72
+g536|Call of Duty: Advanced Warfare|Call of Duty|2014|PS4|Shooter|Sledgehammer|Activision|21.8|83
+g537|Assassin's Creed Unity|Assassin's Creed|2014|PS4|Action-adventure|Ubisoft Montreal|Ubisoft|10.0|70
+g538|Assassin's Creed Rogue|Assassin's Creed|2014|PS3|Action-adventure|Ubisoft Sofia|Ubisoft|3.0|72
+g539|Pro Evolution Soccer 2015|Pro Evolution Soccer|2014|PS4|Sports|PES Productions|Konami|2.5|82
+g540|NBA 2K15|NBA 2K|2014|PS4|Sports|Visual Concepts|2K Sports|7.5|83
+g541|Football Manager 2015|Football Manager|2014|PC|Sports|Sports Interactive|Sega|1.2|81
+g542|FIFA 15|FIFA|2014|PS4|Sports|EA Canada|EA Sports|16.0|82
+g543|Madden NFL 15|Madden NFL|2014|PS4|Sports|Tiburon|EA Sports|5.5|81
+g544|The Witcher 3: Wild Hunt|The Witcher|2015|PC|RPG|CD Projekt Red|CD Projekt|28.0|93
+g545|Bloodborne|Souls|2015|PS4|Action RPG|FromSoftware|Sony|2.5|92
+g546|Metal Gear Solid V: The Phantom Pain|Metal Gear|2015|PS4|Stealth|Kojima Productions|Konami|6.0|93
+g547|Fallout 4|Fallout|2015|PS4|RPG|Bethesda|Bethesda|13.0|84
+g548|Splatoon|Splatoon|2015|Wii U|Shooter|Nintendo EAD|Nintendo|4.9|81
+g549|Super Mario Maker|Super Mario|2015|Wii U|Platformer|Nintendo EAD|Nintendo|4.0|88
+g550|Rocket League|Rocket League|2015|PC|Sports|Psyonix|Psyonix|10.0|86
+g551|Undertale|Undertale|2015|PC|RPG|Toby Fox|Toby Fox|5.0|92
+g552|Life Is Strange|Life Is Strange|2015|PC|Adventure|Dontnod|Square Enix|3.0|85
+g553|Ori and the Blind Forest|Ori|2015|PC|Platformer|Moon Studios|Microsoft|2.0|88
+g554|Rainbow Six Siege|Rainbow Six|2015|PS4|Shooter|Ubisoft Montreal|Ubisoft|25.0|79
+g555|Halo 5: Guardians|Halo|2015|Xbox One|Shooter|343 Industries|Microsoft|5.0|84
+g556|Rise of the Tomb Raider|Tomb Raider|2015|Xbox One|Action-adventure|Crystal Dynamics|Square Enix|9.0|86
+g557|Batman: Arkham Knight|Batman: Arkham|2015|PS4|Action-adventure|Rocksteady|Warner Bros.|5.0|87
+g558|Cities: Skylines|Cities: Skylines|2015|PC|Simulation|Colossal Order|Paradox|12.0|85
+g559|Kerbal Space Program|Kerbal|2015|PC|Simulation|Squad|Squad|5.0|88
+g560|Yakuza 0|Yakuza|2015|PS4|Action-adventure|Ryu Ga Gotoku Studio|Sega|1.0|85
+g561|Tekken 7|Tekken|2015|Arcade|Fighting|Bandai Namco|Bandai Namco|9.0|82
+g562|Mortal Kombat X|Mortal Kombat|2015|PS4|Fighting|NetherRealm|Warner Bros.|11.0|83
+g563|Forza Motorsport 6|Forza|2015|Xbox One|Racing|Turn 10|Microsoft|2.0|87
+g564|Star Wars Battlefront|Star Wars|2015|PS4|Shooter|DICE|EA|14.0|73
+g565|Just Dance 2016|Just Dance|2015|Wii|Rhythm|Ubisoft Paris|Ubisoft|4.0|73
+g566|F1 2015|F1|2015|PS4|Racing|Codemasters|Codemasters|1.0|66
+g567|Call of Duty: Black Ops III|Call of Duty|2015|PS4|Shooter|Treyarch|Activision|26.7|81
+g568|Assassin's Creed Syndicate|Assassin's Creed|2015|PS4|Action-adventure|Ubisoft Quebec|Ubisoft|5.5|76
+g569|Need for Speed (2015)|Need for Speed|2015|PS4|Racing|Ghost Games|EA|4.5|65
+g570|Pro Evolution Soccer 2016|Pro Evolution Soccer|2015|PS4|Sports|PES Productions|Konami|2.5|86
+g571|NBA 2K16|NBA 2K|2015|PS4|Sports|Visual Concepts|2K Sports|8.0|87
+g572|Football Manager 2016|Football Manager|2015|PC|Sports|Sports Interactive|Sega|1.2|80
+g573|FIFA 16|FIFA|2015|PS4|Sports|EA Canada|EA Sports|16.5|82
+g574|Madden NFL 16|Madden NFL|2015|PS4|Sports|Tiburon|EA Sports|5.5|83
+g575|Overwatch|Overwatch|2016|PC|Shooter|Blizzard|Blizzard|50.0|91
+g576|Uncharted 4: A Thief's End|Uncharted|2016|PS4|Action-adventure|Naughty Dog|Sony|16.0|93
+g577|Doom (2016)|Doom|2016|PC|Shooter|id Software|Bethesda|3.0|85
+g578|Dark Souls III|Souls|2016|PS4|Action RPG|FromSoftware|Bandai Namco|10.0|89
+g579|Pokémon Sun and Moon|Pokémon|2016|3DS|RPG|Game Freak|Nintendo|16.3|87
+g580|Pokémon Go|Pokémon|2016|Mobile|Augmented reality|Niantic|Niantic||
+g581|Final Fantasy XV|Final Fantasy|2016|PS4|RPG|Square Enix|Square Enix|10.0|81
+g582|Persona 5|Persona|2016|PS4|RPG|Atlus|Atlus|3.2|93
+g583|Stardew Valley|Stardew Valley|2016|PC|Simulation|ConcernedApe|Chucklefish|10.0|89
+g584|Inside|Inside|2016|Xbox One|Puzzle|Playdead|Playdead|1.0|93
+g585|Firewatch|Firewatch|2016|PC|Adventure|Campo Santo|Panic|2.5|81
+g586|The Witness|The Witness|2016|PC|Puzzle|Thekla|Thekla|1.0|87
+g587|Titanfall 2|Titanfall|2016|PS4|Shooter|Respawn|EA|4.0|89
+g588|Battlefield 1|Battlefield|2016|PS4|Shooter|DICE|EA|15.0|88
+g589|Civilization VI|Civilization|2016|PC|Strategy|Firaxis|2K|8.0|88
+g590|XCOM 2|XCOM|2016|PC|Strategy|Firaxis|2K|2.5|88
+g591|Total War: Warhammer|Total War|2016|PC|Strategy|Creative Assembly|Sega|1.5|86
+g592|Street Fighter V|Street Fighter|2016|PS4|Fighting|Capcom|Capcom|6.0|77
+g593|Forza Horizon 3|Forza|2016|Xbox One|Racing|Playground Games|Microsoft|3.0|91
+g594|Dishonored 2|Dishonored|2016|PC|Stealth|Arkane|Bethesda|2.0|86
+g595|Clash Royale|Clash|2016|Mobile|Strategy|Supercell|Supercell||86
+g596|Just Dance 2017|Just Dance|2016|Wii|Rhythm|Ubisoft Paris|Ubisoft|3.5|72
+g597|F1 2016|F1|2016|PS4|Racing|Codemasters|Codemasters|1.0|82
+g598|Call of Duty: Infinite Warfare|Call of Duty|2016|PS4|Shooter|Infinity Ward|Activision|13.5|77
+g599|Pro Evolution Soccer 2017|Pro Evolution Soccer|2016|PS4|Sports|PES Productions|Konami|2.5|86
+g600|NBA 2K17|NBA 2K|2016|PS4|Sports|Visual Concepts|2K Sports|8.5|90
+g601|Football Manager 2017|Football Manager|2016|PC|Sports|Sports Interactive|Sega|1.2|81
+g602|FIFA 17|FIFA|2016|PS4|Sports|EA Vancouver|EA Sports|17.5|84
+g603|Madden NFL 17|Madden NFL|2016|PS4|Sports|Tiburon|EA Sports|5.5|82
+g604|The Legend of Zelda: Breath of the Wild|Zelda|2017|Switch|Action-adventure|Nintendo EPD|Nintendo|21.5|97
+g605|Super Mario Odyssey|Super Mario|2017|Switch|Platformer|Nintendo EPD|Nintendo|20.2|97
+g606|Mario Kart 8 Deluxe|Mario Kart|2017|Switch|Racing|Nintendo EPD|Nintendo|33.0|92
+g607|Splatoon 2|Splatoon|2017|Switch|Shooter|Nintendo EPD|Nintendo|12.0|83
+g608|Horizon Zero Dawn|Horizon|2017|PS4|Action RPG|Guerrilla|Sony|10.0|89
+g609|Persona 5 (NA)|Persona|2017|PS4|RPG|Atlus|Atlus||93
+g610|NieR: Automata|NieR|2017|PS4|Action RPG|PlatinumGames|Square Enix|5.5|88
+g611|Cuphead|Cuphead|2017|Xbox One|Platformer|Studio MDHR|Studio MDHR|6.0|88
+g612|Hollow Knight|Hollow Knight|2017|PC|Platformer|Team Cherry|Team Cherry|3.0|87
+g613|PlayerUnknown's Battlegrounds|PUBG|2017|PC|Battle royale|PUBG Corporation|Bluehole|75.0|86
+g614|Fortnite Battle Royale|Fortnite|2017|PC|Battle royale|Epic Games|Epic Games||81
+g615|Divinity: Original Sin II|Divinity|2017|PC|RPG|Larian|Larian|2.5|93
+g616|Prey (2017)|Prey|2017|PC|Shooter|Arkane|Bethesda|1.0|79
+g617|Resident Evil 7: Biohazard|Resident Evil|2017|PS4|Survival horror|Capcom|Capcom|10.0|86
+g618|Assassin's Creed Origins|Assassin's Creed|2017|PS4|Action RPG|Ubisoft Montreal|Ubisoft|10.0|81
+g619|Destiny 2|Destiny|2017|PS4|Shooter|Bungie|Activision|8.0|85
+g620|Xenoblade Chronicles 2|Xenoblade|2017|Switch|RPG|Monolith Soft|Nintendo|2.2|83
+g621|Metroid: Samus Returns|Metroid|2017|3DS|Action-adventure|MercurySteam|Nintendo|1.0|85
+g622|Sonic Mania|Sonic|2017|Switch|Platformer|Christian Whitehead|Sega|1.0|86
+g623|ARMS|ARMS|2017|Switch|Fighting|Nintendo EPD|Nintendo|2.7|77
+g624|Forza Motorsport 7|Forza|2017|Xbox One|Racing|Turn 10|Microsoft|1.5|86
+g625|What Remains of Edith Finch|Edith Finch|2017|PC|Adventure|Giant Sparrow|Annapurna|1.0|88
+g626|Gran Turismo Sport|Gran Turismo|2017|PS4|Racing|Polyphony Digital|Sony|8.0|75
+g627|Just Dance 2018|Just Dance|2017|Wii|Rhythm|Ubisoft Paris|Ubisoft|3.0|73
+g628|F1 2017|F1|2017|PS4|Racing|Codemasters|Codemasters|1.0|85
+g629|Call of Duty: WWII|Call of Duty|2017|PS4|Shooter|Sledgehammer|Activision|20.0|79
+g630|Need for Speed Payback|Need for Speed|2017|PS4|Racing|Ghost Games|EA|3.5|62
+g631|Pro Evolution Soccer 2018|Pro Evolution Soccer|2017|PS4|Sports|PES Productions|Konami|2.0|84
+g632|NBA 2K18|NBA 2K|2017|PS4|Sports|Visual Concepts|2K Sports|10.0|84
+g633|Football Manager 2018|Football Manager|2017|PC|Sports|Sports Interactive|Sega|1.2|79
+g634|FIFA 18|FIFA|2017|PS4|Sports|EA Vancouver|EA Sports|24.0|84
+g635|Madden NFL 18|Madden NFL|2017|PS4|Sports|Tiburon|EA Sports|5.5|79
+g636|Red Dead Redemption 2|Red Dead|2018|PS4|Action-adventure|Rockstar Games|Rockstar|36.0|97
+g637|God of War (2018)|God of War|2018|PS4|Action-adventure|Santa Monica Studio|Sony|19.5|94
+g638|Marvel's Spider-Man|Spider-Man|2018|PS4|Action-adventure|Insomniac|Sony|20.0|87
+g639|Super Smash Bros. Ultimate|Super Smash Bros.|2018|Switch|Fighting|Sora|Nintendo|22.0|93
+g640|Monster Hunter: World|Monster Hunter|2018|PS4|Action RPG|Capcom|Capcom|20.0|90
+g641|Celeste|Celeste|2018|PC|Platformer|Matt Makes Games|Matt Makes Games|1.0|94
+g642|Dead Cells|Dead Cells|2018|PC|Roguelike|Motion Twin|Motion Twin|5.0|89
+g643|Return of the Obra Dinn|Obra Dinn|2018|PC|Adventure|Lucas Pope|3909|0.5|89
+g644|Into the Breach|Into the Breach|2018|PC|Strategy|Subset Games|Subset Games|1.0|90
+g645|Among Us|Among Us|2018|Mobile|Party|Innersloth|Innersloth||
+g646|Pokémon: Let's Go, Pikachu! and Eevee!|Pokémon|2018|Switch|RPG|Game Freak|Nintendo|15.0|79
+g647|Octopath Traveler|Octopath Traveler|2018|Switch|RPG|Square Enix|Square Enix|3.0|83
+g648|Detroit: Become Human|Detroit|2018|PS4|Adventure|Quantic Dream|Sony|6.0|78
+g649|Shadow of the Tomb Raider|Tomb Raider|2018|PS4|Action-adventure|Eidos Montreal|Square Enix|9.0|75
+g650|Far Cry 5|Far Cry|2018|PS4|Shooter|Ubisoft Montreal|Ubisoft|10.0|81
+g651|Battlefield V|Battlefield|2018|PS4|Shooter|DICE|EA|7.3|73
+g652|Forza Horizon 4|Forza|2018|Xbox One|Racing|Playground Games|Microsoft|4.0|92
+g653|RimWorld|RimWorld|2018|PC|Simulation|Ludeon Studios|Ludeon Studios|3.0|87
+g654|Mega Man 11|Mega Man|2018|PS4|Platformer|Capcom|Capcom|1.5|82
+g655|Just Dance 2019|Just Dance|2018|Switch|Rhythm|Ubisoft Paris|Ubisoft|3.0|75
+g656|F1 2018|F1|2018|PS4|Racing|Codemasters|Codemasters|1.0|83
+g657|Call of Duty: Black Ops 4|Call of Duty|2018|PS4|Shooter|Treyarch|Activision|16.0|83
+g658|Assassin's Creed Odyssey|Assassin's Creed|2018|PS4|Action RPG|Ubisoft Quebec|Ubisoft|10.0|83
+g659|Pro Evolution Soccer 2019|Pro Evolution Soccer|2018|PS4|Sports|PES Productions|Konami|2.0|80
+g660|NBA 2K19|NBA 2K|2018|PS4|Sports|Visual Concepts|2K Sports|12.0|82
+g661|Football Manager 2019|Football Manager|2018|PC|Sports|Sports Interactive|Sega|1.5|80
+g662|FIFA 19|FIFA|2018|PS4|Sports|EA Vancouver|EA Sports|20.0|83
+g663|Madden NFL 19|Madden NFL|2018|PS4|Sports|Tiburon|EA Sports|5.5|82
+g664|Sekiro: Shadows Die Twice|Souls|2019|PS4|Action-adventure|FromSoftware|Activision|5.0|90
+g665|Resident Evil 2 (2019)|Resident Evil|2019|PS4|Survival horror|Capcom|Capcom|10.0|91
+g666|Disco Elysium|Disco Elysium|2019|PC|RPG|ZA/UM|ZA/UM|1.0|91
+g667|Outer Wilds|Outer Wilds|2019|PC|Adventure|Mobius Digital|Annapurna|1.0|85
+g668|Control|Control|2019|PS4|Action-adventure|Remedy|505 Games|3.0|82
+g669|Death Stranding|Death Stranding|2019|PS4|Action-adventure|Kojima Productions|Sony|5.0|82
+g670|Fire Emblem: Three Houses|Fire Emblem|2019|Switch|Strategy|Intelligent Systems|Nintendo|4.1|89
+g671|Luigi's Mansion 3|Luigi's Mansion|2019|Switch|Action-adventure|Next Level Games|Nintendo|11.4|86
+g672|Pokémon Sword and Shield|Pokémon|2019|Switch|RPG|Game Freak|Nintendo|24.3|80
+g673|Super Mario Maker 2|Super Mario|2019|Switch|Platformer|Nintendo EPD|Nintendo|8.0|88
+g674|The Legend of Zelda: Link's Awakening (2019)|Zelda|2019|Switch|Action-adventure|Grezzo|Nintendo|6.1|87
+g675|Apex Legends|Apex Legends|2019|PC|Battle royale|Respawn|EA||89
+g676|Slay the Spire|Slay the Spire|2019|PC|Card|Mega Crit|Mega Crit|3.0|89
+g677|Baba Is You|Baba Is You|2019|PC|Puzzle|Hempuli|Hempuli|0.5|87
+g678|Untitled Goose Game|Goose|2019|Switch|Puzzle|House House|Panic|1.0|81
+g679|Devil May Cry 5|Devil May Cry|2019|PS4|Action|Capcom|Capcom|6.0|88
+g680|Kingdom Hearts III|Kingdom Hearts|2019|PS4|Action RPG|Square Enix|Square Enix|6.0|83
+g681|Mortal Kombat 11|Mortal Kombat|2019|PS4|Fighting|NetherRealm|Warner Bros.|12.0|82
+g682|Borderlands 3|Borderlands|2019|PS4|Shooter|Gearbox|2K|15.0|81
+g683|Age of Empires II: Definitive Edition|Age of Empires|2019|PC|Strategy|Forgotten Empires|Xbox Game Studios|2.0|81
+g684|Total War: Three Kingdoms|Total War|2019|PC|Strategy|Creative Assembly|Sega|2.0|83
+g685|Ring Fit Adventure|Ring Fit|2019|Switch|Sports|Nintendo EPD|Nintendo|15.0|83
+g686|Beat Saber|Beat Saber|2019|PC|Rhythm|Beat Games|Beat Games|4.0|92
+g687|Mario Kart Tour|Mario Kart|2019|Mobile|Racing|Nintendo EPD|Nintendo||
+g688|Just Dance 2020|Just Dance|2019|Switch|Rhythm|Ubisoft Paris|Ubisoft|3.0|74
+g689|F1 2019|F1|2019|PS4|Racing|Codemasters|Codemasters|1.0|84
+g690|Call of Duty: Modern Warfare (2019)|Call of Duty|2019|PS4|Shooter|Infinity Ward|Activision|30.0|81
+g691|Need for Speed Heat|Need for Speed|2019|PS4|Racing|Ghost Games|EA|3.0|72
+g692|eFootball PES 2020|Pro Evolution Soccer|2019|PS4|Sports|PES Productions|Konami|2.0|80
+g693|NBA 2K20|NBA 2K|2019|PS4|Sports|Visual Concepts|2K Sports|14.0|78
+g694|Football Manager 2020|Football Manager|2019|PC|Sports|Sports Interactive|Sega|1.5|82
+g695|FIFA 20|FIFA|2019|PS4|Sports|EA Vancouver|EA Sports|20.0|79
+g696|Madden NFL 20|Madden NFL|2019|PS4|Sports|Tiburon|EA Sports|5.5|76
+g697|Animal Crossing: New Horizons|Animal Crossing|2020|Switch|Simulation|Nintendo EPD|Nintendo|31.2|90
+g698|The Last of Us Part II|The Last of Us|2020|PS4|Action-adventure|Naughty Dog|Sony|4.0|93
+g699|Ghost of Tsushima|Ghost of Tsushima|2020|PS4|Action-adventure|Sucker Punch|Sony|5.0|83
+g700|Hades|Hades|2020|PC|Roguelike|Supergiant Games|Supergiant Games|1.0|93
+g701|Half-Life: Alyx|Half-Life|2020|PC|Shooter|Valve|Valve|1.0|93
+g702|Doom Eternal|Doom|2020|PC|Shooter|id Software|Bethesda|3.0|88
+g703|Final Fantasy VII Remake|Final Fantasy|2020|PS4|RPG|Square Enix|Square Enix|5.0|87
+g704|Cyberpunk 2077|Cyberpunk|2020|PC|RPG|CD Projekt Red|CD Projekt|13.0|86
+g705|Fall Guys: Ultimate Knockout|Fall Guys|2020|PC|Party|Mediatonic|Devolver Digital|10.0|81
+g706|Genshin Impact|Genshin Impact|2020|Mobile|Action RPG|miHoYo|miHoYo||81
+g707|Ori and the Will of the Wisps|Ori|2020|PC|Platformer|Moon Studios|Xbox Game Studios|2.0|90
+g708|Paper Mario: The Origami King|Paper Mario|2020|Switch|RPG|Intelligent Systems|Nintendo|3.1|80
+g709|Super Mario 3D All-Stars|Super Mario|2020|Switch|Platformer|Nintendo EPD|Nintendo|9.0|83
+g710|Microsoft Flight Simulator (2020)|Flight Simulator|2020|PC|Simulation|Asobo|Xbox Game Studios|2.0|91
+g711|Factorio|Factorio|2020|PC|Simulation|Wube Software|Wube Software|2.5|90
+g712|Crusader Kings III|Crusader Kings|2020|PC|Strategy|Paradox|Paradox|1.0|91
+g713|Resident Evil 3 (2020)|Resident Evil|2020|PS4|Survival horror|Capcom|Capcom|5.0|79
+g714|Marvel's Spider-Man: Miles Morales|Spider-Man|2020|PS5|Action-adventure|Insomniac|Sony|4.1|85
+g715|Demon's Souls (2020)|Souls|2020|PS5|Action RPG|Bluepoint|Sony|1.4|92
+g716|Just Dance 2021|Just Dance|2020|Switch|Rhythm|Ubisoft Paris|Ubisoft|2.5|73
+g717|F1 2020|F1|2020|PS4|Racing|Codemasters|Codemasters|1.0|86
+g718|Call of Duty: Black Ops Cold War|Call of Duty|2020|PS4|Shooter|Treyarch|Activision|30.0|76
+g719|Assassin's Creed Valhalla|Assassin's Creed|2020|PS4|Action RPG|Ubisoft Montreal|Ubisoft|10.0|84
+g720|eFootball PES 2021 Season Update|Pro Evolution Soccer|2020|PS4|Sports|PES Productions|Konami|1.5|77
+g721|NBA 2K21|NBA 2K|2020|PS4|Sports|Visual Concepts|2K Sports|8.0|67
+g722|Football Manager 2021|Football Manager|2020|PC|Sports|Sports Interactive|Sega|1.5|85
+g723|FIFA 21|FIFA|2020|PS4|Sports|EA Vancouver|EA Sports|25.0|74
+g724|Madden NFL 21|Madden NFL|2020|PS4|Sports|Tiburon|EA Sports|6.0|63

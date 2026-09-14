@@ -43,7 +43,10 @@ public record GridWorkbenchStudio() implements Studio<GridWorkbenchHome> {
             HanArticleSpec.INSTANCE,
             // Endless Table: the stress bench for the two branches — a window
             // of twenty over a million rows, measured through the party.
-            EndlessTableSpec.INSTANCE
+            EndlessTableSpec.INSTANCE,
+            // Games Catalogue: sorting and filtering from header cells that are
+            // the relation's own, over seven hundred releases.
+            GamesCatalogueSpec.INSTANCE
     );
 
     public static final GridWorkbenchStudio INSTANCE = new GridWorkbenchStudio();
