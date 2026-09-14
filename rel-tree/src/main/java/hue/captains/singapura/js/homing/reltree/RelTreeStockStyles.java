@@ -29,9 +29,22 @@ public record RelTreeStockStyles() implements CssGroup<RelTreeStockStyles> {
         }
     }
 
+    /** The busy glyph, after the text: muted, a fixed box so the cycling frames do not jitter the line. */
+    public record hrt_text_cell_busy() implements CssClass<RelTreeStockStyles> {
+        @Override public String body() { return """
+                display: inline-block;
+                width: 1.2em;
+                margin-left: 6px;
+                text-align: center;
+                color: var(--color-accent);
+                font-family: monospace;
+                """;
+        }
+    }
+
     @Override public CssImportsFor<RelTreeStockStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<RelTreeStockStyles>> cssClasses() {
-        return List.of(new hrt_text_cell(), new hrt_text_cell_current());
+        return List.of(new hrt_text_cell(), new hrt_text_cell_current(), new hrt_text_cell_busy());
     }
 }

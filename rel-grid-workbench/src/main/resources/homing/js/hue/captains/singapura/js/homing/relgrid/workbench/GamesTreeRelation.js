@@ -19,13 +19,16 @@
 //     mask's panel meanwhile — the tree is locked and washed, as for a copy;
 //   · one type (Puzzle) answers NOTHING, then fetches and TELLS — the tree is
 //     never locked, and the children appear when the owner is told.
+// While either fetch runs THE NODE ITSELF SPINS: the cell is the domain's, so
+// the domain marks it busy when the question arrives and clear when the
+// children land. The tree knows nothing of it.
 //
 //   createGamesTreeRelation(store, { branch, onViewChanged?, slow?, told?, delay? })
 //       branch: the relation's OWN, unactivated when handed; it activates
 //   relation.view() / cellFor(key)                 the tree relation
 //   relation.answer(question, mask) → thenable     the channel, as the host wires it
 //   relation.open(key) / close(key) / closeAll()   the domain's own fold state, for a host's controls
-//   relation.isOpen(key) / cellCount() / describe()
+//   relation.isOpen(key) / cell(key) / cellCount() / describe()
 //
 // Keys: 't:' + type; 's:' + type + '|' + series (a series may recur under two
 // types); the game's own pk for a title.
@@ -98,6 +101,11 @@ function createGamesTreeRelation(store, opts) {
     function tell() {
         if (opts.onViewChanged) opts.onViewChanged();
     }
+    // The node's own cell shows the wait: made on first ask, so it exists by the time it is asked about.
+    function busy(key, on) {
+        var c = cells.get(key);
+        if (c) c.setBusy(on);
+    }
 
     var relation = {
         view: function () { return places(); },
@@ -115,7 +123,8 @@ function createGamesTreeRelation(store, opts) {
             if (question instanceof RelTreeUnfold) {
                 var key = question.key, t = key.slice(0, 2) === "t:" ? key.slice(2) : null;
                 if (t === toldType) {                          // nothing now; fetched, then told
-                    setTimeout(function () { open.add(key); tell(); }, delay);
+                    busy(key, true);
+                    setTimeout(function () { busy(key, false); open.add(key); tell(); }, delay);
                     return Promise.resolve();
                 }
                 if (t === slowType) {                          // late, with a note on the panel meanwhile
@@ -124,8 +133,9 @@ function createGamesTreeRelation(store, opts) {
                     var note = nb.createElement("note", "div");
                     note.textContent = "Fetching the " + t + " series… (the tree is locked and washed; this is the domain's note on the tree's panel)";
                     mask.panel(note);
+                    busy(key, true);
                     return new Promise(function (resolve) {
-                        setTimeout(function () { open.add(key); resolve(new RelTreeView(places())); nb.dissolve(); }, delay);
+                        setTimeout(function () { busy(key, false); open.add(key); resolve(new RelTreeView(places())); nb.dissolve(); }, delay);
                     });
                 }
                 open.add(key);
@@ -143,6 +153,7 @@ function createGamesTreeRelation(store, opts) {
         closeAll: function () { open.clear(); },
         isOpen: function (key) { return open.has(key); },
         cellCount: function () { return cells.size; },
+        cell: function (key) { return cells.get(key) || null; },      // for a host's readout, or a test: the cell as made, or null
         types: function () { return types.slice(); },
         typeKey: typeKey, seriesKey: seriesKey,
         describe: function () {

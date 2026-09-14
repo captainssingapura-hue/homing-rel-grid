@@ -565,7 +565,9 @@ keyboard to the tree on the second press, as it does the grid's.
   note sits on the tree's panel, and every key is refused until the answer lands — exactly what a
   copy does on the grid. The status says *PENDING — locked*.
 - **Unfold Puzzle.** The domain answers **nothing** — the rows stay, the tree is free, the cursor
-  moves — and a second later it **tells**: the series appear, the cursor keeps its node.
+  moves — and a second later it **tells**: the series appear, the cursor keeps its node. The
+  node itself **spins** meanwhile: the cell is the domain's, so the wait is shown where it is
+  waited for, and the tree never knew. (Strategy spins too, under the wash.)
 - **Fold a type with the cursor deep inside it.** The cursor lands on the type that folded, not
   on the row that happens to be third now.
 - **Reveal Need for Speed: Most Wanted (2005).** The navigator's move: the *domain* opens Racing

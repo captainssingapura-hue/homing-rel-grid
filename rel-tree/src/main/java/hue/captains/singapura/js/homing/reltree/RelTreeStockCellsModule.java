@@ -18,7 +18,8 @@ public record RelTreeStockCellsModule() implements DomModule<RelTreeStockCellsMo
     public static final RelTreeStockCellsModule INSTANCE = new RelTreeStockCellsModule();
     @Override public ImportsFor<RelTreeStockCellsModule> imports() {
         return ImportsFor.<RelTreeStockCellsModule>builder()
-                .add(new ModuleImports<>(List.of(new RelTreeStockStyles.hrt_text_cell(), new RelTreeStockStyles.hrt_text_cell_current()),
+                .add(new ModuleImports<>(List.of(new RelTreeStockStyles.hrt_text_cell(), new RelTreeStockStyles.hrt_text_cell_current(),
+                        new RelTreeStockStyles.hrt_text_cell_busy()),
                         RelTreeStockStyles.INSTANCE))
                 .build();
     }

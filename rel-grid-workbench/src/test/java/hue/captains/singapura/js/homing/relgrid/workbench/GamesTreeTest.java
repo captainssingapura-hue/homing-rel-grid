@@ -45,8 +45,10 @@ class GamesTreeTest extends JsModuleTestBase {
                 function shown() { var out = [], p = tree.places(); for (var i = 0; i < p.rows(); i++) out.push(p.keyAt(i)); return out; }
                 function textAt(i) { return container.children[0].children[0].children[i].children[1].textContent; }
                 function mask() { var w = container.children[0]; for (var k = 0; k < w.children.length; k++) if ((w.children[k].className || '').split(' ').indexOf('hrt-mask') >= 0) return w.children[k]; return null; }
+                // Is the node's own cell spinning? The glyph is the cell's child, wearing the busy class.
+                function busy(key) { var c = relation.cell(key); if (!c) return false; var el = c.cellElement(); return el.children.length === 1 && (el.children[0].className || '').split(' ').indexOf('hrt-text-cell-busy') >= 0; }
                 return { tree: tree, relation: relation, store: store, treeB: treeB, cellsB: domainB.getBranch('cells'),
-                         shown: shown, textAt: textAt, mask: mask, moves: moves, told: function () { return told; } };
+                         shown: shown, textAt: textAt, mask: mask, busy: busy, moves: moves, told: function () { return told; } };
             }
             """;
 
@@ -129,12 +131,14 @@ class GamesTreeTest extends JsModuleTestBase {
                     if (!m || !B.tree.isPending() || m.children.length !== 1) return false;
                     if (!/Fetching the Strategy series/.test(m.children[0].children[0].textContent)) return false;
                     if (B.tree.unfold('t:Sports') || B.tree.selectNode('t:Sports')) return false;   // locked
+                    // And the node itself spins — the domain's glyph in the domain's cell, under the wash.
+                    if (!B.busy('t:Strategy') || B.busy('t:Sports')) return false;
                     runTimers();                                               // the fetch lands
                     return true;
                 })()"""), "the slow type locks the tree and puts the domain's note on the panel");
         assertTrue(evalBool("""
                 (() => {
-                    if (B.tree.isPending() || !B.relation.isOpen('t:Strategy')) return false;
+                    if (B.tree.isPending() || !B.relation.isOpen('t:Strategy') || B.busy('t:Strategy')) return false;
                     if (B.shown().indexOf('s:Strategy|Age of Empires') < 0 && !B.shown().some(function (k) { return k.indexOf('s:Strategy|') === 0; })) return false;
                     runTimers();                                               // the hold ends; the mask comes down
                     if (B.mask() !== null) return false;
@@ -145,9 +149,10 @@ class GamesTreeTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     if (B.tree.isPending() || B.mask() !== null || B.relation.isOpen('t:Puzzle')) return false;
+                    if (!B.busy('t:Puzzle')) return false;                      // the node spins; nothing else waits
                     if (!B.tree.selectNode('t:Sports')) return false;          // free meanwhile
                     runTimers();                                               // fetched, and told
-                    if (B.told() !== 1 || !B.relation.isOpen('t:Puzzle')) return false;
+                    if (B.told() !== 1 || !B.relation.isOpen('t:Puzzle') || B.busy('t:Puzzle')) return false;
                     return B.shown().some(function (k) { return k.indexOf('s:Puzzle|') === 0; }) && B.tree.cursor() === 't:Sports';
                 })()"""), "the told type answers nothing and tells later; the tree never locked");
     }
