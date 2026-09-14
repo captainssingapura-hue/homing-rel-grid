@@ -143,7 +143,7 @@ public final class RelGridTestDom {
                         if (prev) prev.dispatch('blur', {});
                     },
                     select: function () {},
-                    setAttribute: function () {}, getAttribute: function () { return null; },
+                    setAttribute: function () {}, removeAttribute: function () {}, getAttribute: function () { return null; },
                     // Geometry for a header drag: _rl / _rr (and _rt / _rb) set by a test; 100 x 20 otherwise.
                     getBoundingClientRect: function () {
                         var l = this._rl || 0, r = (this._rr != null) ? this._rr : l + 100;

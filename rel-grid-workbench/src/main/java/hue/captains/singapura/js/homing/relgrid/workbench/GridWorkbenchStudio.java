@@ -46,7 +46,10 @@ public record GridWorkbenchStudio() implements Studio<GridWorkbenchHome> {
             EndlessTableSpec.INSTANCE,
             // Games Catalogue: sorting and filtering from header cells that are
             // the relation's own, over seven hundred releases.
-            GamesCatalogueSpec.INSTANCE
+            GamesCatalogueSpec.INSTANCE,
+            // Games Tree: the tree view's first bench — the same catalogue as a lazy
+            // three-level tree, the fold and unfold asked on the channel.
+            GamesTreeSpec.INSTANCE
     );
 
     public static final GridWorkbenchStudio INSTANCE = new GridWorkbenchStudio();

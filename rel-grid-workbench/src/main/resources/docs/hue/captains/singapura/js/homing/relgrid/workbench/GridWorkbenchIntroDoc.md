@@ -539,6 +539,48 @@ relation that composes them and answers `view()`. Nothing here is the grid's, an
 the demonstration a provided layer will be extracted from — a decorator that wraps any relation
 and gives it this header, and the parts a domain composes for itself.
 
+## Games Tree
+
+The fifth bench, and the first for the **tree view** — RFC 0050 · Episode 3's second component
+on Episode 2's doctrine, in its own crate beside the grid. The same catalogue, as a tree: *type
+→ series → title*, seven hundred and twenty-four leaves under twenty-four roots, **lazily** — the
+types are closed at first, a series is asked for when its type unfolds, a title when its series
+does, and nothing under a closed node is ever built. The tree owns the rows, the indent, the
+carets, the cursor and the keys; the relation owns every cell and its own fold state; the two
+speak on the **ask channel** the grid already had, where an unfold and a fold are *questions*
+answered with the whole View to present next — or with nothing.
+
+### What to try
+
+Switch the workspace kind to **Games Tree**. Click a row first — the workspace hands the pane's
+keyboard to the tree on the second press, as it does the grid's.
+
+- **Press a caret, or →, on a type.** The series come at once — the question resolved on a
+  microtask, and no mask was ever shown. The rows below moved down; the row you pressed is the
+  same row, and the cursor is on it.
+- **← on an open node** asks the fold; **← on a leaf or a closed node** steps to the parent;
+  **→ on an open node** steps to the first child. **Space** toggles; **Enter** activates — the
+  status says which node. Home, End, the page keys, and ↑ ↓ are what you expect.
+- **Unfold Strategy.** The domain answers late: the tree is **locked and washed**, the domain's
+  note sits on the tree's panel, and every key is refused until the answer lands — exactly what a
+  copy does on the grid. The status says *PENDING — locked*.
+- **Unfold Puzzle.** The domain answers **nothing** — the rows stay, the tree is free, the cursor
+  moves — and a second later it **tells**: the series appear, the cursor keeps its node.
+- **Fold a type with the cursor deep inside it.** The cursor lands on the type that folded, not
+  on the row that happens to be third now.
+- **Reveal Need for Speed: Most Wanted (2005).** The navigator's move: the *domain* opens Racing
+  and the series — it owns the fold state — tells, and asks for the cursor. The tree opened
+  nothing on its behalf.
+- **Dock two.** Each keeps its own folds: the fold state is the relation's, and there are two.
+
+### What it is built from
+
+`rel-channel` — the ask channel's core, extracted from the grid's channel and shared; the family's
+protocol crate, with seven tree records generated beside the grid's; `rel-tree` — places, rows,
+cells, cursor, gestures, layout, the channel's tree customers, a stock text cell — with its RFC
+0044 ledger empty from the first commit; and, here, a relation over the store that answers places
+and the two questions three ways. The record is RFC 0050 · Episode 3-ext1 in the studio.
+
 ## Adding a bench
 
 1. Write the specimens as widgets, beside the ones in `relgrid.workbench`.

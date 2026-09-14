@@ -26,6 +26,8 @@
 
         rel-grid is the primitive — plain JS classes with no runtime
         dependency on anything, packaged as homing DomModules for this stack.
+        rel-tree is the tree view (Episode 3): the second component on the
+        same doctrine, over the channel and the protocol and nothing of the grid.
         rel-grid-workbench is the solo studio of benches that try to make it
         fail, on the workspace shell.
     </description>
@@ -36,6 +38,7 @@
         <module>rel-grid</module>
         <module>rel-grid-selection</module>
         <module>rel-grid-group</module>
+        <module>rel-tree</module>
         <module>rel-grid-workbench</module>
     </modules>
 
