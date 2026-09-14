@@ -567,7 +567,10 @@ keyboard to the tree on the second press, as it does the grid's.
 - **Unfold Puzzle.** The domain answers **nothing** — the rows stay, the tree is free, the cursor
   moves — and a second later it **tells**: the series appear, the cursor keeps its node. The
   node itself **spins** meanwhile: the cell is the domain's, so the wait is shown where it is
-  waited for, and the tree never knew. (Strategy spins too, under the wash.)
+  waited for, and the tree never knew. (Strategy spins too, under the wash.) The ring is a CSS
+  keyframe animation: the class that plays it is the crate's, typed; the `@keyframes` it names
+  is raw CSS the crate declares and this workbench's fixtures install in every theme's globals —
+  a proof of concept for a typed keyframes the class would depend on.
 - **Fold a type with the cursor deep inside it.** The cursor lands on the type that folded, not
   on the row that happens to be third now.
 - **Reveal Need for Speed: Most Wanted (2005).** The navigator's move: the *domain* opens Racing

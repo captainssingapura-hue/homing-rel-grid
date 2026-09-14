@@ -11,20 +11,18 @@
 // a node's children marks the node busy when the question arrives and clear
 // when the children land — whether it answers late under the tree's mask or
 // answers nothing and tells later — and the tree knows nothing of it. The
-// glyph is cycled on a clock rather than a CSS animation: the typed sheet
-// has no keyframes, and a cell's clock is the cell's own to stop.
+// ring is CSS: a class that plays an animation, and a @keyframes the class
+// names (RelTreeStockStyles.KEYFRAMES) that the deployment installs in its
+// themes' globals until the typed sheet can declare one. No clock here.
 //
 //   new RelTreeTextCell({ branch, text })
 //   cellElement()        the span, minted once on the cell's branch
 //   onSelect(mode)       'none' | 'shallow' — the cell wears the mode as a class, and may ignore it
 //   set(text)            the domain updates its own cell; nobody tells the tree
-//   setBusy(on)          a spinning glyph after the text while on; the clock stops when off
+//   setBusy(on)          a spinning ring after the text while on
 //   text() / isBusy()
-//   dispose()            the domain's to call: stops the clock, dissolves the cell's branch
+//   dispose()            the domain's to call: dissolves the cell's branch
 // =============================================================================
-
-var _HRT_BUSY_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-var _HRT_BUSY_TICK = 90;
 
 class RelTreeTextCell {
 
@@ -35,9 +33,7 @@ class RelTreeTextCell {
         this._branch.activate(this);
         this._text = (opts.text === undefined || opts.text === null) ? "" : String(opts.text);
         this._el = null;
-        this._busy = null;                       // the glyph, minted on first use and kept
-        this._clock = null;                      // the busy clock, while spinning
-        this._frame = 0;
+        this._busy = null;                       // the ring, minted on first use and kept
     }
 
     cellElement() {
@@ -54,47 +50,35 @@ class RelTreeTextCell {
     }
 
     text() { return this._text; }
-    isBusy() { return this._clock !== null; }
+    isBusy() { return !!(this._busy && this._el && this._busy.parentNode === this._el); }
 
-    /** The text is the cell's own; the glyph, if spinning, stays after it. */
+    /** The text is the cell's own; the ring, if shown, stays after it. */
     set(text) {
         this._text = (text === undefined || text === null) ? "" : String(text);
         if (this._el) {
+            var busy = this.isBusy();
             this._el.textContent = this._text;
-            if (this._busy && this._clock !== null) this._el.appendChild(this._busy);
+            if (busy) this._el.appendChild(this._busy);
         }
         return this;
     }
 
+    /** The ring is a class that plays the animation; showing and hiding it is all the cell does. */
     setBusy(on) {
         if (on) {
-            if (this._clock !== null) return this;
             var el = this.cellElement();
             if (!this._busy) {
                 this._busy = this._branch.createElement("busy", "span");
                 css.addClass(this._busy, hrt_text_cell_busy);
             }
-            this._busy.textContent = _HRT_BUSY_FRAMES[this._frame];
-            el.appendChild(this._busy);
-            this._tick();
-        } else {
-            if (this._clock !== null) { clearTimeout(this._clock); this._clock = null; }
-            if (this._busy && this._busy.parentNode) this._busy.parentNode.removeChild(this._busy);
+            if (this._busy.parentNode !== el) el.appendChild(this._busy);
+        } else if (this._busy && this._busy.parentNode) {
+            this._busy.parentNode.removeChild(this._busy);
         }
         return this;
     }
 
-    _tick() {
-        var self = this;
-        this._clock = setTimeout(function () {
-            self._frame = (self._frame + 1) % _HRT_BUSY_FRAMES.length;
-            self._busy.textContent = _HRT_BUSY_FRAMES[self._frame];
-            self._tick();
-        }, _HRT_BUSY_TICK);
-    }
-
     dispose() {
-        this.setBusy(false);
         this._branch.dissolve();
         this._el = null;
         this._busy = null;
