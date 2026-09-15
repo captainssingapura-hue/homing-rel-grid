@@ -242,6 +242,49 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
     }
 
     /**
+     * THE GUTTER: a row's number, the grid's own, stuck to the left of whatever
+     * scrolls the table — under the editor (50) and the mask (60), over the
+     * cells it slides across. Muted, right-aligned, tabular so the digits line
+     * up; the header's raised surface so it reads as chrome, not data.
+     */
+    public record hrg_gutter() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                position: sticky;
+                left: 0;
+                z-index: 30;
+                padding: 0 8px;
+                text-align: right;
+                font-weight: 400;
+                font-variant-numeric: tabular-nums;
+                color: var(--color-text-muted);
+                background: var(--color-surface-raised);
+                border-right: 1px solid var(--color-border);
+                border-bottom: 1px solid var(--color-border);
+                white-space: nowrap;
+                user-select: none;
+                -webkit-user-select: none;
+                cursor: default;
+                """;
+        }
+    }
+
+    /** The gutter's corner: the header's cell above the numbers, stuck both ways, above the sticky header (35). */
+    public record hrg_gutter_head() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                z-index: 36;
+                """;
+        }
+    }
+
+    /** The gutter's col: as wide as the numbers need, {@code --hrg-gutter-w} to say otherwise. */
+    public record hrg_gutter_col() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                width: var(--hrg-gutter-w, 44px);
+                """;
+        }
+    }
+
+    /**
      * THE MASK. Over the whole table, in the wrapper: a wash heavy enough that
      * the rows beneath read as unavailable rather than current, and focusable
      * so the keys stop here. It dims rather than replaces — the context stays.
@@ -395,7 +438,8 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
                 // looks
                 new hrg_wrap(), new hrg_frame(), new hrg_lit(),
                 new hrg_table(), new hrg_th(), new hrg_sticky(), new hrg_resize_handle(), new hrg_col(), new hrg_resize_guide(),
-                new hrg_td(), new hrg_merge(), new hrg_edit(), new hrg_mask(), new hrg_panel(), new hrg_scratch(),
+                new hrg_td(), new hrg_merge(), new hrg_edit(), new hrg_gutter(), new hrg_gutter_head(), new hrg_gutter_col(),
+                new hrg_mask(), new hrg_panel(), new hrg_scratch(),
                 // states, after the looks they qualify
                 new hrg_fixed(), new hrg_ov_ellipsis(), new hrg_ov_clip(), new hrg_ov_wrap(),
                 new hrg_lead(), new hrg_covered(), new hrg_group_end(),

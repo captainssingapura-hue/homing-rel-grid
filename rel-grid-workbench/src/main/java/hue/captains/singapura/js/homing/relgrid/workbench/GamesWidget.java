@@ -103,6 +103,7 @@ public final class GamesWidget extends WorkspaceWidget<WorkspaceWidget._None, Ga
                 "        relation: relation,",
                 "        header: { show: true, sticky: true },",
                 "        frame: false,                          // the host frames the scrollport; see above",
+                "        rowNumbers: true,                      // the gutter: a position each, the grid's own, locked left",
                 "        label: 'Games catalogue',",
                 "        onCursorMoved: function () { report(); }",
                 "    });",

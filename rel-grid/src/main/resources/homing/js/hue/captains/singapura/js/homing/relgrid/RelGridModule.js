@@ -40,6 +40,10 @@
 //                         // whatever scrolls the table, so the scrollbar sits inside the light. The
 //                         // host wears hrg_frame and hrg_lit on that element; the cursor's colour
 //                         // follows, since hrg_lit's property inherits. Default: the grid frames its wrap.
+//       rowNumbers?,      // true: a GUTTER — a leading column of row numbers, the grid's own, locked to
+//                         // the left of whatever scrolls the table. A number is a position, 1-based,
+//                         // never a value; a press on one selects the row. Not a column: hide, reorder,
+//                         // widths, the cursor and copy never see it.
 //       header?,          // { show?, sticky? } — grid chrome, the host's, read once (map 12).
 //                         // sticky: the header stays at the top of whatever scrolls the table,
 //                         // and the cursor is revealed clear of it. What a header SAYS is the
@@ -160,6 +164,8 @@ class RelGrid {
         });
         this._layout = new RelGridLayout({
             branch: opts.branch, container: opts.container, label: opts.label || null, frame: opts.frame,
+            rowNumbers: opts.rowNumbers === true,
+            onGutterClick:  function (i) { self._gestures.onGutterClick(i); },
             showHeader: head.show !== false, stickyHeader: head.sticky === true, stickyInset: opts.stickyInset || null,
             overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._gestures.onClick(i, j, mods); },

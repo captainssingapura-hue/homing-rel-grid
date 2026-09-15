@@ -7,6 +7,14 @@
 // whatever sits in an old slot riding the released subtree until the facade
 // re-places it.
 //
+// THE GUTTER is an option: a leading column of ROW NUMBERS that is the grid's
+// own — not a column of the relation's, not in the column view, never a slot.
+// A number is a POSITION, i + 1, painted when the row is minted and never
+// again: slots are positions, so the third row is row 3 whatever key is in
+// it, across every remap. It is LOCKED — stuck to the left edge of whatever
+// scrolls the table — and a press on it is reported by row, for the gestures
+// to make a row selection of. Geometry and position only; no value.
+//
 // It is the CAPTURE SURFACE for slots: a click and a double-click are
 // reported by position with their modifiers, and a PRESS-DRAG as raw pointer
 // facts — a press, each slot the pointer reaches while held, and the release.
@@ -23,13 +31,14 @@
 // far it scrolls; only the cells in them change. Nothing is minted, nothing
 // is released, and the grid's branch holds a constant count.
 //
-//   new RelGridSlots({ branch, table, colgroup, headerRow, drag, sticky?, onCellClick?,
-//                      onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd? })
+//   new RelGridSlots({ branch, table, colgroup, headerRow, drag, sticky?, gutter?, onCellClick?,
+//                      onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?, onGutterClick? })
 //   sticky: the header cells stay at the top of whatever scrolls the table
+//   gutter: a leading column of row numbers, stuck to the left; onGutterClick(i) reports a press on one
 //   render({ headers, rows, labelled? })   the matrix for a shape: true when minted fresh, false when kept.
 //                                  labelled false: the header cells' text is somebody else's — a header
 //                                  cell the facade places — so the <th> is left empty for it
-//   slotAt(i, j) / rows() / cols() / colAt(j) / thAt(j)
+//   slotAt(i, j) / rows() / cols() / colAt(j) / thAt(j) / gutterAt(i) / hasGutter()
 //   pressed() / release()          the press-drag's state, for the document-level release
 //   destroy()
 // =============================================================================
@@ -49,6 +58,8 @@ class RelGridSlots {
         this._headerRow = opts.headerRow || null;
         this._drag = opts.drag || null;         // the header drag, wired per <th>
         this._sticky = opts.sticky === true;    // the header cells wear hrg_sticky
+        this._gutter = opts.gutter === true;    // a leading column of row numbers, the grid's own
+        this._onGutterClick = opts.onGutterClick || null;     // (i) — a press on a row's number
         this._onCellClick = opts.onCellClick || null;         // (i, j, mods)
         this._onCellDblClick = opts.onCellDblClick || null;   // (i, j)
         this._onCellDown = opts.onCellDown || null;           // (i, j, mods) — a press
@@ -58,6 +69,7 @@ class RelGridSlots {
         this._shape = null;                     // { headers, rows } the matrix was minted for
         this._tbody = null;
         this._slots = [];                       // [i][j] → td
+        this._gutters = [];                     // [i] → the row's number cell, when there is a gutter
         this._cols = [];                        // [j] → col
         this._ths = [];                         // [j] → th, when there is a header row
         this._press = null;                     // the slot a button went down on
@@ -118,6 +130,18 @@ class RelGridSlots {
         var labelled = !(shape && shape.labelled === false);
         this._cols = [];
         this._ths = [];
+        this._gutters = [];
+        if (this._gutter) {                                   // the gutter's col and its corner, before the columns'
+            var gcol = slots.createElement("col-gutter", "col");
+            css.addClass(gcol, hrg_col, hrg_gutter_col);
+            this._colgroup.appendChild(gcol);
+            if (this._headerRow) {
+                var gth = slots.createElement("th-gutter", "th");
+                css.addClass(gth, hrg_th, hrg_gutter, hrg_gutter_head);
+                if (this._sticky) css.addClass(gth, hrg_sticky);
+                this._headerRow.appendChild(gth);
+            }
+        }
         for (var h = 0; h < headers.length; h++) {
             var col = slots.createElement("col-" + h, "col");   // widths need cols regardless
             css.addClass(col, hrg_col);
@@ -137,6 +161,7 @@ class RelGridSlots {
         for (var i = 0; i < rows; i++) {
             var tr = slots.createElement("tr-" + i, "tr");
             var rowSlots = [];
+            if (this._gutter) tr.appendChild(this._mintGutter(slots, i));
             for (var j = 0; j < headers.length; j++) {
                 var td = slots.createElement("td-" + i + "-" + j, "td");
                 css.addClass(td, hrg_td);
@@ -151,6 +176,18 @@ class RelGridSlots {
         return true;
     }
 
+    /** The row's number cell: a position, painted once, stuck left; a press on it is reported by row. */
+    _mintGutter(slots, i) {
+        var self = this;
+        var g = slots.createElement("gutter-" + i, "th");
+        css.addClass(g, hrg_gutter);
+        g.setAttribute("scope", "row");
+        g.textContent = String(i + 1);
+        g.addEventListener("click", function () { if (self._onGutterClick) self._onGutterClick(i); });
+        this._gutters.push(g);
+        return g;
+    }
+
     /** The slot at a position, or null. */
     slotAt(i, j) {
         var row = this._slots[i];
@@ -159,6 +196,8 @@ class RelGridSlots {
 
     colAt(j) { return this._cols[j] || null; }
     thAt(j)  { return this._ths[j] || null; }
+    gutterAt(i) { return this._gutters[i] || null; }
+    hasGutter() { return this._gutter; }
     rows() { return this._slots.length; }
     cols() { return this._cols.length; }              // the presented columns — with rows or without, as a header alone has them
 
@@ -176,6 +215,7 @@ class RelGridSlots {
         this._slots = [];
         this._ths = [];
         this._cols = [];
+        this._gutters = [];
         this._press = null;
     }
 }

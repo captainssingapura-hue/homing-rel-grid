@@ -149,6 +149,14 @@ class RelGridGestures {
         else            this.press(i, j, mods);
     }
 
+    /** A press on a row's number: the cursor to the row's first slot, and the row selected across. */
+    onGutterClick(i) {
+        if (this._locked()) return;
+        var last = this._maps.cols() - 1;
+        this.press(i, 0, {});
+        if (last > 0) this.extendTo(i, last);
+    }
+
     onDblClick(i, j) {
         if (this._locked()) return;
         var self = this;
