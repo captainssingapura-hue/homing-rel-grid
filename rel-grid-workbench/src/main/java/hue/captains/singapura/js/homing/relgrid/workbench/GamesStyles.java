@@ -64,12 +64,12 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
         }
     }
 
-    /** A mark while a filter is held on the column. */
+    /** A mark while a filter is held on the column: a magnifier — an emoji, so its colour is the platform's, not the theme's. */
     public record wb_gh_mark() implements CssClass<GamesStyles> {
         @Override public String body() { return """
                 flex: 0 0 auto;
-                font-size: 10px;
-                color: var(--color-accent);
+                font-size: 11px;
+                line-height: 1;
                 """;
         }
     }
