@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.group;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -129,8 +128,6 @@ public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
     public record hrg_on_fence() implements CssClass<RelGridGroupStyles> {
         @Override public String body() { return ""; }
     }
-
-    @Override public CssImportsFor<RelGridGroupStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<RelGridGroupStyles>> cssClasses() {
         return List.of(new hrg_group(), new hrg_member(), new hrg_group_header(), new hrg_group_header_sticky(), new hrg_fence(),

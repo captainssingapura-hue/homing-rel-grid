@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -177,8 +176,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<DishCopyStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<DishCopyStyles>> cssClasses() {
         return List.of(new wb_copy(), new wb_copy_head(), new wb_copy_title(), new wb_copy_sub(), new wb_copy_opts(),

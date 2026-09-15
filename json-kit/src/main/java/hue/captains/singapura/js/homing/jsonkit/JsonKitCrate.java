@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.jsonkit;
 
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
-import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import hue.captains.singapura.js.homing.reltree.RelTreeCrate;
 
@@ -36,7 +35,7 @@ public final class JsonKitCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(JsonTreeStyles.INSTANCE,     StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(JsonTreeStyles.INSTANCE),
                 CrateEntry.of(JsonNodeCellModule.INSTANCE),
                 CrateEntry.of(JsonDocumentModule.INSTANCE),
                 CrateEntry.of(JsonTreeViewModule.INSTANCE));

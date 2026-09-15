@@ -37,8 +37,8 @@ public final class RelGridCrate implements Crate {
                 // a pane the shell is made of.
                 CrateEntry.of(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The looks, typed: generated CSS modules, one for the grid's chrome and one for the stock cell.
-                CrateEntry.of(RelGridStyles.INSTANCE,      StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(RelGridStockStyles.INSTANCE, StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(RelGridStyles.INSTANCE),
+                CrateEntry.of(RelGridStockStyles.INSTANCE),
                 CrateEntry.of(RelGridHeaderDragModule.INSTANCE),
                 CrateEntry.of(RelGridRevealModule.INSTANCE),
                 CrateEntry.of(RelGridSlotsModule.INSTANCE),

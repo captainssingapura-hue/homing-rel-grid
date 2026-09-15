@@ -155,7 +155,9 @@ cd rel-grid-workbench && mvn compile exec:java -Dexec.mainClass=hue.captains.sin
 ```
 
 Builds against the released homing core (`homing.core.version` in the root pom, currently
-`0.8.2`), so a clean machine needs nothing installed first. To build against local core work:
+`0.8.3` — and nothing older: 0.8.3 infers a style group's type from its form and dropped
+`CssGroup.cssImports()`, both of which this reactor follows), so a clean machine needs nothing
+installed first. To build against local core work:
 
 ```bash
 mvn -Dhoming.core.version=LOCAL-SNAPSHOT install

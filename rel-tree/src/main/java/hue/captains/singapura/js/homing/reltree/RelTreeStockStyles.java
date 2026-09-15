@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.reltree;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -73,8 +72,6 @@ public record RelTreeStockStyles() implements CssGroup<RelTreeStockStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<RelTreeStockStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<RelTreeStockStyles>> cssClasses() {
         return List.of(new hrt_text_cell(), new hrt_text_cell_current(), new hrt_text_cell_busy());

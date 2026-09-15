@@ -10,6 +10,7 @@ import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.EsModule;
+import hue.captains.singapura.js.homing.core.ModuleForm;
 import hue.captains.singapura.js.homing.core.JsModuleType;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.core.SvgGroup;
@@ -73,7 +74,7 @@ public final class RelGridConformanceSweep {
         for (CrateEntry entry : crate.entries()) {
             String cls = entry.moduleClass();
             if (resource(cls) != null) continue;
-            if (entry.declaredType() == StandardJsModuleType.GENERATED_CSS) continue;   // a style group: the server renders it
+            if (entry.form() == ModuleForm.CSS_GROUP) continue;                              // a style group: the server renders it
             try {
                 Class<?> c = Class.forName(cls);
                 if (isWidget(c)) continue;                                                // its body is Java-emitted

@@ -60,14 +60,14 @@ public final class RelGridWorkbenchCrate implements Crate {
     public List<CrateEntry> entries() {
         return List.of(
                 // The looks, typed: generated CSS modules — the bench's chrome, and one per domain module that draws.
-                CrateEntry.of(WorkbenchStyles.INSTANCE,   StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(DishStarsStyles.INSTANCE,   StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(DishCopyStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(DishViewStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(HanCellStyles.INSTANCE,     StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(HanFenceStyles.INSTANCE,    StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(OutletFenceStyles.INSTANCE, StandardJsModuleType.GENERATED_CSS),
-                CrateEntry.of(GamesStyles.INSTANCE,       StandardJsModuleType.GENERATED_CSS),
+                CrateEntry.of(WorkbenchStyles.INSTANCE),
+                CrateEntry.of(DishStarsStyles.INSTANCE),
+                CrateEntry.of(DishCopyStyles.INSTANCE),
+                CrateEntry.of(DishViewStyles.INSTANCE),
+                CrateEntry.of(HanCellStyles.INSTANCE),
+                CrateEntry.of(HanFenceStyles.INSTANCE),
+                CrateEntry.of(OutletFenceStyles.INSTANCE),
+                CrateEntry.of(GamesStyles.INSTANCE),
                 // Replicating Tables: a persisted store, a relation with a role and
                 // a cell manager, three editors with different rights, and their
                 // followers. The grid is on none of the edit path.
