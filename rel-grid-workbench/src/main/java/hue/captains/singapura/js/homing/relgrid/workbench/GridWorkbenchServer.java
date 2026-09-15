@@ -37,6 +37,7 @@ public final class GridWorkbenchServer {
 
         var umbrella = new Umbrella.Solo<>(GridWorkbenchStudio.INSTANCE);
         int port = Integer.getInteger("workbench.port", DEFAULT_PORT);
-        new Bootstrap<>(new StudioStarterFixtures<>(umbrella), new DefaultRuntimeParams(port)).start();
+        // The starter's fixtures, with the keyframes the deployed crates name installed in every theme.
+        new Bootstrap<>(new WorkbenchFixtures<>(new StudioStarterFixtures<>(umbrella)), new DefaultRuntimeParams(port)).start();
     }
 }

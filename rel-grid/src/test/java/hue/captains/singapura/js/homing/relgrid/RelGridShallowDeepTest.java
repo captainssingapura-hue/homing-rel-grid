@@ -30,6 +30,7 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
         js.eval("js", RelGridTestDom.STYLES);
         for (String m : RelGridTestDom.PARTY) loadModule(m);
         loadModule(RelGridTestDom.SELECTION);
+        loadModule(RelGridTestDom.CHANNEL);
         loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
         js.eval("js", RelGridTestDom.FIXTURE);

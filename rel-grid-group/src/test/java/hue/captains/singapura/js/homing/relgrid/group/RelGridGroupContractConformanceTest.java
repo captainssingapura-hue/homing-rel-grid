@@ -33,6 +33,7 @@ class RelGridGroupContractConformanceTest extends JsModuleTestBase {
         js.eval("js", RelGridTestDom.STYLES);
         js.eval("js", RelGridTestDom.handles(RelGridGroupStyles.INSTANCE));
         for (String m : RelGridTestDom.PARTY) loadModule(m);
+        loadModule(RelGridTestDom.CHANNEL);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);

@@ -33,6 +33,11 @@
         </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-tree</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid-group</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -89,6 +94,14 @@
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <!-- And the tree's harness, for the tree bench. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-tree</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

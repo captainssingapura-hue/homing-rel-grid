@@ -42,5 +42,17 @@ public final class RelGridProtocolManifest {
             ObjectDefinition.of(RelGridGroupFold.class),
             // The first told to a GRID: its View changed underneath it — ask again.
             // Carries nothing, on purpose. No dependencies.
-            ObjectDefinition.of(RelGridViewChanged.class));
+            ObjectDefinition.of(RelGridViewChanged.class),
+            // THE TREE'S (Episode 3-ext1) — the protocol crate is the family's. A
+            // place: a node and where it stands; no dependencies. A tree's View
+            // carries places, so it comes after them.
+            ObjectDefinition.of(RelTreePlace.class),
+            ObjectDefinition.of(RelTreeView.class),
+            // The two questions a tree waits for, both answered with a View or nothing.
+            ObjectDefinition.of(RelTreeUnfold.class),
+            ObjectDefinition.of(RelTreeFold.class),
+            // The tree's two notifications, and what is told to it. No dependencies.
+            ObjectDefinition.of(RelTreeCursorChanged.class),
+            ObjectDefinition.of(RelTreeActivated.class),
+            ObjectDefinition.of(RelTreeViewChanged.class));
 }

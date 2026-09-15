@@ -31,6 +31,14 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
     public record RelGridView()             implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridGroupFold()        implements Exportable._Class<RelGridProtocolModule> {}
     public record RelGridViewChanged()      implements Exportable._Class<RelGridProtocolModule> {}
+    // The tree's (Episode 3-ext1): the protocol crate is the family's.
+    public record RelTreePlace()            implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelTreeView()             implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelTreeUnfold()           implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelTreeFold()             implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelTreeCursorChanged()    implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelTreeActivated()        implements Exportable._Class<RelGridProtocolModule> {}
+    public record RelTreeViewChanged()      implements Exportable._Class<RelGridProtocolModule> {}
 
     public static final RelGridProtocolModule INSTANCE = new RelGridProtocolModule();
 
@@ -40,6 +48,8 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
         return new ExportsOf<>(INSTANCE, List.of(
                 new RelGridRange(), new RelGridSelectionChanged(),
                 new RelGridBlock(), new RelGridCopyRequested(), new RelGridClipboardContent(),
-                new RelGridViewHandover(), new RelGridView(), new RelGridGroupFold(), new RelGridViewChanged()));
+                new RelGridViewHandover(), new RelGridView(), new RelGridGroupFold(), new RelGridViewChanged(),
+                new RelTreePlace(), new RelTreeView(), new RelTreeUnfold(), new RelTreeFold(),
+                new RelTreeCursorChanged(), new RelTreeActivated(), new RelTreeViewChanged()));
     }
 }

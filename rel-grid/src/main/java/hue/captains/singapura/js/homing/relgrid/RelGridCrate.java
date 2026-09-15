@@ -3,6 +3,7 @@ package hue.captains.singapura.js.homing.relgrid;
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
+import hue.captains.singapura.js.homing.relchannel.RelChannelCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import hue.captains.singapura.js.homing.relgrid.selection.RelGridSelectionCrate;
 
@@ -21,10 +22,10 @@ public final class RelGridCrate implements Crate {
 
     @Override public String name() { return "homing-rel-grid"; }
 
-    /** The selection and the protocol. Neither requires anything itself — map 5's
-     *  law 215 and ext4's law 202 — so the grid's dependencies run one way only. */
+    /** The selection, the protocol and the channel's core. None requires anything
+     *  itself — map 5's law 215, ext4's law 202 — so the grid's dependencies run one way only. */
     @Override public List<Crate> requires() {
-        return List.of(RelGridSelectionCrate.INSTANCE, RelGridProtocolCrate.INSTANCE);
+        return List.of(RelGridSelectionCrate.INSTANCE, RelGridProtocolCrate.INSTANCE, RelChannelCrate.INSTANCE);
     }
 
     @Override

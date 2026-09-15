@@ -65,6 +65,7 @@ class RelGridMergeTest extends JsModuleTestBase {
         js.eval("js", RelGridTestDom.DOM_STUB);
         js.eval("js", RelGridTestDom.STYLES);
         for (String m : RelGridTestDom.PARTY) loadModule(m);
+        loadModule(RelGridTestDom.CHANNEL);
         loadModule(RelGridTestDom.PROTOCOL);
         loadModule(RelGridTestDom.SELECTION);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);

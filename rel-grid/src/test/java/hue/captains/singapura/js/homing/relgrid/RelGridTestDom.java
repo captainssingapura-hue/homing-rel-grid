@@ -27,6 +27,10 @@ public final class RelGridTestDom {
 
     public static final String DIR = "/homing/js/hue/captains/singapura/js/homing/relgrid/";
 
+    /** The ask channel's core, in its own jar: the grid's channel is its customers. */
+    public static final String CHANNEL =
+            "/homing/js/hue/captains/singapura/js/homing/relchannel/RelChannelModule.js";
+
     /** The protocol's classes are generated, and live in their own jar. */
     public static final String PROTOCOL =
             "/homing/js/hue/captains/singapura/js/homing/relgrid/protocol/RelGridProtocolModule.js";
@@ -139,7 +143,7 @@ public final class RelGridTestDom {
                         if (prev) prev.dispatch('blur', {});
                     },
                     select: function () {},
-                    setAttribute: function () {}, getAttribute: function () { return null; },
+                    setAttribute: function () {}, removeAttribute: function () {}, getAttribute: function () { return null; },
                     // Geometry for a header drag: _rl / _rr (and _rt / _rb) set by a test; 100 x 20 otherwise.
                     getBoundingClientRect: function () {
                         var l = this._rl || 0, r = (this._rr != null) ? this._rr : l + 100;

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>VOID-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-tree</artifactId>
+
+    <description>
+        The Tree View (RFC 0050 · Episode 3-ext1): the second component on
+        Episode 2's doctrine, and not a grid. A tree relation answers PLACES
+        — the tree structure, { key, depth, fold } in pre-order, the binding
+        contract — and manages CELLS, the domain's, one per node, opaque to
+        the tree. The tree owns the rows, the indent, the caret, the cursor
+        and the keys; fold and unfold are regular questions on the ask
+        channel, answered with the whole View to present or nothing, so a
+        tree is lazy by default and a domain bounds a large one by what it
+        answers. Rows are positions, grown at the tail.
+
+        Depends on rel-channel for the channel's core and on the family's
+        protocol crate for its messages, and on nothing of the grid's table.
+        The JS has no runtime dependency on homing; the Java side is packaging.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-channel</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-protocol</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ssjs-test-fixtures</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- The real DomOpsParty: every element the tree mints is minted on a
+             branch of it, and the tests hold it to that with the real thing. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core-js</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- The grid's test DOM and its RFC 0044 sweep, reused in TEST scope only:
+             a stub DOM is a stub DOM, and the tree imports nothing of the grid. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <!-- The test DOM's own class references the grid's style groups; test scope, never compile. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- The test harness, published for the benches built on the tree. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

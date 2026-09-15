@@ -3,11 +3,14 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.studio.base.Bootstrap;
 import hue.captains.singapura.js.homing.studio.base.DefaultRuntimeParams;
 import hue.captains.singapura.js.homing.studio.base.Umbrella;
+import hue.captains.singapura.js.homing.reltree.RelTreeStockStyles;
 import hue.captains.singapura.js.homing.studio.starter.StudioStarterFixtures;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** The solo studio composes cleanly, and the bench list registers what it names. */
 class GridWorkbenchBootsTest {
@@ -23,7 +26,25 @@ class GridWorkbenchBootsTest {
     @Test
     void theBenchListIsTheRegistration() {
         assertEquals("replicatingTables", GridWorkbenchStudio.landingKind());
-        assertEquals(4, GridWorkbenchStudio.benches().size());
+        assertEquals(5, GridWorkbenchStudio.benches().size());
+    }
+
+    /** The class that plays hrt-spin renders from the crate; the keyframes it names reach every theme through the fixtures. */
+    @Test
+    void everyThemesGlobalsCarryTheKeyframesTheCratesName() {
+        var fixtures = new WorkbenchFixtures<>(new StudioStarterFixtures<>(new Umbrella.Solo<>(GridWorkbenchStudio.INSTANCE)));
+        var registry = fixtures.themeRegistry();
+        assertTrue(registry.themes().size() >= 2, "the starter's themes are the registry's");
+        for (var theme : registry.themes()) {
+            var globals = registry.globalsForSlug(theme.slug());
+            assertNotNull(globals, "globals for " + theme.slug());
+            String rendered = globals.chunks().isEmpty() ? globals.css() : globals.chunks().get(hue.captains.singapura.js.homing.core.Component.class);
+            assertTrue(rendered != null && rendered.contains("@keyframes " + RelTreeStockStyles.SPIN),
+                    theme.slug() + " carries @keyframes " + RelTreeStockStyles.SPIN + " in its component layer");
+        }
+        // And the class half names exactly that movement.
+        assertTrue(new RelTreeStockStyles.hrt_text_cell_busy().body().contains("animation: " + RelTreeStockStyles.SPIN + " "),
+                "the ring plays the keyframes the crate declares");
         // Three editors with different rights, a follower, and the outlets group — five specimens.
         assertEquals(5, ReplicatingTablesSpec.INSTANCE.widgetEntries().size());
         // An editor, a display, a stress table and the articles group — four specimens.
