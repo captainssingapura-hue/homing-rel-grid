@@ -158,5 +158,10 @@ Builds against the released homing core (`homing.core.version` in the root pom, 
 mvn -Dhoming.core.version=LOCAL-SNAPSHOT install
 ```
 
+The reactor installs as `LOCAL-SNAPSHOT` — the core's convention for a local build — so a
+consumer depends on `io.github.captainssingapura-hue.homing.ssjs:rel-grid-group` (or `rel-tree`,
+or `rel-grid`) at `LOCAL-SNAPSHOT` until a release is cut; a consumer that runs on a local core
+builds the reactor against that core, as above, so the two agree.
+
 The design record — the episodes, their extensions, the feature maps and the case studies — is
 in the companion studio, `homing-self-studio`, under RFC 0050.
