@@ -28,7 +28,7 @@ import java.util.List;
  *       border at rest, the accent while lit, transparent while dormant</li>
  *   <li>{@code --hrg-cursor-style} — solid, or dashed while a cell holds control</li>
  *   <li>{@code --hrg-sel-color} — the selection wash; transparent while dormant</li>
- *   <li>{@code --hrg-frame-shadow} — the wrapper's inset frame; lit while focused</li>
+ *   <li>{@code --hrg-frame-shadow} — the wrapper's frame: an inset hairline, and lit, an outward glow</li>
  *   <li>{@code --hrg-text-overflow} — what the slot asks of a cell's text: ellipsis
  *       under {@code hrg_ov_ellipsis}; a cell that shows text honours it</li>
  * </ul>
@@ -56,10 +56,14 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
     }
 
     /**
-     * LIT, NOT LIFTED. A frame drawn OVER the table, inset — a host that mounts
-     * the grid in a scrollport clips anything outside the box — taking no
-     * pointer, under the editor (50) and the mask (60). At rest a hairline in
-     * the border colour; lit, whatever {@code --hrg-frame-shadow} says.
+     * LIT, NOT LIFTED. A frame drawn OVER the table, taking no pointer, under
+     * the editor (50) and the mask (60). At rest a hairline in the border
+     * colour, inset; lit, whatever {@code --hrg-frame-shadow} says. The
+     * hairline and the catch of light are INSET — they live on the edge and
+     * cover nothing — and the glow is OUTWARD: an inner glow of any width sits
+     * over the first characters of the first column, which is the one place a
+     * frame must not be. A host that mounts the grid in a scrollport clips the
+     * outward glow on the edges it clips, and loses nothing it could read.
      */
     public record hrg_frame() implements CssClass<RelGridStyles> {
         @Override public String pseudoState() { return "::after"; }
@@ -79,8 +83,8 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * The grid that holds the focus is visibly the grid that holds the focus,
      * and it says so with light: an accent-tinted hairline, a catch of light on
      * the inner top-left edge (white mixed into the raised surface, so a dark
-     * theme gets a dim catch), a soft inner glow, and a cursor at full
-     * strength. Focus is {@code :focus-within} — the browser's own fact — so
+     * theme gets a dim catch), a soft glow OUTSIDE the edge — never over the
+     * text — and a cursor at full strength. Focus is {@code :focus-within} — the browser's own fact — so
      * the editor's overlay and the mask's panel count as the grid holding it.
      * Worn by the wrapper, and by a group's fence when it is the stop.
      */
@@ -91,7 +95,7 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
                 --hrg-frame-shadow:
                     inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 60%, var(--color-border)),
                     inset 1px 1px 0 1px color-mix(in srgb, white 35%, var(--color-surface-raised)),
-                    inset 0 0 14px color-mix(in srgb, var(--color-accent) 18%, transparent);
+                    0 0 14px color-mix(in srgb, var(--color-accent) 28%, transparent);
                 """;
         }
     }
