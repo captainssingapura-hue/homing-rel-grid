@@ -153,6 +153,41 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
         }
     }
 
+    /** The JSON Tree bench's input: a monospace textarea that fills the pane and scrolls. */
+    public record wb_json_text() implements CssClass<WorkbenchStyles> {
+        @Override public String body() { return """
+                flex: 1 1 auto;
+                min-height: 120px;
+                width: 100%;
+                box-sizing: border-box;
+                padding: 8px 10px;
+                border: 1px solid var(--color-border);
+                border-radius: 6px;
+                background: var(--color-surface-raised);
+                color: var(--color-text-primary);
+                font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                resize: none;
+                outline: none;
+                white-space: pre;
+                overflow: auto;
+                """;
+        }
+    }
+
+    /** A one-line text input on a bench's bar — a pointer to reveal. */
+    public record wb_input() implements CssClass<WorkbenchStyles> {
+        @Override public String body() { return """
+                padding: 3px 6px;
+                border: 1px solid var(--color-border);
+                border-radius: 4px;
+                background: var(--color-surface-raised);
+                color: var(--color-text-primary);
+                font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                min-width: 160px;
+                """;
+        }
+    }
+
     public record wb_status() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
                 font: 12px monospace;
@@ -166,7 +201,7 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     @Override
     public List<CssClass<WorkbenchStyles>> cssClasses() {
-        return List.of(new wb_root(), new wb_host(), new wb_frame(), new wb_port(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_status());
+        return List.of(new wb_root(), new wb_host(), new wb_frame(), new wb_port(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_json_text(), new wb_input(), new wb_status());
     }
 
     @Override

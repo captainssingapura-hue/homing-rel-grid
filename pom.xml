@@ -28,6 +28,8 @@
         dependency on anything, packaged as homing DomModules for this stack.
         rel-tree is the tree view (Episode 3): the second component on the
         same doctrine, over the channel and the protocol and nothing of the grid.
+        json-kit is the first out-of-the-box offering: a JSON viewer on the tree
+        view — domain-side code that ships, holding values as any domain does.
         rel-grid-workbench is the solo studio of benches that try to make it
         fail, on the workspace shell.
     </description>
@@ -39,6 +41,7 @@
         <module>rel-grid-selection</module>
         <module>rel-grid-group</module>
         <module>rel-tree</module>
+        <module>json-kit</module>
         <module>rel-grid-workbench</module>
     </modules>
 

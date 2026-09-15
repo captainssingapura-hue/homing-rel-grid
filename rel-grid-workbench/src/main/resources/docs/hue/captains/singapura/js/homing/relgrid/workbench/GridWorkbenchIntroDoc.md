@@ -586,6 +586,44 @@ cells, cursor, gestures, layout, the channel's tree customers, a stock text cell
 0044 ledger empty from the first commit; and, here, a relation over the store that answers places
 and the two questions three ways. The record is RFC 0050 · Episode 3-ext1 in the studio.
 
+## JSON Tree
+
+The sixth bench, and the first for an **out-of-the-box offering**: the JSON kit, in its own crate
+over the tree view. A JSON value is already an outline — an object's members and an array's
+elements are a node's children, in the order the value holds them — so the kit builds nothing
+structural: a **document** answers the tree's places by JSON pointer (`""` the root,
+`/releases/0/notes/2` a member) from the value in hand, a **cell** prints a member by kind, and
+the **view** composes the two over a `RelTree` so a host writes one line. Two panes, one store:
+the Input is a plain textarea that parses on every keystroke; the Display shows the last value
+that parsed, and keeps it while the text is broken.
+
+### What to try
+
+Switch the workspace kind to **JSON Tree**.
+
+- **Type in the Input** — inside a string, a new member, a deleted array. The tree redraws from
+  the new value on every keystroke that parses, and keeps its folds and its cursor **by pointer**
+  wherever the node still stands: the cell for a pointer that survives is *set* to the new value
+  in place, because the tree keeps a cell while its key stays presented and asks for it once.
+- **Break the text** — delete a brace. The status says what the parser said; the tree shows the
+  last value that parsed, and says so in its readout.
+- **Unfold** with the caret, →, or Space; **open all**, **open two deep**, **close all** are the
+  document's folds, told to the tree. An empty container is a leaf: there is nothing to unfold.
+- **Reveal a pointer** — `/odd~1key/~0tilde` is `"odd/key"` → `"~tilde"`, escaped as RFC 6901
+  says. The document opens the ancestors, tells the tree, and asks for the cursor; a pointer to
+  nothing is refused and said.
+- **A big array (10,000)** — ten thousand elements under one closed node cost nothing until it
+  unfolds, and then cost ten thousand rows: the tree has no window, and the kit chunks nothing
+  yet. That is the known limit, on record.
+
+### What it is built from
+
+Three modules in `json-kit`, 238 effective lines together: `createJsonDocument` (the pointer
+arithmetic, the places through the tree's own `RelTreePlaces.outline`, the fold set, the cells,
+the channel answered at once, `set` with the cells kept by pointer), `JsonNodeCell` (three spans
+and a class per kind), `JsonTreeView` (the host: two branches beneath its own, the tree and the
+document). The bench adds a store, a textarea and a readout, and nothing else.
+
 ## Adding a bench
 
 1. Write the specimens as widgets, beside the ones in `relgrid.workbench`.
