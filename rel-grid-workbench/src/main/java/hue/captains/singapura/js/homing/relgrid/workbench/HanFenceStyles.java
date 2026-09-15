@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -89,8 +88,6 @@ public record HanFenceStyles() implements CssGroup<HanFenceStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<HanFenceStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<HanFenceStyles>> cssClasses() {
         return List.of(new wb_hanf(), new wb_hanf_title(), new wb_hanf_t(), new wb_hanf_a(),

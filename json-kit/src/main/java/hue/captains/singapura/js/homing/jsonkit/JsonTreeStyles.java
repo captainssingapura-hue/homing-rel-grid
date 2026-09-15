@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.jsonkit;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -93,8 +92,6 @@ public record JsonTreeStyles() implements CssGroup<JsonTreeStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<JsonTreeStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<JsonTreeStyles>> cssClasses() {
         return List.of(new jk_cell(), new jk_cell_current(), new jk_key(), new jk_index(), new jk_punct(),

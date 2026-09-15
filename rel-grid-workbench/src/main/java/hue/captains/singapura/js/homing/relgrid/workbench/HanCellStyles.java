@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -118,8 +117,6 @@ public record HanCellStyles() implements CssGroup<HanCellStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<HanCellStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<HanCellStyles>> cssClasses() {
         return List.of(new han_glyph(), new han_ink(), new han_punct(), new han_half(), new han_open(),

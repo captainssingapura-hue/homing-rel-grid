@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -89,8 +88,6 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<DishStarsStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<DishStarsStyles>> cssClasses() {
         return List.of(new wb_stars(), new wb_stars_ro(), new wb_stars_panel(), new wb_stars_row(),

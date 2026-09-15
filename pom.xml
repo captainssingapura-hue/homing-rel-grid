@@ -52,7 +52,7 @@
         <!-- The homing core RELEASE this builds against, so a clean machine
              builds it without installing core first. Override for local
              core work: mvn -Dhoming.core.version=LOCAL-SNAPSHOT ... -->
-        <homing.core.version>0.8.2</homing.core.version>
+        <homing.core.version>0.8.3</homing.core.version>
         <junit.version>5.11.3</junit.version>
     </properties>
 

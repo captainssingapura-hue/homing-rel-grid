@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -76,8 +75,6 @@ public record OutletFenceStyles() implements CssGroup<OutletFenceStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<OutletFenceStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<OutletFenceStyles>> cssClasses() {
         return List.of(new wb_fence(), new wb_fence_name(), new wb_fence_fold(), new wb_fence_fold_hot(),

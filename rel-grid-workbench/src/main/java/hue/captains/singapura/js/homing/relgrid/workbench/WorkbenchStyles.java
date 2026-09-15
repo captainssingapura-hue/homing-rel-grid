@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -204,8 +203,4 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
         return List.of(new wb_root(), new wb_host(), new wb_frame(), new wb_port(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_json_text(), new wb_input(), new wb_status());
     }
 
-    @Override
-    public CssImportsFor<WorkbenchStyles> cssImports() {
-        return CssImportsFor.none(this);
-    }
 }

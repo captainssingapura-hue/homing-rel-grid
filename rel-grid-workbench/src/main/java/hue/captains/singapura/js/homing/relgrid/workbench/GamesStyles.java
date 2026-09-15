@@ -2,7 +2,6 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.CssImportsFor;
 
 import java.util.List;
 
@@ -301,8 +300,6 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
                 """;
         }
     }
-
-    @Override public CssImportsFor<GamesStyles> cssImports() { return CssImportsFor.none(this); }
 
     @Override public List<CssClass<GamesStyles>> cssClasses() {
         return List.of(new wb_gh(), new wb_gh_label(), new wb_gh_caret(), new wb_gh_order(), new wb_gh_mark(),
