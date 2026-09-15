@@ -42,6 +42,32 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
         }
     }
 
+    /**
+     * THE FRAME around a scrollport: a non-scrolling wrapper the port fills, so
+     * the grid's frame — worn here, with its light — goes round the scrollbar
+     * and not inside it. The grid inside is told to draw no frame of its own.
+     */
+    public record wb_frame() implements CssClass<WorkbenchStyles> {
+        @Override public String body() { return """
+                position: relative;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 240px;
+                """;
+        }
+    }
+
+    /** The scrollport inside a frame: the port scrolls, the frame is lit around it. */
+    public record wb_port() implements CssClass<WorkbenchStyles> {
+        @Override public String body() { return """
+                flex: 1;
+                min-height: 0;
+                overflow: auto;
+                """;
+        }
+    }
+
     public record wb_hint() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
                 font: 12px sans-serif;
@@ -140,7 +166,7 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     @Override
     public List<CssClass<WorkbenchStyles>> cssClasses() {
-        return List.of(new wb_root(), new wb_host(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_status());
+        return List.of(new wb_root(), new wb_host(), new wb_frame(), new wb_port(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_status());
     }
 
     @Override

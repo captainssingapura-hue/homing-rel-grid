@@ -7,8 +7,10 @@ package hue.captains.singapura.js.homing.reltree.contract;
  *
  * <p>Options: {@code container}, {@code branch} (the tree's own, unactivated),
  * {@code relation} ({@link TreeRelationContract}), {@code label},
- * {@code caret} (false for a domain that draws its own), {@code ask} — the
- * channel — and the callbacks named below. No {@code view({ by })} in this
+ * {@code caret} (false for a domain that draws its own), {@code folder} (true
+ * for the tree's SVG folders after the caret, closed or open in the theme's
+ * colour; or the host's three text glyphs),
+ * {@code ask} — the channel — and the callbacks named below. No {@code view({ by })} in this
  * phase: the window is reserved.</p>
  *
  * <p>Unfold and fold are questions on the channel, answered with the whole

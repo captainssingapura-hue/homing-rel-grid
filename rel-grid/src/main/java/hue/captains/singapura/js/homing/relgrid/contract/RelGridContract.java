@@ -108,6 +108,26 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * changes: its arrow is reported as the edge it met, its wheel is left to the
  * browser, and a table in a scrollport scrolls as it always did.</p>
  *
+ * <h2>Row numbers are a gutter, not a column</h2>
+ *
+ * <p>{@code rowNumbers: true} adds a leading column of row numbers that is the
+ * grid's own: a number is a <b>position</b>, {@code i + 1}, painted when the
+ * slot is minted and kept by the slot across every remap — never a value, and
+ * never an identity. It is not in the column view, so hiding, reordering,
+ * widths, the cursor, ranges and copy never see it; it is stuck to the left of
+ * whatever scrolls the table, as the header is stuck to the top; a press on a
+ * number selects the row. A window's numbers are the window's, 1 to W.</p>
+ *
+ * <h2>The frame is the host's to take</h2>
+ *
+ * <p>The grid frames its own wrap and lights it while it holds the focus. A
+ * host that scrolls the table wants the light around the <b>scrollport</b> —
+ * scrollbar inside it, not beside it — which only the host can draw, since
+ * the scroller is the host's: it wears {@code hrg_frame} and {@code hrg_lit}
+ * on a non-scrolling wrapper of its own and passes {@code frame: false}, and
+ * the grid draws none. The cursor's colour follows either way — the lit
+ * class sets a custom property, and custom properties inherit.</p>
+ *
  * <h2>Told, unasked</h2>
  *
  * <p>{@code tell(message)} is the channel's other direction to a grid, as it

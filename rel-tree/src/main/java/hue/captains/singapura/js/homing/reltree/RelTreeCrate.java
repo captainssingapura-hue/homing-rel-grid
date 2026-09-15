@@ -32,6 +32,8 @@ public final class RelTreeCrate implements Crate {
                 CrateEntry.of(RelTreePlacesModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 CrateEntry.of(RelTreeStyles.INSTANCE,       StandardJsModuleType.GENERATED_CSS),
                 CrateEntry.of(RelTreeStockStyles.INSTANCE,  StandardJsModuleType.GENERATED_CSS),
+                // The typed SVG: generated from the assets beside it, as a style group is from its records.
+                CrateEntry.of(RelTreeSvgs.INSTANCE),
                 CrateEntry.of(RelTreeRowsModule.INSTANCE),
                 CrateEntry.of(RelTreeLayoutModule.INSTANCE),
                 CrateEntry.of(RelTreeCellsModule.INSTANCE),

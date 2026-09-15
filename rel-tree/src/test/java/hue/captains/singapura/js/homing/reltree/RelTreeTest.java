@@ -29,7 +29,9 @@ class RelTreeTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelTreeTestDom.DOM_STUB);
+        js.eval("js", RelTreeTestDom.DOM_PARSER);
         js.eval("js", RelTreeTestDom.STYLES);
+        js.eval("js", RelTreeTestDom.SVGS);
         for (String m : RelTreeTestDom.PARTY) loadModule(m);
         loadModule(RelTreeTestDom.CHANNEL);
         loadModule(RelTreeTestDom.PROTOCOL);
@@ -72,6 +74,8 @@ class RelTreeTest extends JsModuleTestBase {
                     if (F.cellsBranch.branchCount !== 3 || countTree(F.cellsBranch) !== 3) return false;
                     // The cell's element sits in the tree's row, after the caret — the one thing that crosses.
                     if (F.cellEl(0) !== F.relation.elementOf('a') || F.row(0).children.length !== 2) return false;
+                    // The caret is the tree's typed SVG inside the span the row owns: one child, an svg, not the party's.
+                    if (F.caret(0).children.length !== 1 || F.caret(0).children[0].tagName !== 'svg' || !/<path /.test(F.caret(0).children[0]._markup)) return false;
                     return F.treeEl().children.length === 3 && countTree(b) === 8;
                 })()"""), "two branches, one crossing: the counts are the party's, not the DOM's");
     }
@@ -137,6 +141,42 @@ class RelTreeTest extends JsModuleTestBase {
                     if (F.cellEl(1) !== F.relation.elementOf('a1')) return false;
                     return F.arranged.join() === 'base,told,told,told';
                 })()"""), "told unasked, the tree asks view() again; the rows are positions kept while the count holds");
+    }
+
+    @Test
+    void theFolderGlyphIsAnOptionPaintedFromThePlace() {
+        assertTrue(evalBool("""
+                (() => {
+                    // Off by default: the row is the caret and the cell.
+                    var F = fixture({ open: ['a'] });
+                    if (F.row(0).children.length !== 2 || F.folder(0) !== null) return false;
+                    // On: a folder after the caret — the tree's two SVGs in the span, one shown by the place:
+                    // the open one for an open node, the closed one for a closed node, neither for a leaf.
+                    var G = fixture({ folder: true, open: ['a'] });                 // a(open) a1 a2(closed) b c(closed)
+                    if (G.row(0).children.length !== 3 || G.cellEl(0).textContent !== 'A') return false;
+                    function shown(i) {
+                        var f = G.folder(i), out = [];
+                        for (var k = 0; k < f.children.length; k++) if (!/hrt-folder-off/.test(f.children[k].className)) out.push(/folderOpen|M3 17.5v-10/.test(f.children[k]._markup) ? 'open' : 'closed');
+                        return out.join('+') || '-';
+                    }
+                    if (G.folder(0).children.length !== 2 || G.folder(0).children[0].tagName !== 'svg') return false;
+                    var states = []; for (var i = 0; i < 5; i++) states.push(shown(i));
+                    if (states.join('|') !== 'open|-|closed|-|closed') return false;
+                    if (!/hrt-folder-open/.test(G.folder(0).className) || /hrt-folder-open/.test(G.folder(2).className)) return false;
+                    if (!/hrt-folder-leaf/.test(G.folder(1).className) || /hrt-folder-leaf/.test(G.folder(0).className)) return false;
+                    // Three OWNED elements a row on the tree's branch — the SVGs are content, not the party's; the domain's cells as before.
+                    if (countTree(G.branch.getBranch('rows')) !== 15 || G.cellsBranch.branchCount !== 5) return false;
+                    // Folded: the same span and the same SVGs, repainted — nothing parsed again.
+                    var f0 = G.folder(0), svgs = [f0.children[0], f0.children[1]];
+                    G.relation.close('a'); G.tree.tell(new RelTreeViewChanged());
+                    if (G.folder(0) !== f0 || f0.children[0] !== svgs[0] || f0.children[1] !== svgs[1] || shown(0) !== 'closed' || G.treeEl().children.length !== 3) return false;
+                    // The host's own text glyphs instead — any of the three, a missing one blank.
+                    var H = fixture({ folder: { closed: '+', open: '-', leaf: '\u00b7' }, open: ['a'] });
+                    var own = []; for (var k = 0; k < 5; k++) own.push(H.folder(k).textContent);
+                    if (own.join('') !== '-\u00b7+\u00b7+' || H.folder(0).children.length !== 0) return false;
+                    var J = fixture({ folder: { open: 'v' } });
+                    return J.folder(0).textContent === '' && J.folder(1).textContent === '';
+                })()"""), "the folder glyph is off by default, on by option, painted from the place, and the host's to choose");
     }
 
     @Test

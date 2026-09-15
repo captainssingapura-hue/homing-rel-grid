@@ -17,7 +17,9 @@ class RelTreeCursorTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelTreeTestDom.DOM_STUB);
+        js.eval("js", RelTreeTestDom.DOM_PARSER);
         js.eval("js", RelTreeTestDom.STYLES);
+        js.eval("js", RelTreeTestDom.SVGS);
         for (String m : RelTreeTestDom.PARTY) loadModule(m);
         loadModule(RelTreeTestDom.CHANNEL);
         loadModule(RelTreeTestDom.PROTOCOL);

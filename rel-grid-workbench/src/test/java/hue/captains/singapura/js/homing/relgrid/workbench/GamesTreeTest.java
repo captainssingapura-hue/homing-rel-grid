@@ -43,7 +43,7 @@ class GamesTreeTest extends JsModuleTestBase {
                                      ask: function (q, mask) { return relation.answer(q, mask); },
                                      onCursorMoved: function (k) { moves.push(k); } });
                 function shown() { var out = [], p = tree.places(); for (var i = 0; i < p.rows(); i++) out.push(p.keyAt(i)); return out; }
-                function textAt(i) { return container.children[0].children[0].children[i].children[1].textContent; }
+                function textAt(i) { return container.children[0].children[0].children[i].children[1].textContent; }   // after the caret
                 function mask() { var w = container.children[0]; for (var k = 0; k < w.children.length; k++) if ((w.children[k].className || '').split(' ').indexOf('hrt-mask') >= 0) return w.children[k]; return null; }
                 // Is the node's own cell spinning? The glyph is the cell's child, wearing the busy class.
                 function busy(key) { var c = relation.cell(key); if (!c) return false; var el = c.cellElement(); return el.children.length === 1 && (el.children[0].className || '').split(' ').indexOf('hrt-text-cell-busy') >= 0; }
@@ -56,7 +56,9 @@ class GamesTreeTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelTreeTestDom.DOM_STUB);
+        js.eval("js", RelTreeTestDom.DOM_PARSER);
         js.eval("js", RelTreeTestDom.STYLES);
+        js.eval("js", RelTreeTestDom.SVGS);
         for (String m : RelTreeTestDom.PARTY) loadModule(m);
         loadModule(RelTreeTestDom.CHANNEL);
         loadModule(RelTreeTestDom.PROTOCOL);

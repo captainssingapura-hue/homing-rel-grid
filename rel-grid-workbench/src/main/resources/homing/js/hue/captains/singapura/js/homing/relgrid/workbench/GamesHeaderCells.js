@@ -65,7 +65,7 @@ class GamesHeaderCell {
         var s = this._owner.sortOf(this._column), f = this._owner.filterOf(this._column);
         this._caret.textContent = s ? (s.dir === "desc" ? "▼" : "▲") : "";
         this._order.textContent = (s && this._owner.sortCount() > 1) ? String(s.index + 1) : "";
-        this._mark.textContent = f ? "⨟" : "";
+        this._mark.textContent = f ? "🔍" : "";        // a magnifier: a filter is held on this column
         css.toggleClass(this._button, wb_gh_menu_on, !!(s || f));
         return this;
     }

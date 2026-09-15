@@ -14,7 +14,7 @@
 // unavailable and holds the focus; the panel is the tree's box for the
 // domain's element, centred by the sheet, minted once per mask.
 //
-//   new RelTreeLayout({ branch, container, label?, caret?, onRowClick?, onRowDblClick?, onCaretClick? })
+//   new RelTreeLayout({ branch, container, label?, caret?, folder?, onRowClick?, onRowDblClick?, onCaretClick? })
 //   render(count) / paint(i, place) / rowAt(i) / rows()      the rows, through RelTreeRows
 //   paintCursor(i)              the current row wears hrt_current; null for none
 //   revealRow(i)                the least scroll that shows row i
@@ -39,7 +39,7 @@ class RelTreeLayout {
         this._wrap.appendChild(this._tree);
         this._container.appendChild(this._wrap);
         this._rows = new RelTreeRows({
-            branch: b, host: this._tree, caret: opts.caret,
+            branch: b, host: this._tree, caret: opts.caret, folder: opts.folder,
             onRowClick: opts.onRowClick, onRowDblClick: opts.onRowDblClick, onCaretClick: opts.onCaretClick
         });
         this._current = -1;

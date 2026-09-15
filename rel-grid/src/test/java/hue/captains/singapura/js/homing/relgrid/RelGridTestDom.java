@@ -296,7 +296,9 @@ public final class RelGridTestDom {
                     resizeGuide: opts.resizeGuide || undefined,
                     // Chrome a test names: a header that sticks, a band the host keeps above.
                     header: opts.header || undefined,
-                    stickyInset: opts.stickyInset || undefined
+                    stickyInset: opts.stickyInset || undefined,
+                    // The gutter of row numbers, when a test asks for it.
+                    rowNumbers: opts.rowNumbers || undefined
                 });
                 // Structure-aware helpers: the table is colgroup, thead, tbody.
                 // container > WRAPPER > table. The wrapper is the grid's own, and is
