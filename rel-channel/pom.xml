@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
         <artifactId>homing-rel-grid</artifactId>
-        <version>LOCAL-SNAPSHOT</version>
+        <version>0.1.1</version>
     </parent>
 
     <artifactId>rel-channel</artifactId>
