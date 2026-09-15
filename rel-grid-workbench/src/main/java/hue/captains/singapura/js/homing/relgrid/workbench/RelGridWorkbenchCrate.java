@@ -7,6 +7,7 @@ import hue.captains.singapura.js.homing.core.js.CoreJsCrate;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
 import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
+import hue.captains.singapura.js.homing.jsonkit.JsonKitCrate;
 import hue.captains.singapura.js.homing.reltree.RelTreeCrate;
 import hue.captains.singapura.js.homing.server.ServerCrate;
 import hue.captains.singapura.js.homing.studio.base.StudioBaseCrate;
@@ -50,7 +51,9 @@ public final class RelGridWorkbenchCrate implements Crate {
                 // And the group the two group benches stack their tables in.
                 RelGridGroupCrate.INSTANCE,
                 // And the tree view, the second component on the same doctrine.
-                RelTreeCrate.INSTANCE);
+                RelTreeCrate.INSTANCE,
+                // And the JSON kit, the first out-of-the-box offering on it.
+                JsonKitCrate.INSTANCE);
     }
 
     @Override
@@ -106,6 +109,10 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(GamesWidget.INSTANCE),
                 // Games Tree: the catalogue as a lazy tree over the tree view.
                 CrateEntry.of(GamesTreeRelation.INSTANCE),
-                CrateEntry.of(GamesTreeWidget.INSTANCE));
+                CrateEntry.of(GamesTreeWidget.INSTANCE),
+                // JSON Tree: the kit's viewer over one document, typed in beside it.
+                CrateEntry.of(JsonDocStore.INSTANCE),
+                CrateEntry.of(JsonInputWidget.INSTANCE),
+                CrateEntry.of(JsonDisplayWidget.INSTANCE));
     }
 }

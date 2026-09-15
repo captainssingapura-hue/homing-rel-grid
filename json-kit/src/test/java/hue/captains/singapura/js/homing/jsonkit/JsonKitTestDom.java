@@ -34,13 +34,14 @@ public final class JsonKitTestDom {
             function jsonFixture(opts) {
                 opts = opts || {};
                 var branch = testBranch(), container = makeEl('div');
-                var activated = [], moves = [];
+                var activated = [], moves = [], arranged = [];
                 var view = new JsonTreeView({
                     container: container, branch: branch,
                     value: opts.hasOwnProperty('value') ? opts.value : SAMPLE,
                     title: opts.title, openDepth: opts.openDepth, maxString: opts.maxString,
                     onActivated:   function (k) { activated.push(k); },
-                    onCursorMoved: function (k) { moves.push(k); }
+                    onCursorMoved: function (k) { moves.push(k); },
+                    onArranged:    function (k) { arranged.push(k); }
                 });
                 function wrap() { return container.children[0]; }
                 function treeEl() { return wrap().children[0]; }
@@ -74,7 +75,7 @@ public final class JsonKitTestDom {
                 function clickCaret(i) { caret(i).dispatch('click', {}); }
                 function cellClass(i) { return (cellEl(i).className || '').split(' ').sort().join(' '); }
                 function valueClass(i) { return (cellEl(i).children[2].className || '').split(' ').sort().join(' '); }
-                return { view: view, branch: branch, container: container, activated: activated, moves: moves,
+                return { view: view, branch: branch, container: container, activated: activated, moves: moves, arranged: arranged,
                          wrap: wrap, treeEl: treeEl, row: row, caret: caret, cellEl: cellEl,
                          drawn: drawn, shown: shown, key: key, click: click, dblclick: dblclick, clickCaret: clickCaret,
                          cellClass: cellClass, valueClass: valueClass };

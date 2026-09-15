@@ -49,7 +49,10 @@ public record GridWorkbenchStudio() implements Studio<GridWorkbenchHome> {
             GamesCatalogueSpec.INSTANCE,
             // Games Tree: the tree view's first bench — the same catalogue as a lazy
             // three-level tree, the fold and unfold asked on the channel.
-            GamesTreeSpec.INSTANCE
+            GamesTreeSpec.INSTANCE,
+            // JSON Tree: the first out-of-the-box offering — the kit's viewer over a
+            // document typed in beside it, every keystroke a new value.
+            JsonTreeSpec.INSTANCE
     );
 
     public static final GridWorkbenchStudio INSTANCE = new GridWorkbenchStudio();

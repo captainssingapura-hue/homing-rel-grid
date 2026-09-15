@@ -23,7 +23,8 @@ What a header says is the relation's too — `labels()`, or a header cell from `
 placed in the header slot as a cell is placed in a body slot — and when the relation's View
 changes underneath, the host **tells** the grid so, and the grid asks `view()` again.
 
-A tree view is the second component built this way: a tree relation answers **places** —
+A tree view is the second component built this way — and the first thing built *on* it is a JSON
+viewer, in `json-kit`, because a JSON value already is an outline: a tree relation answers **places** —
 `{ key, depth, fold }`, the tree structure as the binding contract — and manages cells, one per
 node; the tree owns the rows, the indent, the caret, the cursor and the keys; fold and unfold are
 questions on the ask channel, answered with the whole View or nothing; lazy by default.
@@ -43,7 +44,8 @@ RelTreeUnfold(key)  RelTreeFold(key)   →   RelTreeView(places) | nothing
 | `rel-grid` | the **grid** — `RelGrid`, the facade, composing: its seam (`RelGridViewMaps`), the layout (`RelGridLayout` over `RelGridSlots`, `RelGridOverlays`, `RelGridReveal`, `RelGridHeaderDrag`), the cells and header-cells registries, the cursor, the gestures, the handover of control, the channel's grid customers, the widths, the window, the merged cells, the stock clipboard writer — one module each, every one under 250 effective lines — and a stock text cell that is deliberately domain-side. Plain JS classes with no runtime dependency on anything; packaged as homing `DomModule`s for this stack. |
 | `rel-grid-group` | the **group** — `RelGridGroup`: an ordered list of tables, each an ordinary `RelGrid` that does not know it is in one, with a fence (a slot the domain fills) between every two and around the ends; a header that sticks as a box. Depends on `rel-grid`, never the reverse. |
 | `rel-tree` | the **tree view** — `RelTree`, the facade, composing: the places (`RelTreePlaces`), the rows (positions, a branch each, grown at the tail), the cells registry, the cursor, the gestures, the channel's tree customers, the layout with its mask and panel; a stock text cell with a busy ring; the tree's typed SVG (a caret, two folders). Imports the channel core and the protocol, nothing of the grid's table. |
-| `rel-grid-workbench` | a solo studio of **benches** that try to make the components fail — Replicating Tables, Han Article, the Endless Table (a window of twenty over a million rows measured through the party), the Games Catalogue (724 releases sorted and filtered from header cells that are the relation's own), and the Games Tree (the same catalogue as a lazy three-level tree, the fold and unfold answered three ways). `GridWorkbenchServer` on 8083. |
+| `json-kit` | the first **out-of-the-box offering**: a JSON viewer on the tree view — domain-side code that ships. A JSON value already is an outline, so `createJsonDocument` answers the tree's places by JSON pointer (RFC 6901) from the value in hand, lazily under the fold, and a cell per node; `JsonNodeCell` prints a member by kind; `JsonTreeView` composes the two over a `RelTree` so a host writes one line — `set(value)` keeps the folds and the cursor by pointer. Three modules, 240 effective lines. Depends on `rel-tree`. |
+| `rel-grid-workbench` | a solo studio of **benches** that try to make the components fail — Replicating Tables, Han Article, the Endless Table (a window of twenty over a million rows measured through the party), the Games Catalogue (724 releases sorted and filtered from header cells that are the relation's own), the Games Tree (the same catalogue as a lazy three-level tree, the fold and unfold answered three ways), and the JSON Tree (the kit's viewer over a document typed in beside it, every keystroke a new value). `GridWorkbenchServer` on 8083. |
 
 ## What is here
 
@@ -54,6 +56,7 @@ RelTreeUnfold(key)  RelTreeFold(key)   →   RelTreeView(places) | nothing
 - **Header cells that are the relation's** — sort and filter are the domain's, answered with a View; the grid places the header cell, captures nothing on it but its own resize handle, and is told when the View changed. The Games Catalogue's column menu is the demonstration a provided layer will be cut from.
 - **Column widths** held by identity, applied by position, in place; **merged cells**; a header that shows or not and **sticks** or not; a group's header sticks as a box.
 - **Row numbers** as a gutter the grid owns — a position each, locked to the left of whatever scrolls the table, a press on one selecting the row; not a column, so nothing addressed by column sees it.
+- **A JSON viewer**, out of the box: a document is what the tree asks for — one row per node, by pointer — and a value replaced under it keeps its folds and its cursor wherever the node still stands. A container of ten thousand costs nothing closed and ten thousand rows open: the tree has no window, and the kit chunks nothing yet.
 - **The tree view**: places checked at the door and refused whole; the caret and the folders as typed SVG in `currentColor`, so the theme reaches them; ↑↓ Home End PgUp PgDn, → and ← as a tree's, Enter and Space; `selectNode` for a navigator following a URL, the domain opening the path and telling.
 
 Not here, by decision: a **provided** sort-and-filter layer (the Games bench shows the parts; the decorator is the next cut), the tree's window (`view({ by })` on a tree — reserved, answers nothing), multi-select on the tree, and the tree table — the tree's row axis lent to the grid, designed once both stand.

@@ -55,6 +55,7 @@ class JsonTreeViewTest extends JsonKitTestBase {
         assertEquals("▾$: {3}@0 | name: \"kit2\"@1 | ▾list: [3]@1 | 0: 1@2 | 1: 2@2 | 2: 3@2 | extra: true@1", evalString("F.drawn()"),
                 "a new value: the list still open, every row drawn from the new value");
         assertEquals("/list/0", evalString("F.view.cursor()"), "the cursor kept by pointer");
+        assertTrue(evalBool("F.arranged.length >= 3"), "every presentation pass is reported: the first, the open, the set");
         act("F.view.set('just a string');");
         assertEquals("$: \"just a string\"@0", evalString("F.drawn()"), "a scalar root is one leaf row");
         assertEquals("", evalString("F.view.cursor()"), "the pointer gone, the cursor falls back to the row");

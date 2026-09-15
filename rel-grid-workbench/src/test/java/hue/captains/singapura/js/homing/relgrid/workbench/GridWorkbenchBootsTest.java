@@ -26,7 +26,7 @@ class GridWorkbenchBootsTest {
     @Test
     void theBenchListIsTheRegistration() {
         assertEquals("replicatingTables", GridWorkbenchStudio.landingKind());
-        assertEquals(5, GridWorkbenchStudio.benches().size());
+        assertEquals(6, GridWorkbenchStudio.benches().size());
     }
 
     /** The class that plays hrt-spin renders from the crate; the keyframes it names reach every theme through the fixtures. */
@@ -56,5 +56,8 @@ class GridWorkbenchBootsTest {
         // The games catalogue — one specimen, sorting and filtering for itself.
         assertEquals("gamesCatalogue", GamesCatalogueSpec.INSTANCE.kind());
         assertEquals(1, GamesCatalogueSpec.INSTANCE.widgetEntries().size());
+        // The JSON tree — an input and a display over one document.
+        assertEquals("jsonTree", JsonTreeSpec.INSTANCE.kind());
+        assertEquals(2, JsonTreeSpec.INSTANCE.widgetEntries().size());
     }
 }

@@ -22,13 +22,15 @@
 //       maxString?,       // a string printed up to this many characters — 80 by default
 //       label?,           // aria-label on the tree
 //       onActivated?,     // (pointer) — Enter or a double-click reached the node
-//       onCursorMoved?    // (pointer)
+//       onCursorMoved?,   // (pointer)
+//       onArranged?       // (kind) — after every presentation pass: a fold, a set, a reveal
 //   });
 //   set(value)               a new value: the folds kept where a container still stands, the cursor by pointer
 //   value() / valueAt(pointer)
 //   open(pointer) / close(pointer) / openAll(depth?) / closeAll()
 //   selectPointer(pointer)   the ancestors opened and the cursor put on the node, revealed; false for no such node
 //   cursor()                 the pointer under the cursor, or null
+//   rows()                   how many rows are presented
 //   focus() / el() / destroy()
 // =============================================================================
 
@@ -53,7 +55,8 @@ class JsonTreeView {
             label: opts.label,
             ask: function (question, mask) { return self._document.answer(question, mask); },
             onActivated: opts.onActivated || undefined,
-            onCursorMoved: opts.onCursorMoved || undefined
+            onCursorMoved: opts.onCursorMoved || undefined,
+            onArranged: opts.onArranged || undefined
         });
     }
 
@@ -77,6 +80,7 @@ class JsonTreeView {
     }
 
     cursor() { return this._tree.cursor(); }
+    rows() { return this._tree.places().rows(); }
     focus() { this._tree.focus(); }
     el() { return this._tree.el(); }
 

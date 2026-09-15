@@ -22,10 +22,11 @@ public interface JsonTreeViewContract {
     Object  closeAll();                         // the root row alone
     boolean selectPointer(String pointer);      // the ancestors opened and the cursor put on the node; false for no such node
     Object  cursor();                           // the pointer under the cursor, or null
+    int     rows();                             // how many rows are presented
     void    focus();                            // the keyboard host
     Object  el();                               // the tree's element
     void    destroy();                          // the tree down, the document's cells disposed, both branches dissolved
 
     String   JS_CLASS_NAME = "JsonTreeView";
-    String[] CALLBACK_OPTION_NAMES = { "onActivated", "onCursorMoved" };
+    String[] CALLBACK_OPTION_NAMES = { "onActivated", "onCursorMoved", "onArranged" };
 }
