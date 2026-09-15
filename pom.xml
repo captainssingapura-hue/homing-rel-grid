@@ -6,7 +6,7 @@
 
     <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
     <artifactId>homing-rel-grid</artifactId>
-    <version>VOID-SNAPSHOT</version>
+    <version>LOCAL-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <description>
