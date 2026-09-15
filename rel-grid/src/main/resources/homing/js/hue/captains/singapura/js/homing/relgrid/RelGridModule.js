@@ -36,6 +36,10 @@
 //                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
 //                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
+//       frame?,           // false: the grid draws no frame of its own — the HOST frames it, around
+//                         // whatever scrolls the table, so the scrollbar sits inside the light. The
+//                         // host wears hrg_frame and hrg_lit on that element; the cursor's colour
+//                         // follows, since hrg_lit's property inherits. Default: the grid frames its wrap.
 //       header?,          // { show?, sticky? } — grid chrome, the host's, read once (map 12).
 //                         // sticky: the header stays at the top of whatever scrolls the table,
 //                         // and the cursor is revealed clear of it. What a header SAYS is the
@@ -155,7 +159,7 @@ class RelGrid {
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
-            branch: opts.branch, container: opts.container, label: opts.label || null,
+            branch: opts.branch, container: opts.container, label: opts.label || null, frame: opts.frame,
             showHeader: head.show !== false, stickyHeader: head.sticky === true, stickyInset: opts.stickyInset || null,
             overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._gestures.onClick(i, j, mods); },

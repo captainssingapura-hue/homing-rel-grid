@@ -24,7 +24,7 @@
 // are TYPED — RelGridStyles — with theme tokens only, under the hrg- prefix
 // so this grid and the live one can share a page.
 //
-//   new RelGridLayout({ container, branch, label?, showHeader?, stickyHeader?, stickyInset?, overflow?,
+//   new RelGridLayout({ container, branch, label?, frame?, showHeader?, stickyHeader?, stickyInset?, overflow?,
 //                       onCellClick?, onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   stickyHeader: the header cells stay at the top of whatever scrolls the table, and a
@@ -81,7 +81,11 @@ class RelGridLayout {
         // container > wrapper > table, so an overlay can be a sibling of the
         // table in the wrapper's coordinates.
         this._wrap = this._branch.createElement("wrap", "div");
-        css.addClass(this._wrap, hrg_wrap, hrg_frame, hrg_lit);   // positioned; framed; lit while it holds the focus
+        css.addClass(this._wrap, hrg_wrap);                        // positioned
+        // Framed and lit while it holds the focus — unless the HOST frames the grid: a host that
+        // scrolls the table draws the frame around its own scrollport, so the scrollbar is inside
+        // the light, and tells the grid to draw none of its own (frame: false).
+        if (opts.frame !== false) css.addClass(this._wrap, hrg_frame, hrg_lit);
         this._wrap.appendChild(this._table);
         this._container.appendChild(this._wrap);
 

@@ -19,10 +19,13 @@ public record RelGridStockStyles() implements CssGroup<RelGridStockStyles> {
      * The cell's element. It honours what the slot asks of its text: nowrap is
      * inherited from the table, and the ellipsis — {@code --hrg-text-overflow},
      * the grid's published property — is drawn here, because the text is this
-     * element's and the slot only clips.
+     * element's and the slot only clips. The padding is the cell's too — the
+     * slot has none — and it is the header's, so the text lines up under it;
+     * the editor wears the same, so nothing jumps when a cell is entered.
      */
     public record hrg_text() implements CssClass<RelGridStockStyles> {
         @Override public String body() { return """
+                padding: 0 10px;
                 overflow: hidden;
                 text-overflow: var(--hrg-text-overflow, clip);
                 """;
@@ -48,7 +51,7 @@ public record RelGridStockStyles() implements CssGroup<RelGridStockStyles> {
                 width: 100%;
                 height: 100%;
                 border: 0;
-                padding: 0 6px;
+                padding: 0 10px;
                 font: 13px sans-serif;
                 background: transparent;
                 color: var(--color-text-primary);

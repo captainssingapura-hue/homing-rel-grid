@@ -3,6 +3,7 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.core.Importable;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.relgrid.RelGridModule;
+import hue.captains.singapura.js.homing.relgrid.RelGridStyles;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 import hue.captains.singapura.js.homing.workspace.LifecycleHint;
 import hue.captains.singapura.js.homing.workspace.WorkspaceWidget;
@@ -41,11 +42,12 @@ public final class GamesWidget extends WorkspaceWidget<WorkspaceWidget._None, Ga
     protected List<ModuleImports<? extends Importable>> bodyImports() {
         return List.of(
                 new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE),
+                new ModuleImports<>(List.of(new RelGridStyles.hrg_frame(), new RelGridStyles.hrg_lit()), RelGridStyles.INSTANCE),
                 new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridViewChanged()), RelGridProtocolModule.INSTANCE),
                 new ModuleImports<>(List.of(new GamesStore.createGamesStore()), GamesStore.INSTANCE),
                 new ModuleImports<>(List.of(new GamesRelation.createGamesRelation()), GamesRelation.INSTANCE),
                 new ModuleImports<>(
-                        List.of(new WorkbenchStyles.wb_root(), new WorkbenchStyles.wb_host(),
+                        List.of(new WorkbenchStyles.wb_root(), new WorkbenchStyles.wb_frame(), new WorkbenchStyles.wb_port(),
                                 new WorkbenchStyles.wb_hint(), new WorkbenchStyles.wb_bar(),
                                 new WorkbenchStyles.wb_btn(), new WorkbenchStyles.wb_status()),
                         WorkbenchStyles.INSTANCE));
@@ -64,9 +66,14 @@ public final class GamesWidget extends WorkspaceWidget<WorkspaceWidget._None, Ga
                 "    var bar = branch.createElement('bar', 'div');",
                 "    css.addClass(bar, wb_bar);",
                 "    root.appendChild(bar);",
+                "    // The frame goes round the SCROLLPORT — a non-scrolling wrapper the port fills — so the",
+                "    // light and the hairline sit outside the scrollbar; the grid inside draws no frame of its own.",
+                "    var frame = branch.createElement('frame', 'div');",
+                "    css.addClass(frame, wb_frame, hrg_frame, hrg_lit);",
+                "    root.appendChild(frame);",
                 "    var host = branch.createElement('host', 'div');",
-                "    css.addClass(host, wb_host);",
-                "    root.appendChild(host);",
+                "    css.addClass(host, wb_port);",
+                "    frame.appendChild(host);",
                 "    var status = branch.createElement('status', 'div');",
                 "    css.addClass(status, wb_status);",
                 "    root.appendChild(status);",
@@ -95,6 +102,7 @@ public final class GamesWidget extends WorkspaceWidget<WorkspaceWidget._None, Ga
                 "        branch: gridB,",
                 "        relation: relation,",
                 "        header: { show: true, sticky: true },",
+                "        frame: false,                          // the host frames the scrollport; see above",
                 "        label: 'Games catalogue',",
                 "        onCursorMoved: function () { report(); }",
                 "    });",
