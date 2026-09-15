@@ -93,6 +93,7 @@ public final class GamesTreeWidget extends WorkspaceWidget<WorkspaceWidget._None
                 "        branch: treeB,",
                 "        relation: relation,",
                 "        label: 'Games tree',",
+                "        folder: true,                          // the fold state a second way: a closed or an open folder after the caret",
                 "        // THE CHANNEL: the relation answers; this widget only wires the two together.",
                 "        // Reported after this turn: a question answered at once has settled by then and never reads as pending.",
                 "        ask: function (question, mask) { var out = relation.answer(question, mask); setTimeout(report, 0); return out; },",

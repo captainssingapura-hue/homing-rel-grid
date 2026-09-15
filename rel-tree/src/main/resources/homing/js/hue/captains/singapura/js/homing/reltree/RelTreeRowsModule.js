@@ -18,17 +18,36 @@
 // same footing as a cell's text. Its state is the span's class: open turns
 // the chevron a quarter, a leaf hides it and keeps the box.
 //
+// THE FOLDER IS AN OPTION: a glyph after the caret that says the same fold
+// state a second way — a closed folder, an open one, and for a leaf a blank
+// box that keeps the cells aligned. Painted from the place, like the caret;
+// the glyphs are the host's to choose.
+//
 // It is the CAPTURE SURFACE for rows: a press, a double-click and a press on
 // the caret are reported by position. Nothing here decides what a gesture
 // MEANS.
 //
-//   new RelTreeRows({ branch, host, caret?, onRowClick?, onRowDblClick?, onCaretClick? })
+//   new RelTreeRows({ branch, host, caret?, folder?, onRowClick?, onRowDblClick?, onCaretClick? })
 //   caret: false leaves the caret out — a domain that draws its own in its cell
+//   folder: true for the folder glyphs; { closed?, open?, leaf? } to choose them
 //   render(count)        the rows for a count: grown or shrunk at the tail; how many were minted, minus how many released
 //   paint(i, place)      the row's depth and fold: the indent, the caret's state, ARIA
-//   rowAt(i) / caretAt(i) / rows()
+//   rowAt(i) / caretAt(i) / folderAt(i) / rows()
 //   destroy()
 // =============================================================================
+
+var _HRT_FOLDER = { closed: "\uD83D\uDCC1", open: "\uD83D\uDCC2", leaf: "" };   // 📁 📂 and a blank box
+
+/** The folder option, normalised: null for none; else the three glyphs, the host's over the stock. */
+function _hrtFolderGlyphs(option) {
+    if (!option) return null;
+    var own = (typeof option === "object") ? option : {};
+    return {
+        closed: own.closed !== undefined ? own.closed : _HRT_FOLDER.closed,
+        open:   own.open   !== undefined ? own.open   : _HRT_FOLDER.open,
+        leaf:   own.leaf   !== undefined ? own.leaf   : _HRT_FOLDER.leaf
+    };
+}
 
 /** The asset, parsed: a fresh SVG element for one row. */
 function _hrtCaretSvg() {
@@ -41,17 +60,19 @@ class RelTreeRows {
         this._branch = opts.branch;                 // the tree's own
         this._host = opts.host;                     // the element the rows go in
         this._caret = opts.caret !== false;
+        this._folder = _hrtFolderGlyphs(opts.folder);
         this._onRowClick = opts.onRowClick || null;         // (i, ev)
         this._onRowDblClick = opts.onRowDblClick || null;   // (i)
         this._onCaretClick = opts.onCaretClick || null;     // (i)
         this._rowsBranch = this._branch.createBranch("rows");
         this._rowsBranch.activate(this);
-        this._rows = [];                            // [i] → { branch, row, caret }
+        this._rows = [];                            // [i] → { branch, row, caret, folder }
     }
 
     rows() { return this._rows.length; }
     rowAt(i)   { var r = this._rows[i]; return r ? r.row : null; }
     caretAt(i) { var r = this._rows[i]; return r ? r.caret : null; }
+    folderAt(i) { var r = this._rows[i]; return r ? r.folder : null; }
 
     /** Grow or shrink at the tail; the rows in between are the same rows. */
     render(count) {
@@ -86,10 +107,16 @@ class RelTreeRows {
             });
             row.appendChild(caret);
         }
+        var folder = null;
+        if (this._folder) {
+            folder = rb.createElement("folder", "span");
+            css.addClass(folder, hrt_folder);
+            row.appendChild(folder);
+        }
         row.addEventListener("click", function (ev) { if (self._onRowClick) self._onRowClick(i, ev); });
         row.addEventListener("dblclick", function () { if (self._onRowDblClick) self._onRowDblClick(i); });
         this._host.appendChild(row);
-        return { branch: rb, row: row, caret: caret };
+        return { branch: rb, row: row, caret: caret, folder: folder };
     }
 
     /** What the place says, painted: the indent by depth, the caret by fold, and ARIA for both. */
@@ -103,6 +130,10 @@ class RelTreeRows {
         if (r.caret) {
             css.toggleClass(r.caret, hrt_caret_open, place.fold === "open");
             css.toggleClass(r.caret, hrt_caret_leaf, place.fold === "leaf");
+        }
+        if (r.folder) {
+            r.folder.textContent = this._folder[place.fold];
+            css.toggleClass(r.folder, hrt_folder_leaf, place.fold === "leaf");
         }
         return true;
     }

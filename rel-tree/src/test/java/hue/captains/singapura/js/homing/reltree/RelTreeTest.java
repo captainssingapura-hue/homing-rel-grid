@@ -144,6 +144,33 @@ class RelTreeTest extends JsModuleTestBase {
     }
 
     @Test
+    void theFolderGlyphIsAnOptionPaintedFromThePlace() {
+        assertTrue(evalBool("""
+                (() => {
+                    // Off by default: the row is the caret and the cell.
+                    var F = fixture({ open: ['a'] });
+                    if (F.row(0).children.length !== 2 || F.folder(0) !== null) return false;
+                    // On: a folder after the caret — open, closed, and a blank box for a leaf — from the place.
+                    var G = fixture({ folder: true, open: ['a'] });                 // a(open) a1 a2(closed) b c(closed)
+                    if (G.row(0).children.length !== 3 || G.cellEl(0).textContent !== 'A') return false;
+                    var glyphs = [];
+                    for (var i = 0; i < 5; i++) glyphs.push(G.folder(i).textContent);
+                    if (glyphs.join('|') !== '\uD83D\uDCC2||\uD83D\uDCC1||\uD83D\uDCC1') return false;
+                    if (!/hrt-folder-leaf/.test(G.folder(1).className) || /hrt-folder-leaf/.test(G.folder(0).className)) return false;
+                    // Three elements a row on the tree's branch now; the domain's cells as before.
+                    if (countTree(G.branch.getBranch('rows')) !== 15 || G.cellsBranch.branchCount !== 5) return false;
+                    // Folded: the same span, repainted.
+                    var f0 = G.folder(0);
+                    G.relation.close('a'); G.tree.tell(new RelTreeViewChanged());
+                    if (G.folder(0) !== f0 || f0.textContent !== '\uD83D\uDCC1' || G.treeEl().children.length !== 3) return false;
+                    // The host's own glyphs, any of the three.
+                    var H = fixture({ folder: { closed: '+', open: '-', leaf: '\u00b7' }, open: ['a'] });
+                    var own = []; for (var k = 0; k < 5; k++) own.push(H.folder(k).textContent);
+                    return own.join('') === '-\u00b7+\u00b7+';
+                })()"""), "the folder glyph is off by default, on by option, painted from the place, and the host's to choose");
+    }
+
+    @Test
     void destroyDetachesEveryCellAndDisposesNothing() {
         assertTrue(evalBool("""
                 (() => {

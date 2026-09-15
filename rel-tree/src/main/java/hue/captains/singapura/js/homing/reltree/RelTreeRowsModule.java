@@ -21,7 +21,8 @@ public record RelTreeRowsModule() implements DomModule<RelTreeRowsModule> {
     @Override public ImportsFor<RelTreeRowsModule> imports() {
         return ImportsFor.<RelTreeRowsModule>builder()
                 .add(new ModuleImports<>(List.of(new RelTreeStyles.hrt_row(), new RelTreeStyles.hrt_caret(),
-                        new RelTreeStyles.hrt_caret_open(), new RelTreeStyles.hrt_caret_leaf()), RelTreeStyles.INSTANCE))
+                        new RelTreeStyles.hrt_caret_open(), new RelTreeStyles.hrt_caret_leaf(),
+                        new RelTreeStyles.hrt_folder(), new RelTreeStyles.hrt_folder_leaf()), RelTreeStyles.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelTreeSvgs.caret()), RelTreeSvgs.INSTANCE))
                 .build();
     }

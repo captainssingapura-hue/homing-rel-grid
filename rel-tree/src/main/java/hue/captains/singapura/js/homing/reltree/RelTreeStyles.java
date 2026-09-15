@@ -119,6 +119,26 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
         }
     }
 
+    /** The folder glyph, after the caret: a fixed box, so a row with one and a row without a glyph in it align. */
+    public record hrt_folder() implements CssClass<RelTreeStyles> {
+        @Override public String body() { return """
+                flex: 0 0 auto;
+                width: 20px;
+                text-align: center;
+                font-size: 13px;
+                line-height: 1;
+                """;
+        }
+    }
+
+    /** A leaf's folder box: kept for alignment; blank by default, and a leaf glyph the host chose is dimmed. */
+    public record hrt_folder_leaf() implements CssClass<RelTreeStyles> {
+        @Override public String body() { return """
+                opacity: .55;
+                """;
+        }
+    }
+
     /** THE MASK. Over the rows, in the wrap: a wash that reads as unavailable, focusable so the keys stop here. */
     public record hrt_mask() implements CssClass<RelTreeStyles> {
         @Override public String body() { return """
@@ -173,6 +193,7 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
         return List.of(
                 // looks
                 new hrt_wrap(), new hrt_lit(), new hrt_tree(), new hrt_row(), new hrt_caret(), new hrt_caret_open(), new hrt_caret_leaf(),
+                new hrt_folder(), new hrt_folder_leaf(),
                 new hrt_mask(), new hrt_panel(),
                 // states
                 new hrt_current(), new hrt_masked());

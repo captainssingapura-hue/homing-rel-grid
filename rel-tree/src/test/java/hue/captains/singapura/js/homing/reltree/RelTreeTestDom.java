@@ -82,7 +82,7 @@ public final class RelTreeTestDom {
                 var branch = testBranch(), container = makeEl('div');
                 var sent = [], handles = [], arranged = [], moves = [], activated = [], edges = [];
                 var tree = new RelTree({
-                    container: container, branch: branch, relation: relation, caret: opts.caret,
+                    container: container, branch: branch, relation: relation, caret: opts.caret, folder: opts.folder,
                     onArranged:    function (k) { arranged.push(k); },
                     onCursorMoved: function (k) { moves.push(k); },
                     onActivated:   function (k) { activated.push(k); },
@@ -102,7 +102,8 @@ public final class RelTreeTestDom {
                 function treeEl() { return wrap().children[0]; }
                 function row(i) { return treeEl().children[i]; }
                 function caret(i) { return row(i).children[0]; }
-                function cellEl(i) { return row(i).children[opts.caret === false ? 0 : 1] || null; }
+                function folder(i) { return opts.folder ? row(i).children[opts.caret === false ? 0 : 1] : null; }
+                function cellEl(i) { return row(i).children[(opts.caret === false ? 0 : 1) + (opts.folder ? 1 : 0)] || null; }
                 function mask() {
                     var w = wrap();
                     for (var k = 0; k < w.children.length; k++)
@@ -144,7 +145,7 @@ public final class RelTreeTestDom {
                 }
                 function lastSent(type) { for (var k = sent.length - 1; k >= 0; k--) if (sent[k] instanceof type) return sent[k]; return null; }
                 return { tree: tree, relation: relation, container: container, branch: branch, cellsBranch: cellsBranch,
-                         wrap: wrap, treeEl: treeEl, row: row, caret: caret, cellEl: cellEl, mask: mask, panel: panel,
+                         wrap: wrap, treeEl: treeEl, row: row, caret: caret, folder: folder, cellEl: cellEl, mask: mask, panel: panel,
                          key: key, click: click, dblclick: dblclick, clickCaret: clickCaret,
                          shown: shown, drawn: drawn, current: current, lastSent: lastSent,
                          sent: sent, handles: handles, arranged: arranged, moves: moves, activated: activated, edges: edges,
