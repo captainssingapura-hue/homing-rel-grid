@@ -119,14 +119,31 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
         }
     }
 
-    /** The folder glyph, after the caret: a fixed box, so a row with one and a row without a glyph in it align. */
+    /**
+     * The folder, after the caret: a fixed box holding the SVG folders — or a
+     * host's text glyph — so a row with a folder and a row without align. The
+     * folders are drawn in currentColor, so this colour is the theme's.
+     */
     public record hrt_folder() implements CssClass<RelTreeStyles> {
         @Override public String body() { return """
                 flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 20px;
-                text-align: center;
+                height: 16px;
+                color: var(--color-text-muted);
                 font-size: 13px;
                 line-height: 1;
+                transition: color .18s ease;
+                """;
+        }
+    }
+
+    /** An open folder takes the accent, as the open caret does. */
+    public record hrt_folder_open() implements CssClass<RelTreeStyles> {
+        @Override public String body() { return """
+                color: var(--color-accent);
                 """;
         }
     }
@@ -135,6 +152,14 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
     public record hrt_folder_leaf() implements CssClass<RelTreeStyles> {
         @Override public String body() { return """
                 opacity: .55;
+                """;
+        }
+    }
+
+    /** The folder state not shown: the other of the two SVGs. */
+    public record hrt_folder_off() implements CssClass<RelTreeStyles> {
+        @Override public String body() { return """
+                display: none;
                 """;
         }
     }
@@ -193,7 +218,7 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
         return List.of(
                 // looks
                 new hrt_wrap(), new hrt_lit(), new hrt_tree(), new hrt_row(), new hrt_caret(), new hrt_caret_open(), new hrt_caret_leaf(),
-                new hrt_folder(), new hrt_folder_leaf(),
+                new hrt_folder(), new hrt_folder_open(), new hrt_folder_leaf(), new hrt_folder_off(),
                 new hrt_mask(), new hrt_panel(),
                 // states
                 new hrt_current(), new hrt_masked());

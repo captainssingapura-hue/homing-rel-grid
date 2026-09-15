@@ -29,9 +29,10 @@
 //       label?,           // aria-label
 //       caret?,           // false: no caret of the tree's — a domain that draws its own in its
 //                         // cell, flips its own fold state and tells
-//       folder?,          // true: a folder glyph after the caret says the fold state a second way —
-//                         // 📁 closed, 📂 open, a blank box for a leaf; { closed?, open?, leaf? } to
-//                         // choose the glyphs. Off by default.
+//       folder?,          // true: a folder after the caret says the fold state a second way — the
+//                         // tree's SVG folders, closed or open, in the theme's colour; a blank box for
+//                         // a leaf. { closed?, open?, leaf? }: the host's own text glyphs instead,
+//                         // which no theme reaches. Off by default.
 //       ask?,             // (question, mask) — THE CHANNEL: RelTreeUnfold and RelTreeFold are
 //                         // questions answered with a RelTreeView or nothing; RelTreeCursorChanged
 //                         // and RelTreeActivated are notifications. See RelTreeChannel.
