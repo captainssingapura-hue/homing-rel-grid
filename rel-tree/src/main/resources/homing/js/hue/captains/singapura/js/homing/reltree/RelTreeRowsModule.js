@@ -12,6 +12,12 @@
 // released alone; a cell riding in a released row is the facade's to place
 // again or to detach, and it is still alive either way.
 //
+// THE CARET IS THE TREE'S TYPED SVG — RelTreeSvgs.caret, a chevron in
+// currentColor — parsed per row into the caret span the row owns. The span is
+// the party's; the markup inside it is an asset, not authored DOM, on the
+// same footing as a cell's text. Its state is the span's class: open turns
+// the chevron a quarter, a leaf hides it and keeps the box.
+//
 // It is the CAPTURE SURFACE for rows: a press, a double-click and a press on
 // the caret are reported by position. Nothing here decides what a gesture
 // MEANS.
@@ -19,12 +25,15 @@
 //   new RelTreeRows({ branch, host, caret?, onRowClick?, onRowDblClick?, onCaretClick? })
 //   caret: false leaves the caret out — a domain that draws its own in its cell
 //   render(count)        the rows for a count: grown or shrunk at the tail; how many were minted, minus how many released
-//   paint(i, place)      the row's depth and fold: the indent, the caret's glyph, ARIA
+//   paint(i, place)      the row's depth and fold: the indent, the caret's state, ARIA
 //   rowAt(i) / caretAt(i) / rows()
 //   destroy()
 // =============================================================================
 
-var _HRT_GLYPH = { open: "▾", closed: "▸", leaf: "" };     // ▾ ▸ and nothing
+/** The asset, parsed: a fresh SVG element for one row. */
+function _hrtCaretSvg() {
+    return new DOMParser().parseFromString(caret, "image/svg+xml").documentElement;
+}
 
 class RelTreeRows {
 
@@ -70,6 +79,7 @@ class RelTreeRows {
         if (this._caret) {
             caret = rb.createElement("caret", "span");
             css.addClass(caret, hrt_caret);
+            caret.appendChild(_hrtCaretSvg());
             caret.addEventListener("click", function (ev) {
                 if (ev && ev.stopPropagation) ev.stopPropagation();   // the row's press is this press: reported once, as the caret's
                 if (self._onCaretClick) self._onCaretClick(i);
@@ -91,7 +101,7 @@ class RelTreeRows {
         if (place.fold === "leaf") r.row.removeAttribute("aria-expanded");
         else r.row.setAttribute("aria-expanded", place.fold === "open" ? "true" : "false");
         if (r.caret) {
-            r.caret.textContent = _HRT_GLYPH[place.fold];
+            css.toggleClass(r.caret, hrt_caret_open, place.fold === "open");
             css.toggleClass(r.caret, hrt_caret_leaf, place.fold === "leaf");
         }
         return true;

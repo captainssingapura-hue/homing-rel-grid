@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.reltree;
 
+import hue.captains.singapura.js.homing.core.util.SvgGroupContentProvider;
 import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 
 /**
@@ -23,6 +24,9 @@ public final class RelTreeTestDom {
     public static final String[] PARTY  = RelGridTestDom.PARTY;
     public static final String DOM_STUB = RelGridTestDom.DOM_STUB;
 
+    /** The typed SVG's module, exactly as the server generates it from the assets: the caret as a string constant. */
+    public static final String SVGS = String.join("\n", new SvgGroupContentProvider<>(RelTreeSvgs.INSTANCE).content());
+
     public static final String[] MODULES = {
             "RelTreePlacesModule.js", "RelTreeRowsModule.js", "RelTreeCellsModule.js", "RelTreeLayoutModule.js",
             "RelTreeCursorModule.js", "RelTreeChannelModule.js", "RelTreeGesturesModule.js",
@@ -30,6 +34,17 @@ public final class RelTreeTestDom {
 
     /** The tree's and the stock cell's handles, for every test that loads the tree's modules. */
     public static final String STYLES = RelGridTestDom.handles(RelTreeStyles.INSTANCE, RelTreeStockStyles.INSTANCE);
+
+    /**
+     * The stub has no DOMParser; the tree's caret is a typed SVG parsed through
+     * one. This fake answers a bare svg element for any markup, so a row's caret
+     * holds exactly one child, as it does in a browser.
+     */
+    public static final String DOM_PARSER = """
+            class DOMParser {
+                parseFromString(markup, type) { var svg = makeEl('svg'); svg._markup = markup; return { documentElement: svg }; }
+            }
+            """;
 
     public static final String FIXTURE = """
             function fixture(opts) {
@@ -108,12 +123,17 @@ public final class RelTreeTestDom {
                     for (var i = 0; i < p.rows(); i++) out.push(p.keyAt(i) + ':' + p.depthAt(i) + ':' + p.foldAt(i));
                     return out.join(' ');
                 }
-                // What the rows actually hold: the cell text in each row, and the caret glyph.
+                // What the rows actually hold: the caret's state as the glyph it stands for — the
+                // caret is an SVG now, so its state is its class — then the cell text, then the depth.
+                function glyph(i) {
+                    var cls = (caret(i).className || '').split(' ');
+                    return cls.indexOf('hrt-caret-leaf') >= 0 ? '' : cls.indexOf('hrt-caret-open') >= 0 ? '\u25BE' : '\u25B8';
+                }
                 function drawn() {
                     var out = [];
                     for (var i = 0; i < treeEl().children.length; i++) {
                         var r = row(i), c = cellEl(i);
-                        out.push((opts.caret === false ? '' : caret(i).textContent) + (c ? c.textContent : '-') + '@' + r.style.getPropertyValue('--hrt-depth'));
+                        out.push((opts.caret === false ? '' : glyph(i)) + (c ? c.textContent : '-') + '@' + r.style.getPropertyValue('--hrt-depth'));
                     }
                     return out.join(' ');
                 }

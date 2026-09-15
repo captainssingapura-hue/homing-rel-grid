@@ -29,7 +29,9 @@ class RelTreeTest extends JsModuleTestBase {
     void setup() {
         js = buildContext();
         js.eval("js", RelTreeTestDom.DOM_STUB);
+        js.eval("js", RelTreeTestDom.DOM_PARSER);
         js.eval("js", RelTreeTestDom.STYLES);
+        js.eval("js", RelTreeTestDom.SVGS);
         for (String m : RelTreeTestDom.PARTY) loadModule(m);
         loadModule(RelTreeTestDom.CHANNEL);
         loadModule(RelTreeTestDom.PROTOCOL);
@@ -72,6 +74,8 @@ class RelTreeTest extends JsModuleTestBase {
                     if (F.cellsBranch.branchCount !== 3 || countTree(F.cellsBranch) !== 3) return false;
                     // The cell's element sits in the tree's row, after the caret — the one thing that crosses.
                     if (F.cellEl(0) !== F.relation.elementOf('a') || F.row(0).children.length !== 2) return false;
+                    // The caret is the tree's typed SVG inside the span the row owns: one child, an svg, not the party's.
+                    if (F.caret(0).children.length !== 1 || F.caret(0).children[0].tagName !== 'svg' || !/<path /.test(F.caret(0).children[0]._markup)) return false;
                     return F.treeEl().children.length === 3 && countTree(b) === 8;
                 })()"""), "two branches, one crossing: the counts are the party's, not the DOM's");
     }

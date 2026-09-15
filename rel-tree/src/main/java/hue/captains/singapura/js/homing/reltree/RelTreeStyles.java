@@ -81,22 +81,39 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
         }
     }
 
-    /** The tree's caret: a fixed box so the cells align whether or not there is a glyph in it. */
+    /**
+     * The tree's caret: a fixed box holding the typed SVG chevron, so the cells
+     * align whether or not there is anything to press. The chevron is drawn in
+     * currentColor, so this colour — the theme's muted text — is the caret's.
+     */
     public record hrt_caret() implements CssClass<RelTreeStyles> {
         @Override public String body() { return """
                 flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 16px;
-                text-align: center;
-                font-size: 11px;
+                height: 16px;
                 color: var(--color-text-muted);
                 cursor: pointer;
+                transition: transform .18s ease, color .18s ease;
                 """;
         }
     }
 
-    /** A leaf's caret: the box stays, the glyph is gone, and there is nothing to press. */
+    /** An open node's caret: the chevron turned a quarter to point at the children, in the accent. */
+    public record hrt_caret_open() implements CssClass<RelTreeStyles> {
+        @Override public String body() { return """
+                transform: rotate(90deg);
+                color: var(--color-accent);
+                """;
+        }
+    }
+
+    /** A leaf's caret: the box stays for alignment, the chevron is hidden, and there is nothing to press. */
     public record hrt_caret_leaf() implements CssClass<RelTreeStyles> {
         @Override public String body() { return """
+                visibility: hidden;
                 cursor: default;
                 """;
         }
@@ -155,7 +172,7 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
     @Override public List<CssClass<RelTreeStyles>> cssClasses() {
         return List.of(
                 // looks
-                new hrt_wrap(), new hrt_lit(), new hrt_tree(), new hrt_row(), new hrt_caret(), new hrt_caret_leaf(),
+                new hrt_wrap(), new hrt_lit(), new hrt_tree(), new hrt_row(), new hrt_caret(), new hrt_caret_open(), new hrt_caret_leaf(),
                 new hrt_mask(), new hrt_panel(),
                 // states
                 new hrt_current(), new hrt_masked());

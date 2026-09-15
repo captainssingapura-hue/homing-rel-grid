@@ -12,6 +12,7 @@ import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.EsModule;
 import hue.captains.singapura.js.homing.core.JsModuleType;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
+import hue.captains.singapura.js.homing.core.SvgGroup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,11 +37,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@code -Dhoming.conformance.record=true} to rewrite the ledger from the
  * current findings — deliberately, never to silence a fresh violation.</p>
  *
- * <p>Modules with no {@code .js} resource (a widget's Java-emitted body) are
- * not swept here; that is the module server's renderer's to produce. But a
- * module of a resource-backed KIND — a DomModule or an EsModule — with no
- * resource beside it is a mistake, not a widget: the file is misnamed, and the
- * server would answer 404 for it. That fails the build too, by name.</p>
+ * <p>Modules with no {@code .js} resource (a widget's Java-emitted body, a
+ * style group's or an SVG group's generated one) are not swept here; that is
+ * the module server's renderer's to produce. But a module of a resource-backed
+ * KIND — a DomModule or an EsModule — with no resource beside it is a mistake,
+ * not a widget: the file is misnamed, and the server would answer 404 for it.
+ * That fails the build too, by name.</p>
  */
 public final class RelGridConformanceSweep {
 
@@ -75,6 +77,7 @@ public final class RelGridConformanceSweep {
             try {
                 Class<?> c = Class.forName(cls);
                 if (isWidget(c)) continue;                                                // its body is Java-emitted
+                if (SvgGroup.class.isAssignableFrom(c)) continue;                         // generated from its .svg assets
                 if (DomModule.class.isAssignableFrom(c) || EsModule.class.isAssignableFrom(c))
                     out.add(cls + " has no /homing/js/" + cls.replace('.', '/') + ".js — is the file named after the class?");
             } catch (ClassNotFoundException e) {
