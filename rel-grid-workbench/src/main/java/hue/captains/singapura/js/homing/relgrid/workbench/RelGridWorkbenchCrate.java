@@ -112,6 +112,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(GamesTreeWidget.INSTANCE),
                 // JSON Tree: the kit's viewer over one document, typed in beside it.
                 CrateEntry.of(JsonDocStore.INSTANCE),
+                CrateEntry.of(JsonBench.INSTANCE),
                 CrateEntry.of(JsonInputWidget.INSTANCE),
                 CrateEntry.of(JsonDisplayWidget.INSTANCE));
     }
