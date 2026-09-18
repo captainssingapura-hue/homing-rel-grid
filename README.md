@@ -110,22 +110,37 @@ draw, since the scroller is the host's: it wears `hrg_frame` and `hrg_lit` on a 
 wrapper the port fills and passes `frame: false`, and the grid draws none. The workbench's
 `wb_frame` / `wb_port` pair is the pattern.
 
-### The busy ring, and the keyframes it needs — read this before you take `rel-tree`
+### Every look is a design's word — how the grid and the tree are themed
+
+Nothing in `rel-grid`, `rel-tree`, `rel-grid-group` or `json-kit` names a colour, a face,
+a size, a corner or a shadow. A style class **wears** the pairs its element means (RFC 0065 —
+`wears()`: a semantic on a target), and the deployment's designs fill them: the table is the
+base surface in the body ink, a header cell the raised surface in the muted ink, a slot draws
+the **Lattice** — the lines between the cells of a grid, a semantic the grid brought to the
+substrate — a panel is a raised plate under the overlay's shadow, a selection is the design's
+selected surface, the cursor is the design's **focus ring**. Seven designs and nine palettes in
+the studio registry, sixty-three looks, and the grid has an answer under every one of them:
+`DesignCompletenessTest` in the workbench resolves everything the family wears against every
+registered design and fails on the first pair without a word.
+
+Where the grid **modulates** a look through a channel of its own — `--hrg-cursor-color` dimmed
+at rest and full under `:focus-within`, transparent on a dormant member of a group;
+`--hrg-frame-shadow` — the class **reads** the pair whose binding it passes down (`reads()`,
+the substrate's word for a reference a pseudo-state or a channel needs), so the value in the
+channel is still the design's ring, never the grid's colour. The channels stay the grid's
+published vocabulary; what they carry is the design's.
+
+### The busy ring, and the keyframes it needs — parked
 
 The tree's stock text cell has `setBusy(on)`: a ring after the text while a domain fetches a
 node's children. The ring **turns by a CSS animation** — the class half, `hrt_text_cell_busy`,
 is typed and ships with the crate; the `@keyframes` half cannot ride a `CssClass`, because an
-at-rule has no home in a class rule and the typed sheet has no primitive for one yet. So the
-crate **declares** the movement as raw CSS, `RelTreeStockStyles.KEYFRAMES`, and the
-**deployment installs it** in every theme's globals. A deployment that does not gets a ring that
-does not turn — silently, since CSS treats a missing keyframes as nothing to play.
-
-The workbench's `WorkbenchFixtures` is the recipe: wrap the starter's `Fixtures`, override
-`themeRegistry()`, and append `RelTreeStockStyles.KEYFRAMES` to the Component chunk of every
-theme's `ThemeGlobals`. Three dozen lines; `GridWorkbenchBootsTest` checks every theme carries
-it. This is a proof of concept for a typed `CssKeyframes` a class would *depend on* — a missing
-one caught by the compiler, the movement themeable — which is a wish on the core, recorded in
-RFC 0050 · Episode 3-ext1 §10.
+at-rule has no home in a class rule and the typed sheet has no primitive for one yet. The crate
+still **declares** the movement as raw CSS, `RelTreeStockStyles.KEYFRAMES`; the join that once
+installed it in every theme's globals is gone with the globals sheet (homing RFC 0066 retired
+it), so the ring stands still until the core gives a movement a typed home — a `CssKeyframes`
+a class would *depend on*, a missing one caught by the compiler, the movement themeable — which
+is the wish recorded in RFC 0050 · Episode 3-ext1 §10.
 
 ## The RFC 0044 ledger
 

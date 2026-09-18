@@ -2,8 +2,19 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+
+import static hue.captains.singapura.js.homing.design.DesignClass.of;
+import static hue.captains.singapura.js.homing.design.Target.*;
+import static hue.captains.singapura.js.homing.design.Box.*;
+import static hue.captains.singapura.js.homing.design.Emphasis.*;
+import static hue.captains.singapura.js.homing.design.Interaction.*;
+import static hue.captains.singapura.js.homing.design.Layer.*;
+import static hue.captains.singapura.js.homing.design.Pairing.*;
+import static hue.captains.singapura.js.homing.design.Structure.*;
+import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * The Games Catalogue's header cells and their column menus, typed. A header
@@ -45,29 +56,29 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
     }
 
     public record wb_gh_caret() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 font-size: 9px;
-                color: var(--color-accent);
                 """;
         }
     }
 
     /** The key's place when several sort — a small number after the caret. */
     public record wb_gh_order() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 font-size: 9px;
-                color: var(--color-text-muted);
                 """;
         }
     }
 
     /** A mark while a filter is held on the column: a magnifier — an emoji, so its colour is the platform's, not the theme's. */
     public record wb_gh_mark() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
-                font-size: 11px;
                 line-height: 1;
                 """;
         }
@@ -75,6 +86,7 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
 
     /** The one control: the ▾ that opens the column's menu; lit while the column sorts or filters, boxed while open. */
     public record wb_gh_menu() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Inline.class, Shape.Corner.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 width: 18px;
@@ -82,9 +94,7 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
                 margin-right: 6px;
                 padding: 0;
                 border: 1px solid transparent;
-                border-radius: 3px;
                 background: transparent;
-                color: var(--color-text-muted);
                 font: 11px sans-serif;
                 cursor: pointer;
                 """;
@@ -93,26 +103,22 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
 
     public record wb_gh_menu_hot() implements CssClass<GamesStyles> {
         @Override public String pseudoState() { return ":is(:hover, :focus-visible)"; }
+        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class)); }
         @Override public String body() { return """
-                border-color: var(--color-border);
-                color: var(--color-text-primary);
                 outline: none;
                 """;
         }
     }
 
     public record wb_gh_menu_on() implements CssClass<GamesStyles> {
-        @Override public String body() { return """
-                color: var(--color-accent);
-                """;
+        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class)); }
+        @Override public String body() { return "";
         }
     }
 
     public record wb_gh_menu_open() implements CssClass<GamesStyles> {
-        @Override public String body() { return """
-                border-color: var(--color-accent);
-                background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-                """;
+        @Override public List<? extends Wearable> wears() { return List.of(of(Current.class, Color.Edge.class), of(Current.class, Color.Surface.class)); }
+        @Override public String body() { return "";
         }
     }
 
@@ -120,6 +126,7 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
 
     /** Fixed to the viewport, where the header cell said; above the sticky header (35) and the mask (60). */
     public record wb_gmenu() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Overlay.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 position: fixed;
                 left: var(--wb-gmenu-left, 0px);
@@ -132,24 +139,18 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
                 gap: 2px;
                 padding: 6px;
                 box-sizing: border-box;
-                background: var(--color-surface-raised);
-                color: var(--color-text-primary);
-                border: 1px solid var(--color-border);
-                border-radius: 6px;
-                box-shadow: 0 6px 20px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
-                font: 12px sans-serif;
                 """;
         }
     }
 
     /** A menu item: the sort choices — a row that reads as a line of a menu, not a button. */
     public record wb_gmenu_item() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 display: block;
                 width: 100%;
                 padding: 5px 8px;
                 border: 0;
-                border-radius: 4px;
                 background: transparent;
                 color: inherit;
                 font: inherit;
@@ -161,18 +162,16 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
 
     public record wb_gmenu_item_hot() implements CssClass<GamesStyles> {
         @Override public String pseudoState() { return ":is(:hover, :focus-visible)"; }
+        @Override public List<? extends Wearable> wears() { return List.of(of(Current.class, Color.Surface.class)); }
         @Override public String body() { return """
-                background: color-mix(in srgb, var(--color-accent) 12%, transparent);
                 outline: none;
                 """;
         }
     }
 
     public record wb_gmenu_item_on() implements CssClass<GamesStyles> {
-        @Override public String body() { return """
-                color: var(--color-accent);
-                font-weight: 600;
-                """;
+        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class), of(Label.class, Type.Weight.class)); }
+        @Override public String body() { return "";
         }
     }
 
@@ -183,6 +182,7 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
      * is shrunk to fit the ceiling instead of the list scrolling. flex none.
      */
     public record wb_gmenu_check() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 display: flex;
@@ -190,7 +190,6 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
                 gap: 6px;
                 padding: 3px 8px;
                 line-height: 18px;
-                border-radius: 4px;
                 cursor: pointer;
                 white-space: nowrap;
                 overflow: hidden;
@@ -207,15 +206,16 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
     }
 
     public record wb_gmenu_sep() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Tertiary.class, Color.Surface.class)); }
         @Override public String body() { return """
                 height: 1px;
                 margin: 4px 2px;
-                background: var(--color-border);
                 """;
         }
     }
 
     public record wb_gmenu_search() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class), of(Base.class, Color.Surface.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 flex: 1 1 0;
                 min-width: 0;
@@ -224,10 +224,6 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
                 margin: 2px 0;
                 padding: 4px 8px;
                 font: inherit;
-                color: var(--color-text-primary);
-                background: var(--color-surface);
-                border: 1px solid var(--color-border);
-                border-radius: 4px;
                 """;
         }
     }
@@ -242,6 +238,7 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
 
     /** The values: scrolls on its own, so the sort items and the actions stay in reach. */
     public record wb_gmenu_list() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 display: flex;
                 flex-direction: column;
@@ -249,55 +246,45 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
                 min-height: 60px;
                 max-height: 36vh;
                 overflow: auto;
-                border: 1px solid var(--color-border);
-                border-radius: 4px;
                 padding: 2px;
                 """;
         }
     }
 
     public record wb_gmenu_count() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 margin-left: auto;
                 padding-left: 8px;
-                color: var(--color-text-muted);
-                font-size: 11px;
                 """;
         }
     }
 
     public record wb_gmenu_actions() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Cap.class, Color.Edge.class), of(Cap.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 display: flex;
                 justify-content: flex-end;
                 gap: 6px;
                 padding-top: 6px;
                 margin-top: 2px;
-                border-top: 1px solid var(--color-border);
                 """;
         }
     }
 
     public record wb_gmenu_btn() implements CssClass<GamesStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 padding: 4px 10px;
                 cursor: pointer;
                 font: inherit;
-                background: var(--color-surface);
-                color: var(--color-text-primary);
-                border: 1px solid var(--color-border);
-                border-radius: 4px;
                 """;
         }
     }
 
     public record wb_gmenu_btn_primary() implements CssClass<GamesStyles> {
-        @Override public String body() { return """
-                background: var(--color-accent);
-                color: var(--color-surface);
-                border-color: var(--color-accent);
-                font-weight: 600;
-                """;
+        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Surface.class), of(Label.class, Type.Weight.class), of(OnPrimary.class, Color.Ink.class), of(Primary.class, Color.Edge.class)); }
+        @Override public String body() { return "";
         }
     }
 

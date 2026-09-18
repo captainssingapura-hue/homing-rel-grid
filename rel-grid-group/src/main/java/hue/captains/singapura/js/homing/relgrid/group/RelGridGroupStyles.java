@@ -2,8 +2,15 @@ package hue.captains.singapura.js.homing.relgrid.group;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.Wearable;
+import hue.captains.singapura.js.homing.relgrid.RelGridStyles;
 
 import java.util.List;
+
+import static hue.captains.singapura.js.homing.design.DesignClass.of;
+import static hue.captains.singapura.js.homing.design.Target.*;
+import static hue.captains.singapura.js.homing.design.Interaction.*;
+import static hue.captains.singapura.js.homing.design.Structure.*;
 
 /**
  * RFC 0050 · Episode 2 — the GROUP's looks, typed: the column of boxes, the
@@ -13,7 +20,8 @@ import java.util.List;
  * ({@code --hrg-cursor-color}, {@code --hrg-sel-color}) to transparent, which
  * every slot beneath inherits. A fence that is the stop wears the grid's
  * {@code hrg_lit} as well, so its outline lights under the focus the same way
- * a table's cursor does.
+ * a table's cursor does. What the group draws of its own — the fence's
+ * cursor — is the design's ring, read the way the grid reads it (RFC 0065).
  */
 public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
 
@@ -106,6 +114,7 @@ public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
         @Override public String body() { return """
                 --hrg-cursor-color: transparent;
                 --hrg-sel-color: transparent;
+                --hrg-sel-ink: currentColor;
                 """;
         }
     }
@@ -116,11 +125,13 @@ public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
      * through {@code hrg_lit} — so the eye follows one mark down the group.
      */
     public record hrg_fence_cursor() implements CssClass<RelGridGroupStyles> {
+        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Rule.class), of(Lattice.class, Color.Edge.class)); }
         @Override public String body() { return """
-                outline: 2px solid var(--hrg-cursor-color, color-mix(in srgb, var(--color-accent) 45%, var(--color-border)));
-                outline-offset: -2px;
-                transition: outline-color .18s ease;
-                """;
+                outline-width: %s;
+                outline-style: var(--hrg-cursor-style, %s);
+                outline-offset: %s;
+                outline-color: var(--hrg-cursor-color, color-mix(in srgb, %s 45%%, %s));
+                """.formatted(RelGridStyles.RING_WIDTH, RelGridStyles.RING_STYLE, RelGridStyles.RING_OFFSET, RelGridStyles.RING_COLOUR, RelGridStyles.LATTICE_LINE);
         }
     }
 

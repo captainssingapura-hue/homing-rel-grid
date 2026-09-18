@@ -33,6 +33,11 @@
             <version>${homing.core.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-design-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-tree</artifactId>
             <version>${project.version}</version>

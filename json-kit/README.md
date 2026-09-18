@@ -139,10 +139,11 @@ class from `JsonTreeStyles`:
 | `jk_literal` | `true`, `false`, `null` |
 | `jk_container` | `{3}`, `[5]`, `{}`, `[]` — a count, never the contents |
 
-Every colour is a theme token (`--color-accent`, `--color-text-primary`, `--color-text-muted`);
-there is no stylesheet and no literal colour anywhere in the kit, so a theme reaches every kind
-through the tokens it already sets, and a host that wants strings green has the class names to
-address.
+Every class **wears** a design's word (RFC 0065) and names no colour of its own: the line is
+the code face at the code's size, a name and a number are the body ink, a position, a colon
+and a count the muted ink, a string the primary ink, a literal the kicker's. There is no
+stylesheet and no literal anywhere in the kit, so a design colours every kind without knowing
+JSON exists, and a host that wants strings green has the class names to address.
 
 ## The lower layers, for a host that composes its own tree
 

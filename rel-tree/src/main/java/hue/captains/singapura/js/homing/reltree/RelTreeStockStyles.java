@@ -2,8 +2,14 @@ package hue.captains.singapura.js.homing.reltree;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+
+import static hue.captains.singapura.js.homing.design.DesignClass.of;
+import static hue.captains.singapura.js.homing.design.Target.*;
+import static hue.captains.singapura.js.homing.design.Emphasis.*;
+import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * The stock text cell's looks: a line that clips, the mode it is told, and the
@@ -48,16 +54,15 @@ public record RelTreeStockStyles() implements CssGroup<RelTreeStockStyles> {
         }
     }
 
-    /** The cell was told it is current. Worn, not decided: the tree paints the row, the cell may add. */
+    /** The cell was told it is current. Worn, not decided: the tree paints the row, the cell adds the label's weight. */
     public record hrt_text_cell_current() implements CssClass<RelTreeStockStyles> {
-        @Override public String body() { return """
-                font-weight: 600;
-                """;
-        }
+        @Override public List<? extends Wearable> wears() { return List.of(of(Label.class, Type.Weight.class)); }
+        @Override public String body() { return ""; }
     }
 
-    /** The busy ring, after the text: an arc in the accent over a faint circle, turning — the class half of the animation. */
+    /** The busy ring, after the text: a dotted circle in the primary edge, turning when the movement is installed — the class half of the animation. */
     public record hrt_text_cell_busy() implements CssClass<RelTreeStockStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Edge.class)); }
         @Override public String body() { return """
                 display: inline-block;
                 box-sizing: border-box;
@@ -65,8 +70,8 @@ public record RelTreeStockStyles() implements CssGroup<RelTreeStockStyles> {
                 height: 11px;
                 margin-left: 8px;
                 vertical-align: -1px;
-                border: 2px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-                border-top-color: var(--color-accent);
+                border-width: 2px;
+                border-style: dotted;
                 border-radius: 50%;
                 animation: hrt-spin .8s linear infinite;
                 """;
