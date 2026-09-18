@@ -20,7 +20,7 @@ class GridWorkbenchBootsTest {
         // Mirrors GridWorkbenchServer.main's umbrella exactly.
         var umbrella = new Umbrella.Solo<>(GridWorkbenchStudio.INSTANCE);
         assertDoesNotThrow(() ->
-                new Bootstrap<>(new StudioStarterFixtures<>(umbrella), new DefaultRuntimeParams(0)).compose());
+                new Bootstrap<>(new WorkbenchFixtures<>(new StudioStarterFixtures<>(umbrella)), new DefaultRuntimeParams(0)).compose());
     }
 
     @Test
@@ -29,22 +29,11 @@ class GridWorkbenchBootsTest {
         assertEquals(6, GridWorkbenchStudio.benches().size());
     }
 
-    /** The class that plays hrt-spin renders from the crate; the keyframes it names reach every theme through the fixtures. */
+    /** The specimens each bench registers; the keyframes half of the busy ring is parked until the framework types a movement (RFC 0066 retired the globals it was joined in). */
     @Test
-    void everyThemesGlobalsCarryTheKeyframesTheCratesName() {
+    void everyBenchRegistersItsSpecimens() {
         var fixtures = new WorkbenchFixtures<>(new StudioStarterFixtures<>(new Umbrella.Solo<>(GridWorkbenchStudio.INSTANCE)));
-        var registry = fixtures.themeRegistry();
-        assertTrue(registry.themes().size() >= 2, "the starter's themes are the registry's");
-        for (var theme : registry.themes()) {
-            var globals = registry.globalsForSlug(theme.slug());
-            assertNotNull(globals, "globals for " + theme.slug());
-            String rendered = globals.chunks().isEmpty() ? globals.css() : globals.chunks().get(hue.captains.singapura.js.homing.core.Component.class);
-            assertTrue(rendered != null && rendered.contains("@keyframes " + RelTreeStockStyles.SPIN),
-                    theme.slug() + " carries @keyframes " + RelTreeStockStyles.SPIN + " in its component layer");
-        }
-        // And the class half names exactly that movement.
-        assertTrue(new RelTreeStockStyles.hrt_text_cell_busy().body().contains("animation: " + RelTreeStockStyles.SPIN + " "),
-                "the ring plays the keyframes the crate declares");
+        assertTrue(fixtures.themeRegistry().themes().size() >= 2, "the starter's themes are the registry's");
         // Three editors with different rights, a follower, and the outlets group — five specimens.
         assertEquals(5, ReplicatingTablesSpec.INSTANCE.widgetEntries().size());
         // An editor, a display, a stress table and the articles group — four specimens.

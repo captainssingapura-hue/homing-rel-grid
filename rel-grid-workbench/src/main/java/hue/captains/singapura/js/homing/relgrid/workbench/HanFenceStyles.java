@@ -2,8 +2,18 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+
+import static hue.captains.singapura.js.homing.design.DesignClass.of;
+import static hue.captains.singapura.js.homing.design.Target.*;
+import static hue.captains.singapura.js.homing.design.Box.*;
+import static hue.captains.singapura.js.homing.design.Emphasis.*;
+import static hue.captains.singapura.js.homing.design.Interaction.*;
+import static hue.captains.singapura.js.homing.design.Layer.*;
+import static hue.captains.singapura.js.homing.design.Structure.*;
+import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * The Han fences' looks, typed. Drawn to sit over the squares' width: the
@@ -15,9 +25,9 @@ public record HanFenceStyles() implements CssGroup<HanFenceStyles> {
     public static final HanFenceStyles INSTANCE = new HanFenceStyles();
 
     public record wb_hanf() implements CssClass<HanFenceStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 font-family: 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', 'PMingLiU', serif;
-                color: var(--color-text-primary);
                 padding: 6px 4px 4px;
                 """;
         }
@@ -41,9 +51,8 @@ public record HanFenceStyles() implements CssGroup<HanFenceStyles> {
     }
 
     public record wb_hanf_a() implements CssClass<HanFenceStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Caption.class, Type.Scale.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
-                font-size: 12px;
-                color: var(--color-text-muted);
                 letter-spacing: 0.1em;
                 """;
         }
@@ -61,28 +70,27 @@ public record HanFenceStyles() implements CssGroup<HanFenceStyles> {
     }
 
     public record wb_hanf_g() implements CssClass<HanFenceStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
+                opacity: .45;
                 font-size: 44px;
                 line-height: 1;
-                color: color-mix(in srgb, var(--color-text-muted) 45%, transparent);
                 """;
         }
     }
 
     public record wb_hanf_n() implements CssClass<HanFenceStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Kicker.class, Type.Scale.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
-                font-size: 11px;
-                color: var(--color-text-muted);
                 letter-spacing: 0.2em;
                 """;
         }
     }
 
     public record wb_hanf_colophon() implements CssClass<HanFenceStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Caption.class, Type.Scale.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 text-align: center;
-                font-size: 12px;
-                color: var(--color-text-muted);
                 letter-spacing: 0.3em;
                 padding: 10px 0 4px;
                 """;

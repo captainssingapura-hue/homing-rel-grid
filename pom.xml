@@ -49,10 +49,12 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- The homing core RELEASE this builds against, so a clean machine
-             builds it without installing core first. Override for local
-             core work: mvn -Dhoming.core.version=LOCAL-SNAPSHOT ... -->
-        <homing.core.version>0.8.3</homing.core.version>
+        <!-- The homing core this builds against. Normally a RELEASE, so a clean
+             machine builds it without installing core first; until the design
+             substrate (RFC 0065/0066 — Wearable, DesignClass, the semantics the
+             grid and the tree wear) is released, the local snapshot: install
+             core first. Re-pin to the release that carries it. -->
+        <homing.core.version>LOCAL-SNAPSHOT</homing.core.version>
         <junit.version>5.11.3</junit.version>
     </properties>
 

@@ -2,8 +2,18 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+
+import static hue.captains.singapura.js.homing.design.DesignClass.of;
+import static hue.captains.singapura.js.homing.design.Target.*;
+import static hue.captains.singapura.js.homing.design.Box.*;
+import static hue.captains.singapura.js.homing.design.Emphasis.*;
+import static hue.captains.singapura.js.homing.design.Interaction.*;
+import static hue.captains.singapura.js.homing.design.Layer.*;
+import static hue.captains.singapura.js.homing.design.Structure.*;
+import static hue.captains.singapura.js.homing.design.Text.*;
 
 /** The stars cell's looks, typed: the stars in the slot, and the panel it edits with. */
 public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
@@ -11,8 +21,8 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
     public static final DishStarsStyles INSTANCE = new DishStarsStyles();
 
     public record wb_stars() implements CssClass<DishStarsStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class)); }
         @Override public String body() { return """
-                font: 13px sans-serif;
                 letter-spacing: 2px;
                 padding: 0 6px;
                 """;
@@ -32,6 +42,7 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
      * the table it costs the table nothing: no column widens, no row grows.
      */
     public record wb_stars_panel() implements CssClass<DishStarsStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Overlay.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 position: absolute;
                 top: 100%;
@@ -39,11 +50,6 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
                 min-width: 250px;
                 padding: 12px 14px;
                 box-sizing: border-box;
-                background: var(--color-surface-raised);
-                color: var(--color-text-primary);
-                border: 1px solid var(--color-border);
-                border-radius: 6px;
-                box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text-primary) 28%, transparent);
                 outline: none;
                 """;
         }
@@ -61,10 +67,10 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
     }
 
     public record wb_star() implements CssClass<DishStarsStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 user-select: none;
                 -webkit-user-select: none;
-                color: var(--color-text-muted);
                 opacity: 0.45;
                 """;
         }
@@ -72,18 +78,18 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
 
     /** A star within the draft. Listed after wb_star, which it qualifies. */
     public record wb_star_on() implements CssClass<DishStarsStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return """
-                color: var(--color-accent);
                 opacity: 1;
                 """;
         }
     }
 
     public record wb_stars_hint() implements CssClass<DishStarsStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 margin-top: 10px;
                 font: 11px sans-serif;
-                color: var(--color-text-muted);
                 white-space: nowrap;
                 """;
         }
