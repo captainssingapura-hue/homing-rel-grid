@@ -84,9 +84,13 @@ class DishStarsCell {
 
     _text() { return (this._value == null) ? "—" : this._starsFor(this._value); }
 
+    /** The rating as an extent: 5 is the meaning at full, 3 neutral, 1 the meaning turned the other way. */
+    _extent() { return (this._value == null) ? 0 : (this._value - 3) / 2; }
+
     _paint() {
         if (!this._el || this._editing) return;
         this._el.textContent = this._text();
+        css.extent(this._el, this._extent());
     }
 
     /** The cell's element, minted once on its branch; the grid places it. */
