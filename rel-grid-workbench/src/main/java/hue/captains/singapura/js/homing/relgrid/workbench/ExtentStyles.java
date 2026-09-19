@@ -78,14 +78,14 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
 
     // ── the six words that scale, one class each, each claiming the extent ──
 
-    /** A good mark, a bad one, an unremarkable one. */
+    /** Success on an ink: failure at −1, an unremarkable mark at 0, success at 1. */
     public record wb_x_success_ink() implements CssClass<ExtentStyles> {
         @Override public List<? extends Wearable> wears()   { return List.of(of(Success.class, Color.Ink.class)); }
         @Override public List<? extends Wearable> extents() { return List.of(of(Success.class, Color.Ink.class)); }
         @Override public String body() { return ""; }
     }
 
-    /** A danger wash; turned the other way, success's; at zero, nothing. */
+    /** A danger wash; turned the other way, safety's; at zero, nothing. Danger's own axis — not success reversed. */
     public record wb_x_danger_surface() implements CssClass<ExtentStyles> {
         @Override public List<? extends Wearable> wears()   { return List.of(of(Danger.class, Color.Surface.class)); }
         @Override public List<? extends Wearable> extents() { return List.of(of(Danger.class, Color.Surface.class)); }
@@ -113,7 +113,7 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
         @Override public String body() { return ""; }
     }
 
-    /** Calm to alarm on an edge: all clear at −1, the hairline at 0, the warning at 1. */
+    /** Warning on an edge: calm at −1, the hairline at 0, the warning at 1. */
     public record wb_x_warning_edge() implements CssClass<ExtentStyles> {
         @Override public List<? extends Wearable> wears()   { return List.of(of(Warning.class, Color.Edge.class), of(Control.class, Shape.Rule.class)); }
         @Override public List<? extends Wearable> extents() { return List.of(of(Warning.class, Color.Edge.class)); }

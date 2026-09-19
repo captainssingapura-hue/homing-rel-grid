@@ -41,7 +41,7 @@ function mountExtentTable(branch) {
     var root = _wbExtentHint(branch,
         'COLOUR EXTENTS — six words that scale, at nine extents each. A row is one design pair; a cell is an element wearing it with ' +
         'css.extent(el, x) and nothing else. The design owns the three anchors — the meaning turned the other way at −1, neutral at 0, ' +
-        'the word itself at 1 — and the sheet interpolates between them, the pole by the sign and then from neutral by the magnitude. ' +
+        'the word itself at 1 — and the sheet interpolates between them, the pole by the sign and then from neutral by the magnitude. Each word is its own axis: success at −1 is failure, danger at −1 is safety, and no word is another turned around. ' +
         'Switch the theme: the numbers stay, every colour changes. The table has no empty cell because the completeness test does not let a design leave one.');
 
     var table = branch.createElement('table', 'div');
@@ -79,7 +79,7 @@ function mountExtentTable(branch) {
 function mountExtentCard(branch) {
     var root = _wbExtentHint(branch,
         'ONE NUMBER, THREE WORDS — a card wearing its surface, its edge and its ink at an extent. The slider sets css.extent on the card ' +
-        'and the three move in step: elevation from recessed through the page to raised, the edge from all-clear through the hairline to ' +
+        'and the three move in step: elevation from sunk through the page to raised, the edge from calm through the hairline to ' +
         'warning, the ink from muted through the body to the accent. The extent is a registered number, so the card’s transition on it ' +
         'tweens the colours — no keyframes, no script.');
 
