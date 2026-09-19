@@ -114,6 +114,11 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(JsonDocStore.INSTANCE),
                 CrateEntry.of(JsonBench.INSTANCE),
                 CrateEntry.of(JsonInputWidget.INSTANCE),
-                CrateEntry.of(JsonDisplayWidget.INSTANCE));
+                CrateEntry.of(JsonDisplayWidget.INSTANCE),
+                // The Colour Extents bench: its looks, its two panes, its two widgets.
+                CrateEntry.of(ExtentStyles.INSTANCE),
+                CrateEntry.of(ExtentBench.INSTANCE),
+                CrateEntry.of(ExtentTableWidget.INSTANCE),
+                CrateEntry.of(ExtentCardWidget.INSTANCE));
     }
 }

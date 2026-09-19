@@ -90,7 +90,9 @@ class DishPolicyTest extends JsModuleTestBase {
                     },
                     setClass: function (el) { el.className = Array.prototype.slice.call(arguments, 1).map(name).join(' '); },
                     hasClass: function (el, c) { return el.classList.contains(name(c)); },
-                    className: name
+                    className: name,
+                    // the extent the cell sets from its rating: recorded, not styled — the fake DOM has no style
+                    extent: function (el, t) { el.extent = t; }
                 };
             })();
             var document = {

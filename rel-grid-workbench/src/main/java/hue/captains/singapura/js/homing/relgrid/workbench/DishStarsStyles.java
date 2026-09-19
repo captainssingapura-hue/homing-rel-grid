@@ -10,6 +10,7 @@ import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
 import static hue.captains.singapura.js.homing.design.Box.*;
 import static hue.captains.singapura.js.homing.design.Emphasis.*;
+import static hue.captains.singapura.js.homing.design.Feedback.*;
 import static hue.captains.singapura.js.homing.design.Interaction.*;
 import static hue.captains.singapura.js.homing.design.Layer.*;
 import static hue.captains.singapura.js.homing.design.Structure.*;
@@ -20,8 +21,16 @@ public record DishStarsStyles() implements CssGroup<DishStarsStyles> {
 
     public static final DishStarsStyles INSTANCE = new DishStarsStyles();
 
+    /**
+     * The stars, in the success ink AT AN EXTENT: five stars is the meaning at
+     * full, three is neutral, one is the meaning turned the other way — the
+     * cell sets its extent from the rating, and the design's word for a good
+     * mark, a bad one and an unremarkable one does the colouring. Naming the
+     * pair in extents() is what obliges every design to anchor it at 0 and −1.
+     */
     public record wb_stars() implements CssClass<DishStarsStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class)); }
+        @Override public List<? extends Wearable> wears() { return List.of(of(Success.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class)); }
+        @Override public List<? extends Wearable> extents() { return List.of(of(Success.class, Color.Ink.class)); }
         @Override public String body() { return """
                 letter-spacing: 2px;
                 padding: 0 6px;

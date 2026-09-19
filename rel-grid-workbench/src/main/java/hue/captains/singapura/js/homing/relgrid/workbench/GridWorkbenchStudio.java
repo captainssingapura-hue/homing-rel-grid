@@ -52,7 +52,10 @@ public record GridWorkbenchStudio() implements Studio<GridWorkbenchHome> {
             GamesTreeSpec.INSTANCE,
             // JSON Tree: the first out-of-the-box offering — the kit's viewer over a
             // document typed in beside it, every keystroke a new value.
-            JsonTreeSpec.INSTANCE
+            JsonTreeSpec.INSTANCE,
+            // The substrate's bench, kept here because the grid's cells are its first
+            // customers: six scaled words at nine extents, and a card on a slider.
+            ExtentTableSpec.INSTANCE
     );
 
     public static final GridWorkbenchStudio INSTANCE = new GridWorkbenchStudio();

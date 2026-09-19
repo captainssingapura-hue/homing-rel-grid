@@ -26,7 +26,7 @@ class GridWorkbenchBootsTest {
     @Test
     void theBenchListIsTheRegistration() {
         assertEquals("replicatingTables", GridWorkbenchStudio.landingKind());
-        assertEquals(6, GridWorkbenchStudio.benches().size());
+        assertEquals(7, GridWorkbenchStudio.benches().size());
     }
 
     /** The specimens each bench registers; the keyframes half of the busy ring is parked until the framework types a movement (RFC 0066 retired the globals it was joined in). */
