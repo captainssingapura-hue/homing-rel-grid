@@ -33,6 +33,8 @@
 //                         // tree's SVG folders, closed or open, in the theme's colour; a blank box for
 //                         // a leaf. { closed?, open?, leaf? }: the host's own text glyphs instead,
 //                         // which no theme reaches. Off by default.
+//       surface?,         // false: no ground of the tree's own - a host that lays it on a sheet of
+//                         // its own, whose face the tree should not paint over. On by default.
 //       ask?,             // (question, mask) — THE CHANNEL: RelTreeUnfold and RelTreeFold are
 //                         // questions answered with a RelTreeView or nothing; RelTreeCursorChanged
 //                         // and RelTreeActivated are notifications. See RelTreeChannel.
@@ -74,7 +76,7 @@ class RelTree {
         this._asked = null;                      // { key, kind } while the tree's own fold question is out
         this._places = new RelTreePlaces([]);
         this._layout = new RelTreeLayout({
-            branch: opts.branch, container: opts.container, label: opts.label || null, caret: opts.caret, folder: opts.folder,
+            branch: opts.branch, container: opts.container, label: opts.label || null, caret: opts.caret, folder: opts.folder, surface: opts.surface,
             onRowClick:    function (i) { self._gestures.onRowClick(i); },
             onRowDblClick: function (i) { self._gestures.onRowDblClick(i); },
             onCaretClick:  function (i) { self._gestures.onCaretClick(i); }

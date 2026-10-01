@@ -66,9 +66,9 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
         }
     }
 
-    /** The tree: the keyboard host, a column of rows, on the base surface in the body ink and face at the label's size. */
+    /** The tree: the keyboard host, a column of rows, in the body ink and face at the label's size - on its own ground ({@code hrt_surface}) unless its host lays it on one. */
     public record hrt_tree() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
+        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
         @Override public String body() { return """
                 display: flex;
                 flex-direction: column;
@@ -77,6 +77,15 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
                 outline: none;
                 """;
         }
+    }
+
+    /**
+     * The tree's own ground: the base surface. Worn unless the host says {@code surface: false} - a
+     * host that lays the tree on a sheet of its own, whose face the tree should not paint over.
+     */
+    public record hrt_surface() implements CssClass<RelTreeStyles> {
+        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class)); }
+        @Override public String body() { return ""; }
     }
 
     /**
@@ -230,7 +239,7 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
     @Override public List<CssClass<RelTreeStyles>> cssClasses() {
         return List.of(
                 // looks
-                new hrt_wrap(), new hrt_lit(), new hrt_tree(), new hrt_row(), new hrt_caret(), new hrt_caret_open(), new hrt_caret_leaf(),
+                new hrt_wrap(), new hrt_lit(), new hrt_tree(), new hrt_surface(), new hrt_row(), new hrt_caret(), new hrt_caret_open(), new hrt_caret_leaf(),
                 new hrt_folder(), new hrt_folder_open(), new hrt_folder_leaf(), new hrt_folder_off(),
                 new hrt_mask(), new hrt_panel(),
                 // states
