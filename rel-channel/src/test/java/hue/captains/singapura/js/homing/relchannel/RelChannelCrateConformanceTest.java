@@ -1,19 +1,13 @@
 package hue.captains.singapura.js.homing.relchannel;
 
+import hue.captains.singapura.js.homing.conformance.engine.ConformanceEngine;
+import hue.captains.singapura.js.homing.conformance.engine.ServedModuleRenderer;
 import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
 import hue.captains.singapura.js.homing.conformance.rules.DefaultJsRulePolicy;
 import hue.captains.singapura.js.homing.conformance.rules.Finding;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
-import hue.captains.singapura.js.homing.conformance.rules.ServedModule;
-import hue.captains.singapura.js.homing.core.CrateEntry;
-import hue.captains.singapura.js.homing.core.JsModuleType;
-import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,26 +34,11 @@ class RelChannelCrateConformanceTest {
                 "the crate every presentation's channel stands on may reach none of them");
     }
 
-    /** The rule sweep with no ledger: a crate begun clean stays clean. */
+    /** The rule sweep with no ledger, over the text the server serves: a crate begun clean stays clean. */
     @Test
     void theSweepFindsNothing() {
-        var findings = new ArrayList<String>();
-        for (CrateEntry entry : RelChannelCrate.INSTANCE.entries()) {
-            String cls = entry.moduleClass();
-            String text = resource("/homing/js/" + cls.replace('.', '/') + ".js");
-            JsModuleType type = entry.declaredType() != null ? entry.declaredType() : StandardJsModuleType.CONSUMER;
-            for (Finding f : DefaultJsRulePolicy.INSTANCE.rulesFor(type).checkAll(ServedModule.of(cls, type, text)))
-                findings.add(f.fingerprint());
-        }
+        var findings = new ConformanceEngine(DefaultJsRulePolicy.INSTANCE, new ServedModuleRenderer())
+                .checkCrates(List.of(RelChannelCrate.INSTANCE)).stream().map(Finding::fingerprint).toList();
         assertEquals(List.of(), findings, "rel-channel has no ledger: nothing may be found");
-    }
-
-    private static String resource(String path) {
-        try (InputStream in = RelChannelCrateConformanceTest.class.getResourceAsStream(path)) {
-            if (in == null) throw new IllegalStateException("no such resource: " + path);
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
     }
 }

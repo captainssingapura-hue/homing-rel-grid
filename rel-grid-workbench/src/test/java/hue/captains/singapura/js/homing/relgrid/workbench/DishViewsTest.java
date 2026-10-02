@@ -58,8 +58,8 @@ class DishViewsTest extends JsModuleTestBase {
         for (String m : DishPolicyTest.PARTY) loadModule(m);
         js.eval("js", DishPolicyTest.STYLES);
         loadModule(PROTOCOL);
-        loadModule(BENCH_DIR + "DishStore.js");
-        loadModule(BENCH_DIR + "DishViews.js");
+        loadModule(BENCH_DIR + "DishStoreModule.js");
+        loadModule(BENCH_DIR + "DishViewsModule.js");
         js.eval("js", HELPERS);
     }
 
@@ -70,7 +70,7 @@ class DishViewsTest extends JsModuleTestBase {
     void everyProfileReadsTheStoreAndAnswersPksInItsOrder() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore(), v = createDishViews(store);
+                    var store = new DishStore(), v = new DishViews(store);
                     // The seed: mapo 9.5/480/4★/71 sold, coq 18/610/2★/64, fish 12/560/5★/58,
                     // sauer 14/650/2★/49, burger 11/780/1★/88, carbo 13/720/3★/77.
                     if (v.viewFor('base').join(',') !== store.pks().join(',')) return false;
@@ -94,7 +94,7 @@ class DishViewsTest extends JsModuleTestBase {
     void tiesFallToBaseOrderAndAViewIsAReadingOfTheStoreNow() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore(), v = createDishViews(store);
+                    var store = new DishStore(), v = new DishViews(store);
                     // Make coq as cheap as mapo: the tie falls to base order, mapo first.
                     store.commit('coq', 'price', 9.5);
                     if (v.viewFor('cheapest').slice(0, 2).join(',') !== 'mapo,coq') return false;
@@ -112,8 +112,8 @@ class DishViewsTest extends JsModuleTestBase {
     void aTableRemembersItsProfileAndExplainsIt() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore(), changed = [];
-                    var v = createDishViews(store, { onChanged: function (k) { changed.push(k); } });
+                    var store = new DishStore(), changed = [];
+                    var v = new DishViews(store, { onChanged: function (k) { changed.push(k); } });
                     if (v.held() !== 'base') return false;
                     if (!/^As entered — .* · 6 of 6$/.test(v.describe())) return false;
                     var pks = v.choose('light');
@@ -132,11 +132,11 @@ class DishViewsTest extends JsModuleTestBase {
     @Test
     void thePanelListsTheProfilesAndAChoiceAnswersAView() {
         act("""
-                var store = createDishStore(), v = createDishViews(store);
+                var store = new DishStore(), v = new DishViews(store);
                 var host = makeEl('div'), chosen = null, answer = 'unsettled';
                 var q = new RelGridViewHandover();
                 var branch = hostBranch();
-                dishViewPanel(v, q, maskOf(host), { branch: branch, onChosen: function (k, n) { chosen = k + ':' + n; } })
+                v.answer(q, maskOf(host), { branch: branch, onChosen: function (k, n) { chosen = k + ':' + n; } })
                     .then(function (a) { answer = a; });
                 var root = host.children[0];
                 if (branch.branchCount !== 1) throw new Error('the panel mints on a branch of its own for the session');
@@ -174,27 +174,27 @@ class DishViewsTest extends JsModuleTestBase {
     @Test
     void numbersClickAndCancelDoWhatTheySay() {
         act("""
-                var S = createDishStore(), V = createDishViews(S);
+                var S = new DishStore(), V = new DishViews(S);
                 var nHost = makeEl('div'), nAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), maskOf(nHost), { branch: hostBranch() }).then(function (a) { nAnswer = a; });
+                V.answer(new RelGridViewHandover(), maskOf(nHost), { branch: hostBranch() }).then(function (a) { nAnswer = a; });
                 nHost.children[0].dispatch('keydown', { key: '4' });
                 """);
         assertTrue(evalBool("nAnswer instanceof RelGridView && nAnswer.pks.join(',') === 'fish,mapo,carbo,sauer,coq,burger' && V.held() === 'rated'"),
                 "4 chooses the fourth profile");
         act("""
                 var cHost = makeEl('div'), cAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), maskOf(cHost), { branch: hostBranch() }).then(function (a) { cAnswer = a; });
+                V.answer(new RelGridViewHandover(), maskOf(cHost), { branch: hostBranch() }).then(function (a) { cAnswer = a; });
                 byClass(cHost, 'wb-view-item')[6].dispatch('click', {});
                 """);
         assertTrue(evalBool("cAnswer instanceof RelGridView && cAnswer.pks.join(',') === 'coq,carbo,burger,mapo' && V.held() === 'bestsellers'"),
                 "a click chooses, and the table now remembers that one");
         act("""
                 var eHost = makeEl('div'), eAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), maskOf(eHost), { branch: hostBranch() }).then(function (a) { eAnswer = a; });
+                V.answer(new RelGridViewHandover(), maskOf(eHost), { branch: hostBranch() }).then(function (a) { eAnswer = a; });
                 if (!/wb-view-held/.test(byClass(eHost, 'wb-view-item')[6].className)) throw new Error('the held profile is not marked');
                 eHost.children[0].dispatch('keydown', { key: 'Escape' });
                 var xHost = makeEl('div'), xAnswer = 'unsettled';
-                dishViewPanel(V, new RelGridViewHandover(), maskOf(xHost), { branch: hostBranch() }).then(function (a) { xAnswer = a; });
+                V.answer(new RelGridViewHandover(), maskOf(xHost), { branch: hostBranch() }).then(function (a) { xAnswer = a; });
                 byClass(xHost, 'wb-view-cancel')[0].dispatch('click', {});
                 """);
         assertTrue(evalBool("eAnswer === undefined && xAnswer === undefined && V.held() === 'bestsellers'"),

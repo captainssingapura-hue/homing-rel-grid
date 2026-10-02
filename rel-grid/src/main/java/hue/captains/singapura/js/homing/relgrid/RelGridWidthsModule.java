@@ -14,7 +14,8 @@ import java.util.List;
  * grid's alone (map 7). Held by column identity, answered by position for the
  * layout to apply in place; a request is bounded at normalisation and the
  * bounded request is what is held; a column the relation does not have is
- * refused. Imports nothing: it is arithmetic over the view maps it is handed.
+ * refused. Imports nothing: it is arithmetic over the view maps it is handed,
+ * applied through the layout it is handed and reported to the host callback.
  */
 public record RelGridWidthsModule() implements DomModule<RelGridWidthsModule> {
 

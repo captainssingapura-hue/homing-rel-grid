@@ -32,7 +32,7 @@ public record RelGridLayoutModule() implements DomModule<RelGridLayoutModule> {
                 .add(new ModuleImports<>(List.of(new RelGridHeaderDragModule.RelGridHeaderDrag()), RelGridHeaderDragModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridSlotsModule.RelGridSlots()), RelGridSlotsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridOverlaysModule.RelGridOverlays()), RelGridOverlaysModule.INSTANCE))
-                .add(new ModuleImports<>(List.of(new RelGridRevealModule.relGridRevealSlot(), new RelGridRevealModule.relGridHasKeyboard()),
+                .add(new ModuleImports<>(List.of(new RelGridRevealModule.RelGridReveal()),
                         RelGridRevealModule.INSTANCE))
                 // The looks, typed: every class the layout mints or paints.
                 .add(new ModuleImports<>(List.of(

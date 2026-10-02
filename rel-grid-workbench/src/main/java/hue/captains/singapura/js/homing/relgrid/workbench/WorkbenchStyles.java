@@ -2,9 +2,11 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.CssVar;
 import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+import java.util.Set;
 
 import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
@@ -110,7 +112,10 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
      */
     public record wb_han_host() implements CssClass<WorkbenchStyles> {
         @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class)); }
+        /** The width of the columns shown, handed in by the widget that knows which they are. */
+        @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--wb-han-width")); }
         @Override public String body() { return """
+                width: var(--wb-han-width, auto);
                 flex: 0 1 auto;
                 min-height: 0;
                 align-self: flex-start;

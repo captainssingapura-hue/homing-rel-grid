@@ -18,9 +18,11 @@ pinned: two copies of the *same* specimen, differently arranged, is a comparison
 The first bench on the episode-2 grid, and the proof of its root principle: the grid captures
 intents and arranges cells, and **holds no value**.
 
-Open **Benches** below, then the picker with **➕**. Dock the three editors — **Chef**,
-**Nutritionist**, **Shop manager** — and a **Follower** or two, side by side. Every one of them
-is the same grid, constructed the same way, over the same persisted store. What differs is the
+Open **Grid benches** below: the bench opens with the three editors — **Chef**,
+**Nutritionist**, **Shop manager** — a **Follower** and the **Outlets** docked side by side; dock
+another Follower or two from the picker with **➕**. Every one of them is the same grid,
+constructed the same way, over a replica of the same persisted store — the bench's one store,
+which the tables share through a party and its steward keeps. What differs is the
 **relation** each was handed, and a relation is built for a role.
 
 | table | may edit | because |
@@ -626,12 +628,16 @@ document). The bench adds a store, a textarea and a readout, and nothing else.
 
 ## Adding a bench
 
-1. Write the specimens as widgets, beside the ones in `relgrid.workbench`.
-2. Declare a `WorkspaceSpec` with a new `kind()`, listing those widgets as `WidgetEntry`s —
-   grouped and described. `ReplicatingTablesSpec` is the worked example.
-3. Add the spec to `GridWorkbenchStudio.BENCHES`. That is the whole registration: naming the
-   singleton runs its static initializer, and nothing else needs editing.
+1. Write the specimens as widgets beside the ones in `relgrid.workbench`: a class that extends
+   `BenchWidget` (its DomOps and focus parties, its keys, its body), in a module of its own —
+   `XModule` exporting class `X`, declared a `SelfContainedWidget`.
+2. Declare each one's kind - a `WidgetDeclaration` - and the bench, a `WorkspaceDeclaration`
+   listing those kinds, with how it is arranged the first time. What the specimens share is a
+   messaging party, declared as a type with its secretary (and a steward, when it is kept);
+   a kind says which types it joins. `ReplicatingTablesBench` is the worked example.
+3. File the bench in `Benches`: in `ALL`, in a section of the group, and among the
+   arrangements. Add its modules to `RelGridWorkbenchCrate`; `GridWorkbenchGateTest` holds
+   them to the strict gate.
 
-**There is no leaf per bench, deliberately.** The workspace chrome serialises the whole registry
-to the client, so the workspace controls already offer cross-kind switching between every
-registered bench. A catalogue tile each would restate a list the substrate carries.
+The benches are one group of workspaces, so the workspace controls switch between every bench
+filed there; the catalogue has one leaf for the group, and none per bench.

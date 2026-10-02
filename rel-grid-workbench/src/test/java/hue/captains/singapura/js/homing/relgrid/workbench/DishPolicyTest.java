@@ -121,7 +121,7 @@ class DishPolicyTest extends JsModuleTestBase {
 
     /** Owner-side helpers: a relation over its own branch, a cell asked for its element, an edit driven. No grid. */
     private static final String HELPERS = """
-            function relationOf(store, role) { return createDishRelation(store, { role: role, branch: testBranch() }); }
+            function relationOf(store, role) { return new DishRelation(store, { role: role, branch: testBranch() }); }
             // A cell is a NOUN: asked for its element, as the grid would ask, and nothing rendered into it.
             function mount(rel, pk, col) { var c = rel.cellFor(pk, col); c.cellElement(); return c; }
             // The cell's own half of the two-stage handover. Stage one is the whole
@@ -153,10 +153,11 @@ class DishPolicyTest extends JsModuleTestBase {
         js.eval("js", STYLES);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
         loadModule(GRID_DIR + "protocol/RelGridProtocolModule.js");   // the formats answer with the protocol's content record
-        loadModule(BENCH_DIR + "DishClipboardFormats.js");
+        loadModule(BENCH_DIR + "DishClipboardFormatsModule.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");
-        loadModule(BENCH_DIR + "DishStore.js");
-        loadModule(BENCH_DIR + "DishRelation.js");
+        loadModule(BENCH_DIR + "DishStoreModule.js");
+        loadModule(BENCH_DIR + "DishRelationModule.js");
+        loadModule(BENCH_DIR + "DishesSecretaryModule.js");
         js.eval("js", HELPERS);
     }
 
@@ -166,7 +167,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void eachRoleEditsItsOwnColumnsAndNoOthers() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore(), roles = dishRoles(), cols = store.columns();
+                    var store = new DishStore(), roles = DishRelation.roles(), cols = store.columns();
                     var ok = true;
                     Object.keys(roles).forEach(function (role) {
                         var rel = relationOf(store, role);
@@ -190,7 +191,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void whatNobodyMayWriteIsTheStoresRuleWhoeverAsks() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore();
+                    var store = new DishStore();
                     var pop = store.get('mapo', 'popularity'), sold = store.get('mapo', 'sold'), rev = store.revision();
                     var a = store.commit('mapo', 'popularity', 5);
                     var b = store.commit('mapo', 'sold', 5);
@@ -209,7 +210,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void aSaleRederivesPopularityIntoEveryRelationsOwnCellsWithoutACommit() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore(), pks = store.pks();
+                    var store = new DishStore(), pks = store.pks();
                     var rels = ['nutritionist', 'manager', 'follower'].map(function (r) { return relationOf(store, r); });
                     rels.forEach(function (rel) { pks.forEach(function (pk) { mount(rel, pk, 'popularity'); mount(rel, pk, 'sold'); }); });
                     // Seed: burger is the best seller (88); sauer sold 49 of that.
@@ -235,7 +236,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void anEditorsCommitReachesEveryOtherRelationThroughTheStoreAlone() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore();
+                    var store = new DishStore();
                     var nut = relationOf(store, 'nutritionist');
                     var mgr = relationOf(store, 'manager');
                     var fol = relationOf(store, 'follower');
@@ -253,24 +254,58 @@ class DishPolicyTest extends JsModuleTestBase {
     }
 
     @Test
-    void theDerivedColumnIsRecomputedFromWhatWasPersistedNotStored() {
+    void theBenchsStoreIsTheDishesPartys_soldKept_popularityDerivedByEveryReplica() {
         assertTrue(evalBool("""
                 (() => {
-                    var a = createDishStore();
-                    a.sell('fish', 100);                                              // 158 — fish is the best seller
-                    var b = createDishStore();                                        // loads what a persisted
-                    var raw = JSON.parse(localStorage.getItem('bench.replicatingTables.dishes.v3'));
-                    return b.get('fish', 'sold') === 158 && b.get('fish', 'popularity') === 100
-                        && b.get('burger', 'popularity') === Math.round(100 * 88 / 158)
-                        && raw.fish.sold === 158 && raw.fish.popularity === undefined;   // derived is never persisted
-                })()"""), "sold is persisted and popularity is derived again on load");
+                    // The bench's one store is the dishes party's secretary; its steward keeps it.
+                    var s = DishesSecretary.initial, from = 'chef';
+                    function step(m) { var r = DishesSecretary.behavior(s, { from: from, message: m }); s = r.newState; return r.actions; }
+                    var a = step({ kind: 'CurrentRequested' });                         // not loaded: asked of the steward, once
+                    if (a.length !== 1 || a[0].kind !== 'SendToSteward' || a[0].message.kind !== 'Load') return false;
+                    if (step({ kind: 'CurrentRequested' }).length !== 0) return false;  // loading: nothing more
+                    a = step({ kind: 'Loaded', dishes: '', found: false });              // nothing kept: the seed, to every member
+                    if (a.length !== 1 || a[0].kind !== 'BroadcastToMembers' || JSON.parse(a[0].message.dishes).fish.sold !== 58) return false;
+                    a = step({ kind: 'Sell', pk: 'fish', n: 100 });                      // 158 - fish is the best seller
+                    var state = a[0].message, saved = JSON.parse(a[1].message.dishes);
+                    if (a[1].kind !== 'SendToSteward' || saved.fish.sold !== 158 || saved.fish.popularity !== undefined) return false;   // derived is never kept
+                    // A replica told the state derives popularity itself.
+                    var b = new DishStore();
+                    b.apply(JSON.parse(state.dishes), state.revision);
+                    if (b.get('fish', 'sold') !== 158 || b.get('fish', 'popularity') !== 100) return false;
+                    if (b.get('burger', 'popularity') !== Math.round(100 * 88 / 158) || b.revision() !== 1) return false;
+                    // What the store's rules refuse, the party refuses: counted, nothing said.
+                    if (step({ kind: 'Commit', pk: 'fish', column: 'sold', value: '1' }).length !== 0 || s.refused !== 1) return false;
+                    if (step({ kind: 'Commit', pk: 'fish', column: 'calories', value: 'not json' }).length !== 0 || s.refused !== 2) return false;
+                    a = step({ kind: 'Commit', pk: 'fish', column: 'calories', value: '500' });   // a number stays a number
+                    return a.length === 2 && JSON.parse(a[0].message.dishes).fish.calories === 500 && s.revision === 2;
+                })()"""), "the party keeps sold and hands it to the steward; every replica derives popularity; refusals are the store's");
+    }
+
+    @Test
+    void aJoinedReplicaWritesThroughAndChangesOnlyWhenTold() {
+        assertTrue(evalBool("""
+                (() => {
+                    var store = new DishStore(), told = [];
+                    store.writeTo({ commit: function (pk, col, v) { told.push(['commit', pk, col, v]); },
+                                    sell: function (pk, n) { told.push(['sell', pk, n]); },
+                                    reset: function () { told.push(['reset']); } });
+                    if (!store.commit('mapo', 'calories', 400) || store.get('mapo', 'calories') !== 480) return false;   // told, not changed
+                    if (store.commit('mapo', 'sold', 1)) return false;                                                   // refused here, never told
+                    store.sell('mapo', 2); store.reset();
+                    var heard = [];
+                    store.subscribe(function (pk, col, v) { heard.push(pk + ' ' + col + ' ' + v); });
+                    var next = DishStore.committed(store.data(), 'mapo', 'calories', 400);
+                    store.apply(next, 7);                                                 // the party says: only the change is told
+                    return told.length === 3 && told[0].join() === 'commit,mapo,calories,400' && told[1].join() === 'sell,mapo,2'
+                        && heard.join('|') === 'mapo calories 400' && store.revision() === 7 && store.get('mapo', 'calories') === 400;
+                })()"""), "joined, the store tells the party and changes only when the party says so");
     }
 
     @Test
     void theRatingIsACustomControlAndTheContractDoesNotNotice() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore();
+                    var store = new DishStore();
                     var nut = relationOf(store, 'nutritionist');
                     var fol = relationOf(store, 'follower');
                     var cell = mount(nut, 'mapo', 'stars');
@@ -322,7 +357,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void theEditorIsItsOwnElementAndNeverGoesIntoTheCell() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore();
+                    var store = new DishStore();
                     var nut = relationOf(store, 'nutritionist');
                     var cell = mount(nut, 'mapo', 'stars');
                     var before = cell.cellElement().textContent;
@@ -344,7 +379,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void escapingTheRatingPanelSettlesWithoutCommitting() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore();
+                    var store = new DishStore();
                     var nut = relationOf(store, 'nutritionist');
                     var cell = openEdit(nut, 'mapo', 'stars');
                     press(cell, 'ArrowLeft'); press(cell, 'ArrowLeft'); press(cell, 'ArrowLeft');
@@ -365,7 +400,7 @@ class DishPolicyTest extends JsModuleTestBase {
     void aCellThatCannotEditNamesThePropertyOnItsHost() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createDishStore();
+                    var store = new DishStore();
                     var mgr = relationOf(store, 'manager');
                     var fol = relationOf(store, 'follower');
                     var ro = /\\bhrg-text-ro\\b/;

@@ -34,8 +34,8 @@ class DishClipboardTest extends JsModuleTestBase {
                 return spec.map(function (b) { return new RelGridBlock(b[0], b[1]); });
             }
             function bench(role) {
-                var store = createDishStore();
-                return { store: store, rel: createDishRelation(store, { role: role || 'follower', branch: testBranch() }) };
+                var store = new DishStore();
+                return { store: store, rel: new DishRelation(store, { role: role || 'follower', branch: testBranch() }) };
             }
             // What the grid hands a domain with its question: a mask whose panel(element)
             // PLACES the domain's element in the grid's box — here, a host of the test's.
@@ -60,11 +60,11 @@ class DishClipboardTest extends JsModuleTestBase {
         js.eval("js", DishPolicyTest.STYLES);
         loadModule(PROTOCOL);
         loadModule(GRID_DIR + "RelGridStockCellsModule.js");
-        loadModule(BENCH_DIR + "DishClipboardFormats.js");
+        loadModule(BENCH_DIR + "DishClipboardFormatsModule.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");
-        loadModule(BENCH_DIR + "DishStore.js");
-        loadModule(BENCH_DIR + "DishRelation.js");
-        loadModule(BENCH_DIR + "DishClipboard.js");
+        loadModule(BENCH_DIR + "DishStoreModule.js");
+        loadModule(BENCH_DIR + "DishRelationModule.js");
+        loadModule(BENCH_DIR + "DishClipboardModule.js");
         js.eval("js", HELPERS);
     }
 
@@ -76,7 +76,7 @@ class DishClipboardTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var b = bench();
-                    var c = dishClipboardContent(b.rel, blocks([[['mapo', 'coq'], ['ingredient', 'calories', 'stars']]]), 'tsv');
+                    var c = DishClipboardFormats.content(b.rel, blocks([[['mapo', 'coq'], ['ingredient', 'calories', 'stars']]]), 'tsv');
                     if (!(c instanceof RelGridClipboardContent)) return false;
                     if (c.html !== undefined) return false;                              // text only
                     var lines = c.text.split('\\n');
@@ -97,7 +97,7 @@ class DishClipboardTest extends JsModuleTestBase {
                     var b = bench('chef');
                     // A value with a comma, a quote and a newline: the three things CSV must quote.
                     b.store.commit('mapo', 'ingredient', 'tofu, "silken"\\nsoft');
-                    var c = dishClipboardContent(b.rel, blocks([[['mapo', 'coq'], ['ingredient', 'price']]]), 'csv', { headers: false });
+                    var c = DishClipboardFormats.content(b.rel, blocks([[['mapo', 'coq'], ['ingredient', 'price']]]), 'csv', { headers: false });
                     var lines = c.text.split('\\n');
                     // Two pks, and the newline INSIDE the quoted field makes a third line.
                     if (lines.length !== 3) return false;
@@ -113,7 +113,7 @@ class DishClipboardTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var b = bench();
-                    var c = dishClipboardContent(b.rel, blocks([[['fish'], ['ingredient', 'stars', 'calories']]]), 'html');
+                    var c = DishClipboardFormats.content(b.rel, blocks([[['fish'], ['ingredient', 'stars', 'calories']]]), 'html');
                     if (typeof c.html !== 'string') return false;
                     // Text rides beside it — as TSV, since that is what text/plain is for.
                     if (c.text.split('\\n')[1] !== 'cod\\t5\\t' + b.store.get('fish', 'calories')) return false;
@@ -135,13 +135,13 @@ class DishClipboardTest extends JsModuleTestBase {
                 (() => {
                     var b = bench('chef');
                     b.store.commit('coq', 'ingredient', '<b>chicken</b> & "rice"');
-                    var c = dishClipboardContent(b.rel, blocks([[['coq'], ['ingredient']]]), 'html', { headers: false });
+                    var c = DishClipboardFormats.content(b.rel, blocks([[['coq'], ['ingredient']]]), 'html', { headers: false });
                     if (c.html.indexOf('&lt;b&gt;chicken&lt;/b&gt; &amp; &quot;rice&quot;') < 0) return false;
                     // The copier read the CELL. Prove it: set the cell behind the store's back,
                     // and the copier follows the cell rather than the store.
                     var cell = b.rel.cellFor('coq', 'ingredient');
                     cell.set('what the cell says');
-                    var d = dishClipboardContent(b.rel, blocks([[['coq'], ['ingredient']]]), 'tsv', { headers: false });
+                    var d = DishClipboardFormats.content(b.rel, blocks([[['coq'], ['ingredient']]]), 'tsv', { headers: false });
                     return d.text === 'what the cell says';
                 })()"""), "HTML is escaped, and the copier reads the relation's cells rather than the store");
     }
@@ -152,12 +152,12 @@ class DishClipboardTest extends JsModuleTestBase {
                 (() => {
                     var b = bench();
                     var two = blocks([[['mapo', 'coq'], ['ingredient']], [['fish'], ['calories', 'stars']]]);
-                    var t = dishClipboardContent(b.rel, two, 'tsv');
+                    var t = DishClipboardFormats.content(b.rel, two, 'tsv');
                     // A blank line between blocks in text; the shape is the person's, not squared off.
                     var parts = t.text.split('\\n\\n');
                     if (parts.length !== 2) return false;
                     if (parts[0].split('\\n').length !== 3 || parts[1].split('\\n').length !== 2) return false;
-                    var h = dishClipboardContent(b.rel, two, 'html');
+                    var h = DishClipboardFormats.content(b.rel, two, 'html');
                     return (h.html.match(/<table/g) || []).length === 2;
                 })()"""), "each block is its own section — a blank line in text, a table each in HTML");
     }
@@ -170,7 +170,7 @@ class DishClipboardTest extends JsModuleTestBase {
                 var chosen = null, answer = 'unsettled';
                 var q = new RelGridCopyRequested(blocks([[['mapo', 'coq', 'fish'], ['ingredient', 'stars']]]));
                 var branch = hostBranch();
-                dishCopyPanel(P.rel, q, maskOf(host), { branch: branch, onChosen: function (f, n) { chosen = f + ':' + n; } })
+                new DishClipboard(P.rel, { branch: branch, onChosen: function (f, n) { chosen = f + ':' + n; } }).answer(q, maskOf(host))
                     .then(function (c) { answer = c; });
                 var root = host.children[0];
                 if (branch.branchCount !== 1) throw new Error('the panel mints on a branch of its own for the session');
@@ -214,21 +214,21 @@ class DishClipboardTest extends JsModuleTestBase {
                 var K = bench();
                 var kHost = makeEl('div'), kAnswer = 'unsettled', kChosen = null;
                 var kq = new RelGridCopyRequested(blocks([[['mapo'], ['price']]]));
-                dishCopyPanel(K.rel, kq, maskOf(kHost), { branch: hostBranch(), onChosen: function (f) { kChosen = f; } }).then(function (c) { kAnswer = c; });
+                new DishClipboard(K.rel, { branch: hostBranch(), onChosen: function (f) { kChosen = f; } }).answer(kq, maskOf(kHost)).then(function (c) { kAnswer = c; });
                 kHost.children[0].dispatch('keydown', { key: 'c' });
                 """);
         assertTrue(evalBool("kChosen === 'csv' && kAnswer instanceof RelGridClipboardContent && kAnswer.text === 'price\\n' + K.store.get('mapo', 'price')"),
                 "C chooses CSV");
         act("""
                 var eHost = makeEl('div'), eAnswer = 'unsettled', eChosen = null;
-                dishCopyPanel(K.rel, kq, maskOf(eHost), { branch: hostBranch(), onChosen: function (f) { eChosen = f; } }).then(function (c) { eAnswer = c; });
+                new DishClipboard(K.rel, { branch: hostBranch(), onChosen: function (f) { eChosen = f; } }).answer(kq, maskOf(eHost)).then(function (c) { eAnswer = c; });
                 eHost.children[0].dispatch('keydown', { key: 'Escape' });
                 """);
         assertTrue(evalBool("eChosen === null && eAnswer === undefined"),
                 "Escape answers absence: nothing chosen, and the grid will write nothing");
         act("""
                 var xHost = makeEl('div'), xAnswer = 'unsettled';
-                dishCopyPanel(K.rel, kq, maskOf(xHost), { branch: hostBranch() }).then(function (c) { xAnswer = c; });
+                new DishClipboard(K.rel, { branch: hostBranch() }).answer(kq, maskOf(xHost)).then(function (c) { xAnswer = c; });
                 byClass(xHost, 'wb-copy-cancel')[0].dispatch('click', {});
                 """);
         assertTrue(evalBool("xAnswer === undefined"), "and so does the Cancel button");
@@ -240,7 +240,7 @@ class DishClipboardTest extends JsModuleTestBase {
                 var T = bench();
                 var tHost = makeEl('div'), tAnswer = 'unsettled';
                 var tq = new RelGridCopyRequested(blocks([[['mapo'], ['ingredient']]]));
-                dishCopyPanel(T.rel, tq, maskOf(tHost), { branch: hostBranch() }).then(function (c) { tAnswer = c; });
+                new DishClipboard(T.rel, { branch: hostBranch() }).answer(tq, maskOf(tHost)).then(function (c) { tAnswer = c; });
                 var box = byClass(tHost, 'wb-copy-foot')[0].children[0].children[0];
                 box.checked = false;
                 box.dispatch('change', {});

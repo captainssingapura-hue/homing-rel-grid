@@ -142,8 +142,17 @@ public final class RelGridTestDom {
                         __focused = this;
                         if (prev) prev.dispatch('blur', {});
                     },
+                    blur: function () {
+                        if (__focused !== this) return;
+                        __focused = null;
+                        this.dispatch('blur', {});
+                    },
                     select: function () {},
-                    setAttribute: function () {}, removeAttribute: function () {}, getAttribute: function () { return null; },
+                    // Attributes kept, so a test can read what was set and what was taken away.
+                    _attrs: {},
+                    setAttribute: function (k, v) { this._attrs[k] = String(v); },
+                    removeAttribute: function (k) { delete this._attrs[k]; },
+                    getAttribute: function (k) { return Object.prototype.hasOwnProperty.call(this._attrs, k) ? this._attrs[k] : null; },
                     // Geometry for a header drag: _rl / _rr (and _rt / _rb) set by a test; 100 x 20 otherwise.
                     getBoundingClientRect: function () {
                         var l = this._rl || 0, r = (this._rr != null) ? this._rr : l + 100;

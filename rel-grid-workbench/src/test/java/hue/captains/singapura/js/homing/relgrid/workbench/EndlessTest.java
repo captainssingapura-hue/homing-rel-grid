@@ -35,7 +35,7 @@ class EndlessTest extends JsModuleTestBase {
                 var hostB = hostBranch();
                 var gridB = hostB.createBranch('grid'), domainB = hostB.createBranch('domain');
                 domainB.activate({ toString: function () { return 'bench'; } });
-                var relation = createEndlessRelation({ branch: domainB.createBranch('cells'), rows: opts.rows || 1000, window: opts.window || 5 });
+                var relation = new EndlessRelation({ branch: domainB.createBranch('cells'), rows: opts.rows || 1000, window: opts.window || 5 });
                 var container = makeEl('div'), edges = [];
                 var grid = new RelGrid({ container: container, branch: gridB, relation: relation, onEdge: function (d) { edges.push(d); } });
                 var W = relation.window(), cols = relation.columns().length;
@@ -80,7 +80,7 @@ class EndlessTest extends JsModuleTestBase {
         loadModule(RelGridTestDom.CHANNEL);
         loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
-        loadModule(BENCH_DIR + "EndlessRelation.js");
+        loadModule(BENCH_DIR + "EndlessRelationModule.js");
         js.eval("js", HELPERS);
     }
 
@@ -90,7 +90,7 @@ class EndlessTest extends JsModuleTestBase {
     void theRelationAnswersAWindowMovesItAndFreesARowOutsideTwoViews() {
         assertTrue(evalBool("""
                 (() => {
-                    var rel = createEndlessRelation({ branch: testBranch(), rows: 100, window: 5 });
+                    var rel = new EndlessRelation({ branch: testBranch(), rows: 100, window: 5 });
                     if (typeof rel.pks !== 'undefined') return false;                    // one root: nothing lists
                     if (rel.view().join(',') !== 'r0,r1,r2,r3,r4' || rel.at() !== 0) return false;
                     if (rel.view({ by: -1 }) !== null) return false;                      // an end: nothing, the rows stay
@@ -126,7 +126,7 @@ class EndlessTest extends JsModuleTestBase {
     void anEditOutlivesItsCell() {
         assertTrue(evalBool("""
                 (() => {
-                    var rel = createEndlessRelation({ branch: testBranch(), rows: 100, window: 5 });
+                    var rel = new EndlessRelation({ branch: testBranch(), rows: 100, window: 5 });
                     var qty = rel.cellFor('r2', 'qty'), before = qty.value();
                     qty.cellElement();                                        // placed, as far as the cell knows
                     if (qty.mayTakeControl() !== true) return false;

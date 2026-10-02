@@ -46,7 +46,7 @@ class JsonKitContractConformanceTest extends JsonKitTestBase {
 
     @Test
     void theDocumentAnswersTheTreeRelationContractAndTheChannel() {
-        act("var D = createJsonDocument(SAMPLE, { branch: testBranch() });");
+        act("var D = new JsonDocument(SAMPLE, { branch: testBranch() });");
         for (String m : TreeRelationContract.METHOD_NAMES)
             assertTrue(evalBool("typeof D." + m + " === 'function'"), "a JSON document must answer " + m);
         assertTrue(evalBool("typeof D.answer === 'function' && typeof D.set === 'function'"));

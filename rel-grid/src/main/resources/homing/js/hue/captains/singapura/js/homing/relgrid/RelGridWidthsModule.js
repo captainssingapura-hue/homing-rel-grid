@@ -7,7 +7,9 @@
 // refused (drift). The grid persists nothing: what is held is a report, and
 // remembering it is the host's.
 //
-//   new RelGridWidths({ maps, minColumnWidth? })
+//   new RelGridWidths({ maps, layout, minColumnWidth?, onResized?, settle? })
+//   apply(column, px)    held, applied in place, reported once — whether it was held
+//   applyAll(widths)     a snapshot applied; unknown columns dropped as drift
 //   hold(column, px)     → { px, changed } with the bounded width, or null when refused
 //   get(column)          what is HELD, or null — never what was measured
 //   snapshot()           every held width, by column: a plain object the host may keep
@@ -30,9 +32,35 @@ class RelGridWidths {
     constructor(opts) {
         opts = opts || {};
         this._maps = opts.maps;
+        this._layout = opts.layout;
+        this._onResized = opts.onResized || null;
+        this._settle = opts.settle || function () {};
         this._widths = new Map();         // column → px, identity-keyed; positional only at the layout
         var minW = Number(opts.minColumnWidth);
         this._minW = isFinite(minW) ? Math.max(_HRG_MIN_W_FLOOR, Math.min(_HRG_MAX_W, minW)) : _HRG_MIN_W;
+    }
+
+    /** Hold a width, apply it in place, report it once. Whether it was held. */
+    apply(column, px) {
+        var held = this.hold(column, px);
+        if (!held) return false;
+        if (!held.changed) return true;                       // already held: nothing to do
+        this._layout.setColWidths(this.positional());
+        if (this._onResized) {
+            try { this._onResized(column, held.px); }
+            catch (e) { console.error("[RelGrid] onColumnResized threw:", e); }
+            // A host may answer the report by changing the geometry the grid sits in
+            // — sizing its container to the widths now held is the common case — and
+            // the merged cells' hosts were measured before it did. Measure again.
+            this._settle();
+        }
+        return true;
+    }
+
+    applyAll(widths) {
+        for (var c in widths) {
+            if (Object.prototype.hasOwnProperty.call(widths, c)) this.apply(c, widths[c]);
+        }
     }
 
     /**

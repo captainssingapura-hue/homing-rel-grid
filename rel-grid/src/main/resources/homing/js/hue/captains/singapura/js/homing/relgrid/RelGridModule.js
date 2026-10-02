@@ -140,7 +140,6 @@ class RelGrid {
         this._relation = r;
         this._cellFor = function (pk, col) { return r.cellFor(pk, col); };
         this._cbArranged = opts.onArranged || null;
-        this._cbResized  = opts.onColumnResized || null;
         this._destroyed = false;
         var head = opts.header || {};
         if (head.labels) throw new Error("[RelGrid] header.labels is gone: what a column is called is the relation's — labels(), or headerFor(column) (map 12, law 86)");
@@ -184,7 +183,10 @@ class RelGrid {
         this._headers = new RelGridHeaders();   // the domain's header cells, by column; the grid mints none
         this._spans = new RelGridSpans({ on: opts.mergedCells === true, layout: this._layout, cells: this._cells, maps: this._maps });
         this._window = new RelGridWindow({ relation: r, maps: this._maps });
-        this._widths = new RelGridWidths({ maps: this._maps, minColumnWidth: opts.minColumnWidth });
+        this._widths = new RelGridWidths({
+            maps: this._maps, layout: this._layout, minColumnWidth: opts.minColumnWidth,
+            onResized: opts.onColumnResized || null, settle: function () { self._spans.settle(); }
+        });
         this._cursor = new RelGridCursor({
             maps: this._maps, layout: this._layout, cells: this._cells,
             stepJ: function (i, j, dj) { return self._spans.stepJ(i, j, dj); },
@@ -199,7 +201,7 @@ class RelGrid {
             ask: (typeof opts.ask === "function") ? opts.ask : null,
             layout: this._layout, maps: this._maps, selection: this._selection,
             cursorPos: function () { return self._cursor.pos(); },
-            clipboard: opts.clipboard || createRelGridClipboard({ branch: opts.branch }),
+            clipboard: opts.clipboard || new RelGridClipboard({ branch: opts.branch }),
             onCopied: opts.onCopied
         });
         this._gestures = new RelGridGestures({
@@ -285,22 +287,7 @@ class RelGrid {
      * a fixed position, and moving the column under it would leave the two
      * disagreeing.
      */
-    setColumnWidth(column, px) {
-        if (this._locked()) return false;
-        var held = this._widths.hold(column, px);
-        if (!held) return false;
-        if (!held.changed) return true;                       // already held: nothing to do
-        this._layout.setColWidths(this._widths.positional());
-        if (this._cbResized) {
-            try { this._cbResized(column, held.px); }
-            catch (e) { console.error("[RelGrid] onColumnResized threw:", e); }
-            // A host may answer the report by changing the geometry the grid sits in
-            // — sizing its container to the widths now held is the common case — and
-            // the merged cells' hosts were measured before it did. Measure again.
-            this._spans.settle();
-        }
-        return true;
-    }
+    setColumnWidth(column, px) { return this._locked() ? false : this._widths.apply(column, px); }
 
     /** What is HELD for a column, or null. Never what was measured. */
     columnWidth(column) { return this._widths.get(column); }
@@ -310,10 +297,7 @@ class RelGrid {
 
     /** Apply a snapshot. Unknown columns are dropped as drift; applying it twice is applying it once. */
     setColumnWidths(widths) {
-        if (!widths) return this;
-        for (var c in widths) {
-            if (Object.prototype.hasOwnProperty.call(widths, c)) this.setColumnWidth(c, widths[c]);
-        }
+        if (widths && !this._locked()) this._widths.applyAll(widths);
         return this;
     }
 

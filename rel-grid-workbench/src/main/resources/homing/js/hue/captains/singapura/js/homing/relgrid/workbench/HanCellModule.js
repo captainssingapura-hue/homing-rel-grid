@@ -112,7 +112,7 @@ class HanCell {
             return;
         }
         var marks = Array.from(g);
-        if (this._span > 1 || (marks.length === 1 && !hanIsPunct(marks[0]))) {
+        if (this._span > 1 || (marks.length === 1 && !HanLayout.isPunct(marks[0]))) {
             this._detach(halves[0]); this._detach(halves[1]);
             mark.textContent = g;
             ink.appendChild(mark);
@@ -123,7 +123,7 @@ class HanCell {
         css.addClass(ink, han_punct);
         for (var k = 0; k < 2; k++) {
             if (k >= marks.length) { this._detach(halves[k]); continue; }
-            css.toggleClass(halves[k], han_open, hanIsOpener(marks[k]));
+            css.toggleClass(halves[k], han_open, HanLayout.isOpener(marks[k]));
             halves[k].textContent = marks[k];
             ink.appendChild(halves[k]);
         }

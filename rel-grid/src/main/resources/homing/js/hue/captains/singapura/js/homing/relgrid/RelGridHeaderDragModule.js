@@ -5,6 +5,12 @@
 // reported on release, Escape abandons and reports nothing. Nothing in the
 // cell tree is touched mid-gesture.
 //
+// The Escape is heard on the handle: the gesture takes the focus for its
+// length, so the key lands on the gesture's own element — the native world,
+// never the document — and gives it back where it found it. The handle is
+// focusable only while it is dragged: outside a gesture it is no stop for
+// anything that looks for one.
+//
 // Positional only — it reports (j, px) and knows no identity. The facade
 // translates j to a column, bounds the request, holds it, applies it. That
 // split is map 7's capture rule: the gesture MINTS; it never applies.
@@ -80,7 +86,7 @@ class RelGridHeaderDrag {
             if (e.preventDefault) e.preventDefault();
             if (e.stopPropagation) e.stopPropagation();          // the header body is not armed
             var held = self._heldWidth ? self._heldWidth(j) : null;
-            self._start(j, held != null ? held : rect.right - rect.left, e.clientX);
+            self._start(handle, j, held != null ? held : rect.right - rect.left, e.clientX);
         });
         return this;
     }
@@ -112,8 +118,8 @@ class RelGridHeaderDrag {
         return { branch: branch, els: out };
     }
 
-    _start(j, startW, startX) {
-        var self = this, lastX = startX;
+    _start(handle, j, startW, startX) {
+        var self = this, lastX = startX, had = document.activeElement || null;
         var guide = this._makeGuide(startX), guides = guide.els;
         function onMove(e) {
             lastX = e.clientX;
@@ -122,8 +128,13 @@ class RelGridHeaderDrag {
         function teardown() {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
-            document.removeEventListener("keydown", onKey, true);
+            handle.removeEventListener("keydown", onKey);
             guide.branch.dissolve();                           // the segments go with their branch
+            if (document.activeElement === handle) {           // still ours: given back where it was found
+                if (had && had !== document.body && had.focus) had.focus({ preventScroll: true });
+                else if (handle.blur) handle.blur();
+            }
+            handle.removeAttribute("tabindex");                // after the focus has left: focusable no longer
         }
         // One request, on release. Whole pixels: a header's rect is fractional
         // and a request is something a host may keep — normalisation only
@@ -134,6 +145,8 @@ class RelGridHeaderDrag {
         }
         document.addEventListener("mousemove", onMove);
         document.addEventListener("mouseup", onUp);
-        document.addEventListener("keydown", onKey, true);
+        handle.setAttribute("tabindex", "-1");                     // focusable for the gesture's length; never a Tab stop
+        handle.addEventListener("keydown", onKey);
+        if (handle.focus) handle.focus({ preventScroll: true });   // the Escape lands here
     }
 }

@@ -14,7 +14,7 @@
 // unavailable and holds the focus; the panel is the tree's box for the
 // domain's element, centred by the sheet, minted once per mask.
 //
-//   new RelTreeLayout({ branch, container, label?, caret?, folder?, onRowClick?, onRowDblClick?, onCaretClick? })
+//   new RelTreeLayout({ branch, container, label?, caret?, folder?, surface?, onRowClick?, onRowDblClick?, onCaretClick? })
 //   render(count) / paint(i, place) / rowAt(i) / rows()      the rows, through RelTreeRows
 //   paintCursor(i)              the current row wears hrt_current; null for none
 //   revealRow(i)                the least scroll that shows row i
@@ -33,6 +33,7 @@ class RelTreeLayout {
         css.addClass(this._wrap, hrt_wrap);
         this._tree = b.createElement("tree", "div");
         css.addClass(this._tree, hrt_tree);
+        if (opts.surface !== false) css.addClass(this._tree, hrt_surface);   // its own ground, unless its host lays it on one
         this._tree.setAttribute("role", "tree");
         this._tree.setAttribute("tabindex", "0");              // the keyboard host
         if (opts.label) this._tree.setAttribute("aria-label", opts.label);

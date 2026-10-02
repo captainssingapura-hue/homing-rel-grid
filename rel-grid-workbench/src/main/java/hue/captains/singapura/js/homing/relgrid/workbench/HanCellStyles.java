@@ -2,9 +2,11 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.CssVar;
 import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+import java.util.Set;
 
 import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
@@ -37,6 +39,8 @@ public record HanCellStyles() implements CssGroup<HanCellStyles> {
      * to THIS box.
      */
     public record han_glyph() implements CssClass<HanCellStyles> {
+        /** A host that wants a fixed side hands it in. */
+        @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--han-side")); }
         @Override public String body() { return """
                 width: 100%;
                 height: var(--han-side, auto);
@@ -52,6 +56,8 @@ public record HanCellStyles() implements CssGroup<HanCellStyles> {
 
     /** The ink: 68% of the row, in the CJK serif unless the square says otherwise. */
     public record han_ink() implements CssClass<HanCellStyles> {
+        /** The ink's face, its spacing and its tracking, as the square's kind says them. */
+        @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--han-ink-font"), new CssVar("--han-ink-space"), new CssVar("--han-ink-tracking")); }
         @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 font: var(--han-ink-font, 68cqh/1 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', 'PMingLiU', serif);
@@ -82,6 +88,8 @@ public record HanCellStyles() implements CssGroup<HanCellStyles> {
 
     /** A half-width box for one mark; a half-square's box is the whole square wide. */
     public record han_half() implements CssClass<HanCellStyles> {
+        /** Where the half-square's mark sits, as the square's kind says it. */
+        @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--han-half-basis")); }
         @Override public String body() { return """
                 flex: 0 0 var(--han-half-basis, 50%);
                 width: var(--han-half-basis, 50%);

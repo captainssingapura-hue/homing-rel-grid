@@ -18,7 +18,7 @@ import java.util.List;
  * JsonTreeViewModule view}, which does.
  */
 public record JsonDocumentModule() implements DomModule<JsonDocumentModule> {
-    public record createJsonDocument() implements Exportable._Constant<JsonDocumentModule> {}
+    public record JsonDocument() implements Exportable._Class<JsonDocumentModule> {}
     public static final JsonDocumentModule INSTANCE = new JsonDocumentModule();
     @Override public ImportsFor<JsonDocumentModule> imports() {
         return ImportsFor.<JsonDocumentModule>builder()
@@ -31,6 +31,6 @@ public record JsonDocumentModule() implements DomModule<JsonDocumentModule> {
                 .build();
     }
     @Override public ExportsOf<JsonDocumentModule> exports() {
-        return new ExportsOf<>(INSTANCE, List.of(new createJsonDocument()));
+        return new ExportsOf<>(INSTANCE, List.of(new JsonDocument()));
     }
 }

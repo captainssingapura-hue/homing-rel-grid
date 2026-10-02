@@ -12,23 +12,34 @@
     <artifactId>rel-grid-workbench</artifactId>
 
     <description>
-        The grid workbenches — a solo studio of benches, each a workspace of
-        specimens that tries to make the Relation Grid fail in one way. A bench
-        is not a demo: a demo shows the grid working. Registering a bench's
-        WorkspaceSpec is the whole registration; the workspace control modal
-        switches between every registered kind.
+        The grid workbenches - benches, each a workspace of specimens that tries to make
+        the Relation Grid fail in one way. A bench is not a demo: a demo shows the grid
+        working. Each bench is a workspace declared on the workspace's core - its widgets
+        self-contained, what they share a messaging party - filed in one group, beside the
+        workbench's introduction, read in DocView, on a catalogue site.
 
-        Bench: Replicating Tables — one editor, any number of read-only
-        followers, one persisted store; an edit reaches every table through
-        the domain, and no grid is told.
-
-        GridWorkbenchServer runs it on 8083 (-Dworkbench.port=...).
+        Private: never published. It stands on the workspace and studio repos, which are
+        built from this one, so it is built after them, in the workbench profile:
+        mvn -Pworkbench -pl rel-grid-workbench install. GridWorkbenchServer runs it on 8083
+        (-Dworkbench.port=...).
     </description>
 
+    <properties>
+        <homing.components.version>LOCAL-SNAPSHOT</homing.components.version>
+        <homing.ws.version>LOCAL-SNAPSHOT</homing.ws.version>
+        <homing.studio.version>LOCAL-SNAPSHOT</homing.studio.version>
+    </properties>
+
     <dependencies>
+        <!-- WHAT IS BENCHED: the grid family. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-protocol</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -46,47 +57,128 @@
             <artifactId>json-kit</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- THE FRAMEWORK the benches are made of: modules, the design substrate, the keys. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core-js</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-component-base</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-design-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-server</artifactId>
             <version>${homing.core.version}</version>
         </dependency>
+
+        <!-- THE WORKSPACE each bench is: widgets, their parties, the grouped page, the server that keeps states. -->
         <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-studio-base</artifactId>
-            <version>${homing.core.version}</version>
+            <groupId>io.github.captainssingapura-hue.homing.js.ws</groupId>
+            <artifactId>homing-workspace-widgets</artifactId>
+            <version>${homing.ws.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-workspace</artifactId>
-            <version>${homing.core.version}</version>
+            <groupId>io.github.captainssingapura-hue.homing.js.ws</groupId>
+            <artifactId>homing-workspace-parties</artifactId>
+            <version>${homing.ws.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-workspace-codecs</artifactId>
-            <version>${homing.core.version}</version>
+            <groupId>io.github.captainssingapura-hue.homing.js.ws</groupId>
+            <artifactId>homing-workspace-site</artifactId>
+            <version>${homing.ws.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-workspace-persistence</artifactId>
-            <version>${homing.core.version}</version>
+            <groupId>io.github.captainssingapura-hue.homing.js.ws</groupId>
+            <artifactId>homing-workspace-groups-core-models</artifactId>
+            <version>${homing.ws.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <groupId>io.github.captainssingapura-hue.homing.js.ws</groupId>
             <artifactId>homing-workspace-shell</artifactId>
-            <version>${homing.core.version}</version>
+            <version>${homing.ws.version}</version>
         </dependency>
-        <!-- RFC 0040 — the batteries-included starter: StudioStarterFixtures
-             brings the Studio Workspace (genericWorkspace + the "studio" spec)
-             out of the box. The workbench composes nothing of its own. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js.ws</groupId>
+            <artifactId>homing-workspace-log</artifactId>
+            <version>${homing.ws.version}</version>
+        </dependency>
+
+        <!-- THE SITE: a catalogue, its introduction read in DocView, through the standard MPA. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-studio-starter</artifactId>
+            <artifactId>homing-doc-model</artifactId>
             <version>${homing.core.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-site-base</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-site-catalogue</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-site-mpa</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-rigid-tree</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-designs</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-site-mpa-standard</artifactId>
+            <version>${homing.components.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js.studio</groupId>
+            <artifactId>homing-catalogue-site</artifactId>
+            <version>${homing.studio.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js.studio</groupId>
+            <artifactId>homing-docview-site</artifactId>
+            <version>${homing.studio.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js.studio</groupId>
+            <artifactId>homing-docview-app</artifactId>
+            <version>${homing.studio.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- The gate, strict, as the new stack's sites have it. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js.studio</groupId>
+            <artifactId>homing-catalogue-gate</artifactId>
+            <version>${homing.studio.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -95,7 +187,7 @@
             <version>${homing.core.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- The grid's test sources: the RFC 0044 rule sweep and its ledger. -->
+        <!-- The grid's and the tree's test harnesses, for the benches' domain tests. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid</artifactId>
@@ -103,7 +195,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- And the tree's harness, for the tree bench. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-tree</artifactId>
@@ -111,7 +202,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- A JS test runtime, for the bench's own domain tests (store, relation, roles). -->
+        <!-- A JS test runtime, for the benches' domain tests (store, relation, roles) and their secretaries. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-ssjs-test-fixtures</artifactId>
@@ -119,4 +210,17 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <mainClass>hue.captains.singapura.js.homing.relgrid.workbench.GridWorkbenchServer</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

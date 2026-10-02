@@ -15,7 +15,7 @@ class JsonDocumentTest extends JsonKitTestBase {
 
     private static final String HELPERS = """
             function outline(D) { return D.view().map(function (p) { return p.key + ':' + p.depth + ':' + p.fold; }).join(' '); }
-            function doc(value, opts) { opts = opts || {}; opts.branch = testBranch(); return createJsonDocument(value, opts); }
+            function doc(value, opts) { opts = opts || {}; opts.branch = testBranch(); return new JsonDocument(value, opts); }
             """;
 
     @Test

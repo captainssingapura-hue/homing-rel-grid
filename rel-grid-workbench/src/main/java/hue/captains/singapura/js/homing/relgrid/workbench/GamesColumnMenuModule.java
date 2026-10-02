@@ -1,5 +1,9 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
+import hue.captains.singapura.js.homing.component.BranchComponent;
+import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
+import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
@@ -20,7 +24,12 @@ import java.util.List;
  */
 public record GamesColumnMenuModule() implements DomModule<GamesColumnMenuModule> {
 
-    public record GamesColumnMenu() implements Exportable._Class<GamesColumnMenuModule> {}
+    public record GamesColumnMenu() implements BranchComponent<GamesColumnMenuModule>, NeedKeyboard {
+        @Override public String summary() { return "A column's menu: its sort, and a search over its values with a count each, staged until OK."; }
+        @Override public List<KeyBinding> keys() {
+            return List.of(KeyBinding.of(Key.ENTER, "the search applied"), KeyBinding.of(Key.ESCAPE, "the menu closed"));
+        }
+    }
 
     public static final GamesColumnMenuModule INSTANCE = new GamesColumnMenuModule();
 

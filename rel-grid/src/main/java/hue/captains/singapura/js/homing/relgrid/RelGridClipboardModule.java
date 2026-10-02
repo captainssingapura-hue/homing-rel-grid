@@ -17,7 +17,7 @@ import java.util.List;
  */
 public record RelGridClipboardModule() implements DomModule<RelGridClipboardModule> {
 
-    public record createRelGridClipboard() implements Exportable._Constant<RelGridClipboardModule> {}
+    public record RelGridClipboard() implements Exportable._Class<RelGridClipboardModule> {}
 
     public static final RelGridClipboardModule INSTANCE = new RelGridClipboardModule();
 
@@ -29,6 +29,6 @@ public record RelGridClipboardModule() implements DomModule<RelGridClipboardModu
     }
 
     @Override public ExportsOf<RelGridClipboardModule> exports() {
-        return new ExportsOf<>(INSTANCE, List.of(new createRelGridClipboard()));
+        return new ExportsOf<>(INSTANCE, List.of(new RelGridClipboard()));
     }
 }

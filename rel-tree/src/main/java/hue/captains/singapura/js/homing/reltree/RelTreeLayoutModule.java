@@ -20,7 +20,7 @@ public record RelTreeLayoutModule() implements DomModule<RelTreeLayoutModule> {
     @Override public ImportsFor<RelTreeLayoutModule> imports() {
         return ImportsFor.<RelTreeLayoutModule>builder()
                 .add(new ModuleImports<>(List.of(new RelTreeRowsModule.RelTreeRows()), RelTreeRowsModule.INSTANCE))
-                .add(new ModuleImports<>(List.of(new RelTreeStyles.hrt_wrap(), new RelTreeStyles.hrt_tree(), new RelTreeStyles.hrt_mask(),
+                .add(new ModuleImports<>(List.of(new RelTreeStyles.hrt_wrap(), new RelTreeStyles.hrt_tree(), new RelTreeStyles.hrt_surface(), new RelTreeStyles.hrt_mask(),
                         new RelTreeStyles.hrt_panel(), new RelTreeStyles.hrt_current(), new RelTreeStyles.hrt_masked()), RelTreeStyles.INSTANCE))
                 .build();
     }
