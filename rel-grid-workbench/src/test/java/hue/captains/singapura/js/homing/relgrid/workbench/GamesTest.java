@@ -26,12 +26,12 @@ class GamesTest extends JsModuleTestBase {
 
     private static final String HELPERS = """
             var PSV = %s;
-            function catalogue() { return createGamesStore(PSV); }
+            function catalogue() { return new GamesStore(PSV); }
             // A relation over the catalogue, its owner's callbacks recorded, a popover host of its own.
             function games(opts) {
                 opts = opts || {};
                 var host = makeEl('div'), told = [];
-                var relation = createGamesRelation(opts.store || catalogue(), {
+                var relation = new GamesRelation(opts.store || catalogue(), {
                     branch: testBranch(), menuHost: host,
                     onViewChanged: function () { told.push(relation.describe()); }
                 });
@@ -50,7 +50,7 @@ class GamesTest extends JsModuleTestBase {
                          open: open, menuEl: menuEl, rows: rows, rowOf: rowOf,
                          shown: function (col) { return rows(col).filter(function (r) { return !css.hasClass(r, wb_gmenu_hidden); }); } };
             }
-            """.formatted(HanStressWidget.jsString(GamesDataset.psv()));
+            """.formatted(JsText.literal(GamesDataset.psv()));
 
     @BeforeEach
     void setup() {
@@ -63,11 +63,11 @@ class GamesTest extends JsModuleTestBase {
         loadModule(RelGridTestDom.CHANNEL);
         loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
-        loadModule(BENCH_DIR + "GamesStore.js");
-        loadModule(BENCH_DIR + "GamesConditions.js");
+        loadModule(BENCH_DIR + "GamesStoreModule.js");
+        loadModule(BENCH_DIR + "GamesConditionsModule.js");
         loadModule(BENCH_DIR + "GamesColumnMenuModule.js");
         loadModule(BENCH_DIR + "GamesHeaderCells.js");
-        loadModule(BENCH_DIR + "GamesRelation.js");
+        loadModule(BENCH_DIR + "GamesRelationModule.js");
         js.eval("js", HELPERS);
     }
 
@@ -97,56 +97,56 @@ class GamesTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var s = catalogue(), v = function (pk, c) { return s.get(pk, c); }, k = function (c) { return s.kind(c); };
-                    var c = gamesConditions();
+                    var c = GamesConditions.empty();
                     if (c.sort.length !== 0 || Object.keys(c.filters).length !== 0) return false;
                     // A click cycles none → asc → desc → none, and not additive it is the only key.
-                    var c1 = gamesToggleSort(c, 'year', false);
+                    var c1 = GamesConditions.toggleSort(c, 'year', false);
                     if (c1.sort.length !== 1 || c1.sort[0].column !== 'year' || c1.sort[0].dir !== 'asc' || c.sort.length !== 0) return false;
-                    var c2 = gamesToggleSort(c1, 'year', false);
+                    var c2 = GamesConditions.toggleSort(c1, 'year', false);
                     if (c2.sort[0].dir !== 'desc') return false;
-                    if (gamesToggleSort(c2, 'year', false).sort.length !== 0) return false;
-                    var c3 = gamesToggleSort(c1, 'score', false);
+                    if (GamesConditions.toggleSort(c2, 'year', false).sort.length !== 0) return false;
+                    var c3 = GamesConditions.toggleSort(c1, 'score', false);
                     if (c3.sort.length !== 1 || c3.sort[0].column !== 'score') return false;
                     // Additive: joins after what is there; cycling where it already is keeps its place.
-                    var c4 = gamesToggleSort(c1, 'title', true);
+                    var c4 = GamesConditions.toggleSort(c1, 'title', true);
                     if (c4.sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'year:asc,title:asc') return false;
-                    var c5 = gamesToggleSort(c4, 'year', true);
+                    var c5 = GamesConditions.toggleSort(c4, 'year', true);
                     if (c5.sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'year:desc,title:asc') return false;
-                    if (gamesToggleSort(c5, 'year', true).sort.map(function (x) { return x.column; }).join() !== 'title') return false;
-                    if (gamesSortOf(c5, 'title').index !== 1 || gamesSortOf(c5, 'sales') !== null) return false;
+                    if (GamesConditions.toggleSort(c5, 'year', true).sort.map(function (x) { return x.column; }).join() !== 'title') return false;
+                    if (GamesConditions.sortOf(c5, 'title').index !== 1 || GamesConditions.sortOf(c5, 'sales') !== null) return false;
                     // A menu sets a direction outright: not additive, the only key (or none); additive, it joins or turns in place.
-                    if (gamesSetSort(c5, 'sales', 'desc', false).sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'sales:desc') return false;
-                    if (gamesSetSort(c5, 'sales', 'desc', true).sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'year:desc,title:asc,sales:desc') return false;
-                    if (gamesSetSort(c5, 'year', 'asc', true).sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'year:asc,title:asc') return false;
-                    if (gamesSetSort(c5, 'year', null, true).sort.map(function (x) { return x.column; }).join() !== 'title') return false;
-                    if (gamesSetSort(c5, 'year', null, false).sort.length !== 0) return false;
+                    if (GamesConditions.setSort(c5, 'sales', 'desc', false).sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'sales:desc') return false;
+                    if (GamesConditions.setSort(c5, 'sales', 'desc', true).sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'year:desc,title:asc,sales:desc') return false;
+                    if (GamesConditions.setSort(c5, 'year', 'asc', true).sort.map(function (x) { return x.column + ':' + x.dir; }).join() !== 'year:asc,title:asc') return false;
+                    if (GamesConditions.setSort(c5, 'year', null, true).sort.map(function (x) { return x.column; }).join() !== 'title') return false;
+                    if (GamesConditions.setSort(c5, 'year', null, false).sort.length !== 0) return false;
                     // The View: filtered, then sorted; absent LAST either way; ties in base order.
-                    var byScoreDesc = gamesApply(gamesToggleSort(gamesToggleSort(c, 'score', false), 'score', false), s.pks(), v, k);
+                    var byScoreDesc = GamesConditions.apply(GamesConditions.toggleSort(GamesConditions.toggleSort(c, 'score', false), 'score', false), s.pks(), v, k);
                     if (v(byScoreDesc[0], 'score') !== 99) return false;                                  // Ocarina first
                     if (v(byScoreDesc[byScoreDesc.length - 1], 'score') !== null) return false;         // the unrated last
-                    var byScoreAsc = gamesApply(gamesToggleSort(c, 'score', false), s.pks(), v, k);
+                    var byScoreAsc = GamesConditions.apply(GamesConditions.toggleSort(c, 'score', false), s.pks(), v, k);
                     if (v(byScoreAsc[byScoreAsc.length - 1], 'score') !== null || v(byScoreAsc[0], 'score') === null) return false;
-                    var byYear = gamesApply(c1, s.pks(), v, k);
+                    var byYear = GamesConditions.apply(c1, s.pks(), v, k);
                     if (byYear[0] !== 'g001' || v(byYear[byYear.length - 1], 'year') !== 2020) return false;    // stable: g001 keeps its place among 1990
                     // Filters: contains (case aside), a range either end open, any of; absence never passes.
-                    var f = gamesSetFilter(c, 'series', { contains: 'fifa' });
-                    if (gamesApply(f, s.pks(), v, k).length !== 28) return false;
-                    var f2 = gamesSetFilter(f, 'year', { min: 2010, max: null });
-                    if (gamesApply(f2, s.pks(), v, k).length !== 11) return false;                       // FIFA 11 to FIFA 21
-                    var f3 = gamesSetFilter(c, 'type', { in: ['Shooter', 'Racing'] });
-                    var n = gamesApply(f3, s.pks(), v, k).length;
+                    var f = GamesConditions.setFilter(c, 'series', { contains: 'fifa' });
+                    if (GamesConditions.apply(f, s.pks(), v, k).length !== 28) return false;
+                    var f2 = GamesConditions.setFilter(f, 'year', { min: 2010, max: null });
+                    if (GamesConditions.apply(f2, s.pks(), v, k).length !== 11) return false;                       // FIFA 11 to FIFA 21
+                    var f3 = GamesConditions.setFilter(c, 'type', { in: ['Shooter', 'Racing'] });
+                    var n = GamesConditions.apply(f3, s.pks(), v, k).length;
                     if (n !== s.distinct('type').filter(function (d) { return d.value === 'Shooter' || d.value === 'Racing'; }).reduce(function (a, d) { return a + d.count; }, 0)) return false;
-                    var f4 = gamesSetFilter(c, 'score', { min: 0, max: 100 });
-                    if (gamesApply(f4, s.pks(), v, k).length !== s.size() - s.pks().filter(function (pk) { return v(pk, 'score') === null; }).length) return false;
-                    if (Object.keys(gamesSetFilter(f, 'series', null).filters).length !== 0) return false;
+                    var f4 = GamesConditions.setFilter(c, 'score', { min: 0, max: 100 });
+                    if (GamesConditions.apply(f4, s.pks(), v, k).length !== s.size() - s.pks().filter(function (pk) { return v(pk, 'score') === null; }).length) return false;
+                    if (Object.keys(GamesConditions.setFilter(f, 'series', null).filters).length !== 0) return false;
                     // Values chosen on a text column, and on a number column beside a range.
-                    var f5 = gamesSetFilter(c, 'title', { in: ['Doom', 'Doom II', 'Doom 3'] });
-                    if (gamesApply(f5, s.pks(), v, k).length !== 3) return false;
-                    var f6 = gamesSetFilter(c, 'year', { min: 1998, max: 1999, in: [1998] });
-                    if (gamesApply(f6, s.pks(), v, k).some(function (pk) { return v(pk, 'year') !== 1998; })) return false;
+                    var f5 = GamesConditions.setFilter(c, 'title', { in: ['Doom', 'Doom II', 'Doom 3'] });
+                    if (GamesConditions.apply(f5, s.pks(), v, k).length !== 3) return false;
+                    var f6 = GamesConditions.setFilter(c, 'year', { min: 1998, max: 1999, in: [1998] });
+                    if (GamesConditions.apply(f6, s.pks(), v, k).some(function (pk) { return v(pk, 'year') !== 1998; })) return false;
                     // Described, for a status line.
-                    if (gamesDescribe(c) !== 'as catalogued') return false;
-                    return gamesDescribe(gamesSetFilter(c5, 'type', { in: ['RPG'] })) === 'sorted by year \\u2193, then title \\u2191; where type in {RPG}';
+                    if (GamesConditions.describe(c) !== 'as catalogued') return false;
+                    return GamesConditions.describe(GamesConditions.setFilter(c5, 'type', { in: ['RPG'] })) === 'sorted by year \\u2193, then title \\u2191; where type in {RPG}';
                 })()"""), "conditions are values; absent sorts last either way; filters as named");
     }
 
@@ -236,7 +236,7 @@ class GamesTest extends JsModuleTestBase {
                     var g = games(), r = g.relation, container = makeEl('div'), gridB = testBranch(), told = [];
                     // The bench's wiring: the relation tells its owner; the owner tells the grid, unasked.
                     var grid = null;
-                    var rel2 = createGamesRelation(catalogue(), { branch: testBranch(), menuHost: g.host,
+                    var rel2 = new GamesRelation(catalogue(), { branch: testBranch(), menuHost: g.host,
                                                                    onViewChanged: function () { if (grid) told.push(grid.tell(new RelGridViewChanged())); } });
                     grid = new RelGrid({ container: container, branch: gridB, relation: rel2, header: { show: true, sticky: true } });
                     var table = container.children[0].children[0], thead = table.children[1], tbody = table.children[2];

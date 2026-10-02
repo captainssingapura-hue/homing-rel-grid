@@ -1,5 +1,9 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
+import hue.captains.singapura.js.homing.component.BranchComponent;
+import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
+import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
@@ -28,13 +32,18 @@ import java.util.List;
  */
 public record DishStarsCellModule() implements DomModule<DishStarsCellModule> {
 
-    public record DishStarsCell() implements Exportable._Class<DishStarsCellModule> {}
+    public record DishStarsCell() implements BranchComponent<DishStarsCellModule>, NeedKeyboard {
+        @Override public String summary() { return "A health rating as five stars: a cell whose editor is a panel the arrows move and Enter commits."; }
+        @Override public List<KeyBinding> keys() {
+            return List.of(KeyBinding.of(Key.ARROW_RIGHT, "a star more, while the rating is open"), KeyBinding.of(Key.ARROW_LEFT, "a star fewer, while the rating is open"), KeyBinding.of(Key.ENTER, "the rating committed"), KeyBinding.of(Key.ESCAPE, "the rating closed, nothing committed"));
+        }
+    }
 
     public static final DishStarsCellModule INSTANCE = new DishStarsCellModule();
 
     @Override public ImportsFor<DishStarsCellModule> imports() {
         return ImportsFor.<DishStarsCellModule>builder()
-                .add(new ModuleImports<>(List.of(new DishClipboardFormats.dishStarsHtml()), DishClipboardFormats.INSTANCE))
+                .add(new ModuleImports<>(List.of(new DishClipboardFormatsModule.DishClipboardFormats()), DishClipboardFormatsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new DishStarsStyles.wb_stars(), new DishStarsStyles.wb_stars_ro(),
                         new DishStarsStyles.wb_stars_panel(), new DishStarsStyles.wb_stars_row(), new DishStarsStyles.wb_star(),
                         new DishStarsStyles.wb_star_on(), new DishStarsStyles.wb_stars_hint()), DishStarsStyles.INSTANCE))

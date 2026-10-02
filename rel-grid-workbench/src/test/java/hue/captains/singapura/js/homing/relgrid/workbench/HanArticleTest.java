@@ -52,10 +52,10 @@ class HanArticleTest extends JsModuleTestBase {
         js.eval("js", DishPolicyTest.DOM_STUB);
         for (String m : DishPolicyTest.PARTY) loadModule(m);
         js.eval("js", DishPolicyTest.STYLES);
-        loadModule(BENCH_DIR + "HanLayout.js");
-        loadModule(BENCH_DIR + "HanStore.js");
+        loadModule(BENCH_DIR + "HanLayoutModule.js");
+        loadModule(BENCH_DIR + "HanStoreModule.js");
         loadModule(BENCH_DIR + "HanCellModule.js");
-        loadModule(BENCH_DIR + "HanRelation.js");
+        loadModule(BENCH_DIR + "HanRelationModule.js");
         js.eval("js", HELPERS);
     }
 
@@ -65,7 +65,7 @@ class HanArticleTest extends JsModuleTestBase {
     void thePoemLaysOutFourRowsOfNineWithOneEmptySquareEach() {
         assertTrue(evalBool("""
                 (() => {
-                    var lay = hanLayout(POEM, 9);
+                    var lay = HanLayout.layout(POEM, 9);
                     if (lay.rows.length !== 4 || lay.cols !== 9 || lay.glyphs !== 32) return false;
                     if (rowsStr(lay) !== '月落乌啼霜满天，·|江枫渔火对愁眠。·|姑苏城外寒山寺，·|夜半钟声到客船。·') return false;
                     // Every row is exactly nine squares, whatever the line held, and no
@@ -85,19 +85,19 @@ class HanArticleTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     // Prose wraps at nine.
-                    if (rowsStr(hanLayout('一二三四五六七八九十', 9)) !== '一二三四五六七八九|十········') return false;
+                    if (rowsStr(HanLayout.layout('一二三四五六七八九十', 9)) !== '一二三四五六七八九|十········') return false;
                     // A newline right after a wrap IS the wrap: no blank row.
-                    if (rowsStr(hanLayout('一二三四五六七八九\\n十', 9)) !== '一二三四五六七八九|十········') return false;
+                    if (rowsStr(HanLayout.layout('一二三四五六七八九\\n十', 9)) !== '一二三四五六七八九|十········') return false;
                     // But a second newline is a blank line.
-                    if (rowsStr(hanLayout('一二三四五六七八九\\n\\n十', 9)) !== '一二三四五六七八九|·········|十········') return false;
+                    if (rowsStr(HanLayout.layout('一二三四五六七八九\\n\\n十', 9)) !== '一二三四五六七八九|·········|十········') return false;
                     // A full last row is just that: the article is edited as text, so
                     // the layout owes nobody an empty row to type in.
-                    if (rowsStr(hanLayout('一二三四五六七八九', 9)) !== '一二三四五六七八九') return false;
+                    if (rowsStr(HanLayout.layout('一二三四五六七八九', 9)) !== '一二三四五六七八九') return false;
                     // Empty text is one empty row, and CRLF is a newline.
-                    if (rowsStr(hanLayout('', 9)) !== '·········') return false;
-                    if (rowsStr(hanLayout('甲\\r\\n乙', 9)) !== '甲········|乙········') return false;
+                    if (rowsStr(HanLayout.layout('', 9)) !== '·········') return false;
+                    if (rowsStr(HanLayout.layout('甲\\r\\n乙', 9)) !== '甲········|乙········') return false;
                     // Code points, not UTF-16 units: a supplementary-plane glyph is ONE square.
-                    var sup = hanLayout('𠀋乙', 9);
+                    var sup = HanLayout.layout('𠀋乙', 9);
                     return sup.glyphs === 2 && sup.rows[0].cells[0].glyph === '𠀋' && sup.rows[0].cells[1].glyph === '乙';
                 })()"""), "wrap at nine, newline ends a row, a wrap's newline adds nothing");
     }
@@ -109,12 +109,12 @@ class HanArticleTest extends JsModuleTestBase {
                     // What a mark is: CJK marks, fullwidth ASCII marks, dashes and the ellipsis,
                     // the middle dot — and not a character, a digit, or the ideographic space.
                     var marks = ['，', '。', '、', '；', '：', '？', '！', '「', '」', '『', '』', '（', '）', '《', '》', '…', '—', '·', '．'];
-                    for (var i = 0; i < marks.length; i++) if (!hanIsPunct(marks[i])) return false;
+                    for (var i = 0; i < marks.length; i++) if (!HanLayout.isPunct(marks[i])) return false;
                     var not = ['月', 'a', '1', '\\u3000', ' ', '\\n', ''];
-                    for (var j = 0; j < not.length; j++) if (hanIsPunct(not[j])) return false;
+                    for (var j = 0; j < not.length; j++) if (HanLayout.isPunct(not[j])) return false;
 
                     // A mark that follows a lone mark joins it; a third starts a new slot.
-                    var lay = hanLayout('「月落」，。乙', 9);
+                    var lay = HanLayout.layout('「月落」，。乙', 9);
                     if (slotsStr(lay) !== '[「][月][落][」，][。][乙]···') return false;
                     var pair = lay.rows[0].cells[3];
                     if (pair.kind !== 'punct' || pair.glyph !== '」，') return false;
@@ -123,11 +123,11 @@ class HanArticleTest extends JsModuleTestBase {
 
                     // A pair does not widen a row, even across a closed one: eight characters
                     // and a pair of marks is nine slots and one row.
-                    var nine = hanLayout('一二三四五六七八，。', 9);
+                    var nine = HanLayout.layout('一二三四五六七八，。', 9);
                     if (slotsStr(nine) !== '[一][二][三][四][五][六][七][八][，。]') return false;
 
                     // Only within a line: nothing joins across a newline.
-                    if (slotsStr(hanLayout('甲，\\n。乙', 9)) !== '[甲][，]·······|[。][乙]·······') return false;
+                    if (slotsStr(HanLayout.layout('甲，\\n。乙', 9)) !== '[甲][，]·······|[。][乙]·······') return false;
 
                     return true;
                 })()"""), "a mark joins a lone mark; a pair costs one slot; nothing joins across a line");
@@ -139,21 +139,21 @@ class HanArticleTest extends JsModuleTestBase {
                 (() => {
                     // The case from the bench: nine characters fill the row, and the mark that
                     // follows may not start a line. It goes into the row's trailing half-square.
-                    var lay = hanLayout('一二三四五六七八九。乙', 9);
+                    var lay = HanLayout.layout('一二三四五六七八九。乙', 9);
                     if (slotsStr(lay) !== '[一][二][三][四][五][六][七][八][九]{。}|[乙]········') return false;
                     if (!lay.usesTrail || lay.usesLead) return false;
                     if (lay.rows[0].trail.kind !== 'punct' || lay.glyphs !== 11) return false;
                     // One mark fits; a second starts the next line after all.
-                    if (slotsStr(hanLayout('一二三四五六七八九。」乙', 9)) !== '[一][二][三][四][五][六][七][八][九]{。}|[」][乙]·······') return false;
+                    if (slotsStr(HanLayout.layout('一二三四五六七八九。」乙', 9)) !== '[一][二][三][四][五][六][七][八][九]{。}|[」][乙]·······') return false;
                     // Pairing comes first: a lone mark in the ninth square takes the next mark
                     // as its partner, and only a THIRD mark is squeezed.
-                    if (slotsStr(hanLayout('一二三四五六七八，。！乙', 9)) !== '[一][二][三][四][五][六][七][八][，。]{！}|[乙]········') return false;
+                    if (slotsStr(HanLayout.layout('一二三四五六七八，。！乙', 9)) !== '[一][二][三][四][五][六][七][八][，。]{！}|[乙]········') return false;
                     // Only after a WRAP. After a newline the mark starts the line the author
                     // gave it, and after a newline nothing is squeezed backwards.
-                    if (slotsStr(hanLayout('一二三四五六七八九\\n。乙', 9)) !== '[一][二][三][四][五][六][七][八][九]|[。][乙]·······') return false;
-                    if (slotsStr(hanLayout('甲\\n。乙', 9)) !== '[甲]········|[。][乙]·······') return false;
+                    if (slotsStr(HanLayout.layout('一二三四五六七八九\\n。乙', 9)) !== '[一][二][三][四][五][六][七][八][九]|[。][乙]·······') return false;
+                    if (slotsStr(HanLayout.layout('甲\\n。乙', 9)) !== '[甲]········|[。][乙]·······') return false;
                     // An OPENER at the head of a line is not squeezed back — it opens what follows.
-                    var open = hanLayout('一二三四五六七八九「乙', 9);
+                    var open = HanLayout.layout('一二三四五六七八九「乙', 9);
                     return slotsStr(open) === '[一][二][三][四][五][六][七][八][九]|[「][乙]·······' && !open.usesTrail;
                 })()"""), "a closer that would start a line hangs off the previous line's trailing half-square");
     }
@@ -164,17 +164,17 @@ class HanArticleTest extends JsModuleTestBase {
                 (() => {
                     // The opener would take the ninth square and end the line. The line closes
                     // with that square empty, and the opener leads the next line.
-                    var lay = hanLayout('一二三四五六七八「九十', 9);
+                    var lay = HanLayout.layout('一二三四五六七八「九十', 9);
                     if (slotsStr(lay) !== '[一][二][三][四][五][六][七][八]·|{「}[九][十]·······') return false;
                     if (!lay.usesLead || lay.usesTrail || lay.rows[1].lead.kind !== 'punct') return false;
                     // The line it leads still has all nine squares, and may squeeze at its end too.
-                    var both = hanLayout('一二三四五六七八「九十一二三四五六七。八', 9);
+                    var both = HanLayout.layout('一二三四五六七八「九十一二三四五六七。八', 9);
                     if (slotsStr(both) !== '[一][二][三][四][五][六][七][八]·|{「}[九][十][一][二][三][四][五][六][七]{。}|[八]········') return false;
                     if (!both.usesLead || !both.usesTrail) return false;
                     // An opener anywhere but the last square is just a square.
-                    if (slotsStr(hanLayout('一「二', 9)) !== '[一][「][二]······') return false;
+                    if (slotsStr(HanLayout.layout('一「二', 9)) !== '[一][「][二]······') return false;
                     // A leading half-square alone is a row: the opener was the last thing typed.
-                    return slotsStr(hanLayout('一二三四五六七八「', 9)) === '[一][二][三][四][五][六][七][八]·|{「}·········';
+                    return slotsStr(HanLayout.layout('一二三四五六七八「', 9)) === '[一][二][三][四][五][六][七][八]·|{「}·········';
                 })()"""), "an opener that would end a line leads the next line from its leading half-square");
     }
 
@@ -182,7 +182,7 @@ class HanArticleTest extends JsModuleTestBase {
     void theStoreHoldsTheTextAndTellsItsSubscribers() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createHanStore('甲乙丙');
+                    var store = new HanStore('甲乙丙');
                     var told = [];
                     store.subscribe(function (t) { told.push(t); });
                     if (!store.set('甲丁丙')) return false;
@@ -199,8 +199,8 @@ class HanArticleTest extends JsModuleTestBase {
     void theRelationOwnsOneSquareCellPerSlotAndShowsTheGlyph() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createHanStore(POEM);
-                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    var store = new HanStore(POEM);
+                    var rel = new HanRelation(store, { cols: 9, branch: testBranch() });
                     // One root: the View is the rows in use, answered — there is no capacity to list.
                     if (typeof rel.pks !== 'undefined' || typeof rel.capacity !== 'undefined') return false;
                     if (rel.view().join(',') !== 'r0,r1,r2,r3' || rel.presented().join(',') !== 'r0,r1,r2,r3') return false;
@@ -227,8 +227,8 @@ class HanArticleTest extends JsModuleTestBase {
     void aSquareDrawsAPairAsTwoHalvesAndACharacterAsItself() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createHanStore('甲，。乙。');
-                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    var store = new HanStore('甲，。乙。');
+                    var rel = new HanRelation(store, { cols: 9, branch: testBranch() });
                     // A character: the mark span alone, no halves.
                     var han = mount(rel, 'r0', 'c0');
                     if (inkOf(han) !== '甲' || han._ink.children.length !== 1) return false;
@@ -255,8 +255,8 @@ class HanArticleTest extends JsModuleTestBase {
     void theHalfSquareColumnsArePresentedWhenARowUsesThemAndTheirCellsAreNarrow() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createHanStore('一二三四五六七八九。乙');
-                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    var store = new HanStore('一二三四五六七八九。乙');
+                    var rel = new HanRelation(store, { cols: 9, branch: testBranch() });
                     if (rel.presentedColumns().join(',') !== 'c0,c1,c2,c3,c4,c5,c6,c7,c8,trail') return false;
                     // The trailing cell: narrow, and showing the squeezed mark as one half-box.
                     var t = mount(rel, 'r0', 'trail');
@@ -284,20 +284,20 @@ class HanArticleTest extends JsModuleTestBase {
                     // What is narrow: Latin, digits, spaces, ASCII marks. What is not: a
                     // character, kana, hangul, a fullwidth letter, the ideographic space, a mark.
                     var narrow = ['w', 'A', '7', ' ', '.', '-', '?'];
-                    for (var i = 0; i < narrow.length; i++) if (!hanIsNarrow(narrow[i])) return false;
+                    for (var i = 0; i < narrow.length; i++) if (!HanLayout.isNarrow(narrow[i])) return false;
                     var wide = ['月', 'あ', '한', 'Ａ', '\\u3000', '，', '「', '\\n', '𠀋'];
-                    for (var j = 0; j < wide.length; j++) if (hanIsNarrow(wide[j])) return false;
+                    for (var j = 0; j < wide.length; j++) if (HanLayout.isNarrow(wide[j])) return false;
 
                     // "what" is four narrow characters: one slot, two squares; the second is covered.
-                    var lay = hanLayout('善哉what也', 9);
+                    var lay = HanLayout.layout('善哉what也', 9);
                     if (slotsStr(lay) !== '[善][哉][what]·[也]····') return false;
                     var run = lay.rows[0].cells[2], cov = lay.rows[0].cells[3];
                     if (run.kind !== 'latin' || run.span !== 2 || cov.kind !== 'covered' || cov.glyph !== null) return false;
                     if (lay.glyphs !== 7) return false;                        // letters count
                     // An odd run rounds up; a run with a space is one run; a single letter is one square.
-                    if (hanLayout('abc', 9).rows[0].cells[0].span !== 2) return false;
-                    if (slotsStr(hanLayout('a b', 9)) !== '[a b]········') return false;     // two squares: one covered, seven empty
-                    if (hanLayout('x', 9).rows[0].cells[0].span !== 1) return false;
+                    if (HanLayout.layout('abc', 9).rows[0].cells[0].span !== 2) return false;
+                    if (slotsStr(HanLayout.layout('a b', 9)) !== '[a b]········') return false;     // two squares: one covered, seven empty
+                    if (HanLayout.layout('x', 9).rows[0].cells[0].span !== 1) return false;
                     // The span key names the reach of every square, row by row.
                     return lay.spanKey === '112111111';
                 })()"""), "a run of narrow characters is one slot reaching over ⌈n/2⌉ squares");
@@ -309,16 +309,16 @@ class HanArticleTest extends JsModuleTestBase {
                 (() => {
                     // Room for it: it stays. Eight characters, then "what" needs two squares
                     // and one is left — it moves whole to the next row.
-                    if (slotsStr(hanLayout('一二三四五六七what', 9)) !== '[一][二][三][四][五][六][七][what]·') return false;
-                    if (slotsStr(hanLayout('一二三四五六七八what', 9)) !== '[一][二][三][四][五][六][七][八]·|[what]········') return false;
+                    if (slotsStr(HanLayout.layout('一二三四五六七what', 9)) !== '[一][二][三][四][五][六][七][what]·') return false;
+                    if (slotsStr(HanLayout.layout('一二三四五六七八what', 9)) !== '[一][二][三][四][五][六][七][八]·|[what]········') return false;
                     // Longer than a row: broken at the row's end, two characters a square.
-                    var long = hanLayout('internationalization', 9);      // 20 letters: 18 fill a row, 2 remain
+                    var long = HanLayout.layout('internationalization', 9);      // 20 letters: 18 fill a row, 2 remain
                     if (slotsStr(long) !== '[internationalizati]········|[on]········') return false;
                     if (long.rows[0].cells[0].span !== 9 || long.rows[1].cells[0].span !== 1) return false;
                     // A run that fills the row wraps like anything else, and a closer that
                     // follows is squeezed into the trailing half-square as usual — the
                     // covered square reads as '·' here, since it holds nothing of its own.
-                    return slotsStr(hanLayout('一二三四五六七what。', 9)) === '[一][二][三][四][五][六][七][what]·{。}';
+                    return slotsStr(HanLayout.layout('一二三四五六七what。', 9)) === '[一][二][三][四][五][六][七][what]·{。}';
                 })()"""), "whole if it fits, whole on the next row if it fits one, else broken at the row's end");
     }
 
@@ -326,8 +326,8 @@ class HanArticleTest extends JsModuleTestBase {
     void aRunCellReachesOverItsSquaresAndSaysSo() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createHanStore('善哉what也');
-                    var rel = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    var store = new HanStore('善哉what也');
+                    var rel = new HanRelation(store, { cols: 9, branch: testBranch() });
                     var run = mount(rel, 'r0', 'c2');
                     // The cell answers the reach the grid asks about, and draws itself that wide.
                     if (run.colSpan() !== 2 || !/han-run/.test(run._el.className)) return false;
@@ -352,9 +352,9 @@ class HanArticleTest extends JsModuleTestBase {
     void anEditToTheTextReflowsEveryRelationOverTheStore() {
         assertTrue(evalBool("""
                 (() => {
-                    var store = createHanStore(POEM);
-                    var a = createHanRelation(store, { cols: 9, branch: testBranch() });
-                    var b = createHanRelation(store, { cols: 9, branch: testBranch() });
+                    var store = new HanStore(POEM);
+                    var a = new HanRelation(store, { cols: 9, branch: testBranch() });
+                    var b = new HanRelation(store, { cols: 9, branch: testBranch() });
                     // Mount a few cells on both, as two grids would have.
                     ['r0','r1','r2','r3'].forEach(function (r) { for (var k = 0; k < 9; k++) { mount(a, r, 'c' + k); mount(b, r, 'c' + k); } });
 

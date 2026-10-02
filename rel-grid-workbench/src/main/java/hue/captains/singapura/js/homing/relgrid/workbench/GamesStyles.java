@@ -2,9 +2,11 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
+import hue.captains.singapura.js.homing.core.CssVar;
 import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
+import java.util.Set;
 
 import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
@@ -126,6 +128,8 @@ public record GamesStyles() implements CssGroup<GamesStyles> {
 
     /** Fixed to the viewport, where the header cell said; above the sticky header (35) and the mask (60). */
     public record wb_gmenu() implements CssClass<GamesStyles> {
+        /** Where the menu is placed: under its header, as the menu measures it. */
+        @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--wb-gmenu-left"), new CssVar("--wb-gmenu-top")); }
         @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Overlay.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 position: fixed;

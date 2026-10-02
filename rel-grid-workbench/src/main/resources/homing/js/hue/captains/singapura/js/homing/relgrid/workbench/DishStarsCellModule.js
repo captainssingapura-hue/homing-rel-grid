@@ -121,7 +121,7 @@ class DishStarsCell {
      */
     clipboardHtml() {
         if (this._value == null) return "—";
-        return dishStarsHtml(this._value, this._starsFor(this._value));
+        return DishClipboardFormats.starsHtml(this._value, this._starsFor(this._value));
     }
 
     onSelect(mode) { this._mode = mode; }

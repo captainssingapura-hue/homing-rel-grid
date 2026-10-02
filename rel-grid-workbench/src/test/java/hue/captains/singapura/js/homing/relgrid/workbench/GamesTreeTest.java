@@ -33,8 +33,8 @@ class GamesTreeTest extends JsModuleTestBase {
                 var treeB = hostB.createBranch('tree'), domainB = hostB.createBranch('domain');
                 domainB.activate({ toString: function () { return 'bench'; } });
                 var tree = null, told = 0;
-                var store = createGamesStore(PSV);
-                var relation = createGamesTreeRelation(store, {
+                var store = new GamesStore(PSV);
+                var relation = new GamesTreeRelation(store, {
                     branch: domainB.createBranch('cells'), delay: 300,
                     onViewChanged: function () { told++; if (tree) tree.tell(new RelTreeViewChanged()); }
                 });
@@ -63,9 +63,9 @@ class GamesTreeTest extends JsModuleTestBase {
         loadModule(RelTreeTestDom.CHANNEL);
         loadModule(RelTreeTestDom.PROTOCOL);
         for (String m : RelTreeTestDom.MODULES) loadModule(RelTreeTestDom.DIR + m);
-        loadModule(BENCH_DIR + "GamesStore.js");
-        loadModule(BENCH_DIR + "GamesTreeRelation.js");
-        js.eval("js", HELPERS.formatted(HanStressWidget.jsString(GamesDataset.psv())));
+        loadModule(BENCH_DIR + "GamesStoreModule.js");
+        loadModule(BENCH_DIR + "GamesTreeRelationModule.js");
+        js.eval("js", HELPERS.formatted(JsText.literal(GamesDataset.psv())));
     }
 
     private boolean evalBool(String expr) { return js.eval("js", expr).asBoolean(); }

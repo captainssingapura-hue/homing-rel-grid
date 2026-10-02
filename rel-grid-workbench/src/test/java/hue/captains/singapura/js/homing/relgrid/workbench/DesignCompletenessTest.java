@@ -6,7 +6,7 @@ import hue.captains.singapura.js.homing.design.Deployment;
 import hue.captains.singapura.js.homing.design.Design;
 import hue.captains.singapura.js.homing.design.DesignClass;
 import hue.captains.singapura.js.homing.server.ServedModules;
-import hue.captains.singapura.js.homing.studio.themes.StudioThemeRegistry;
+import hue.captains.singapura.js.homing.designs.HomingDesigns;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ class DesignCompletenessTest {
     @Test
     void everyDesign_answersEveryPairTheWorkbenchWears_validly() {
         var worn = worn();
-        for (Theme t : StudioThemeRegistry.INSTANCE.themes()) {
+        for (Theme t : HomingDesigns.REGISTRY.themes()) {
             Design d = (Design) t;
             var r = Deployment.of(worn, d).resolve();
             assertEquals(List.of(), r.findings(), () -> d.slug() + ": " + r.findings());

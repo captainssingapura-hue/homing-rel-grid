@@ -1,0 +1,39 @@
+package hue.captains.singapura.js.homing.relgrid.workbench;
+
+import hue.captains.singapura.js.homing.core.DomModule;
+import hue.captains.singapura.js.homing.core.Exportable;
+import hue.captains.singapura.js.homing.core.ExportsOf;
+import hue.captains.singapura.js.homing.core.ImportsFor;
+import hue.captains.singapura.js.homing.core.ModuleImports;
+
+import java.util.List;
+
+/**
+ * A {@code RootRelationContract}-shaped relation over a {@code HanStore}: the
+ * article laid out by {@code HanLayout} into rows of square slots, and a cell
+ * manager that owns one {@link HanCellModule.HanCell} per slot. Identity is
+ * positional — the square — and the glyph is what the square shows; on every
+ * change the relation re-lays the article out and sets its own cells. Its
+ * View is the rows the layout uses now — one root, no capacity to list; it
+ * declares the two half-square columns, leading and trailing, and presents
+ * whichever the layout has put a mark in. Nothing here mentions a grid, and nothing here
+ * commits: the cells are displays.
+ */
+public record HanRelationModule() implements DomModule<HanRelationModule> {
+
+    public record HanRelation() implements Exportable._Class<HanRelationModule> {}
+
+    public static final HanRelationModule INSTANCE = new HanRelationModule();
+
+    @Override
+    public ImportsFor<HanRelationModule> imports() {
+        return ImportsFor.<HanRelationModule>builder()
+                .add(new ModuleImports<>(List.of(new HanLayoutModule.HanLayout()), HanLayoutModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new HanCellModule.HanCell()), HanCellModule.INSTANCE))
+                .build();
+    }
+
+    @Override public ExportsOf<HanRelationModule> exports() {
+        return new ExportsOf<>(INSTANCE, List.of(new HanRelation()));
+    }
+}
