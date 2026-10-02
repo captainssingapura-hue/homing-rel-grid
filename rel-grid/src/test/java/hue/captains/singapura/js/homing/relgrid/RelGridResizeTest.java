@@ -72,21 +72,25 @@ class RelGridResizeTest extends JsModuleTestBase {
                     th._rl = 300.4; th._rr = 400.6;                              // rect: width 100.2 — fractional, as a browser's is
                     var handle = th.children[th.children.length - 1];
                     if (handle.className !== 'hrg-resize-handle') return false;
+                    var had = document.activeElement;
                     handle.dispatch('mousedown', { clientX: 398 });
-                    var midDrag = f.colWidth(1) === '';                          // nothing applied mid-gesture
+                    var midDrag = f.colWidth(1) === '' && document.activeElement === handle;   // nothing applied; the handle hears the keys
                     document.dispatch('mousemove', { clientX: 448 });
                     document.dispatch('mouseup', {});                            // ONE request: 100 + 50
-                    var committed = f.colWidth(1) === '150px' && f.resized.join() === 'calories 150';
+                    var committed = f.colWidth(1) === '150px' && f.resized.join() === 'calories 150'
+                        && document.activeElement === had;                       // the focus given back
                     handle.dispatch('mousedown', { clientX: 399 });
                     document.dispatch('mousemove', { clientX: 500 });
-                    document.dispatch('keydown', { key: 'Escape' });             // ABANDON
+                    document.dispatch('keydown', { key: 'Escape' });             // the document's: not the gesture's
+                    var stillLive = f.resized.length === 1 && document.body.children.length > 0;
+                    handle.dispatch('keydown', { key: 'Escape' });               // ABANDON, where the focus is
                     document.dispatch('mouseup', {});                            // stale: listeners are gone
-                    var abandoned = f.colWidth(1) === '150px' && f.resized.length === 1;
+                    var abandoned = f.colWidth(1) === '150px' && f.resized.length === 1 && document.activeElement === had;
                     th.dispatch('mousedown', { clientX: 350 });                  // the header body arms nothing
                     document.dispatch('mouseup', {});
-                    return midDrag && committed && abandoned && f.colWidth(1) === '150px'
+                    return midDrag && committed && stillLive && abandoned && f.colWidth(1) === '150px'
                         && document.body.children.length === 0;                  // no guide left behind
-                })()"""), "law 54: a staged gesture mints one intent on release; Escape mints nothing; only the handle arms");
+                })()"""), "law 54: a staged gesture mints one intent on release; Escape mints nothing; only the handle arms; the keys are the handle's, and the focus goes back");
     }
 
     @Test
@@ -191,7 +195,7 @@ class RelGridResizeTest extends JsModuleTestBase {
                     var guide = document.body.children[document.body.children.length - 1];
                     if (!guide || guide.className !== 'hrg-resize-guide') return false;
                     var top = guide.style.getPropertyValue('--hrg-guide-top'), h = guide.style.getPropertyValue('--hrg-guide-h');
-                    document.dispatch('keydown', { key: 'Escape' });
+                    handle.dispatch('keydown', { key: 'Escape' });
                     if (top !== '40px' || h !== '600px') return false;
                     // Without one, the table's own box.
                     var g = fixture();
@@ -200,7 +204,7 @@ class RelGridResizeTest extends JsModuleTestBase {
                     handle2.dispatch('mousedown', { clientX: 398 });
                     var guide2 = document.body.children[document.body.children.length - 1];
                     var top2 = guide2.style.getPropertyValue('--hrg-guide-top'), h2 = guide2.style.getPropertyValue('--hrg-guide-h');
-                    document.dispatch('keydown', { key: 'Escape' });
+                    handle2.dispatch('keydown', { key: 'Escape' });
                     return top2 === '0px' && h2 === '20px';
                 })()"""), "the guide line runs down the extent the host names, else down the table");
     }
@@ -231,7 +235,7 @@ class RelGridResizeTest extends JsModuleTestBase {
                     if (typeof window === 'undefined') globalThis.window = { innerHeight: 1000 };
                     handle.dispatch('mousedown', { clientX: 398 });
                     var again = document.body.children.slice(was).length;
-                    document.dispatch('keydown', { key: 'Escape' });
+                    handle.dispatch('keydown', { key: 'Escape' });
                     return again === 2;
                 })()"""), "a list of boxes is a segment of line each, none across what lies between them");
     }
@@ -251,14 +255,14 @@ class RelGridResizeTest extends JsModuleTestBase {
                     handle.dispatch('mousedown', { clientX: 398 });
                     var guide = document.body.children[document.body.children.length - 1];
                     var top = guide.style.getPropertyValue('--hrg-guide-top'), h = guide.style.getPropertyValue('--hrg-guide-h');
-                    document.dispatch('keydown', { key: 'Escape' });
+                    handle.dispatch('keydown', { key: 'Escape' });
                     if (top !== '100px' || h !== '300px') return false;
                     // An ancestor that does not scroll clips nothing.
                     pane._scrolls = false;
                     handle.dispatch('mousedown', { clientX: 398 });
                     var g2 = document.body.children[document.body.children.length - 1];
                     var top2 = g2.style.getPropertyValue('--hrg-guide-top'), h2 = g2.style.getPropertyValue('--hrg-guide-h');
-                    document.dispatch('keydown', { key: 'Escape' });
+                    handle.dispatch('keydown', { key: 'Escape' });
                     delete globalThis.getComputedStyle;
                     return top2 === '40px' && h2 === '600px';
                 })()"""), "the guide runs down what is SEEN of the extent: a scrolling ancestor cuts it, a plain one does not");

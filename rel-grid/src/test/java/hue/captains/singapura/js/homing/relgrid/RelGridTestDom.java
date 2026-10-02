@@ -142,6 +142,11 @@ public final class RelGridTestDom {
                         __focused = this;
                         if (prev) prev.dispatch('blur', {});
                     },
+                    blur: function () {
+                        if (__focused !== this) return;
+                        __focused = null;
+                        this.dispatch('blur', {});
+                    },
                     select: function () {},
                     setAttribute: function () {}, removeAttribute: function () {}, getAttribute: function () { return null; },
                     // Geometry for a header drag: _rl / _rr (and _rt / _rb) set by a test; 100 x 20 otherwise.

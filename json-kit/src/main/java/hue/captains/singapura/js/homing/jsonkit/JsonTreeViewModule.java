@@ -22,7 +22,7 @@ public record JsonTreeViewModule() implements DomModule<JsonTreeViewModule> {
     @Override public ImportsFor<JsonTreeViewModule> imports() {
         return ImportsFor.<JsonTreeViewModule>builder()
                 .add(new ModuleImports<>(List.of(new RelTreeModule.RelTree()), RelTreeModule.INSTANCE))
-                .add(new ModuleImports<>(List.of(new JsonDocumentModule.createJsonDocument()), JsonDocumentModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new JsonDocumentModule.JsonDocument()), JsonDocumentModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelTreeViewChanged()), RelGridProtocolModule.INSTANCE))
                 .build();
     }

@@ -45,7 +45,7 @@ class JsonTreeView {
         this._branch.activate(this);
         this._treeBranch = this._branch.createBranch("tree");           // the tree's: handed whole, it activates
         this._documentBranch = this._branch.createBranch("document");   // the document's: it activates, its cells beneath
-        this._document = createJsonDocument(opts.value, {
+        this._document = new JsonDocument(opts.value, {
             branch: this._documentBranch, title: opts.title, openDepth: opts.openDepth, maxString: opts.maxString
         });
         this._tree = new RelTree({

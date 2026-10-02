@@ -265,7 +265,7 @@ class RelGridLayout {
     focus() { if (this._table.focus) this._table.focus({ preventScroll: true }); return this; }
 
     /** The least scroll that shows a slot; nothing moves when it already shows. */
-    revealSlot(i, j) { relGridRevealSlot(this.slotAt(i, j), this._inset()); return this; }
+    revealSlot(i, j) { RelGridReveal.revealSlot(this.slotAt(i, j), this._inset()); return this; }
 
     /** What is stuck at the top of the port: the grid's own header when it sticks, and the host's band when it names one. */
     _inset() {
@@ -276,7 +276,7 @@ class RelGridLayout {
     }
 
     /** Does the grid have the keyboard — the table, or something in it, holding the focus? */
-    hasKeyboard() { return relGridHasKeyboard(this._table); }
+    hasKeyboard() { return RelGridReveal.hasKeyboard(this._table); }
 
     el() { return this._table; }
     slotAt(i, j) { return this._slots.slotAt(i, j); }

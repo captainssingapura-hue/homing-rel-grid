@@ -5,6 +5,10 @@
 // reported on release, Escape abandons and reports nothing. Nothing in the
 // cell tree is touched mid-gesture.
 //
+// The Escape is heard on the handle: the gesture takes the focus for its
+// length, so the key lands on the gesture's own element — the native world,
+// never the document — and gives it back where it found it.
+//
 // Positional only — it reports (j, px) and knows no identity. The facade
 // translates j to a column, bounds the request, holds it, applies it. That
 // split is map 7's capture rule: the gesture MINTS; it never applies.
@@ -74,13 +78,14 @@ class RelGridHeaderDrag {
         var handle = branch.createElement("handle-" + j, "span");
         css.addClass(handle, hrg_resize_handle);
         th.appendChild(handle);
+        handle.tabIndex = -1;                                    // focusable for a gesture's length; never a Tab stop
         handle.addEventListener("mousedown", function (e) {
             var rect = th.getBoundingClientRect ? th.getBoundingClientRect() : null;
             if (!rect || e.clientX == null) return;              // no geometry: inert (headless)
             if (e.preventDefault) e.preventDefault();
             if (e.stopPropagation) e.stopPropagation();          // the header body is not armed
             var held = self._heldWidth ? self._heldWidth(j) : null;
-            self._start(j, held != null ? held : rect.right - rect.left, e.clientX);
+            self._start(handle, j, held != null ? held : rect.right - rect.left, e.clientX);
         });
         return this;
     }
@@ -112,8 +117,8 @@ class RelGridHeaderDrag {
         return { branch: branch, els: out };
     }
 
-    _start(j, startW, startX) {
-        var self = this, lastX = startX;
+    _start(handle, j, startW, startX) {
+        var self = this, lastX = startX, had = document.activeElement || null;
         var guide = this._makeGuide(startX), guides = guide.els;
         function onMove(e) {
             lastX = e.clientX;
@@ -122,8 +127,11 @@ class RelGridHeaderDrag {
         function teardown() {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
-            document.removeEventListener("keydown", onKey, true);
+            handle.removeEventListener("keydown", onKey);
             guide.branch.dissolve();                           // the segments go with their branch
+            if (document.activeElement !== handle) return;     // moved on mid-gesture: not ours to give back
+            if (had && had !== document.body && had.focus) had.focus({ preventScroll: true });
+            else if (handle.blur) handle.blur();
         }
         // One request, on release. Whole pixels: a header's rect is fractional
         // and a request is something a host may keep — normalisation only
@@ -134,6 +142,7 @@ class RelGridHeaderDrag {
         }
         document.addEventListener("mousemove", onMove);
         document.addEventListener("mouseup", onUp);
-        document.addEventListener("keydown", onKey, true);
+        handle.addEventListener("keydown", onKey);
+        if (handle.focus) handle.focus({ preventScroll: true });   // the Escape lands here
     }
 }

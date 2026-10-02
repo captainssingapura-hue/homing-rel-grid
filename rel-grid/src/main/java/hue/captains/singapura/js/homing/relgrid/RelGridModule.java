@@ -49,7 +49,7 @@ public record RelGridModule() implements DomModule<RelGridModule> {
                 .add(new ModuleImports<>(List.of(new RelGridControlModule.RelGridControl()),       RelGridControlModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridChannelModule.RelGridChannel()),       RelGridChannelModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridGesturesModule.RelGridGestures()),     RelGridGesturesModule.INSTANCE))
-                .add(new ModuleImports<>(List.of(new RelGridClipboardModule.createRelGridClipboard()), RelGridClipboardModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridClipboardModule.RelGridClipboard()), RelGridClipboardModule.INSTANCE))
                 .build();
     }
 

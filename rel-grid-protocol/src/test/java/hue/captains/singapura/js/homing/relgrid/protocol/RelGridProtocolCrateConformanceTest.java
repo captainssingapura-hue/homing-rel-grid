@@ -1,7 +1,11 @@
 package hue.captains.singapura.js.homing.relgrid.protocol;
 
 import hue.captains.singapura.js.homing.codec.ObjectDefinition;
+import hue.captains.singapura.js.homing.conformance.engine.ConformanceEngine;
+import hue.captains.singapura.js.homing.conformance.engine.ServedModuleRenderer;
 import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
+import hue.captains.singapura.js.homing.conformance.rules.DefaultJsRulePolicy;
+import hue.captains.singapura.js.homing.conformance.rules.Finding;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
 import org.junit.jupiter.api.Test;
 
@@ -60,5 +64,13 @@ class RelGridProtocolCrateConformanceTest {
                 "generated JS lives in target/classes; this module's src/main/resources stays empty");
         assertTrue(RelGridProtocolGen.FILE_NAME.equals(RelGridProtocolModule.class.getSimpleName() + ".js"),
                 "the generated filename must equal the DomModule's simple name, or the body is not found");
+    }
+
+    /** The rule sweep with no ledger, over the text the server serves: a crate begun clean stays clean. */
+    @Test
+    void theSweepFindsNothing() {
+        var findings = new ConformanceEngine(DefaultJsRulePolicy.INSTANCE, new ServedModuleRenderer())
+                .checkCrates(List.of(RelGridProtocolCrate.INSTANCE)).stream().map(Finding::fingerprint).toList();
+        assertEquals(List.of(), findings, "rel-grid-protocol has no ledger: nothing may be found");
     }
 }

@@ -1,18 +1,17 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.conformance.engine.ConformanceEngine;
+import hue.captains.singapura.js.homing.conformance.engine.ServedModuleRenderer;
 import hue.captains.singapura.js.homing.conformance.rules.Baseline;
 import hue.captains.singapura.js.homing.conformance.rules.DefaultJsRulePolicy;
 import hue.captains.singapura.js.homing.conformance.rules.Finding;
 import hue.captains.singapura.js.homing.conformance.rules.FindingGrader;
 import hue.captains.singapura.js.homing.conformance.rules.GradedFinding;
-import hue.captains.singapura.js.homing.conformance.rules.ServedModule;
 import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.EsModule;
 import hue.captains.singapura.js.homing.core.ModuleForm;
-import hue.captains.singapura.js.homing.core.JsModuleType;
-import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.core.SvgGroup;
 
 import java.io.IOException;
@@ -30,20 +29,25 @@ import static org.junit.jupiter.api.Assertions.fail;
  * RFC 0044 — the JS rule sweep over a crate's own modules, with a committed
  * <b>ledger</b> of pre-existing violations that can only shrink.
  *
- * <p>Every crate entry backed by a {@code .js} resource is swept under the rule
- * set its declared type owes ({@link DefaultJsRulePolicy}). A finding not in the
+ * <p>Every crate entry is swept AS THE SERVER SERVES IT - rendered by the
+ * framework's {@link ServedModuleRenderer}: the authored file with its imports,
+ * its emitted {@code export} line and its injected managers, and the modules Java
+ * emits whole - under the rule set its type owes ({@link DefaultJsRulePolicy}; an
+ * undeclared module is classified as the engine classifies it, which for a JS
+ * module is the full discipline). It is the framework's own check
+ * ({@link ConformanceEngine#checkCrates}), the one the downstream gates run, so a
+ * rule that reads the served text - which names a module exports, what it
+ * imports - sees here what it sees there. A finding not in the
  * ledger is NEW and fails the build; a ledger line that no longer matches any
  * finding is STALE and fails the build too — a violation that was fixed must
  * leave the ledger, so the ledger is an honest count of what is left. Run with
  * {@code -Dhoming.conformance.record=true} to rewrite the ledger from the
  * current findings — deliberately, never to silence a fresh violation.</p>
  *
- * <p>Modules with no {@code .js} resource (a widget's Java-emitted body, a
- * style group's or an SVG group's generated one) are not swept here; that is
- * the module server's renderer's to produce. But a module of a resource-backed
- * KIND — a DomModule or an EsModule — with no resource beside it is a mistake,
- * not a widget: the file is misnamed, and the server would answer 404 for it.
- * That fails the build too, by name.</p>
+ * <p>A module of a resource-backed KIND — a DomModule or an EsModule — with no
+ * resource beside it is a mistake, not a widget: the file is misnamed, and the
+ * server would answer 404 for it. That fails the build too, by name, before
+ * anything is graded.</p>
  */
 public final class RelGridConformanceSweep {
 
@@ -51,17 +55,9 @@ public final class RelGridConformanceSweep {
 
     public static final String RECORD_PROPERTY = "homing.conformance.record";
 
-    /** Every finding over the crate's own resource-backed modules, under each module's declared rule set. */
+    /** Every finding over the crate's own modules, each graded as served, under the rule set its type owes. */
     public static List<Finding> findings(Crate crate) {
-        var out = new ArrayList<Finding>();
-        for (CrateEntry entry : crate.entries()) {
-            String cls = entry.moduleClass();
-            String text = resource(cls);
-            if (text == null) continue;                          // Java-emitted: not swept here
-            JsModuleType type = entry.declaredType() != null ? entry.declaredType() : StandardJsModuleType.CONSUMER;   // undeclared = the full discipline
-            out.addAll(DefaultJsRulePolicy.INSTANCE.rulesFor(type).checkAll(ServedModule.of(cls, type, text)));
-        }
-        return out;
+        return new ConformanceEngine(DefaultJsRulePolicy.INSTANCE, new ServedModuleRenderer()).checkCrates(List.of(crate));
     }
 
     /**

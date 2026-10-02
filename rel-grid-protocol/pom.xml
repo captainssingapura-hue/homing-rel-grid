@@ -59,6 +59,14 @@
             <version>${homing.core.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The engine and its renderer, so the sweep grades the text the server serves:
+             the imports, the export line, the injected managers - not the authored file. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-engine</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-ssjs-test-fixtures</artifactId>

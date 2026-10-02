@@ -15,15 +15,13 @@ import java.util.List;
  */
 public record RelGridRevealModule() implements DomModule<RelGridRevealModule> {
 
-    public record relGridRevealSlot()  implements Exportable._Constant<RelGridRevealModule> {}
-    public record relGridHasKeyboard() implements Exportable._Constant<RelGridRevealModule> {}
-    public record relGridWithin()      implements Exportable._Constant<RelGridRevealModule> {}
+    public record RelGridReveal() implements Exportable._Class<RelGridRevealModule> {}
 
     public static final RelGridRevealModule INSTANCE = new RelGridRevealModule();
 
     @Override public ImportsFor<RelGridRevealModule> imports() { return ImportsFor.noImports(); }
 
     @Override public ExportsOf<RelGridRevealModule> exports() {
-        return new ExportsOf<>(INSTANCE, List.of(new relGridRevealSlot(), new relGridHasKeyboard(), new relGridWithin()));
+        return new ExportsOf<>(INSTANCE, List.of(new RelGridReveal()));
     }
 }
