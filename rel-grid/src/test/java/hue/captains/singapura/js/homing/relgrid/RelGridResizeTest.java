@@ -73,22 +73,26 @@ class RelGridResizeTest extends JsModuleTestBase {
                     var handle = th.children[th.children.length - 1];
                     if (handle.className !== 'hrg-resize-handle') return false;
                     var had = document.activeElement;
+                    var inert = handle.getAttribute('tabindex') === null;        // no stop for anything, outside a gesture
                     handle.dispatch('mousedown', { clientX: 398 });
-                    var midDrag = f.colWidth(1) === '' && document.activeElement === handle;   // nothing applied; the handle hears the keys
+                    var midDrag = f.colWidth(1) === '' && document.activeElement === handle   // nothing applied; the handle hears the keys
+                        && handle.getAttribute('tabindex') === '-1';
                     document.dispatch('mousemove', { clientX: 448 });
                     document.dispatch('mouseup', {});                            // ONE request: 100 + 50
                     var committed = f.colWidth(1) === '150px' && f.resized.join() === 'calories 150'
-                        && document.activeElement === had;                       // the focus given back
+                        && document.activeElement === had                        // the focus given back
+                        && handle.getAttribute('tabindex') === null;             // and the handle focusable no longer
                     handle.dispatch('mousedown', { clientX: 399 });
                     document.dispatch('mousemove', { clientX: 500 });
                     document.dispatch('keydown', { key: 'Escape' });             // the document's: not the gesture's
                     var stillLive = f.resized.length === 1 && document.body.children.length > 0;
                     handle.dispatch('keydown', { key: 'Escape' });               // ABANDON, where the focus is
                     document.dispatch('mouseup', {});                            // stale: listeners are gone
-                    var abandoned = f.colWidth(1) === '150px' && f.resized.length === 1 && document.activeElement === had;
+                    var abandoned = f.colWidth(1) === '150px' && f.resized.length === 1 && document.activeElement === had
+                        && handle.getAttribute('tabindex') === null;
                     th.dispatch('mousedown', { clientX: 350 });                  // the header body arms nothing
                     document.dispatch('mouseup', {});
-                    return midDrag && committed && stillLive && abandoned && f.colWidth(1) === '150px'
+                    return inert && midDrag && committed && stillLive && abandoned && f.colWidth(1) === '150px'
                         && document.body.children.length === 0;                  // no guide left behind
                 })()"""), "law 54: a staged gesture mints one intent on release; Escape mints nothing; only the handle arms; the keys are the handle's, and the focus goes back");
     }

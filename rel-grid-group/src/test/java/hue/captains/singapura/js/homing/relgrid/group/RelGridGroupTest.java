@@ -33,6 +33,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                 var el = __makeEl(tag); el._a = {};
                 el.setAttribute = function (k, v) { this._a[k] = String(v); };
                 el.getAttribute = function (k) { return (this._a[k] == null) ? null : this._a[k]; };
+                el.removeAttribute = function (k) { delete this._a[k]; };
                 return el;
             };
             """;
