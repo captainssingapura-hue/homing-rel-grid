@@ -76,6 +76,22 @@ class RelTreeCursorTest extends JsModuleTestBase {
                 })()"""), "the vertical keys move among the presented rows, clamped, and the edges are reported");
     }
 
+    /** A chord is not the tree's: Alt+← and Alt+→ are the browser's back and forward, and Ctrl or Meta with any key is left to the page. */
+    @Test
+    void aChordIsNotTheTrees_theBrowsersOwnGetThrough() {
+        act("var F = fixture({ open: ['a', 'a2'] });   // a a1 a2 a2x a2y b c");
+        assertTrue(evalBool("""
+                (() => {
+                    F.click(2);                                                  // a2: open
+                    var before = F.shown();
+                    if (F.chord('ArrowLeft', { altKey: true }) || F.chord('ArrowRight', { altKey: true })) return false;   // not prevented: back, forward
+                    if (F.chord('ArrowDown', { ctrlKey: true }) || F.chord('Home', { metaKey: true }) || F.chord(' ', { ctrlKey: true })) return false;
+                    if (F.tree.cursor() !== 'a2' || F.shown() !== before) return false;                                  // nothing moved, nothing folded
+                    if (F.sent.some(function (q) { return q instanceof RelTreeFold || q instanceof RelTreeUnfold; })) return false;
+                    return F.key('ArrowLeft') && F.lastSent(RelTreeFold).key === 'a2';                                   // the bare key is still the tree's
+                })()"""), "a key held with Alt, Ctrl or Meta is left alone; the same key bare is the tree's");
+    }
+
     @Test
     void theTreeOwnsLeftAndRightByWhatThePlaceIs() {
         act("var F = fixture({ open: ['a', 'a2'] });   // a a1 a2 a2x a2y b c");
