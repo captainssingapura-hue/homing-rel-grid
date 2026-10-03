@@ -333,9 +333,13 @@ public final class RelGridTestDom {
                     var at = grid.viewMaps().locate(pk, col);
                     return at ? td(at.i, at.j).children[0] : null;
                 }
+                // → whether the grid took the key: prevented its default
                 function key(k, mods) {
                     mods = mods || {};
-                    table().dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
+                    var ev = { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl, metaKey: !!mods.meta, prevented: false };
+                    ev.preventDefault = function () { ev.prevented = true; };
+                    table().dispatch('keydown', ev);
+                    return ev.prevented;
                 }
                 // A click as a browser actually sends one: mousedown, mouseup, click.
                 // Dispatching the click alone is not faithful — the grid arms a

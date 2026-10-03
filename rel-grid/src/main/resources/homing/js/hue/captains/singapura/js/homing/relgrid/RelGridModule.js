@@ -209,7 +209,6 @@ class RelGrid {
             locked: function () { return self._locked(); },
             afterSelection: function () { self._afterSelection(); },
             stepJ: function (i, j, dj) { return self._spans.stepJ(i, j, dj); },
-            stepWidth: function (column, dir) { self.setColumnWidth(column, self._widths.stepped(column, dir)); },
             rowHeight: function () { return self._layout.rowHeight(); },
             onEdge: opts.onEdge
         });
