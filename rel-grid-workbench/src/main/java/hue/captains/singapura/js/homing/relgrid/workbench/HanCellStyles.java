@@ -3,19 +3,11 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
 import hue.captains.singapura.js.homing.core.CssVar;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 import java.util.Set;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Box.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * The Han cell's looks, typed. A square whose ink is sized from its height
@@ -58,7 +50,6 @@ public record HanCellStyles() implements CssGroup<HanCellStyles> {
     public record han_ink() implements CssClass<HanCellStyles> {
         /** The ink's face, its spacing and its tracking, as the square's kind says them. */
         @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--han-ink-font"), new CssVar("--han-ink-space"), new CssVar("--han-ink-tracking")); }
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 font: var(--han-ink-font, 68cqh/1 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', 'PMingLiU', serif);
                 letter-spacing: var(--han-ink-tracking, normal);

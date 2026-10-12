@@ -2,14 +2,10 @@ package hue.captains.singapura.js.homing.relgrid;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * RFC 0050 · Episode 2 — the stock text cell's looks, typed. DOMAIN-side, as
@@ -44,7 +40,6 @@ public record RelGridStockStyles() implements CssGroup<RelGridStockStyles> {
      * painted is the design's business: the muted ink.
      */
     public record hrg_text_ro() implements CssClass<RelGridStockStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return ""; }
     }
 
@@ -54,7 +49,6 @@ public record RelGridStockStyles() implements CssGroup<RelGridStockStyles> {
      * ink and face at the label's size, the same as the text it replaces.
      */
     public record hrg_text_edit() implements CssClass<RelGridStockStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
         @Override public String body() { return """
                 box-sizing: border-box;
                 width: 100%;

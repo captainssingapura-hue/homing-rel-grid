@@ -2,15 +2,11 @@ package hue.captains.singapura.js.homing.relgrid.group;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 import hue.captains.singapura.js.homing.relgrid.RelGridStyles;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
 
 /**
  * RFC 0050 · Episode 2 — the GROUP's looks, typed: the column of boxes, the
@@ -125,7 +121,6 @@ public record RelGridGroupStyles() implements CssGroup<RelGridGroupStyles> {
      * through {@code hrg_lit} — so the eye follows one mark down the group.
      */
     public record hrg_fence_cursor() implements CssClass<RelGridGroupStyles> {
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Rule.class), of(Lattice.class, Color.Edge.class)); }
         @Override public String body() { return """
                 outline-width: %s;
                 outline-style: var(--hrg-cursor-style, %s);

@@ -2,18 +2,10 @@ package hue.captains.singapura.js.homing.reltree;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Box.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * RFC 0050 · Episode 3-ext1 — the tree's LOOKS, typed. One class per thing the
@@ -39,12 +31,13 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     public static final RelTreeStyles INSTANCE = new RelTreeStyles();
 
-    // ── the ring, by name, for what draws from the cursor's channel ──
-    static final String RING_COLOUR = of(Focus.class, Color.Edge.class).var("outline-color");
-    static final String RING_WIDTH  = of(Focus.class, Shape.Rule.class).var("outline-width");
-    static final String RING_STYLE  = of(Focus.class, Shape.Rule.class).var("outline-style");
-    static final String RING_OFFSET = of(Focus.class, Shape.Rule.class).var("outline-offset");
-    static final String HAIRLINE    = of(Hairline.class, Color.Edge.class).var("border-color");
+    // ── the ring and the hairline, by name, for what draws from the cursor's channel: in the ink the tree stands on,
+    //    until the tree wears the house's look ──
+    static final String RING_COLOUR = "currentColor";
+    static final String RING_WIDTH  = "2px";
+    static final String RING_STYLE  = "solid";
+    static final String RING_OFFSET = "-2px";
+    static final String HAIRLINE    = "color-mix(in srgb, currentColor 18%, transparent)";
 
     // ── the wrapper: the positioned parent, and the frame that catches the focus ──
 
@@ -59,7 +52,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
     /** Lit while something in the wrap holds the focus: the cursor takes the design's ring. */
     public record hrt_lit() implements CssClass<RelTreeStyles> {
         @Override public String pseudoState() { return ":focus-within"; }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class)); }
         @Override public String body() { return """
                 --hrt-cursor-color: %s;
                 """.formatted(RING_COLOUR);
@@ -68,7 +60,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     /** The tree: the keyboard host, a column of rows, in the body ink and face at the label's size - on its own ground ({@code hrt_surface}) unless its host lays it on one. */
     public record hrt_tree() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
         @Override public String body() { return """
                 display: flex;
                 flex-direction: column;
@@ -84,7 +75,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
      * host that lays the tree on a sheet of its own, whose face the tree should not paint over.
      */
     public record hrt_surface() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class)); }
         @Override public String body() { return ""; }
     }
 
@@ -96,8 +86,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
      * current row only has to colour it.
      */
     public record hrt_row() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Control.class, Shape.Corner.class)); }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: center;
@@ -120,7 +108,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
      * currentColor, so this colour — the design's muted ink — is the caret's.
      */
     public record hrt_caret() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 display: flex;
@@ -135,7 +122,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     /** An open node's caret: the chevron turned a quarter to point at the children, in the primary ink. */
     public record hrt_caret_open() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return """
                 transform: rotate(90deg);
                 """;
@@ -157,7 +143,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
      * folders are drawn in currentColor, so this colour is the design's muted ink.
      */
     public record hrt_folder() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Label.class, Type.Scale.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 display: flex;
@@ -171,7 +156,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     /** An open folder takes the primary ink, as the open caret does. */
     public record hrt_folder_open() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return ""; }
     }
 
@@ -193,7 +177,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     /** THE MASK. Over the rows, in the wrap: the design's backdrop — a wash that reads as unavailable — focusable so the keys stop here. */
     public record hrt_mask() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Backdrop.class, Color.Surface.class)); }
         @Override public String body() { return """
                 position: absolute;
                 left: 0; top: 0; right: 0; bottom: 0;
@@ -205,7 +188,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     /** THE PANEL: the tree's box for the domain's element, centred by the sheet — a raised plate under the overlay's shadow. */
     public record hrt_panel() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Overlay.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 position: absolute;
                 box-sizing: border-box;
@@ -223,8 +205,6 @@ public record RelTreeStyles() implements CssGroup<RelTreeStyles> {
 
     /** The current row: the design's current surface and ink, and the ring in the cursor's colour — painted on the row and never on the cell. */
     public record hrt_current() implements CssClass<RelTreeStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Current.class, Color.Surface.class), of(Current.class, Color.Ink.class)); }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Hairline.class, Color.Edge.class)); }
         @Override public String body() { return """
                 outline-color: var(--hrt-cursor-color, color-mix(in srgb, %s 45%%, %s));
                 """.formatted(RING_COLOUR, HAIRLINE);

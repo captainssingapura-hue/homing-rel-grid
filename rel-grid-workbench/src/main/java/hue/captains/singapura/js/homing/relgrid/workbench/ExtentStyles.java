@@ -2,18 +2,10 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Box.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Feedback.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * The Colour Extents bench's looks: a table whose rows are scaled words and
@@ -42,7 +34,6 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
 
     /** A column head: the extent, as a number. */
     public record wb_extent_head() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Kicker.class, Type.Scale.class), of(Kicker.class, Type.Weight.class), of(Muted.class, Color.Ink.class), of(Code.class, Type.Face.class)); }
         @Override public String body() { return """
                 text-align: center;
                 padding: 2px 0;
@@ -52,7 +43,6 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
 
     /** A row label: the pair, in the code face. */
     public record wb_extent_label() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Code.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: center;
@@ -64,7 +54,6 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
 
     /** Every cell: a small box the pair's word colours; the extent is the element's. */
     public record wb_extent_cell() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 min-height: 30px;
                 display: flex;
@@ -80,43 +69,31 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
 
     /** Success on an ink: failure at −1, an unremarkable mark at 0, success at 1. */
     public record wb_x_success_ink() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears()   { return List.of(of(Success.class, Color.Ink.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Success.class, Color.Ink.class)); }
         @Override public String body() { return ""; }
     }
 
     /** A danger wash; turned the other way, safety's; at zero, nothing. Danger's own axis — not success reversed. */
     public record wb_x_danger_surface() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears()   { return List.of(of(Danger.class, Color.Surface.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Danger.class, Color.Surface.class)); }
         @Override public String body() { return ""; }
     }
 
     /** The accent as a fill: a grey fill at −1, nothing at 0, the accent at 1. */
     public record wb_x_primary_surface() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears()   { return List.of(of(Primary.class, Color.Surface.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Primary.class, Color.Surface.class)); }
         @Override public String body() { return ""; }
     }
 
     /** The accent as emphasis: the muted ink at −1, the body ink at 0, the accent at 1. */
     public record wb_x_primary_ink() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears()   { return List.of(of(Primary.class, Color.Ink.class), of(Label.class, Type.Weight.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return ""; }
     }
 
     /** Elevation as a number: recessed at −1, the page at 0, raised at 1 — with the raised edge, so the box shows where its surface is the page's. */
     public record wb_x_raised_surface() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears()   { return List.of(of(Raised.class, Color.Surface.class), of(Hairline.class, Color.Edge.class), of(Control.class, Shape.Rule.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Raised.class, Color.Surface.class)); }
         @Override public String body() { return ""; }
     }
 
     /** Warning on an edge: calm at −1, the hairline at 0, the warning at 1. */
     public record wb_x_warning_edge() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears()   { return List.of(of(Warning.class, Color.Edge.class), of(Control.class, Shape.Rule.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Warning.class, Color.Edge.class)); }
         @Override public String body() { return """
                 border-width: 2px;
                 """;
@@ -132,10 +109,6 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
      * animation, the property itself interpolates.
      */
     public record wb_extent_card() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(
-                of(Raised.class, Color.Surface.class), of(Warning.class, Color.Edge.class), of(Control.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class),
-                of(Primary.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
-        @Override public List<? extends Wearable> extents() { return List.of(of(Raised.class, Color.Surface.class), of(Warning.class, Color.Edge.class), of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return """
                 border-width: 2px;
                 padding: 18px 20px;
@@ -146,7 +119,6 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
     }
 
     public record wb_extent_card_title() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Heading.class, Type.Face.class), of(Heading.class, Type.Scale.class), of(Heading.class, Type.Weight.class)); }
         @Override public String body() { return """
                 margin: 0 0 6px 0;
                 """;
@@ -155,7 +127,6 @@ public record ExtentStyles() implements CssGroup<ExtentStyles> {
 
     /** The slider row: the range input and the number it is at. */
     public record wb_extent_slider() implements CssClass<ExtentStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Code.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: center;

@@ -2,18 +2,10 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Box.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * The copy panel's looks, typed. Laid out for the SMALLEST box the grid will
@@ -26,7 +18,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     public static final DishCopyStyles INSTANCE = new DishCopyStyles();
 
     public record wb_copy() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class)); }
         @Override public String body() { return """
                 display: flex;
                 flex-direction: column;
@@ -51,7 +42,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_title() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Label.class, Type.Weight.class)); }
         @Override public String body() { return """
                 font-size: 14px;
                 """;
@@ -59,7 +49,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_sub() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -76,7 +65,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_opt() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Label.class, Type.Weight.class)); }
         @Override public String body() { return """
                 flex: 1 1 0;
                 padding: 5px 0;
@@ -92,7 +80,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     /** A format under the pointer or the focus. Worn beside wb_copy_opt. */
     public record wb_copy_opt_hot() implements CssClass<DishCopyStyles> {
         @Override public String pseudoState() { return ":is(:hover, :focus)"; }
-        @Override public List<? extends Wearable> wears() { return List.of(of(Current.class, Color.Edge.class), of(Current.class, Color.Surface.class)); }
         @Override public String body() { return """
                 outline: none;
                 """;
@@ -101,7 +88,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
 
     /** One line, for whichever format is under the focus or the pointer. */
     public record wb_copy_hint() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 white-space: nowrap;
                 overflow: hidden;
@@ -111,7 +97,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_preview() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Control.class, Shape.Corner.class), of(Muted.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 flex: 1 1 auto;
                 min-height: 0;
@@ -125,7 +110,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_foot() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: center;
@@ -137,7 +121,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_label() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: center;
@@ -165,7 +148,6 @@ public record DishCopyStyles() implements CssGroup<DishCopyStyles> {
     }
 
     public record wb_copy_cancel() implements CssClass<DishCopyStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Kicker.class, Type.Scale.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class), of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 font: inherit;
                 padding: 2px 9px;

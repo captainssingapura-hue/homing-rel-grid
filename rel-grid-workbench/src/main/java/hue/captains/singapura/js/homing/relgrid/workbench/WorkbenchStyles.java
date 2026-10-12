@@ -3,19 +3,11 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
 import hue.captains.singapura.js.homing.core.CssVar;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 import java.util.Set;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Box.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /** The bench widgets' chrome: a column root, a scrolling host, a hint, a button bar, a readout. */
 public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
@@ -43,7 +35,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
      * anything no longer fits, which is the host's geometry and not the grid's.
      */
     public record wb_host() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 flex: 1;
                 min-height: 240px;
@@ -79,7 +70,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
     }
 
     public record wb_hint() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return "";
         }
     }
@@ -94,7 +84,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
     }
 
     public record wb_btn() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class), of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 padding: 4px 10px;
                 cursor: pointer;
@@ -111,7 +100,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
      * the pane scrolls.
      */
     public record wb_han_host() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class)); }
         /** The width of the columns shown, handed in by the widget that knows which they are. */
         @Override public Set<CssVar> runtimeVars() { return Set.of(new CssVar("--wb-han-width")); }
         @Override public String body() { return """
@@ -127,7 +115,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     /** A host exactly the table's size — the endless table's window: nothing scrolls natively, the wheel is the window's. */
     public record wb_window_host() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 align-self: flex-start;
@@ -140,7 +127,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     /** The Han Article's editor: plain text, as wide as the squares below it, in the same face. */
     public record wb_han_text() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 align-self: flex-start;
@@ -157,7 +143,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     /** The JSON Tree bench's input: a monospace textarea that fills the pane and scrolls. */
     public record wb_json_text() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Code.class, Type.Face.class), of(Code.class, Type.Scale.class)); }
         @Override public String body() { return """
                 flex: 1 1 auto;
                 min-height: 120px;
@@ -174,7 +159,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     /** A one-line text input on a bench's bar — a pointer to reveal. */
     public record wb_input() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class), of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Code.class, Type.Face.class), of(Code.class, Type.Scale.class)); }
         @Override public String body() { return """
                 padding: 3px 6px;
                 min-width: 160px;
@@ -183,7 +167,6 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
     }
 
     public record wb_status() implements CssClass<WorkbenchStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Code.class, Type.Face.class), of(Code.class, Type.Scale.class), of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 white-space: pre-line;
                 max-height: 90px;

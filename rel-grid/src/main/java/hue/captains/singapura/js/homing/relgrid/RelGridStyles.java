@@ -3,17 +3,10 @@ package hue.captains.singapura.js.homing.relgrid;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.util.CssClassName;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
  * RFC 0050 · Episode 2 — the grid's LOOKS, typed. One class per thing the
@@ -66,17 +59,19 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     public static final RelGridStyles INSTANCE = new RelGridStyles();
 
-    // ── the words the channels carry — the ring, the selection, the lattice — by name, for anything that draws from a channel ──
+    // ── what the channels carry — the ring, the selection, the lattice — by name, for anything that draws from a channel.
+    //    Each takes the ink the grid stands on, until the grid wears the house's look: a ring in the ink, a lattice
+    //    and a selection washed with it - seen in every theme, naming no colour. ──
 
-    public static final String RING_COLOUR  = of(Focus.class, Color.Edge.class).var("outline-color");
-    public static final String RING_BORDER  = of(Focus.class, Color.Edge.class).var("border-color");
-    public static final String RING_WIDTH   = of(Focus.class, Shape.Rule.class).var("outline-width");
-    public static final String RING_STYLE   = of(Focus.class, Shape.Rule.class).var("outline-style");
-    public static final String RING_OFFSET  = of(Focus.class, Shape.Rule.class).var("outline-offset");
-    public static final String RING_GLOW    = of(Focus.class, Shape.Shadow.class).var();
-    public static final String LATTICE_LINE = of(Lattice.class, Color.Edge.class).var("border-color");
-    public static final String SEL_SURFACE  = of(Selected.class, Color.Surface.class).var("background-color");
-    public static final String SEL_INK      = of(Selected.class, Color.Ink.class).var();
+    public static final String RING_COLOUR  = "currentColor";
+    public static final String RING_BORDER  = "currentColor";
+    public static final String RING_WIDTH   = "2px";
+    public static final String RING_STYLE   = "solid";
+    public static final String RING_OFFSET  = "-2px";
+    public static final String RING_GLOW    = "0 0 0 1px color-mix(in srgb, currentColor 20%, transparent)";
+    public static final String LATTICE_LINE = "color-mix(in srgb, currentColor 18%, transparent)";
+    public static final String SEL_SURFACE  = "color-mix(in srgb, currentColor 12%, transparent)";
+    public static final String SEL_INK      = "inherit";
 
     // ── the wrapper: the positioned parent, and the frame that catches the focus ──
 
@@ -100,7 +95,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      */
     public record hrg_frame() implements CssClass<RelGridStyles> {
         @Override public String pseudoState() { return "::after"; }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Lattice.class, Color.Edge.class)); }
         @Override public String body() { return """
                 content: "";
                 position: absolute;
@@ -123,7 +117,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      */
     public record hrg_lit() implements CssClass<RelGridStyles> {
         @Override public String pseudoState() { return ":focus-within"; }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 --hrg-cursor-color: %s;
                 --hrg-frame-shadow: inset 0 0 0 1px %s, %s;
@@ -141,7 +134,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * collapsed border — the table's — never does.
      */
     public record hrg_table() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
         @Override public String body() { return """
                 border-collapse: separate;
                 border-spacing: 0;
@@ -155,7 +147,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     /** A header cell: the raised surface in the muted ink at the label's weight, drawing its share of the lattice. */
     public record hrg_th() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Muted.class, Color.Ink.class), of(Label.class, Type.Weight.class), of(Lattice.class, Color.Edge.class), of(Lattice.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 position: relative;
                 text-align: left;
@@ -203,7 +194,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     /** The guide a header drag draws: one segment per box of the extent, in fixed coordinates the drag sets, in the primary surface. */
     public record hrg_resize_guide() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Surface.class)); }
         @Override public String body() { return """
                 position: fixed;
                 top: var(--hrg-guide-top);
@@ -224,7 +214,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * column.
      */
     public record hrg_td() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Lattice.class, Color.Edge.class), of(Lattice.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 padding: 0;
                 position: relative;
@@ -241,7 +230,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * wears the group's state — cursor, selection — mirrored from the slots.
      */
     public record hrg_merge() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 position: absolute;
                 z-index: 30;
@@ -262,7 +250,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * holds control is the one with the ring.
      */
     public record hrg_edit() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 position: absolute;
                 z-index: 50;
@@ -281,7 +268,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * share of the lattice like any slot.
      */
     public record hrg_gutter() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Muted.class, Color.Ink.class), of(Lattice.class, Color.Edge.class), of(Lattice.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 position: sticky;
                 left: 0;
@@ -320,7 +306,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * replaces: the context stays.
      */
     public record hrg_mask() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Backdrop.class, Color.Surface.class)); }
         @Override public String body() { return """
                 position: absolute;
                 left: 0; top: 0; right: 0; bottom: 0;
@@ -332,7 +317,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     /** THE PANEL: the grid's box for the domain's element. A raised plate under the overlay's shadow, scrolling inside itself. */
     public record hrg_panel() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Overlay.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 position: absolute;
                 box-sizing: border-box;
@@ -425,7 +409,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * selection transparent without touching a slot.
      */
     public record hrg_sel() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> reads() { return List.of(of(Selected.class, Color.Surface.class), of(Selected.class, Color.Ink.class)); }
         @Override public String body() { return """
                 background-color: var(--hrg-sel-color, %s);
                 color: var(--hrg-sel-ink, %s);
@@ -441,7 +424,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * dashed while the cell is deep, so the handover is visible.
      */
     public record hrg_cursor() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Rule.class), of(Lattice.class, Color.Edge.class)); }
         @Override public String body() { return """
                 outline-width: %s;
                 outline-style: var(--hrg-cursor-style, %s);

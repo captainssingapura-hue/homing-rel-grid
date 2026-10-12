@@ -145,11 +145,6 @@
         </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-designs</artifactId>
-            <version>${homing.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-site-mpa-standard</artifactId>
             <version>${homing.components.version}</version>
         </dependency>
