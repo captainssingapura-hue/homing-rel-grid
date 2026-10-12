@@ -21,10 +21,10 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  *
  * <p><b>The registry rule is the cell's.</b> Asked once per presentation of
  * the column, placed, forgotten when the column leaves the column view, asked
- * again if it returns; never disposed by the grid. A relation with no
- * {@code headerFor} gets the grid's own text in the slot — the label the
- * relation declares through {@code labels()}, or the column's name — which
- * is the header a plain relation has always had.</p>
+ * again if it returns; never disposed by the grid. The grid writes no text of
+ * its own in a header slot: a relation whose header is only labels answers the
+ * stock label header cells ({@code RelGridLabels}, rel-grid-cells), and a grid
+ * whose header is shown refuses a relation with no {@code headerFor}.</p>
  *
  * <p>Later, the same shape carries map 26: a header cell that answers
  * {@code colSpan()} is placed over several header slots, as a merged cell is

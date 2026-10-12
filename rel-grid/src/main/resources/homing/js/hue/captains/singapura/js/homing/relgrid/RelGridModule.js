@@ -29,7 +29,7 @@
 //                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
 //                         // Dissolving it is the host's. Never a cell's element.
 //       relation,         // { view(intent?), columns(), cellFor(pk, column) } — and, optionally,
-//                         // readOnlyColumns(), labels(), headerFor(column). See RootRelationContract.
+//                         // readOnlyColumns(), headerFor(column). See RootRelationContract.
 //                         // ONE ROOT: view() answers the rows to PRESENT now, in order — the whole
 //                         // of a static relation, a window of an endless one. The grid asks it at
 //                         // construction and holds what it answered, and no other list; there is
@@ -49,12 +49,12 @@
 //       header?,          // { show?, sticky? } — grid chrome, the host's, read once (map 12).
 //                         // sticky: the header stays at the top of whatever scrolls the table,
 //                         // and the cursor is revealed clear of it. What a header SAYS is the
-//                         // relation's: labels(), or a header cell from headerFor(column), placed
-//                         // in the <th> as a cell is placed in a <td> (law 86). No labels here.
+//                         // relation's: a header cell from headerFor(column), placed in the <th>
+//                         // as a cell is placed in a <td> (law 86) - a label is a stock header
+//                         // cell's (RelGridLabels, rel-grid-cells). The grid writes no text there:
+//                         // a header shown needs header cells, and the grid refuses without them.
 //       stickyInset?,     // () → px: a band the HOST keeps stuck above the table — a group's
 //                         // header — that a revealed slot must clear. Geometry, asked when needed
-//       overflow?,        // wrap | clip | ellipsis — what a slot does with content
-//                         // too wide for it. Default ellipsis.
 //       columnView?,      // a subset of relation.columns() — the column axis IS listed. A
 //                         // relation may declare columns it shows only sometimes. (There is
 //                         // no rowView: what is presented is what relation.view() answers,
@@ -150,12 +150,15 @@ class RelGrid {
         this._cbArranged = opts.onArranged || null;
         this._destroyed = false;
         var head = opts.header || {};
-        if (head.labels) throw new Error("[RelGrid] header.labels is gone: what a column is called is the relation's — labels(), or headerFor(column) (map 12, law 86)");
-        // What a column is CALLED: the relation's, read once (structure). A relation that
-        // answers header cells says it in the cell; a plain one in labels(); else the name.
-        var labels = (typeof r.labels === "function") ? (r.labels() || {}) : {};
-        this._labelOf = function (c) { return Object.prototype.hasOwnProperty.call(labels, c) ? labels[c] : c; };
-        this._headerFor = (typeof r.headerFor === "function") ? function (c) { return r.headerFor(c); } : null;
+        if (head.labels) throw new Error("[RelGrid] header.labels is gone: what a column is called is the relation's header cell, from headerFor(column) (map 12, law 86)");
+        if (opts.overflow !== undefined)
+            throw new Error("[RelGrid] overflow is gone: what a cell does with text too wide for its column is the cell's own - RelGridTextCell({ overflow })");
+        // What a column is CALLED is said by the relation's header cell; the grid writes no text of its own,
+        // and a header hidden asks for none.
+        this._headerFor = (head.show !== false && typeof r.headerFor === "function") ? function (c) { return r.headerFor(c); } : null;
+        if (head.show !== false && !this._headerFor)
+            throw new Error("[RelGrid] a header shown is the relation's header cells: answer headerFor(column) - RelGridLabels (rel-grid-cells) answers labels"
+                    + ((typeof r.labels === "function") ? "; labels() is no longer read" : "") + " - or make the grid with header: { show: false }");
         // The column constraint: read ONCE, here, because it is structure and
         // not a question about a moment. Absent means no constraint.
         var readOnly = new Set();
@@ -174,7 +177,7 @@ class RelGrid {
             rowNumbers: opts.rowNumbers === true,
             onGutterClick:  function (i) { self._gestures.onGutterClick(i); },
             showHeader: head.show !== false, stickyHeader: head.sticky === true, stickyInset: opts.stickyInset || null,
-            overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
+            resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._gestures.onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._gestures.onDblClick(i, j); },
             onCellDown:     function (i, j, mods) { self._gestures.onDown(i, j, mods); },
@@ -233,8 +236,8 @@ class RelGrid {
     // ── the arrangement cycle: structure, then re-place ────────────────────
 
     _arrange(kind) {
-        var maps = this._maps, headers = [], ids = [], i, j, id;
-        for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
+        var maps = this._maps, columns = [], ids = [], i, j, id;
+        for (var j0 = 0; j0 < maps.cols(); j0++) columns.push(maps.columnAt(j0));
         // One ask per identity per presentation — and every ask BEFORE a slot moves:
         // a refusal here leaves the pass with nothing changed, and the maps undo the View.
         // The header cells first, one per presented column, when the relation answers them.
@@ -246,7 +249,7 @@ class RelGrid {
                 ids.push(id);
             }
         }
-        this._layout.render({ headers: headers, rows: maps.rows(), labelled: !this._headerFor });
+        this._layout.render({ columns: columns, rows: maps.rows() });
         this._layout.setColWidths(this._widths.positional());   // widths ride identity onto the new positions
         // The header cells into the header slots; whatever column left the view is forgotten.
         if (this._headerFor) {

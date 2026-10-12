@@ -85,7 +85,7 @@ class RelGridGutterTest extends JsModuleTestBase {
                     if (F.edges.join() !== 'left' || F.grid.cursor().column !== 'ingredient') return false;
                     // Widths, header cells and labels are by column; the gutter is none — the fixture's
                     // helpers count from the first cell, which is the number here, so the header is read by hand.
-                    if (F.headerRow().children[1].textContent !== 'ingredient' || F.grid.columnWidth('ingredient') !== null) return false;
+                    if (F.headText(1) !== 'ingredient' || F.grid.columnWidth('ingredient') !== null) return false;
                     F.grid.setColumnWidth('ingredient', 120);
                     var cols_ = F.table().children[0];                                 // the colgroup: the gutter's col, then the columns'
                     if (cols_.children.length !== 3 || cols_.children[1].style.getPropertyValue('--hrg-col-w') !== '120px') return false;

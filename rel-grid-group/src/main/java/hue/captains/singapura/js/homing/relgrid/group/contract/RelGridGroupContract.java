@@ -52,8 +52,9 @@ package hue.captains.singapura.js.homing.relgrid.group.contract;
  * own at the very top, above the first fence — a grid over the members'
  * columns that presents nothing, the illustration's trick — whose header
  * band is the group's, resize handles and all, levelled with the rest; every
- * member is built with none. Its labels are the first member's; its columns
- * must be every member's, checked once at construction. {@code header:
+ * member is built with none. What it says is the group's own header cells
+ * ({@code headerFor}), never a member's; its columns must be every member's,
+ * checked once at construction. {@code header:
  * 'each'}: the group adds no table and every member keeps whatever its own
  * options say.</p>
  *

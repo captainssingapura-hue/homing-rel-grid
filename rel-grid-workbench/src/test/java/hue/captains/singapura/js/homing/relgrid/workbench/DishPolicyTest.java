@@ -1,6 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
-import hue.captains.singapura.js.homing.relgrid.RelGridStockStyles;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridStockStyles;
 import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ class DishPolicyTest extends JsModuleTestBase {
 
     /** The typed classes every domain module of the bench imports as handles, as the server would emit them. */
     static final String STYLES = RelGridTestDom.handles(RelGridStockStyles.INSTANCE, DishStarsStyles.INSTANCE,
-            HanCellStyles.INSTANCE, HanFenceStyles.INSTANCE, OutletFenceStyles.INSTANCE, DishCopyStyles.INSTANCE, DishViewStyles.INSTANCE);
+            HanCellStyles.INSTANCE, HanFenceStyles.INSTANCE, OutletFenceStyles.INSTANCE, DishCopyStyles.INSTANCE, DishViewStyles.INSTANCE) + RelGridTestDom.LOOK;
 
     /** The DomOpsParty — the real one, from homing-core-js: every cell, fence and panel mints on a branch of it. */
     static final String[] PARTY = {
@@ -151,7 +151,8 @@ class DishPolicyTest extends JsModuleTestBase {
         js.eval("js", DOM_STUB);
         for (String m : PARTY) loadModule(m);
         js.eval("js", STYLES);
-        loadModule(GRID_DIR + "RelGridStockCellsModule.js");
+        loadModule(GRID_DIR + "cells/RelGridStockCellsModule.js");
+        loadModule(GRID_DIR + "cells/RelGridLabelsModule.js");
         loadModule(GRID_DIR + "protocol/RelGridProtocolModule.js");   // the formats answer with the protocol's content record
         loadModule(BENCH_DIR + "DishClipboardFormatsModule.js");
         loadModule(BENCH_DIR + "DishStarsCellModule.js");

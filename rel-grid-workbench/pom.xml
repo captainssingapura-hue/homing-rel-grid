@@ -44,6 +44,11 @@
         </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-cells</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid-protocol</artifactId>
             <version>${project.version}</version>
         </dependency>

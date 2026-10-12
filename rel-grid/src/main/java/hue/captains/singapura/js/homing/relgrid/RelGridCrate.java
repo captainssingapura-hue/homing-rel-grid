@@ -42,7 +42,6 @@ public final class RelGridCrate implements Crate {
                 CrateEntry.of(GridFrameModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The looks, typed: generated CSS modules, one for the grid's chrome and one for the stock cell.
                 CrateEntry.of(RelGridStyles.INSTANCE),
-                CrateEntry.of(RelGridStockStyles.INSTANCE),
                 CrateEntry.of(RelGridHeaderDragModule.INSTANCE),
                 CrateEntry.of(RelGridRevealModule.INSTANCE),
                 CrateEntry.of(RelGridSlotsModule.INSTANCE),
@@ -59,7 +58,6 @@ public final class RelGridCrate implements Crate {
                 CrateEntry.of(RelGridChannelModule.INSTANCE),
                 CrateEntry.of(RelGridGesturesModule.INSTANCE),
                 CrateEntry.of(RelGridCellsModule.INSTANCE),
-                CrateEntry.of(RelGridStockCellsModule.INSTANCE),
                 CrateEntry.of(RelGridModule.INSTANCE));
     }
 }

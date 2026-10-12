@@ -39,6 +39,7 @@
     <modules>
         <module>rel-channel</module>
         <module>rel-grid-protocol</module>
+        <module>rel-grid-cells</module>
         <module>rel-grid</module>
         <module>rel-grid-house</module>
         <module>rel-grid-selection</module>

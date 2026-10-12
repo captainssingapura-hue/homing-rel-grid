@@ -31,6 +31,9 @@
 //       header?,            // 'group' (default): ONE header, the group's, at the top above every
 //                           // fence, and no member shows its own; 'each': every member keeps
 //                           // its own header option, and the group adds none
+//       headerFor?,         // (column) → the header cell for the group's header: the group's own,
+//                           // never a member's - a member's would sort that member alone. Needed
+//                           // when the header is the group's; RelGridLabels answers labels
 //       stickyHeader?,      // true: the group's header stays at the top of whatever scrolls the
 //                           // group, and every member reveals its cursor clear of it. 'group'
 //                           // mode only: in 'each' mode NO header sticks — a member's own
@@ -129,7 +132,7 @@ class RelGridGroup {
             if (!mv.grid) throw new Error("[RelGridGroup] member '" + mv.id + "' has no grid options");
         }
         this._mint = new RelGridGroupMint({
-            branch: this._branch, root: this._root, headerMode: headerMode, sticky: sticky, design: opts.design,
+            branch: this._branch, root: this._root, headerMode: headerMode, sticky: sticky, design: opts.design, headerFor: opts.headerFor,
             hooks: {
                 onResized:  function (id, column, px) { self._onMemberResized(id, column, px); },
                 onReleased: function (id) { self._level(id); },

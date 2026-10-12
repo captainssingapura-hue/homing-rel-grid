@@ -1,7 +1,8 @@
 // =============================================================================
-// RelGridStockCellsModule — RFC 0050 · Episode 2's stock cells. DOMAIN-side code
-// that ships with the grid: a relation's cell manager may build from these,
-// and the grid never imports them.
+// RelGridStockCellsModule — RFC 0050 · Episode 2's stock text cell, one of the
+// out-of-the-box cells (rel-grid-cells, Appendix: The Frame). DOMAIN-side code:
+// a relation's cell manager may build from it, through the same factory as any
+// domain's cell, privileged by nothing; the grid never imports it.
 //
 // A CELL IS A NOUN. It holds what it shows, and it OWNS what it is made of:
 // its element is minted on the branch it was handed — a DomOpsParty branch
@@ -32,7 +33,7 @@
 // store, fire twice, or fire after the grid is gone. While deep the cell owns
 // the keyboard: keys inside its input do not reach the grid.
 //
-//   new RelGridTextCell({ branch, value?, onCommit? })
+//   new RelGridTextCell({ branch, value?, onCommit?, overflow? })
 //     · branch — the cell's OWN DomOpsParty branch (unactivated; the cell
 //       activates it, and dispose() dissolves it). The owner mints one per
 //       cell from a branch of its own.
@@ -42,6 +43,9 @@
 //       owner decides (persist, replicate, refuse) and the cell shows whatever
 //       it then set()s. A cell without onCommit answers no to mayTakeControl,
 //       is never offered the handover, and the grid stays shallow.
+//     · overflow — what the cell does with text too wide for its column:
+//       'ellipsis' (the default), 'clip' or 'wrap'. The cell's own: a slot
+//       only places it.
 //
 // No focused node is ever removed by the cell: ending an edit detaches the
 // input's listeners FIRST, then repaints, then reports, then hands control
@@ -51,16 +55,30 @@
 //
 // A cell that cannot edit marks its element hrg-text-ro — the predicate map
 // 16 argues for (law 116): an uneditable cell has no resting affordance to be
-// missing, so the property has to be named. Whether it is painted is the
-// theme's business; the stock cell ships one muted rule as a default. And it
-// honours what the slot asks of its text: nowrap is inherited, the ellipsis
-// is read from --hrg-text-overflow — the grid's published property — because
-// the text is this element's, and the slot only clips.
+// missing, so the property has to be named. Whether it is painted is a
+// design's business.
 // =============================================================================
 
-// THE LOOKS ARE TYPED — RelGridStockStyles, the cell's own group, applied
-// through the css manager: hrg_text on the element, hrg_text_ro when it
-// cannot edit, hrg_text_edit on the editor.
+// ITS ROOM AND ITS OVERFLOW ARE ITS OWN — RelGridStockStyles: hrg_text on the
+// element, the overflow's class beside it, hrg_text_ro when it cannot edit,
+// hrg_text_edit on the editor. ITS INK, FACE AND WEIGHT ARE THE HOUSE'S: the
+// element and its editor wear the house's data cell, as a table's cells do.
+
+/** What a stock cell does with text too wide for its column: its own class, ellipsis unless it says otherwise. */
+function _hrgTextOverflow(choice, who) {
+    if (choice === undefined || choice === null || choice === "ellipsis") return hrg_text_ellipsis;
+    if (choice === "clip") return hrg_text_clip;
+    if (choice === "wrap") return hrg_text_wrap;
+    throw new Error("[" + who + "] overflow is 'ellipsis', 'clip' or 'wrap', not " + JSON.stringify(choice));
+}
+
+/** A leaf of the house, as a stock cell wears it: its ink and its type, never a table's rules or room. Made once per leaf. */
+function _hrgWearHouse(leaf, el) {
+    var looks = _hrgWearHouse._looks || (_hrgWearHouse._looks = {});
+    var look = looks[leaf] || (looks[leaf] = new Look(Object.freeze({ LEAF: leaf }), ROLE.STANDALONE));
+    look.wear(el, { only: ["color-ink", "type-face", "type-weight", "type-scale", "type-treatment"] });
+    return el;
+}
 
 class RelGridTextCell {
 
@@ -72,6 +90,7 @@ class RelGridTextCell {
         this._el = null;           // minted on first cellElement()
         this._value = (opts.value === undefined) ? null : opts.value;
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
+        this._overflow = _hrgTextOverflow(opts.overflow, "RelGridTextCell");
         this._mode = "none";
         this._input = null;        // minted on first editorElement(), kept
         this._editing = false;     // true between takeControl() and its settle
@@ -95,7 +114,8 @@ class RelGridTextCell {
     cellElement() {
         if (!this._el) {
             this._el = this._branch.createElement("cell", "div");
-            css.addClass(this._el, hrg_text);
+            css.addClass(this._el, hrg_text, this._overflow);
+            _hrgWearHouse("data-cell", this._el);
             if (!this._onCommit) css.addClass(this._el, hrg_text_ro);
             this._paint();
         }
@@ -134,6 +154,7 @@ class RelGridTextCell {
         if (!this._input) {
             this._input = this._branch.createElement("editor", "input");
             css.addClass(this._input, hrg_text_edit);
+            _hrgWearHouse("data-cell", this._input);
         }
         return this._input;
     }

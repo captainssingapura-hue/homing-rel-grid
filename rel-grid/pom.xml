@@ -110,6 +110,13 @@
             <version>${homing.core.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The stock cells, which the tests' fixture relation builds from: test scope, so the grid never depends on them. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-cells</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -43,11 +43,12 @@ class RelGridGroupTest extends JsModuleTestBase {
                 opts = opts || {};
                 var data = {}, cells = new Map(), commits = [];
                 var cellsB = hostBranch(), seq = 0;                        // the DOMAIN's branch, activated as a relation activates its own: a sub-branch per cell
+                var heads = new RelGridLabels({ branch: testBranch(), labels: opts.labels || {} });   // what its columns are called, as a member's own header says
                 rows.forEach(function (r) { data[r[0]] = { ingredient: r[1], calories: r[2] }; });
                 var relation = {
                     view:    function (intent) { return intent ? null : Object.keys(data); },
                     columns: function () { return ['ingredient', 'calories']; },
-                    labels:  opts.labels ? function () { return opts.labels; } : undefined,   // law 86: the relation's
+                    headerFor: function (col) { return heads.headerFor(col); },        // law 86: the relation's
                     cellFor: function (pk, col) {
                         var k = pk + ' ' + col, c = cells.get(k);
                         if (!c) {
@@ -110,10 +111,12 @@ class RelGridGroupTest extends JsModuleTestBase {
                 var trailing = opts.trailing === undefined ? fenceCell('trailing') : opts.trailing;
                 var folds = [];
                 var branch = testBranch();
+                var groupHeads = new RelGridLabels({ branch: testBranch(), labels: opts.headerLabels || {} });
                 var group = new RelGridGroup({
                     container: container,
                     branch: branch,
                     design: TEST_DESIGN,
+                    headerFor: opts.headerFor || function (col) { return groupHeads.headerFor(col); },   // the group's own header cells
                     members: specs,
                     fence: trailing,
                     columnWidths: opts.columnWidths,
@@ -273,19 +276,25 @@ class RelGridGroupTest extends JsModuleTestBase {
                 (() => {
                     var f = groupFixture();
                     // 'group' (the default): a header table of the group's own at the top, presenting
-                    // nothing, with the first member's labels; no member shows one.
+                    // nothing, saying what the group's header cells say; no member shows one.
                     var ht = f.headerTable();
                     if (!ht || ht.tagName !== 'table') return false;
                     var thead = null, tbody = null;
                     for (var k = 0; k < ht.children.length; k++) { if (ht.children[k].tagName === 'thead') thead = ht.children[k]; if (ht.children[k].tagName === 'tbody') tbody = ht.children[k]; }
                     if (!thead || thead.children[0].children.length !== 2 || tbody.children.length !== 0) return false;
-                    if (thead.children[0].children[0].textContent !== 'ingredient') return false;
+                    if (thead.children[0].children[0].children[0].textContent !== 'ingredient') return false;   // the th's label header
                     if (f.theadOf('a') !== null || f.theadOf('b') !== null || f.theadOf('c') !== null) return false;
-                    // Labels come from the first member.
-                    var l = groupFixture({ specs: [memberSpec('a', [['mapo', 'tofu', 480]], { labels: { ingredient: 'Dish' } }), memberSpec('b', [['fish', 'cod', 560]])] });
+                    // The header cells are the group's own: never a member's labels.
+                    var l = groupFixture({ headerLabels: { ingredient: 'Dish' },
+                                           specs: [memberSpec('a', [['mapo', 'tofu', 480]], { labels: { ingredient: 'Plate' } }), memberSpec('b', [['fish', 'cod', 560]])] });
                     var lt = l.headerTable(), lthead = null;
                     for (var q = 0; q < lt.children.length; q++) if (lt.children[q].tagName === 'thead') lthead = lt.children[q];
-                    if (lthead.children[0].children[0].textContent !== 'Dish') return false;
+                    if (lthead.children[0].children[0].children[0].textContent !== 'Dish') return false;
+                    // A group whose header is its own needs header cells of its own.
+                    var told = false;
+                    try { new RelGridGroup({ container: makeEl('div'), branch: testBranch(), design: TEST_DESIGN, members: [memberSpec('a', [['mapo', 'tofu', 480]])] }); }
+                    catch (e) { told = /the group's header says what the group's header cells say/.test(String(e)); }
+                    if (!told) return false;
                     // 'each': no table of the group's; every member keeps its own header option.
                     var g = groupFixture({ header: 'each' });
                     if (g.headerBox() !== null) return false;

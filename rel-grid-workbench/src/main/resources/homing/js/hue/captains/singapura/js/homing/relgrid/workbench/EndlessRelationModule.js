@@ -71,6 +71,12 @@ class EndlessRelation {
 
     columns() { return this._columns.slice(); }
 
+    /** The header cell for a column: a stock label header, made once on a branch of the relation's own. */
+    headerFor(col) {
+        if (!this._heads) this._heads = new RelGridLabels({ branch: this._branch.createBranch("heads"), labels: {} });
+        return this._heads.headerFor(col);
+    }
+
     readOnlyColumns() { return ["id"]; }
 
     cellFor(pk, col) {

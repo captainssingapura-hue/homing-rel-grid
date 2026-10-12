@@ -4,9 +4,9 @@
 // in; the slot matrix of one arrangement is RelGridSlots, and what is laid
 // OVER the slots — the editor's anchor, the mask and its panel, a merged
 // cell's host — is RelGridOverlays. Positional only — everything is addressed
-// by (i, j) and nothing here sees an identity; headers arrive as display
-// labels and widths arrive per visible position. It never touches slot
-// content: a slot's children are the domain's, placed by the facade.
+// by (i, j); the columns' identities arrive only to say the shape, and widths
+// arrive per visible position. It never touches slot content: a slot's
+// children are the domain's, a header slot's too, placed by the facade.
 //
 // It is the KEYBOARD HOST: the table is focusable, and the cursor and the
 // selection are painted on the slots at the facade's direction — and
@@ -25,26 +25,19 @@
 // design's it is made with, worn on what it makes - its box, its slots, its
 // overlays - and the cursor and the selection are RelGridMarks'.
 //
-//   new RelGridLayout({ container, branch, design, box?, label?, rowNumbers?, showHeader?, stickyHeader?, stickyInset?, overflow?,
+//   new RelGridLayout({ container, branch, design, box?, label?, rowNumbers?, showHeader?, stickyHeader?, stickyInset?,
 //                       onCellClick?, onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   stickyHeader: the header cells stay at the top of whatever scrolls the table, and a
 //                 revealed slot clears them; stickyInset: () → px of a band the HOST keeps stuck
 //                 above the table — a group's header — that a revealed slot must clear too
-//   render({ headers, rows, labelled? }) / setColWidths(widths) / slotAt(i, j) / headerSlotAt(j) / rows() / cols()
+//   render({ columns, rows }) / setColWidths(widths) / slotAt(i, j) / headerSlotAt(j) / rows() / cols()
 //   paintCursor(ij) / paintSelection(rects) / setDeep(on) / setMasked(on)
 //   focus() / revealSlot(i, j) / hasKeyboard() / el() / rowHeight()
 //   openOverlay(i, j) / closeOverlay() / overlay()
 //   openMask() / openPanel(el) / closePanel() / closeMask() / mask() / panel()
 //   openGroup(i, j, n) / groupAt(i, j) / placeGroups() / closeGroups() / groups()
 // =============================================================================
-
-/** wrap | clip | ellipsis — ellipsis unless the host says otherwise. */
-function _hrgOverflowClass(choice) {
-    if (choice === "wrap") return hrg_ov_wrap;
-    if (choice === "clip") return hrg_ov_clip;
-    return hrg_ov_ellipsis;
-}
 
 class RelGridLayout {
 
@@ -57,7 +50,7 @@ class RelGridLayout {
         this._branch = opts.branch;                           // the grid's own; the host dissolves it
         this._design = opts.design;                           // what wears every leaf of the frame; the layout never learns a class
         this._table = this._branch.createElement("table", "table");
-        css.addClass(this._table, hrg_table, _hrgOverflowClass(opts.overflow));
+        css.addClass(this._table, hrg_table);
         this._table.setAttribute("tabindex", "0");            // the keyboard host
         if (opts.label) this._table.setAttribute("aria-label", opts.label);
         // The resize gesture lives in RelGridHeaderDrag; wired per <th> at render.
@@ -124,7 +117,7 @@ class RelGridLayout {
     }
 
     /**
-     * The structure for a shape: { headers: string[], rows: n }. The merged
+     * The structure for a shape: { columns: string[], rows: n }. The merged
      * cells' hosts go first — spans are read afresh on every pass, and the
      * slots they marked are unmarked, since those slots may live on — then
      * the matrix: kept when the shape is unchanged, minted fresh when not.

@@ -322,35 +322,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
         }
     }
 
-    /**
-     * What a slot asks of content too wide for it: an ellipsis. Ellipsis by
-     * default, because wrapping makes one row six lines tall while its
-     * neighbours stay at one. nowrap is inherited by every cell; the ellipsis
-     * itself is the cell's to draw, from {@code --hrg-text-overflow} — the
-     * stock text cell does — because the text is the cell's element, not the
-     * slot's. It engages only once a column has a definite width.
-     */
-    public record hrg_ov_ellipsis() implements CssClass<RelGridStyles> {
-        @Override public String body() { return """
-                --hrg-text-overflow: ellipsis;
-                white-space: nowrap;
-                """;
-        }
-    }
-
-    /** Clip without an ellipsis. */
-    public record hrg_ov_clip() implements CssClass<RelGridStyles> {
-        @Override public String body() { return """
-                white-space: nowrap;
-                """;
-        }
-    }
-
-    /** Wrap — what plain CSS does. A predicate with nothing to add. */
-    public record hrg_ov_wrap() implements CssClass<RelGridStyles> {
-        @Override public String body() { return ""; }
-    }
-
     /** The leading slot of a merged cell. A fact: the lattice is shed from it, and the group's host draws the rules. */
     public record hrg_lead() implements CssClass<RelGridStyles> {
         @Override public String body() { return ""; }
@@ -400,7 +371,7 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
                 new hrg_td(), new hrg_merge(), new hrg_edit(), new hrg_gutter(), new hrg_gutter_head(), new hrg_gutter_col(),
                 new hrg_mask(), new hrg_panel(), new hrg_scratch(),
                 // states, after the looks they qualify
-                new hrg_fixed(), new hrg_ov_ellipsis(), new hrg_ov_clip(), new hrg_ov_wrap(),
+                new hrg_fixed(),
                 new hrg_lead(), new hrg_covered(), new hrg_group_end(),
                 new hrg_sel(), new hrg_cursor(), new hrg_deep(), new hrg_masked());
     }

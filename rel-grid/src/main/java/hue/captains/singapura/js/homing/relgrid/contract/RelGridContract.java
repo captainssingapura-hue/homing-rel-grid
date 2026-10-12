@@ -14,7 +14,7 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  *                           // dissolving it is the host's. A cell's element is never on it.
  *       relation,           // RootRelationContract shape: view(intent?), columns(), cellFor(pk, column)
  *       label?,             // aria-label for the table
- *       header?,            // { show?, sticky? } — grid chrome; what a header SAYS is the relation's (labels(), headerFor)
+ *       header?,            // { show?, sticky? } — grid chrome; what a header SAYS is the relation's header cells (headerFor)
  *       stickyInset?,       // () → px: a band the host keeps stuck above the table, which a revealed slot clears
  *       ask?,               // (question) → thenable — THE CHANNEL (ext4, ext6)
  *       onArranged?,        // (kind) — after every placement pass

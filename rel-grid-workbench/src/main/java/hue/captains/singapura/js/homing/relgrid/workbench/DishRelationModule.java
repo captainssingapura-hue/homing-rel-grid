@@ -5,7 +5,8 @@ import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
-import hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridStockCellsModule;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridLabelsModule;
 
 import java.util.List;
 
@@ -37,6 +38,7 @@ public record DishRelationModule() implements DomModule<DishRelationModule> {
         // tell which is which.
         return ImportsFor.<DishRelationModule>builder()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells
                 .add(new ModuleImports<>(List.of(new DishStarsCellModule.DishStarsCell()), DishStarsCellModule.INSTANCE))
                 .build();
     }

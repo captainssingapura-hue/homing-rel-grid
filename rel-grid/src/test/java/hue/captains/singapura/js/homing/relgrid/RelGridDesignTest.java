@@ -29,7 +29,7 @@ class RelGridDesignTest extends JsModuleTestBase {
                 function wears(el, token) { return el.classList.contains('frame-' + token); }
                 function refusal(opts) {
                     var relation = { view: function () { return []; }, columns: function () { return ['a']; }, cellFor: function () { return null; } };
-                    var o = { container: makeEl('div'), branch: testBranch(), relation: relation };
+                    var o = { container: makeEl('div'), branch: testBranch(), relation: relation, header: { show: false } };
                     for (var k in opts) o[k] = opts[k];
                     try { new RelGrid(o); return null; } catch (e) { return String(e.message); }
                 }

@@ -12,6 +12,7 @@ import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
 import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import hue.captains.singapura.js.homing.relgrid.house.RelGridHouseCrate;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridCellsCrate;
 import hue.captains.singapura.js.homing.reltree.RelTreeCrate;
 import hue.captains.singapura.js.homing.server.ServerCrate;
 import hue.captains.singapura.js.homing.workspace.parties.WorkspacePartiesCrate;
@@ -41,7 +42,7 @@ public final class RelGridWorkbenchCrate implements Crate {
                 ServerCrate.INSTANCE,
                 // The grid under test, and the protocol it speaks: a domain answers
                 // through the protocol, so the bench depends on it directly.
-                RelGridCrate.INSTANCE, RelGridHouseCrate.INSTANCE,
+                RelGridCrate.INSTANCE, RelGridHouseCrate.INSTANCE, RelGridCellsCrate.INSTANCE,
                 RelGridProtocolCrate.INSTANCE,
                 // And the group the two group benches stack their tables in.
                 RelGridGroupCrate.INSTANCE,

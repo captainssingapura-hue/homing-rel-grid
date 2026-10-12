@@ -38,7 +38,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     if (typeof f.relation.get !== 'undefined') return false;   // there is nothing to read
                     var headerRow = f.headerRow();
                     if (headerRow.children.length !== 2) return false;
-                    if (headerRow.children[0].textContent !== 'ingredient') return false;
+                    if (f.headText(0) !== 'ingredient') return false;
                     if (f.tbody().children.length !== 3) return false;
                     for (var i = 0; i < maps.rows(); i++) for (var j = 0; j < maps.cols(); j++) {
                         var td = f.td(i, j);
@@ -147,9 +147,11 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     // knows what it owns: a stranger is refused at cellFor.
                     var asked = [], cellsB = hostBranch(), seq = 0;              // the domain's branch, a sub-branch per cell
                     var shown = ['r0', 'r1', 'r2'];                                // what the relation presents right now
+                    var heads = new RelGridLabels({ branch: testBranch() });
                     var relation = {
                         view:    function (intent) { return intent ? null : shown.slice(); },
                         columns: function () { return ['a', 'b']; },
+                        headerFor: function (col) { return heads.headerFor(col); },
                         cellFor: function (pk, col) {
                             if (!/^r([0-9]|[1-4][0-9])$/.test(pk)) throw new Error('no such row: ' + pk);
                             asked.push(pk + ' ' + col);

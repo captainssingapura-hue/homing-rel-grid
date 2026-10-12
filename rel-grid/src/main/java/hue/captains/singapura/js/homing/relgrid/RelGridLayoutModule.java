@@ -41,8 +41,8 @@ public record RelGridLayoutModule() implements DomModule<RelGridLayoutModule> {
                 // The looks, typed: every class the layout mints or paints.
                 .add(new ModuleImports<>(List.of(
                         new RelGridStyles.hrg_wrap(),
-                        new RelGridStyles.hrg_table(), new RelGridStyles.hrg_fixed(), new RelGridStyles.hrg_ov_ellipsis(),
-                        new RelGridStyles.hrg_ov_clip(), new RelGridStyles.hrg_ov_wrap(), new RelGridStyles.hrg_deep(), new RelGridStyles.hrg_masked()),
+                        new RelGridStyles.hrg_table(), new RelGridStyles.hrg_fixed(),
+                        new RelGridStyles.hrg_deep(), new RelGridStyles.hrg_masked()),
                         RelGridStyles.INSTANCE))
                 .build();
     }

@@ -5,8 +5,9 @@ import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
-import hue.captains.singapura.js.homing.relgrid.RelGridStockCellsModule;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridStockCellsModule;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridLabelsModule;
 
 import java.util.List;
 
@@ -37,6 +38,7 @@ public record OutletRelationModule() implements DomModule<OutletRelationModule> 
     public ImportsFor<OutletRelationModule> imports() {
         return ImportsFor.<OutletRelationModule>builder()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridGroupFold()), RelGridProtocolModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new OutletFenceStyles.wb_fence(), new OutletFenceStyles.wb_fence_name(),
                         new OutletFenceStyles.wb_fence_fold(), new OutletFenceStyles.wb_fence_fold_hot(),

@@ -51,7 +51,7 @@ class RelGridViewHandoverTest extends JsModuleTestBase {
                     for (var j = 0; j < 2; j++) {
                         var th = f.thAt(j);
                         for (var k = 0; k < th.children.length; k++)
-                            if (th.children[k].className !== 'hrg-resize-handle') return false;
+                            if (th.children[k].className !== 'hrg-resize-handle' && th.children[k].className.split(' ').indexOf('hrg-label') < 0) return false;
                     }
                     if (f.grid.handoverView() !== true) return false;
                     var q = f.handoverAsked();
@@ -59,7 +59,7 @@ class RelGridViewHandoverTest extends JsModuleTestBase {
                     if (Object.keys(q).length !== 0) return false;                 // the kind is the message
                     if (!f.grid.isPending()) return false;
                     // Still nothing on the header while the question is out.
-                    return f.thAt(0).children.length === 1 && f.thAt(1).children.length === 1;
+                    return f.thAt(0).children.length === 2 && f.thAt(1).children.length === 2;   // the label, and the handle
                 })()"""), "handoverView() asks a RelGridViewHandover with no payload, and no header wears anything");
     }
 

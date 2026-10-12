@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridStockStyles;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
@@ -39,7 +40,7 @@ public final class RelGridTestDom {
     public static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
             "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridMarksModule.js", "RelGridLayoutModule.js",
-            "RelGridCellsModule.js", "RelGridStockCellsModule.js",
+            "RelGridCellsModule.js", "cells/RelGridStockCellsModule.js", "cells/RelGridLabelsModule.js",
             "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridHeadersModule.js", "RelGridSpansModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
             "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
 
@@ -76,8 +77,19 @@ public final class RelGridTestDom {
             });
             """;
 
-    /** The grid's and the stock cell's handles, and the frame's leaves and a design, for every test that loads the grid's modules. */
-    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE) + FRAME;
+    /**
+     * The house's look as the stock cells wear it, for tests: a {@code Look} that wears its leaf as a class named for
+     * it - {@code look-data-cell} - and the one role the stock cells ask for. The real one is the house's; the cells
+     * only ask it to wear.
+     */
+    public static final String LOOK = """
+            var ROLE = Object.freeze({ STANDALONE: 'standalone' });
+            var Look = function (leaf, role) { this._leaf = leaf.LEAF; this._role = role; };
+            Look.prototype.wear = function (el) { el.classList.add('look-' + this._leaf); return el; };
+            """;
+
+    /** The grid's and the stock cells' handles, the frame's leaves and a design, and the look, for every test that loads the grid's modules. */
+    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE) + FRAME + LOOK;
 
     /** The DomOpsParty — the real one, from homing-core-js: base first, then the levels and the root singleton. */
     public static final String[] PARTY = {
@@ -131,6 +143,15 @@ public final class RelGridTestDom {
                         this.children.splice(i, 1);
                         if (__focused === c) { __focused = null; c.dispatch('blur', {}); }
                         c.parentNode = null; return c;
+                    },
+                    // Before a child, or last when there is none to stand before, as Node.insertBefore does.
+                    insertBefore: function (c, ref) {
+                        if (c.parentNode) c.parentNode.removeChild(c);
+                        var i = ref ? this.children.indexOf(ref) : -1;
+                        if (ref && i < 0) throw new Error("NotFoundError: the node before which to insert is not a child of this node");
+                        c.parentNode = this;
+                        if (i < 0) this.children.push(c); else this.children.splice(i, 0, c);
+                        return c;
                     },
                     replaceChild: function (nu, old) {
                         var i = this.children.indexOf(old);
@@ -252,14 +273,16 @@ public final class RelGridTestDom {
                 // The DOMAIN's branch: every cell's element is minted under it, never under the
                 // grid's. Activated here, as a relation activates its own.
                 var cellsBranch = hostBranch(), cellSeq = 0, mints = 0;
+                // The stock label headers, on a branch of the domain's own: what a column is called.
+                var heads = new RelGridLabels({ branch: testBranch(), labels: opts.labels || {} });
                 var relation = {
                     // ONE ROOT: the View is answered, never listed — the whole of it here, and a
                     // movement goes nowhere, so nothing is the answer and the rows stay.
                     view:    function (intent) { return intent ? null : (shown || Object.keys(data)); },
                     columns: function () { return ['ingredient', 'calories']; },
-                    // The relation's declarations, when a test names them: labels, header cells.
-                    labels:    opts.labels ? function () { return opts.labels; } : undefined,
-                    headerFor: opts.headerFor || undefined,
+                    // The header: the relation's header cells - a test's own, or the stock label
+                    // headers, with the labels a test names.
+                    headerFor: opts.headerFor || function (col) { return heads.headerFor(col); },
                     // What the relation presents from now on; the grid is told through the host.
                     show:    function (keys) { shown = keys; },
                     cellFor: function (pk, col) {
@@ -399,7 +422,14 @@ public final class RelGridTestDom {
                     }
                     return out.join(' ');
                 }
-                return { grid: grid, relation: relation, container: container, data: data,
+                // What a header slot says: the text of the label header placed in it, or null.
+                function headText(j) {
+                    var th = thAt(j);
+                    for (var k = 0; k < th.children.length; k++)
+                        if ((th.children[k].className || '').split(' ').indexOf('hrg-label') >= 0) return th.children[k].textContent;
+                    return null;
+                }
+                return { grid: grid, relation: relation, container: container, data: data, headText: headText,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
                          wrap: wrap, overlay: overlay, mask: mask, panel: panel,
