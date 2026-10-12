@@ -195,7 +195,7 @@ class RelGridResizeTest extends JsModuleTestBase {
                     var handle = th.children[th.children.length - 1];
                     handle.dispatch('mousedown', { clientX: 398 });
                     var guide = document.body.children[document.body.children.length - 1];
-                    if (!guide || guide.className !== 'hrg-resize-guide') return false;
+                    if (!guide || !guide.classList.contains('hrg-resize-guide') || !guide.classList.contains('frame-resize-guide')) return false;   // its mechanics, and its leaf as the design wears it
                     var top = guide.style.getPropertyValue('--hrg-guide-top'), h = guide.style.getPropertyValue('--hrg-guide-h');
                     handle.dispatch('keydown', { key: 'Escape' });
                     if (top !== '40px' || h !== '600px') return false;

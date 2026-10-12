@@ -113,6 +113,7 @@ class RelGridGroupTest extends JsModuleTestBase {
                 var group = new RelGridGroup({
                     container: container,
                     branch: branch,
+                    design: TEST_DESIGN,
                     members: specs,
                     fence: trailing,
                     columnWidths: opts.columnWidths,

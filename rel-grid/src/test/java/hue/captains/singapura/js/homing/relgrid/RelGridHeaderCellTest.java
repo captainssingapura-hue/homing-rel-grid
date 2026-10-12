@@ -115,7 +115,7 @@ class RelGridHeaderCellTest extends JsModuleTestBase {
                     if (plain.thAt(0).textContent !== 'ingredient') return false;
                     // The host has no say in what a column is called (law 86).
                     var refused = false;
-                    try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: plain.relation, header: { labels: { ingredient: 'x' } } }); }
+                    try { new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: testBranch(), relation: plain.relation, header: { labels: { ingredient: 'x' } } }); }
                     catch (e) { refused = /labels is gone/.test(String(e)); }
                     if (!refused) return false;
                     // A header cell without an element is refused — before anything moves, as a cell is.

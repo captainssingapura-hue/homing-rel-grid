@@ -79,6 +79,7 @@ class Outlets extends BenchWidget {
         var group = new RelGridGroup({
             container: this._host,
             branch: gridB,
+            design: HouseGrid,
             members: members,
             fence: ledger,
             header: mode,                      // 'group': one header at the top; 'each': one per table

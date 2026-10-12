@@ -20,9 +20,9 @@ class GamesCatalogue extends BenchWidget {
         var hint = this.el("hint", "div", wb_hint, body);
         var bar = this.el("bar", "div", wb_bar, body);
         // The frame goes round the SCROLLPORT - a non-scrolling wrapper the port fills - so the
-        // light and the hairline sit outside the scrollbar; the grid inside draws no frame of its own.
+        // light and the hairline sit outside the scrollbar: it is the grid's box, and wears its edge.
         var frame = this.el("frame", "div", null, body);
-        css.addClass(frame, wb_frame, hrg_frame, hrg_lit);
+        css.addClass(frame, wb_frame);
         var host = this.el("host", "div", wb_port, frame);
         this._status = this.el("status", "div", wb_status, body);
         var gridB = this.branch.createBranch("grid");
@@ -44,9 +44,10 @@ class GamesCatalogue extends BenchWidget {
         this._grid = new RelGrid({
             container: host,
             branch: gridB,
+            design: HouseGrid,
             relation: this._relation,
             header: { show: true, sticky: true },
-            frame: false,                              // the host frames the scrollport; see above
+            box: frame,                              // the frame round the scrollport wears the grid's edge; see above
             rowNumbers: true,                          // the gutter: a position each, the grid's own, locked left
             label: "Games catalogue",
             onCursorMoved: function () { self._report(); }

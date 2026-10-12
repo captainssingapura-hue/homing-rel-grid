@@ -57,6 +57,7 @@ class RelGridSlots {
         this._colgroup = opts.colgroup;
         this._headerRow = opts.headerRow || null;
         this._drag = opts.drag || null;         // the header drag, wired per <th>
+        this._design = opts.design;             // what wears the frame's leaves on the slots
         this._sticky = opts.sticky === true;    // the header cells wear hrg_sticky
         this._gutter = opts.gutter === true;    // a leading column of row numbers, the grid's own
         this._onGutterClick = opts.onGutterClick || null;     // (i) — a press on a row's number
@@ -138,6 +139,7 @@ class RelGridSlots {
             if (this._headerRow) {
                 var gth = slots.createElement("th-gutter", "th");
                 css.addClass(gth, hrg_th, hrg_gutter, hrg_gutter_head);
+                this._design.wear(GRID_FRAME.GUTTER_BAND, gth);
                 if (this._sticky) css.addClass(gth, hrg_sticky);
                 this._headerRow.appendChild(gth);
             }
@@ -150,6 +152,7 @@ class RelGridSlots {
             if (!this._headerRow) continue;
             var th = slots.createElement("th-" + h, "th");
             css.addClass(th, hrg_th);
+            this._design.wear(GRID_FRAME.HEADER_BAND, th);
             if (this._sticky) css.addClass(th, hrg_sticky);
             if (labelled) th.textContent = headers[h];
             this._ths.push(th);
@@ -165,6 +168,8 @@ class RelGridSlots {
             for (var j = 0; j < headers.length; j++) {
                 var td = slots.createElement("td-" + i + "-" + j, "td");
                 css.addClass(td, hrg_td);
+                this._design.wear(GRID_FRAME.LATTICE, td);
+                this._design.wear(GRID_FRAME.SELECTION_FILL, td);
                 this._wire(td, i, j);
                 tr.appendChild(td);
                 rowSlots.push(td);
@@ -181,6 +186,7 @@ class RelGridSlots {
         var self = this;
         var g = slots.createElement("gutter-" + i, "th");
         css.addClass(g, hrg_gutter);
+        this._design.wear(GRID_FRAME.GUTTER_BAND, g);
         g.setAttribute("scope", "row");
         g.textContent = String(i + 1);
         g.addEventListener("click", function () { if (self._onGutterClick) self._onGutterClick(i); });

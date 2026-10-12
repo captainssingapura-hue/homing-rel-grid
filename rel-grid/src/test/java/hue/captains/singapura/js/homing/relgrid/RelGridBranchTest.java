@@ -157,12 +157,12 @@ class RelGridBranchTest extends JsModuleTestBase {
                     // A second grid on it is refused by the party before the grid mints a thing:
                     // the branch is already somebody's.
                     var refused = null;
-                    try { new RelGrid({ container: makeEl('div'), branch: f.branch, relation: f.relation }); }
+                    try { new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: f.branch, relation: f.relation }); }
                     catch (e) { refused = String(e); }
                     if (!refused || !/already activated/.test(refused)) return false;
                     // And so is one the host activated itself: a host creates and dissolves, never activates.
                     var hosts = hostBranch(), gate = null;
-                    try { new RelGrid({ container: makeEl('div'), branch: hosts, relation: f.relation }); }
+                    try { new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: hosts, relation: f.relation }); }
                     catch (e) { gate = String(e); }
                     return !!gate && /already activated/.test(gate);
                 })()"""), "a grid activates the branch it is handed, so a branch that is already somebody's is refused");

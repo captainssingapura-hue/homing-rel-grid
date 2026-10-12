@@ -44,6 +44,7 @@ class HanArticles extends BenchWidget {
         var group = this._group = new RelGridGroup({
             container: host,
             branch: gridB,
+            design: HouseGrid,
             members: members,
             fence: new HanColophonFence({ branch: domainB.createBranch("fence-colophon"), text: "— 唐詩二首 —" }),
             columnWidths: widths,

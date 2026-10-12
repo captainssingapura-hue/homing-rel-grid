@@ -118,15 +118,13 @@ package hue.captains.singapura.js.homing.relgrid.contract;
  * whatever scrolls the table, as the header is stuck to the top; a press on a
  * number selects the row. A window's numbers are the window's, 1 to W.</p>
  *
- * <h2>The frame is the host's to take</h2>
+ * <h2>The frame is the design's</h2>
  *
- * <p>The grid frames its own wrap and lights it while it holds the focus. A
- * host that scrolls the table wants the light around the <b>scrollport</b> —
- * scrollbar inside it, not beside it — which only the host can draw, since
- * the scroller is the host's: it wears {@code hrg_frame} and {@code hrg_lit}
- * on a non-scrolling wrapper of its own and passes {@code frame: false}, and
- * the grid draws none. The cursor's colour follows either way — the lit
- * class sets a custom property, and custom properties inherit.</p>
+ * <p>The grid is made with a design of its frame ({@code opts.design}, Appendix: The Frame) - the house's, or a
+ * domain's - and refuses to be made without one, or with a design of another branch. Every element it makes it
+ * asks the design to wear a leaf of the frame on - its box, each slot, the bands, the overlays - and the cursor's
+ * slot the leaf for where the keys are; it never learns a class. A host that scrolls the table names its scrollport
+ * as the grid's box ({@code opts.box}), so the edge stands round what is seen and the scrollbar inside it.</p>
  *
  * <h2>Told, unasked</h2>
  *

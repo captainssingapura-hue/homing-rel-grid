@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
@@ -23,6 +24,8 @@ public record RelGridHeaderDragModule() implements DomModule<RelGridHeaderDragMo
 
     @Override public ImportsFor<RelGridHeaderDragModule> imports() {
         return ImportsFor.<RelGridHeaderDragModule>builder()
+                // the frame's leaves, by which the design it is made with is asked to wear one
+                .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_resize_handle(), new RelGridStyles.hrg_resize_guide()),
                         RelGridStyles.INSTANCE))
                 .build();

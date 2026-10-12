@@ -36,10 +36,12 @@
 //                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
 //                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
-//       frame?,           // false: the grid draws no frame of its own — the HOST frames it, around
-//                         // whatever scrolls the table, so the scrollbar sits inside the light. The
-//                         // host wears hrg_frame and hrg_lit on that element; the cursor's colour
-//                         // follows, since hrg_lit's property inherits. Default: the grid frames its wrap.
+//       design,           // THE FRAME'S DESIGN: a typed design of grid-frame - the house's HouseGrid, or a
+//                         // domain's - which the grid asks to wear a leaf of the frame on every element it
+//                         // makes (GRID_FRAME). Required: no design, no grid. The grid never learns a class.
+//       box?,             // the element the grid's box is drawn on - its edge, its ground, its corner: the
+//                         // grid's wrapper, unless the HOST scrolls the table and names its scrollport, so
+//                         // the edge stands round what is seen and the scrollbar inside it.
 //       rowNumbers?,      // true: a GUTTER — a leading column of row numbers, the grid's own, locked to
 //                         // the left of whatever scrolls the table. A number is a position, 1-based,
 //                         // never a value; a press on one selects the row. Not a column: hide, reorder,
@@ -135,6 +137,12 @@ class RelGrid {
         if (opts.rowView) throw new Error("[RelGrid] there is no rowView: what is presented is what relation.view() answers");
         var start = r.view();                    // the rows to present now — the relation's answer, held as the View
         if (!Array.isArray(start)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + start);
+        if (opts.frame !== undefined)
+            throw new Error("[RelGrid] frame is gone: the grid is made with a design (opts.design), and a host that scrolls the table names its box (opts.box)");
+        var design = opts.design, branch = GRID_FRAME.GRID_EDGE.branch;
+        if (!design || typeof design.wear !== "function" || typeof design.shed !== "function" || design.branch !== branch)
+            throw new Error("[RelGrid] opts.design is required: a design of " + branch + " - the house's HouseGrid, or a domain's; not "
+                    + (design && design.branch ? "a design of " + design.branch : design));
         var self = this;
         opts.branch.activate(this);              // the grid's own: the party refuses one that is already somebody's
         this._relation = r;
@@ -162,7 +170,7 @@ class RelGrid {
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
-            branch: opts.branch, container: opts.container, label: opts.label || null, frame: opts.frame,
+            branch: opts.branch, container: opts.container, label: opts.label || null, design: design, box: opts.box || null,
             rowNumbers: opts.rowNumbers === true,
             onGutterClick:  function (i) { self._gestures.onGutterClick(i); },
             showHeader: head.show !== false, stickyHeader: head.sticky === true, stickyInset: opts.stickyInset || null,

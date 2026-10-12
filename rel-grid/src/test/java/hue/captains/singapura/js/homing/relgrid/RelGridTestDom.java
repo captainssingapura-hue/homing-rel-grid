@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
 import hue.captains.singapura.js.homing.core.util.CssClassName;
@@ -37,7 +38,7 @@ public final class RelGridTestDom {
 
     public static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
-            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridLayoutModule.js",
+            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridMarksModule.js", "RelGridLayoutModule.js",
             "RelGridCellsModule.js", "RelGridStockCellsModule.js",
             "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridHeadersModule.js", "RelGridSpansModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
             "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
@@ -59,8 +60,24 @@ public final class RelGridTestDom {
         return sb.toString();
     }
 
-    /** The grid's and the stock cell's handles, for every test that loads the grid's modules. */
-    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE);
+    /**
+     * The frame's leaves, as the grid's own module generates them ({@code GRID_FRAME}), and a design of the frame for
+     * tests: it wears each leaf as a class named for it - {@code frame-lattice} - so a test sees what the grid asked to
+     * wear, and where; and it refuses a leaf of another branch, as a design does.
+     */
+    public static final String FRAME = String.join("\n", GridFrameModule.INSTANCE.selfContent(null)) + "\n" + """
+            var TEST_DESIGN = Object.freeze({
+                branch: "grid-frame", name: "test-design",
+                wear: function (leaf, el) {
+                    if (!leaf || leaf.branch !== "grid-frame") throw new Error("[TEST_DESIGN] a leaf of grid-frame is asked, not " + leaf);
+                    el.classList.add("frame-" + leaf.token); return el;
+                },
+                shed: function (leaf, el) { el.classList.remove("frame-" + leaf.token); return el; }
+            });
+            """;
+
+    /** The grid's and the stock cell's handles, and the frame's leaves and a design, for every test that loads the grid's modules. */
+    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE) + FRAME;
 
     /** The DomOpsParty — the real one, from homing-core-js: base first, then the levels and the root singleton. */
     public static final String[] PARTY = {
@@ -121,6 +138,8 @@ public final class RelGridTestDom {
                         this.children[i] = nu; old.parentNode = null;
                         nu.parentNode = this; return old;
                     },
+                    // Whether a node is this one or inside it, as Node.contains answers.
+                    contains: function (n) { for (var x = n; x; x = x.parentNode) if (x === this) return true; return false; },
                     // What a branch's dissolve calls on every element it owns.
                     remove: function () { if (this.parentNode) this.parentNode.removeChild(this); },
                     // What the css manager drives: a classList over the className string.
@@ -283,7 +302,7 @@ public final class RelGridTestDom {
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
                 var written = [], copied = [], handles = [], edges = [];
                 var grid = new RelGrid({
-                    container: container, branch: branch, relation: relation,
+                    container: container, branch: branch, relation: relation, design: opts.design || TEST_DESIGN, box: opts.box,
                     onArranged:      function (k) { arranged.push(k); },
                     onCursorMoved:   function (pk, col) { moves.push(pk + ' ' + col); },
                     onControlTaken:    function (pk, col) { started.push(pk + " " + col); },

@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
@@ -36,6 +37,8 @@ public record RelGridModule() implements DomModule<RelGridModule> {
     @Override
     public ImportsFor<RelGridModule> imports() {
         return ImportsFor.<RelGridModule>builder()
+                // the frame's leaves, by which the design it is made with is asked to wear one
+                .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridViewMapsModule.RelGridViewMaps()), RelGridViewMapsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLayoutModule.RelGridLayout()),     RelGridLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridCellsModule.RelGridCells()),       RelGridCellsModule.INSTANCE))

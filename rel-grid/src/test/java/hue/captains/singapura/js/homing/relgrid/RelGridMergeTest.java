@@ -42,7 +42,7 @@ class RelGridMergeTest extends JsModuleTestBase {
                     }
                 };
                 var container = makeEl('div');
-                var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation,
+                var grid = new RelGrid({ design: TEST_DESIGN, container: container, branch: testBranch(), relation: relation,
                                          mergedCells: opts.mergedCells === true });
                 function wrap() { return container.children[0]; }
                 function table() { return wrap().children[0]; }
@@ -205,7 +205,7 @@ class RelGridMergeTest extends JsModuleTestBase {
                                                                     return { cellElement: function () { return el; }, onSelect: function () {}, dispose: function () {},
                                                                              colSpan: function () { return col === 'a' ? 2 : 1; } }; } };
                     var container = makeEl('div');
-                    var grid = new RelGrid({ container: container, branch: testBranch(),
+                    var grid = new RelGrid({ design: TEST_DESIGN, container: container, branch: testBranch(),
                                              relation: relation, mergedCells: true,
                                              onColumnResized: function () {
                                                  // the container narrows; every slot shifts

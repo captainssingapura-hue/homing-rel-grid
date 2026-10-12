@@ -8,6 +8,7 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupModule;
+import hue.captains.singapura.js.homing.relgrid.house.HouseGridModule;
 import hue.captains.singapura.js.homing.workspace.widgets.SelfContainedWidget;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public record OutletsModule() implements DomModule<OutletsModule> {
         return ImportsFor.<OutletsModule>builder()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridGroupModule.RelGridGroup()), RelGridGroupModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with
                 .add(new ModuleImports<>(List.of(new SalesStoreModule.SalesStore()), SalesStoreModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new OutletRelationModule.OutletRelation(), new OutletRelationModule.OutletFence(),
                         new OutletRelationModule.LedgerFence()), OutletRelationModule.INSTANCE))

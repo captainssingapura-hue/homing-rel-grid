@@ -7,6 +7,8 @@ import hue.captains.singapura.js.homing.relchannel.RelChannelCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import hue.captains.singapura.js.homing.relgrid.selection.RelGridSelectionCrate;
 
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
+
 import java.util.List;
 
 /**
@@ -36,6 +38,8 @@ public final class RelGridCrate implements Crate {
                 // structural primitive: a grid is a component a widget composes, not
                 // a pane the shell is made of.
                 CrateEntry.of(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                // The frame's leaves, generated from the house's taxonomy: what the grid asks its design to wear.
+                CrateEntry.of(GridFrameModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The looks, typed: generated CSS modules, one for the grid's chrome and one for the stock cell.
                 CrateEntry.of(RelGridStyles.INSTANCE),
                 CrateEntry.of(RelGridStockStyles.INSTANCE),
@@ -43,6 +47,7 @@ public final class RelGridCrate implements Crate {
                 CrateEntry.of(RelGridRevealModule.INSTANCE),
                 CrateEntry.of(RelGridSlotsModule.INSTANCE),
                 CrateEntry.of(RelGridOverlaysModule.INSTANCE),
+                CrateEntry.of(RelGridMarksModule.INSTANCE),
                 CrateEntry.of(RelGridLayoutModule.INSTANCE),
                 CrateEntry.of(RelGridClipboardModule.INSTANCE),
                 CrateEntry.of(RelGridWidthsModule.INSTANCE),

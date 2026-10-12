@@ -66,6 +66,7 @@ class RelGridHeaderDrag {
         if (!opts.branch) throw new Error("[RelGridHeaderDrag] opts.branch is required");
         this._table = opts.table;
         this._branch = opts.branch;                            // the grid's own: the guide's segments are minted under it
+        this._design = opts.design;                            // what wears the guide's leaf
         this._seq = 0;                                         // one sub-branch per gesture
         this._onColResize = opts.onColResize || null;
         this._heldWidth = opts.heldWidth || null;              // (j) → px | null: the width held, if any
@@ -109,6 +110,7 @@ class RelGridHeaderDrag {
             if (span.height <= 0) continue;                    // out of view: no segment
             var guide = branch.createElement("segment-" + k, "div");
             css.addClass(guide, hrg_resize_guide);
+            this._design.wear(GRID_FRAME.RESIZE_GUIDE, guide);
             guide.style.setProperty("--hrg-guide-top", span.top + "px");
             guide.style.setProperty("--hrg-guide-h", span.height + "px");
             guide.style.setProperty("--hrg-guide-x", atX + "px");

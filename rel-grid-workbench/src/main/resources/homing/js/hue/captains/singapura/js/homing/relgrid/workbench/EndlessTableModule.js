@@ -43,6 +43,7 @@ class EndlessTable extends BenchWidget {
         this._grid = new RelGrid({
             container: host,
             branch: this._gridB,
+            design: HouseGrid,
             relation: this._relation,
             header: { show: true, sticky: true },
             label: "Endless",

@@ -238,7 +238,7 @@ class GamesTest extends JsModuleTestBase {
                     var grid = null;
                     var rel2 = new GamesRelation(catalogue(), { branch: testBranch(), menuHost: g.host,
                                                                    onViewChanged: function () { if (grid) told.push(grid.tell(new RelGridViewChanged())); } });
-                    grid = new RelGrid({ container: container, branch: gridB, relation: rel2, header: { show: true, sticky: true } });
+                    grid = new RelGrid({ container: container, branch: gridB, relation: rel2, design: TEST_DESIGN, header: { show: true, sticky: true } });
                     var table = container.children[0].children[0], thead = table.children[1], tbody = table.children[2];
                     var ths = thead.children[0].children;
                     if (ths.length !== 9 || ths[2].children.indexOf(rel2.headerFor('year').headerElement()) < 0) return false;
