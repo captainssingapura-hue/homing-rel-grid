@@ -40,6 +40,7 @@
         <module>rel-channel</module>
         <module>rel-grid-protocol</module>
         <module>rel-grid</module>
+        <module>rel-grid-house</module>
         <module>rel-grid-selection</module>
         <module>rel-grid-group</module>
         <module>rel-tree</module>
@@ -56,6 +57,9 @@
              grid and the tree wear) is released, the local snapshot: install
              core first. Re-pin to the release that carries it. -->
         <homing.core.version>LOCAL-SNAPSHOT</homing.core.version>
+        <!-- The house's components repository: its taxonomy is the meta the grid's frame is declared in, and its
+             styles what the house's design of the frame is drawn in. Never an implementation. -->
+        <homing.components.version>LOCAL-SNAPSHOT</homing.components.version>
         <junit.version>5.11.3</junit.version>
     </properties>
 
