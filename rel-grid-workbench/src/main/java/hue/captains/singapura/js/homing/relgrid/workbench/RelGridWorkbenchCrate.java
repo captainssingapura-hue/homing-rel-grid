@@ -5,7 +5,6 @@ import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.core.js.CoreJsCrate;
-import hue.captains.singapura.js.homing.design.DesignCrate;
 import hue.captains.singapura.js.homing.docview.app.DocViewAppCrate;
 import hue.captains.singapura.js.homing.docview.site.DocViewSiteCrate;
 import hue.captains.singapura.js.homing.jsonkit.JsonKitCrate;
@@ -39,7 +38,6 @@ public final class RelGridWorkbenchCrate implements Crate {
         return List.of(
                 CoreJsCrate.INSTANCE,
                 ServerCrate.INSTANCE,
-                DesignCrate.INSTANCE,
                 // The grid under test, and the protocol it speaks: a domain answers
                 // through the protocol, so the bench depends on it directly.
                 RelGridCrate.INSTANCE,
