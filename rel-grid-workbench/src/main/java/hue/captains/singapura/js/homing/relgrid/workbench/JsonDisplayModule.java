@@ -3,6 +3,8 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
 import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.conformance.rules.ConformanceDebt;
+import hue.captains.singapura.js.homing.conformance.rules.WidgetDrawsOnlyComponentsRule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
@@ -18,6 +20,8 @@ import java.util.List;
  * over the bench's one document, fed the last value that parsed of what the {@code json-text}
  * party says.
  */
+@ConformanceDebt(rule = WidgetDrawsOnlyComponentsRule.class, findings = 11,
+        reason = "It makes its hint, bar, frame, pointer field and status of its own, wears the frame's class, labels the field, writes their text and reaches the document: it waits for the designed containers, the widget slot and the content components to draw only components.")
 public record JsonDisplayModule() implements DomModule<JsonDisplayModule> {
 
     public record JsonDisplay() implements SelfContainedWidget<JsonDisplayModule>, NeedKeyboard {

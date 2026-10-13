@@ -3,6 +3,8 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
 import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.conformance.rules.ConformanceDebt;
+import hue.captains.singapura.js.homing.conformance.rules.WidgetDrawsOnlyComponentsRule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
@@ -18,6 +20,8 @@ import java.util.List;
  * params)} - a window of twenty over a million rows, the grid never told there are more, its
  * invariants read off the party's numbers after every step.
  */
+@ConformanceDebt(rule = WidgetDrawsOnlyComponentsRule.class, findings = 8,
+        reason = "It makes its hint, bar and readouts of its own and writes their text: it waits for the designed containers, the widget slot and the content components to draw only components.")
 public record EndlessTableModule() implements DomModule<EndlessTableModule> {
 
     public record EndlessTable() implements SelfContainedWidget<EndlessTableModule>, NeedKeyboard {

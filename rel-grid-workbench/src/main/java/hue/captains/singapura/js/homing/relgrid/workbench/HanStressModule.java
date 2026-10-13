@@ -3,6 +3,8 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
 import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.conformance.rules.ConformanceDebt;
+import hue.captains.singapura.js.homing.conformance.rules.WidgetDrawsOnlyComponentsRule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
@@ -18,6 +20,8 @@ import java.util.List;
  * over the same engine, every column resizable, the merged cells and half-squares measured
  * against the slots beneath them after every change.
  */
+@ConformanceDebt(rule = WidgetDrawsOnlyComponentsRule.class, findings = 12,
+        reason = "It makes its hint, bar, host and readouts of its own, writes their text and sets the host's side and width: it waits for the designed containers, the widget slot and the content components to draw only components.")
 public record HanStressModule() implements DomModule<HanStressModule> {
 
     public record HanStress() implements SelfContainedWidget<HanStressModule>, NeedKeyboard {

@@ -3,6 +3,8 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
 import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.conformance.rules.ConformanceDebt;
+import hue.captains.singapura.js.homing.conformance.rules.WidgetDrawsOnlyComponentsRule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
@@ -18,6 +20,8 @@ import java.util.List;
  * one page with an illustration between, three members of a group; titles, the illustration
  * and the colophon are the domain's fences.
  */
+@ConformanceDebt(rule = WidgetDrawsOnlyComponentsRule.class, findings = 5,
+        reason = "It makes its hint, host and status of its own, writes their text and sets the host's width: it waits for the designed containers, the widget slot and the content components to draw only components.")
 public record HanArticlesModule() implements DomModule<HanArticlesModule> {
 
     public record HanArticles() implements SelfContainedWidget<HanArticlesModule>, NeedKeyboard {

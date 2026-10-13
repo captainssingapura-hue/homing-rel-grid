@@ -186,11 +186,12 @@
             <version>${homing.studio.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The debts the benches' widgets declare, and the gate, headless: provided, as the widgets' own. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-conformance-rules</artifactId>
             <version>${homing.core.version}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <!-- The grid's and the tree's test harnesses, for the benches' domain tests. -->
         <dependency>
