@@ -274,9 +274,9 @@ class RelGrid {
             }
         }
         this._spans.settle();                                 // every cell is in; measure the hosts
-        this._showCopied();                                   // the copy where it stands now - or cancelled, if it no longer does
         this._cursor.resolve(this._control.isDeep());         // first: a cell the cursor leaves is told while it is still known
         this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree, forgotten
+        this._showCopied();                                   // the copy where it stands, measured once the cells let go have left their slots
         this._selection.clear();                              // law 43: every range goes with the presented space
         this._afterSelection();
         if (this._cbArranged) {

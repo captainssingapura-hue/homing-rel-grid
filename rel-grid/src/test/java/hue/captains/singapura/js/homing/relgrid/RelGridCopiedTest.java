@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -141,6 +142,61 @@ class RelGridCopiedTest extends JsModuleTestBase {
                     maps.setRowView(['coq', 'mapo', 'fish']);                                       // sorted apart: it no longer stands
                     return F.grid.copied().length === 0 && shown(F).length === 0;
                 })()"""), "a block that still stands as a rectangle is shown where it stands; one that does not, cancels the copy");
+    }
+
+    @Test
+    void aBlockPartlyOutOfTheWindow_isMarkedOverExactlyTheRowsStillShown() {
+        act("var F = copying(); F.click(1, 0); F.click(2, 1, { shift: true }); F.grid.copy();");   // coq and fish, both columns
+        assertEquals("true", js.eval("js", """
+                (() => {
+                    // The slots laid out as a browser would: a row 20 high, a column 100 wide; then a width held, so the
+                    // overlay is placed again over the slots as they are.
+                    var px = 100;
+                    function laidOut() {
+                        for (var i = 0; i < F.grid.viewMaps().rows(); i++)
+                            for (var j = 0; j < 2; j++) {
+                                var t = F.td(i, j);
+                                t._rl = j * 100; t._rr = j * 100 + 100; t._rt = i * 20; t._rb = i * 20 + 20;
+                            }
+                        F.grid.setColumnWidth('calories', ++px);
+                        var b = shown(F);
+                        if (b.length !== 1) return 'boxes ' + b.length;
+                        var st = b[0].style;
+                        return ['--hrg-left', '--hrg-top', '--hrg-width', '--hrg-height'].map(function (p) { return st.getPropertyValue(p); }).join(' ');
+                    }
+                    var whole = laidOut();
+                    if (whole !== '0px 20px 200px 40px') return 'whole: ' + whole;                   // rows 1 and 2, both columns
+                    var maps = F.grid.viewMaps();
+                    maps.setRowView(['mapo', 'coq']);                                               // fish below the window
+                    var lower = laidOut();
+                    if (lower !== '0px 20px 200px 20px') return 'fish out: ' + lower;                // coq alone, where it stands
+                    maps.setRowView(['fish']);                                                      // coq above the window
+                    var upper = laidOut();
+                    if (upper !== '0px 0px 200px 20px') return 'coq out: ' + upper;                  // fish alone, at the top
+                    return copiedSays(F) === 'coq,fish / ingredient,calories';                     // the copy itself, whole
+                })()""").toString(),
+                "half the block out of sight: the half still shown marked exactly, the copy kept whole");
+    }
+
+    @Test
+    void theWindowMoving_placesTheMarkOverTheSlotsAsTheyStandAtTheEndOfThePass() {
+        act("var F = copying(); F.click(1, 0); F.click(1, 1, { shift: true }); F.grid.copy();");   // coq, both columns
+        assertEquals("0px 0px 200px 20px", js.eval("js", """
+                (() => {
+                    var maps = F.grid.viewMaps();
+                    maps.setRowView(['mapo', 'coq']);
+                    // A slot as tall as what it holds, as a browser lays it: a cell the window let go still standing in
+                    // its slot beside the one that replaced it makes the row twice as tall, until it is detached.
+                    for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) (function (t, i, j) {
+                        t.getBoundingClientRect = function () {
+                            var h = 20 * Math.max(1, t.children.length);
+                            return { left: j * 100, right: j * 100 + 100, top: i * 20, bottom: i * 20 + h, width: 100, height: h };
+                        };
+                    })(F.td(i, j), i, j);
+                    maps.setRowView(['coq', 'fish']);                                               // the same slots: the window moved a row
+                    var st = shown(F)[0].style;
+                    return ['--hrg-left', '--hrg-top', '--hrg-width', '--hrg-height'].map(function (p) { return st.getPropertyValue(p); }).join(' ');
+                })()""").toString(), "the mark measured once the cells the window let go have left their slots");
     }
 
     @Test
