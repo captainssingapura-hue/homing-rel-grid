@@ -4,7 +4,7 @@
 // grid that reads as a document's table - drawn in the house's document table
 // (HouseProse), its cells the house's data and header cells. Read only: no
 // cell is ever offered control. The keys, when it holds them, walk it, and a
-// copy carries what its cells say.
+// copy carries what its cells drew, as tab-separated text.
 //
 //   new ProseTable(branch, relation, {
 //       inline?,     // (text, el) - how a cell's text is drawn; el.textContent by default.
@@ -98,43 +98,26 @@ class ProseTable {
     }
 
     /**
-     * A copy, what the relation says: one cell, its value alone; two or more, each block its columns' titles over its
-     * rows - tab-separated lines, a blank line between blocks, and a table with its head, a span a colspan. A relation
-     * with no titles copies its rows alone. Any other question: nothing.
+     * A copy, each value what its cell drew (ProseCell.copyValue): one cell, its value alone; two or more, each block
+     * its columns' titles over its rows - tab-separated lines, a blank line between blocks; a span's value in its own
+     * column, the columns it reaches over empty. A relation with no titles copies its rows alone. Text alone: other
+     * forms are a copier's to offer. Any other question: nothing.
      */
     _answer(question) {
         if (!(question instanceof RelGridCopyRequested)) return undefined;
-        var relation = this._relation, blocks = question.blocks;
-        if (blocks.length === 1 && blocks[0].pks.length === 1 && blocks[0].columns.length === 1) {
-            var one = relation.cell(blocks[0].pks[0], blocks[0].columns[0]);
-            return new RelGridClipboardContent(one ? one.text : "", undefined);
-        }
-        var esc = ProseTable._escaped, texts = [], html = [];
-        blocks.forEach(function (block) {
-            var lines = [], rows = [];
-            if (relation.titled()) {
-                var titles = block.columns.map(function (col) { return relation.column(col).title; });
-                lines.push(titles.join("\t"));
-                rows.push("<thead><tr>" + titles.map(function (t) { return "<th>" + esc(t) + "</th>"; }).join("") + "</tr></thead>");
-            }
-            var body = [];
+        var relation = this._relation, cells = this._cells, heads = this._heads, blocks = question.blocks;
+        function value(pk, col) { var c = cells.get(pk + " " + col); return c ? c.copyValue() : ""; }
+        if (blocks.length === 1 && blocks[0].pks.length === 1 && blocks[0].columns.length === 1)
+            return new RelGridClipboardContent(value(blocks[0].pks[0], blocks[0].columns[0]), undefined);
+        var texts = blocks.map(function (block) {
+            var lines = [];
+            if (relation.titled()) lines.push(block.columns.map(function (col) { return heads.get(col).copyValue(); }).join("\t"));
             block.pks.forEach(function (pk) {
-                var said = [], tds = [];
-                for (var k = 0; k < block.columns.length; k++) {
-                    var c = relation.cell(pk, block.columns[k]);
-                    said.push(c ? c.text : "");
-                    var span = c ? Math.min(c.colSpan, block.columns.length - k) : 1;
-                    tds.push("<td" + (span > 1 ? " colspan=\"" + span + "\"" : "") + ">" + esc(c ? c.text : "") + "</td>");
-                    for (var s = 1; s < span; s++) said.push(c ? relation.cell(pk, block.columns[++k]).text : "");   // what it reaches over: in the text, empty
-                }
-                lines.push(said.join("\t"));
-                body.push("<tr>" + tds.join("") + "</tr>");
+                lines.push(block.columns.map(function (col) { return value(pk, col); }).join("\t"));
             });
-            rows.push("<tbody>" + body.join("") + "</tbody>");
-            texts.push(lines.join("\n"));
-            html.push("<table>" + rows.join("") + "</table>");
+            return lines.join("\n");
         });
-        return new RelGridClipboardContent(texts.join("\n\n"), html.join(""));
+        return new RelGridClipboardContent(texts.join("\n\n"), undefined);
     }
 
     /** The table's own, dissolved: the grid first, then its cells and heads, then its branch. */
@@ -145,9 +128,5 @@ class ProseTable {
         this._cells.clear();
         this._heads.clear();
         this._branch.dissolve();
-    }
-
-    static _escaped(text) {
-        return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 }

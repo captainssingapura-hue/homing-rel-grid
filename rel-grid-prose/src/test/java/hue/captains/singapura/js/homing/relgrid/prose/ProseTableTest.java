@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * A document's table: a {@code DocTableRelation} - what the table says, judged when it is made and frozen - handed to a
  * {@code ProseTable}, which takes nothing else and makes a grid that reads as a document's table: its cells the house's
- * data and header cells, its caption the house's, its rules its design's; read only, its copy what its cells say. The
+ * data and header cells, its caption the house's, its rules its design's; read only, its copy what its cells drew. The
  * house's look is the test DOM's stand-in, which wears a leaf as {@code look-<leaf>}; the design is the test design,
  * which wears a leaf of the frame as {@code frame-<token>}.
  */
@@ -182,16 +182,14 @@ class ProseTableTest extends JsModuleTestBase {
     }
 
     @Test
-    void aCopy_carriesTheHeadOverTheRows_asTextAndAsATable() {
+    void aCopy_carriesTheHeadOverTheRows_asTabSeparatedText() {
         assertTrue(evalBool("""
                 (() => {
                     var t = releases();
                     var c = t._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1'])]));
                     return c instanceof RelGridClipboardContent && c.text === 'Version\\tDownloads\\n1.0\\t1,204\\n1.1\\t980'
-                        && c.html === '<table><thead><tr><th>Version</th><th>Downloads</th></tr></thead>'
-                                    + '<tbody><tr><td>1.0</td><td>1,204</td></tr><tr><td>1.1</td><td>980</td></tr></tbody></table>'
-                        && t._answer({}) === undefined;
-                })()"""), "two cells or more: the selected columns' titles over the rows, tab-separated and as a table with its head");
+                        && c.html === undefined && t._answer({}) === undefined;
+                })()"""), "two cells or more: the selected columns' titles over the rows, tab-separated, and nothing else");
     }
 
     @Test
@@ -200,11 +198,11 @@ class ProseTableTest extends JsModuleTestBase {
                 (() => {
                     var c = releases()._answer(new RelGridCopyRequested([new RelGridBlock(['r1'], ['c1'])]));
                     return c.text === '980' && c.html === undefined;
-                })()"""), "a single cell: its value, no head, no table");
+                })()"""), "a single cell: its value, no head");
     }
 
     @Test
-    void aCopy_takesEachRangeWithItsHead_aSpanAColspan_andNoHeadWhereThereIsNone() {
+    void aCopy_takesEachRangeWithItsHead_aSpanInItsOwnColumn_andNoHeadWhereThereIsNone() {
         assertTrue(evalBool("""
                 (() => {
                     var two = releases()._answer(new RelGridCopyRequested([new RelGridBlock(['r0'], ['c0']), new RelGridBlock(['r1'], ['c1'])]));
@@ -212,12 +210,31 @@ class ProseTableTest extends JsModuleTestBase {
                     var spans = new ProseTable(testBranch(), new DocTableRelation({ columns: ['a', 'b', 'c'],
                                                                                   rows: [[{ text: 'all', colSpan: 3 }], ['x', 'y', 'z']] }));
                     var s = spans._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1', 'c2'])]));
-                    if (s.text !== 'a\\tb\\tc\\nall\\t\\t\\nx\\ty\\tz') return false;
-                    if (s.html.indexOf('<tr><td colspan="3">all</td></tr>') < 0) return false;
+                    if (s.text !== 'a\\tb\\tc\\nall\\t\\t\\nx\\ty\\tz' || s.html !== undefined) return false;
                     var bare = new ProseTable(testBranch(), new DocTableRelation({ columns: ['', ''], rows: [['k', 'v'], ['k2', 'v2']] }));
                     var b = bare._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1'])]));
-                    return b.text === 'k\\tv\\nk2\\tv2' && b.html.indexOf('<thead>') < 0;
-                })()"""), "a block a range, each with its head; a span a colspan, empty under it in the text; no titles, no head");
+                    return b.text === 'k\\tv\\nk2\\tv2';
+                })()"""), "a block a range, each with its head; a span's value in its own column, empty over what it reaches; no titles, no head");
+    }
+
+    @Test
+    void aCopy_carriesWhatTheCellsDrew_notWhatTheyWereTold_eachOnOneLine() {
+        assertTrue(evalBool("""
+                (() => {
+                    // a document's drawing: **words** drawn strong, inside the cell; anything else as it is
+                    function inline(text, el) {
+                        var m = /^[*][*](.*)[*][*]$/.exec(text);
+                        if (!m) { el.textContent = text; return; }
+                        var strong = document.createElement('strong');
+                        strong.textContent = m[1];
+                        el.appendChild(strong);
+                    }
+                    var t = new ProseTable(testBranch(), new DocTableRelation({ columns: ['**Part**', 'Note'], rows: [
+                        ['**The substrate**', 'wraps\\n   over lines'], [{ text: 'done', badge: 'success' }, 'a\\ttab']] }), { inline: inline });
+                    var all2 = t._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1'])]));
+                    var one = t._answer(new RelGridCopyRequested([new RelGridBlock(['r0'], ['c0'])]));
+                    return all2.text === 'Part\\tNote\\nThe substrate\\twraps over lines\\ndone\\ta tab' && one.text === 'The substrate';
+                })()"""), "a bold cell copies as its words, a badge as its word; white space one space, so no value breaks a row");
     }
 
     @Test

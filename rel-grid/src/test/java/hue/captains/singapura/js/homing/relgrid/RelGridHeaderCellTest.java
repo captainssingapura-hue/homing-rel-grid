@@ -71,7 +71,7 @@ class RelGridHeaderCellTest extends JsModuleTestBase {
                     if (h.made.join() !== 'ingredient,calories') return false;
                     var th0 = f.thAt(0), th1 = f.thAt(1);
                     if (th0.children.indexOf(h.cells.get('ingredient').el) < 0 || th1.children.indexOf(h.cells.get('calories').el) < 0) return false;
-                    if (th0.textContent !== '' || th0.children.length !== 2) return false;   // the handle, and the domain's element; no text of the grid's
+                    if (th0.ownText !== '' || th0.children.length !== 2) return false;   // the handle, and the domain's element; no text of the grid's
                     if (h.cells.get('ingredient').el.textContent !== 'Dish') return false;
                     // The header cell's element is on the DOMAIN's branch, not the grid's.
                     if (h.branch.getBranch('h-ingredient').getElement('head') !== h.cells.get('ingredient').el) return false;
@@ -112,7 +112,7 @@ class RelGridHeaderCellTest extends JsModuleTestBase {
                     // Labels are a stock header cell's: RelGridLabels answers headerFor; a column not named has its name.
                     var l = fixture({ labels: { ingredient: 'Dish' } });
                     if (l.headText(0) !== 'Dish' || l.headText(1) !== 'calories') return false;
-                    if (l.thAt(0).textContent !== '') return false;                    // the grid wrote nothing of its own
+                    if (l.thAt(0).ownText !== '') return false;                    // the grid wrote nothing of its own
                     var plain = fixture();
                     if (plain.headText(0) !== 'ingredient') return false;
                     // A relation with no header cells is refused while the header shows - labels() is not read -

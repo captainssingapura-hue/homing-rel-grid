@@ -13,11 +13,16 @@
 //
 // WHAT A CELL'S TEXT BECOMES is the table's to say (inline): plain text by
 // default; a document hands in its own inline drawing - its links, its code.
+// WHAT A COPY OF IT CARRIES is what it drew, never what it was told: a bold
+// cell copies as its words, a link as its text, a badge as its word - on one
+// line, its runs of white space one space, so a value never breaks a row of
+// tab-separated text.
 //
 //   new ProseCell({ branch, text, inline, align?, emphasis?, badge?, colSpan? })
 //       emphasis: 'strong' | 'muted'   badge: 'success' | 'warning' | 'danger'
 //   new ProseHeader({ branch, title, inline, align? })
 //   align: 'left' | 'center' | 'right'; none said, as the slot has it
+//   cell.copyValue()   header.copyValue()   what it drew, as one line of text
 // =============================================================================
 
 /** A leaf of the house worn on an element, part of it or whole: one look per leaf, made once. */
@@ -30,6 +35,9 @@ function _proseWear(leaf, el, part) {
 
 /** The rules are the table's design's, drawn on the slots: a cell wears none of its leaf's. */
 var _PROSE_NO_RULES = Object.freeze(["shape-border", "color-border"]);
+
+/** What an element drew, as one line: its text, every run of white space one space. */
+function _proseDrawn(el) { return String(el.textContent || "").replace(/\s+/g, " ").trim(); }
 
 function _proseAligned(el, align) {
     if (align === "left") css.addClass(el, prose_left);
@@ -78,8 +86,8 @@ class ProseCell {
         return el;
     }
 
-    /** What it says, as text: what a copy of it carries. */
-    text() { return this._text; }
+    /** Its value to copy: what it drew, as one line - a bold cell's words, a link's text, a badge's word. */
+    copyValue() { return _proseDrawn(this.cellElement()); }
 
     /** The columns it reaches across: one, or the span it was given. */
     colSpan() { return this._span; }
@@ -118,8 +126,8 @@ class ProseHeader {
         return el;
     }
 
-    /** Its title, as text. */
-    title() { return this._title; }
+    /** Its value to copy: the title it drew, as one line. */
+    copyValue() { return _proseDrawn(this.headerElement()); }
 
     dispose() {
         this._el = null;

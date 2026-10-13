@@ -8,8 +8,8 @@ import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
  * {@link JsonKitTestBase} — and a FIXTURE: a {@code JsonTreeView} over a value, with the rows read back
  * as a person would see them.
  *
- * <p>The stub's {@code textContent} is a field, not a walk of the children, so
- * a cell's line is read by summing its spans.</p>
+ * <p>The stub's {@code textContent} is the element's own text and then its
+ * children's, as a browser's is, so a cell's line is its text.</p>
  */
 public final class JsonKitTestDom {
 
@@ -26,11 +26,7 @@ public final class JsonKitTestDom {
             // A value the tests share: every kind, an escape, an empty container, nesting three deep.
             var SAMPLE = { name: "kit", n: 3, ok: true, none: null, list: [1, { deep: "x" }], "a/b": {}, empty: [] };
 
-            function textOf(el) {                                  // the stub keeps textContent per element: sum the spans
-                var s = el.textContent || '';
-                for (var i = 0; i < el.children.length; i++) s += textOf(el.children[i]);
-                return s;
-            }
+            function textOf(el) { return el.textContent; }         // its spans' text, in order, as a person reads the line
             function jsonFixture(opts) {
                 opts = opts || {};
                 var branch = testBranch(), container = makeEl('div');

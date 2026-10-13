@@ -63,7 +63,7 @@ class ProseNotesPage extends ProsePage {
             caption: "Releases, newest first",
             columns: ["Version", "Released", { title: "State", align: "center" }, { title: "Downloads", align: "right" }, "Notes"],
             rows: [
-                ["2.4.0", "12 Oct 2026", { text: "beta", badge: "warning" }, "-", "Tables in documents drawn by the document's own design; a copy carries what the cells say."],
+                ["2.4.0", "12 Oct 2026", { text: "beta", badge: "warning" }, "-", "Tables in documents drawn by the document's own design; a copy carries what the cells drew, as tab-separated text."],
                 ["2.3.2", "2 Oct 2026", { text: "current", badge: "success" }, "18,204", "Workspaces open what they are asked, by name or by id."],
                 ["2.3.1", "21 Sep 2026", { text: "stable", badge: "success" }, "9,877", "Floating panes are tabs in transit; a desk holds them all."],
                 ["2.3.0", "28 Aug 2026", { text: "withdrawn", badge: "danger" }, "1,342", { text: "Pulled for a focus regression: take 2.3.1.", emphasis: "muted" }],

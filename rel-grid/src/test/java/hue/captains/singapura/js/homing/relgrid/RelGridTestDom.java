@@ -129,8 +129,19 @@ public final class RelGridTestDom {
             }
             function makeEl(tag) {
                 var el = {
-                    tagName: tag, id: "", className: "", textContent: "", value: "",
+                    tagName: tag, id: "", className: "", value: "",
                     children: [], parentNode: null, style: makeStyle(),
+                    // Faithful: an element's text is its own and then its children's, in order; setting it
+                    // replaces its children, as Node.textContent does.
+                    _text: "",
+                    get textContent() { return this._text + this.children.map(function (c) { return c.textContent; }).join(""); },
+                    set textContent(v) {
+                        this.children.forEach(function (c) { c.parentNode = null; });
+                        this.children.length = 0;
+                        this._text = (v === null || v === undefined) ? "" : String(v);
+                    },
+                    // What was written on it, not its children's: how a test tells an element's own text from what it holds.
+                    get ownText() { return this._text; },
                     appendChild: function (c) {
                         if (c.parentNode) c.parentNode.removeChild(c);
                         c.parentNode = this; this.children.push(c); return c;
