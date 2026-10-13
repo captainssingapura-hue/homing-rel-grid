@@ -5,6 +5,7 @@ import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
+import hue.captains.singapura.js.homing.relgrid.prose.DocTableRelationModule;
 import hue.captains.singapura.js.homing.relgrid.prose.ProseTableModule;
 import hue.captains.singapura.js.homing.ui.elements.Heading2Module;
 import hue.captains.singapura.js.homing.ui.elements.LedeModule;
@@ -15,7 +16,7 @@ import java.util.List;
 
 /**
  * The Document Table bench's pages: a document's tables as a document has them - a heading, its ledes, and
- * {@code ProseTable}s between, the house's words throughout. Components on the branch each is handed; the bench's
+ * {@code ProseTable}s between, each made from a {@code DocTableRelation}, the house's words throughout. Components on the branch each is handed; the bench's
  * widgets show them.
  */
 public record ProsePagesModule() implements DomModule<ProsePagesModule> {
@@ -28,6 +29,7 @@ public record ProsePagesModule() implements DomModule<ProsePagesModule> {
 
     @Override public ImportsFor<ProsePagesModule> imports() {
         return ImportsFor.<ProsePagesModule>builder()
+                .add(new ModuleImports<>(List.of(new DocTableRelationModule.DocTableRelation()), DocTableRelationModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new ProseTableModule.ProseTable()), ProseTableModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new Heading2Module.Heading2()), Heading2Module.INSTANCE))
                 .add(new ModuleImports<>(List.of(new LedeModule.Lede()), LedeModule.INSTANCE))

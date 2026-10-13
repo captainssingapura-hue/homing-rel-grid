@@ -13,10 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * A document's table: columns and rows of text handed in, a grid that reads as a document's table - its cells the
- * house's data and header cells, its caption the house's, its rules its design's - read only, its copy what its cells
- * say. The house's look is the test DOM's stand-in, which wears a leaf as {@code look-<leaf>}; the design is the test
- * design, which wears a leaf of the frame as {@code frame-<token>}.
+ * A document's table: a {@code DocTableRelation} - what the table says, judged when it is made and frozen - handed to a
+ * {@code ProseTable}, which takes nothing else and makes a grid that reads as a document's table: its cells the house's
+ * data and header cells, its caption the house's, its rules its design's; read only, its copy what its cells say. The
+ * house's look is the test DOM's stand-in, which wears a leaf as {@code look-<leaf>}; the design is the test design,
+ * which wears a leaf of the frame as {@code frame-<token>}.
  */
 class ProseTableTest extends JsModuleTestBase {
 
@@ -33,6 +34,7 @@ class ProseTableTest extends JsModuleTestBase {
         loadModule(RelGridTestDom.PROTOCOL);
         for (String m : RelGridTestDom.MODULES) loadModule(RelGridTestDom.DIR + m);
         js.eval("js", "var HouseProse = TEST_DESIGN;");          // the house's document table, as the test design stands in for it
+        loadModule(DIR + "DocTableRelationModule.js");
         loadModule(DIR + "ProseCellsModule.js");
         loadModule(DIR + "ProseTableModule.js");
         js.eval("js", """
@@ -48,20 +50,68 @@ class ProseTableTest extends JsModuleTestBase {
                     for (var k = 0; k < el.children.length; k++) all(el.children[k], c, out);
                     return out;
                 }
-                function releases(more) {
-                    var opts = { caption: 'Releases', columns: ['Version', { title: 'Downloads', align: 'right' }],
-                                 rows: [['1.0', '1,204'], ['1.1', '980']] };
-                    for (var k in (more || {})) opts[k] = more[k];
-                    return new ProseTable(testBranch(), opts);
-                }
-                function refusal(opts) { try { new ProseTable(testBranch(), opts); return null; } catch (e) { return String(e.message); } }
+                var RELEASES = { caption: 'Releases', columns: ['Version', { title: 'Downloads', align: 'right' }], rows: [['1.0', '1,204'], ['1.1', 980]] };
+                function releases(opts) { return new ProseTable(testBranch(), new DocTableRelation(RELEASES), opts); }
+                function refusal(spec) { try { new DocTableRelation(spec); return null; } catch (e) { return String(e.message); } }
                 """);
     }
 
     private boolean evalBool(String expr) { return js.eval("js", expr).asBoolean(); }
 
+    // ── the relation: what a doc's table says, judged when made ─────────────
+
     @Test
-    void columnsAndRowsOfText_readAsADocumentsTable() {
+    void theRelation_saysWhatTheTableSays_byIdentity_andIsFrozen() {
+        assertTrue(evalBool("""
+                (() => {
+                    var r = new DocTableRelation({ caption: 'Matrix', columns: ['Area', { title: 'State', align: 'center' }, 'Note'],
+                                                   rows: [[{ text: 'Grid', emphasis: 'strong', colSpan: 2 }, 'x'], ['Tree']] });
+                    if (r.columns().join() !== 'c0,c1,c2' || r.view().join() !== 'r0,r1') return false;
+                    if (r.column('c1').title !== 'State' || r.column('c1').align !== 'center' || r.column('c9') !== null) return false;
+                    var lead = r.cell('r0', 'c0'), over = r.cell('r0', 'c1'), short = r.cell('r1', 'c1');
+                    if (lead.text !== 'Grid' || lead.colSpan !== 2 || lead.emphasis !== 'strong') return false;
+                    if (over.text !== '' || over.colSpan !== 1 || over.align !== 'center') return false;   // what a span reaches over: empty, its column's alignment
+                    if (short.text !== '' || r.cell('r1', 'c2').text !== '') return false;                 // a row that says fewer: the rest empty
+                    if (r.cell('r9', 'c0') !== null || r.cell('r0', 'c9') !== null) return false;          // a stranger: nothing
+                    if (!r.titled() || !r.spans() || r.caption() !== 'Matrix') return false;
+                    if (!Object.isFrozen(r) || !Object.isFrozen(lead) || !Object.isFrozen(r.column('c0'))) return false;
+                    var none = new DocTableRelation({ columns: ['', ''], rows: [[1, 2]] });
+                    return !none.titled() && !none.spans() && none.caption() === null && none.cell('r0', 'c0').text === '1';
+                })()"""), "columns and rows by identity, a value for every cell, frozen");
+    }
+
+    @Test
+    void whatADocsTableCannotSay_isRefusedByTheRelation_byName() {
+        assertTrue(evalBool("""
+                (() => {
+                    var rowSpan = refusal({ columns: ['a', 'b'], rows: [[{ text: 'x', rowSpan: 2 }, 'y']] });
+                    var wide = refusal({ columns: ['a'], rows: [['x', 'y']] });
+                    var badge = refusal({ columns: ['a'], rows: [[{ text: 'x', badge: 'info' }]] });
+                    var align = refusal({ columns: [{ title: 'a', align: 'justify' }], rows: [] });
+                    var none = refusal({ columns: [], rows: [] });
+                    return /\\[DocTableRelation\\] cell 0,0 spans 2 rows: the grid spans columns only/.test(rowSpan)
+                        && /more cells than the 1 columns/.test(wide)
+                        && /badge is one of success, warning, danger, not "info"/.test(badge) && /align is one of left, center, right/.test(align)
+                        && /at least one column/.test(none);
+                })()"""), "row spans, rows wider than the table, words it has not: refused when the relation is made");
+    }
+
+    // ── the table: it takes a relation, and nothing else ───────────────────
+
+    @Test
+    void theTable_takesADocTableRelation_andNothingElse() {
+        assertTrue(evalBool("""
+                (() => {
+                    function refused(relation) { try { new ProseTable(testBranch(), relation); return null; } catch (e) { return String(e.message); } }
+                    var plain = refused(RELEASES), lookalike = refused({ columns: function () { return ['c0']; }, view: function () { return []; } });
+                    return /a DocTableRelation is required/.test(plain) && /not Object/.test(plain)
+                        && /a DocTableRelation is required/.test(lookalike) && /a DocTableRelation is required/.test(refused(null))
+                        && releases().grid !== null;
+                })()"""), "the shape of a relation is not a relation: only a DocTableRelation, judged when made");
+    }
+
+    @Test
+    void aRelation_readsAsADocumentsTable() {
         assertTrue(evalBool("""
                 (() => {
                     var t = releases();
@@ -86,8 +136,7 @@ class ProseTableTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     var t = releases();
-                    var table = find(t.root, 'hrg-table');
-                    table.dispatch('keydown', { key: 'Enter', preventDefault: function () {} });
+                    find(t.root, 'hrg-table').dispatch('keydown', { key: 'Enter', preventDefault: function () {} });
                     return !t.grid.isDeep() && t.grid.mayTakeControlAtCursor() === false;
                 })()"""), "a document's table: Enter opens nothing");
     }
@@ -96,8 +145,8 @@ class ProseTableTest extends JsModuleTestBase {
     void aCellsEmphasisAndBadge_areTheHousesWords() {
         assertTrue(evalBool("""
                 (() => {
-                    var t = new ProseTable(testBranch(), { columns: ['Area', 'State', 'Note'], rows: [[
-                        { text: 'Grid', emphasis: 'strong' }, { text: 'done', badge: 'success' }, { text: 'later', emphasis: 'muted', align: 'center' }]] });
+                    var t = new ProseTable(testBranch(), new DocTableRelation({ columns: ['Area', 'State', 'Note'], rows: [[
+                        { text: 'Grid', emphasis: 'strong' }, { text: 'done', badge: 'success' }, { text: 'later', emphasis: 'muted', align: 'center' }]] }));
                     var cells = all(t.root, 'prose-cell');
                     if (!has(cells[0], 'look-data-cell') || !has(cells[0], 'look-header-cell')) return false;   // strong: a header cell's weight
                     var badge = find(cells[1], 'prose-badge');
@@ -110,7 +159,7 @@ class ProseTableTest extends JsModuleTestBase {
     void aCellSpansColumns_aShortRowStandsEmpty_andAHeadlessTableHasNoHead() {
         assertTrue(evalBool("""
                 (() => {
-                    var t = new ProseTable(testBranch(), { columns: ['', '', ''], rows: [[{ text: 'all three', colSpan: 3 }], ['a', 'b']] });
+                    var t = new ProseTable(testBranch(), new DocTableRelation({ columns: ['', '', ''], rows: [[{ text: 'all three', colSpan: 3 }], ['a', 'b']] }));
                     var table = find(t.root, 'hrg-table');
                     for (var k = 0; k < table.children.length; k++) if (table.children[k].tagName === 'thead') return false;
                     if (t.grid.viewMaps().cols() !== 3) return false;
@@ -119,21 +168,6 @@ class ProseTableTest extends JsModuleTestBase {
                     var cells = all(t.root, 'prose-cell').map(function (c) { return c.textContent; });
                     return cells.indexOf('a') >= 0 && cells.indexOf('b') >= 0 && cells.filter(function (s) { return s === ''; }).length === 3;
                 })()"""), "a span is a merged cell; a short row's rest is empty; no titles, no head");
-    }
-
-    @Test
-    void whatItCannotDraw_isRefusedByName() {
-        assertTrue(evalBool("""
-                (() => {
-                    var rowSpan = refusal({ columns: ['a', 'b'], rows: [[{ text: 'x', rowSpan: 2 }, 'y']] });
-                    var wide = refusal({ columns: ['a'], rows: [['x', 'y']] });
-                    var badge = refusal({ columns: ['a'], rows: [[{ text: 'x', badge: 'info' }]] });
-                    var align = refusal({ columns: [{ title: 'a', align: 'justify' }], rows: [] });
-                    var none = refusal({ columns: [], rows: [] });
-                    return /spans 2 rows: the grid spans columns only/.test(rowSpan) && /more cells than the 1 columns/.test(wide)
-                        && /badge is one of success, warning, danger, not "info"/.test(badge) && /align is one of left, center, right/.test(align)
-                        && /at least one column/.test(none);
-                })()"""), "row spans, rows wider than the table, words it has not: refused, by name");
     }
 
     @Test
@@ -163,7 +197,7 @@ class ProseTableTest extends JsModuleTestBase {
     void disposing_takesDownTheGridAndItsCells() {
         assertTrue(evalBool("""
                 (() => {
-                    var b = testBranch(), t = new ProseTable(b, { columns: ['a'], rows: [['x']] });
+                    var t = releases();
                     t.dispose();
                     return t.grid === null;
                 })()"""), "the table's own, dissolved");

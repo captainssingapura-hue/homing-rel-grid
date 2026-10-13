@@ -14,9 +14,10 @@ import hue.captains.singapura.js.homing.ui.look.LookModule;
 import java.util.List;
 
 /**
- * RFC 0050 · Episode 2 — Appendix: The Frame: a document's table, out of the box. Columns and rows of text handed in,
- * and a grid that reads as a document's table - made with the house's document table ({@code HouseProse}), its cells
- * the house's data and header cells, its caption the house's caption. Read only; a copy carries what its cells say.
+ * RFC 0050 · Episode 2 — Appendix: The Frame: a document's table, out of the box. A {@code DocTableRelation} handed in -
+ * nothing else, checked - and a grid that reads as a document's table: made with the house's document table
+ * ({@code HouseProse}), its cells the house's data and header cells, its caption the house's caption. Read only; a copy
+ * carries what its cells say.
  */
 public record ProseTableModule() implements DomModule<ProseTableModule> {
 
@@ -29,6 +30,8 @@ public record ProseTableModule() implements DomModule<ProseTableModule> {
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 // the design it is made with, unless it is handed another
                 .add(new ModuleImports<>(List.of(new HouseProseModule.HouseProse()), HouseProseModule.INSTANCE))
+                // what it is handed, and takes nothing else
+                .add(new ModuleImports<>(List.of(new DocTableRelationModule.DocTableRelation()), DocTableRelationModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new ProseCellsModule.ProseCell(), new ProseCellsModule.ProseHeader()), ProseCellsModule.INSTANCE))
                 // a copy: the question it answers, and its answer
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridCopyRequested(), new RelGridProtocolModule.RelGridClipboardContent()),
