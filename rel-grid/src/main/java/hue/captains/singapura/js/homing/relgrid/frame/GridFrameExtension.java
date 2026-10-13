@@ -3,6 +3,8 @@ package hue.captains.singapura.js.homing.relgrid.frame;
 import hue.captains.singapura.js.homing.component.taxonomy.Component;
 import hue.captains.singapura.js.homing.component.taxonomy.TaxonomyExtension;
 import hue.captains.singapura.js.homing.component.taxonomy.TaxonomySource;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrame.CopiedArea;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrame.CopiedBorder;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame.CursorBorder;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame.EditorAnchor;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame.GridEdge;
@@ -35,6 +37,6 @@ public record GridFrameExtension() implements TaxonomyExtension {
     @Override public List<Component<?>> components() {
         return List.of(GridEdge.INSTANCE, Lattice.INSTANCE, CursorBorder.INSTANCE, HeldCursorBorder.INSTANCE, LentCursorBorder.INSTANCE,
                        SelectionFill.INSTANCE, HeaderBand.INSTANCE, GutterBand.INSTANCE, EditorAnchor.INSTANCE, Mask.INSTANCE,
-                       QuestionPanel.INSTANCE, MergeHost.INSTANCE, ResizeGuide.INSTANCE);
+                       QuestionPanel.INSTANCE, MergeHost.INSTANCE, ResizeGuide.INSTANCE, CopiedArea.INSTANCE, CopiedBorder.INSTANCE);
     }
 }

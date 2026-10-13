@@ -153,4 +153,27 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE); }
         public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<ResizeGuide, GridFrame, D> {}
     }
+
+    /**
+     * The box over a block the grid last copied (RFC 0050 · Episode 2, appendix The Copied Range): its ground - a
+     * tint at most, the cells showing through - and an animation effect, a band that sweeps across, or none. There
+     * while the copy stands; its being there is the copy shown.
+     */
+    public record CopiedArea() implements VirtualComponent<GridFrame>, Owns {
+        public static final CopiedArea INSTANCE = new CopiedArea();
+        @Override public GridFrame parent() { return GridFrame.INSTANCE; }
+        @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE, Target.Animation.Effect.INSTANCE); }
+        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<CopiedArea, GridFrame, D> {}
+    }
+
+    /**
+     * The line round a block the grid last copied, on its edge - a vector line, never filled: its ink and an
+     * animation effect, the dashes that march, or none.
+     */
+    public record CopiedBorder() implements VirtualComponent<GridFrame>, Owns {
+        public static final CopiedBorder INSTANCE = new CopiedBorder();
+        @Override public GridFrame parent() { return GridFrame.INSTANCE; }
+        @Override public List<Target> owns() { return List.of(Target.Color.Stroke.INSTANCE, Target.Animation.Effect.INSTANCE); }
+        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<CopiedBorder, GridFrame, D> {}
+    }
 }

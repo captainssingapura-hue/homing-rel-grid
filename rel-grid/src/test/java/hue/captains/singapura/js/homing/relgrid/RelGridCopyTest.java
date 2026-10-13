@@ -211,7 +211,7 @@ class RelGridCopyTest extends JsModuleTestBase {
         assertTrue(evalBool("""
                 (() => {
                     // Answered on a microtask, well inside the delay: the mask never mounted.
-                    if (F.mask() !== null || F.wrap().children.length !== 1) return false;
+                    if (F.mask() !== null || F.wrap().children.length !== 2) return false;   // the table, and the copy shown over what was copied
                     if (F.grid.isPending()) return false;
                     if (pendingTimers() !== 0) return false;                   // the delay was cancelled
                     // The grid WROTE it — both forms — and reported it; it read nothing.

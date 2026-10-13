@@ -36,6 +36,7 @@ public record RelGridLayoutModule() implements DomModule<RelGridLayoutModule> {
                 .add(new ModuleImports<>(List.of(new RelGridSlotsModule.RelGridSlots()), RelGridSlotsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridOverlaysModule.RelGridOverlays()), RelGridOverlaysModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridMarksModule.RelGridMarks()), RelGridMarksModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridCopiedOverlayModule.RelGridCopiedOverlay()), RelGridCopiedOverlayModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridRevealModule.RelGridReveal()),
                         RelGridRevealModule.INSTANCE))
                 // The looks, typed: every class the layout mints or paints.

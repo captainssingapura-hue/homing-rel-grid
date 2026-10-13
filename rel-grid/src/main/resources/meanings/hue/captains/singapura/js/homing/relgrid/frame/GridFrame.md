@@ -55,3 +55,11 @@ One cell that reaches across several columns of its row.
 ## ResizeGuide
 
 Where a column's edge will land while the user resizes it.
+
+## CopiedArea
+
+The cells the grid last copied, shown as copied - until Escape, an edit, the next copy or a rearranged view.
+
+## CopiedBorder
+
+The line round the cells the grid last copied - the marching ants of a spreadsheet, or whatever a design draws there.

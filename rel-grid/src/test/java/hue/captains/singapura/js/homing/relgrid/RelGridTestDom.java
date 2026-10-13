@@ -39,10 +39,10 @@ public final class RelGridTestDom {
 
     public static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
-            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridMarksModule.js", "RelGridLayoutModule.js",
+            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridCopiedOverlayModule.js", "RelGridMarksModule.js", "RelGridLayoutModule.js",
             "RelGridCellsModule.js", "cells/RelGridStockCellsModule.js", "cells/RelGridLabelsModule.js",
             "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridHeadersModule.js", "RelGridSpansModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
-            "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
+            "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridCopiedModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
     public static final String SELECTION =
@@ -219,6 +219,8 @@ public final class RelGridTestDom {
                 head: makeEl("head"),
                 body: makeEl("body"),
                 createElement: function (tag) { return makeEl(tag); },
+                // an SVG element: the same stand-in, in SVG's namespace
+                createElementNS: function (ns, tag) { var el = makeEl(tag); el.namespaceURI = ns; return el; },
                 getElementById: function (id) {
                     for (var i = 0; i < this.head.children.length; i++)
                         if (this.head.children[i].id === id) return this.head.children[i];

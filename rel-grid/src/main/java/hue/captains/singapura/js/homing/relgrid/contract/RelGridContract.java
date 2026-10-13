@@ -174,6 +174,9 @@ public interface RelGridContract {
     int     selectionCount();                       // how many ranges were MADE; zero is the cursor's own
     // ─── copy (map 6, ext6) ──────────────────────────────────────────────
     boolean copy();                                 // ask what the selection is worth; write the answer. False when locked or channel-less
+    // ─── the copied range (appendix The Copied Range) ────────────────────
+    boolean cancelCopy();                           // nothing copied from here any more, the selection kept: Escape's first stage. False when there was none
+    Object  copied();                               // what was last copied from here, by identity: [{ pks, columns }], or none
     // ─── the view handover ───────────────────────────────────────────────
     boolean handoverView();                         // hand the rows' arrangement to the domain; present its View. False when locked or channel-less
     // ─── the window ──────────────────────────────────────────────────────

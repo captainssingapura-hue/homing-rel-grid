@@ -217,6 +217,44 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
     }
 
     /**
+     * A copied block's box (RFC 0050 · Episode 2, appendix The Copied Range): laid over the block's slots in the
+     * wrapper, over the slots' marks and a merged cell's host, under the sticky header, the editor's anchor and the
+     * mask; never in the pointer's way. Its ground and its effect are the design's (CopiedArea).
+     */
+    public record hrg_copied() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                position: absolute;
+                z-index: 32;
+                box-sizing: border-box;
+                pointer-events: none;
+                left: var(--hrg-left); top: var(--hrg-top);
+                width: var(--hrg-width); height: var(--hrg-height);
+                """;
+        }
+    }
+
+    /** The drawing a copied block's border is made in: the box's whole, its line free to stand on the box's edge. */
+    public record hrg_copied_line() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                overflow: visible;
+                pointer-events: none;
+                """;
+        }
+    }
+
+    /** The border's rectangle: a line, never filled. Its ink and its effect are the design's (CopiedBorder). */
+    public record hrg_copied_rect() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                fill: none;
+                """;
+        }
+    }
+
+    /**
      * An editor's anchor: laid over the slot, in the wrapper, OUTSIDE the
      * table — so an editor cannot widen a column, stretch a row, or be clipped
      * by its own cell, and a cell may open something larger than itself. On
@@ -380,7 +418,8 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
                 // looks
                 new hrg_wrap(), new hrg_frame(), new hrg_lit(),
                 new hrg_table(), new hrg_th(), new hrg_sticky(), new hrg_resize_handle(), new hrg_col(), new hrg_resize_guide(),
-                new hrg_td(), new hrg_merge(), new hrg_edit(), new hrg_gutter(), new hrg_gutter_head(), new hrg_gutter_col(),
+                new hrg_td(), new hrg_merge(), new hrg_copied(), new hrg_copied_line(), new hrg_copied_rect(),
+                new hrg_edit(), new hrg_gutter(), new hrg_gutter_head(), new hrg_gutter_col(),
                 new hrg_mask(), new hrg_panel(), new hrg_scratch(),
                 // states, after the looks they qualify
                 new hrg_fixed(),

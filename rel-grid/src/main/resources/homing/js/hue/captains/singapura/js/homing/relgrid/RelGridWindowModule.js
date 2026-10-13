@@ -16,6 +16,8 @@
 //   move(n)      ask view({ by: n }) and present the answer. True when the rows moved;
 //                false for 0, for nothing back, for the same rows back, and — loudly,
 //                on the console — for an answer that is not a list.
+//   told(message) the domain saying, unasked: RelGridViewChanged asks view() again and
+//                presents the answer; a stranger is recorded and refused. Whether anything was done.
 // =============================================================================
 
 /** The same rows, in the same order. */
@@ -51,5 +53,22 @@ class RelGridWindow {
         if (_hrgSameRows(keys, this._maps.rowView())) return false;
         this._maps.setRowView(keys);                          // → arrange("rows")
         return true;
+    }
+
+    /**
+     * The domain saying, unasked, through the host. A protocol value by kind:
+     * RelGridViewChanged — the View changed underneath the grid — is answered
+     * by asking view() again and presenting the answer, as any remap; an
+     * unknown kind is recorded and refused. Whether anything was done.
+     */
+    told(message) {
+        if (message instanceof RelGridViewChanged) {
+            var keys = this._relation.view();
+            if (!Array.isArray(keys)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + keys);
+            this._maps.setRowView(keys);                      // → arrange("rows")
+            return true;
+        }
+        console.error("[RelGrid] told something it does not understand:", message);
+        return false;
     }
 }

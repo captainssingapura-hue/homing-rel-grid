@@ -24,7 +24,9 @@
 // Keys: arrows move (a bare arrow at an edge goes nowhere and is REPORTED, so
 // a host stacking tables may step over); Shift+arrow extends; Ctrl+A selects
 // all; Ctrl+C asks the copy; Alt+Enter hands the rows' arrangement over; Enter
-// offers the cell control. A key is consumed only when it did something. An
+// offers the cell control; Escape cancels in two stages - the copy first, the
+// selection kept, then the selection, the cursor's cell remaining - and with
+// nothing to cancel is not the grid's. A key is consumed only when it did something. An
 // arrow held with Alt, Ctrl or Meta is not the grid's: it is the browser's —
 // Alt+← and Alt+→ are back and forward — and is left alone, not prevented.
 //
@@ -82,6 +84,13 @@ class RelGridGestures {
         this._selection.extend({ i: this._cursor.clampI(i), j: this._cursor.clampJ(j) }, pos);
         this._afterSelection();
         return true;
+    }
+
+    /** Whether the selection holds more than the cursor's own cell: then Escape has a selection to cancel. */
+    _beyondCursor() {
+        if (this._selection.count() === 0) return false;
+        var pos = this._cursor.pos(), rs = this._selection.resolve(pos);
+        return !(pos && rs.length === 1 && rs[0].i0 === pos.i && rs[0].i1 === pos.i && rs[0].j0 === pos.j && rs[0].j1 === pos.j);
     }
 
     /** Shift+arrow: step the corner extension moves, from the cursor on the first one. */
@@ -220,6 +229,15 @@ class RelGridGestures {
             }
         }
         else if (key === "Enter")      grid.takeControlAtCursor();
+        // Escape, in two stages (appendix The Copied Range): the copy cancelled and the selection kept; then the
+        // selection cancelled, the cursor's cell remaining. With nothing to cancel it is not the grid's: it bubbles.
+        else if (key === "Escape") {
+            if (!grid.cancelCopy()) {
+                if (!this._beyondCursor()) return;
+                this._selection.clear();
+                this._afterSelection();
+            }
+        }
         // PageUp/PageDown: the window's height of rows. Consumed only when the
         // relation moved the window; a static table leaves the key to the browser.
         else if (key === "PageDown" || key === "PageUp") {

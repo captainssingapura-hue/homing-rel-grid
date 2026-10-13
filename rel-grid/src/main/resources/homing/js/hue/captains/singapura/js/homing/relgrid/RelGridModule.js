@@ -122,6 +122,13 @@
 // LOCKED while a cell is deep OR a question is pending — the two are exclusive
 // (law 228) — every intent is refused, not deferred (law 221): keys, clicks,
 // drags, the handover, a resize, the window, and the programmatic twins of each.
+//
+// THE COPIED RANGE (appendix The Copied Range) is state kept here with the
+// cursor and the selection - RelGridCopied: the blocks of the last copy written,
+// by identity - set when a copy is written, before the host hears of it, and
+// cancelled by Escape's first stage (cancelCopy), a cell given control, a View
+// under which its blocks no longer stand as rectangles, and the grid's end. The
+// layout shows it, an overlay over each block; the grid never says how it looks.
 // =============================================================================
 
 class RelGrid {
@@ -167,6 +174,7 @@ class RelGrid {
             for (var d = 0; d < declared.length; d++) readOnly.add(declared[d]);
         }
         this._selection = new RelGridSelection();  // POSITIONS, and nothing else
+        this._copied = new RelGridCopied();        // the blocks last copied, by IDENTITY
         this._maps = new RelGridViewMaps({
             rowView: start, columns: r.columns(),
             columnView: opts.columnView || null,
@@ -213,6 +221,7 @@ class RelGrid {
             layout: this._layout, maps: this._maps, selection: this._selection,
             cursorPos: function () { return self._cursor.pos(); },
             clipboard: opts.clipboard || new RelGridClipboard({ branch: opts.branch }),
+            onWritten: function (blocks) { self._copied.set(blocks); self._showCopied(); },
             onCopied: opts.onCopied
         });
         this._gestures = new RelGridGestures({
@@ -265,6 +274,7 @@ class RelGrid {
             }
         }
         this._spans.settle();                                 // every cell is in; measure the hosts
+        this._showCopied();                                   // the copy where it stands now - or cancelled, if it no longer does
         this._cursor.resolve(this._control.isDeep());         // first: a cell the cursor leaves is told while it is still known
         this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree, forgotten
         this._selection.clear();                              // law 43: every range goes with the presented space
@@ -284,6 +294,9 @@ class RelGrid {
         this._layout.paintSelection(rects);
         this._channel.selectionChanged(rects);
     }
+
+    /** The copied state shown: an overlay over each block where it stands; a block that no longer stands cancels the copy. */
+    _showCopied() { var layout = this._layout; this._copied.show(this._maps, function (rects) { layout.paintCopied(rects); }); }
 
     /** Arrange again. The domain calls this after changing something the grid
      *  cannot see; it carries nothing and the grid asks nothing. */
@@ -319,6 +332,12 @@ class RelGrid {
         return this._channel.copy();
     }
 
+    /** The copy cancelled - nothing copied from here any more - and the selection kept: Escape's first stage. Whether there was one. */
+    cancelCopy() { if (!this._copied.clear()) return false; this._layout.paintCopied([]); return true; }
+
+    /** What was last copied from here, by identity - a block each, pks down and columns across - or nothing. */
+    copied() { return this._copied.identities(); }
+
     /** Hand the arrangement of the rows to the domain. The twin of Alt+Enter; the grid offers no control of its own. */
     handoverView() {
         if (this._locked() || !this._channel.has()) return false;
@@ -328,22 +347,10 @@ class RelGrid {
     // ── told, unasked: the channel's other direction ───────────────────────
 
     /**
-     * The domain saying, unasked, through the host. A protocol value by kind:
-     * RelGridViewChanged — the View changed underneath the grid — is answered
-     * by asking view() again and presenting the answer, as any remap; an
-     * unknown kind is recorded and refused. Whether anything was done.
+     * The domain saying, unasked, through the host - RelGridViewChanged: the View changed underneath the grid, and the
+     * window asks view() again and presents it; a stranger is refused. Whether anything was done.
      */
-    tell(message) {
-        if (this._destroyed) return false;
-        if (message instanceof RelGridViewChanged) {
-            var keys = this._relation.view();
-            if (!Array.isArray(keys)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + keys);
-            this._maps.setRowView(keys);                      // → arrange("rows")
-            return true;
-        }
-        console.error("[RelGrid] told something it does not understand:", message);
-        return false;
-    }
+    tell(message) { return this._destroyed ? false : this._window.told(message); }
 
     // ── the window: the same seam, asked to move ───────────────────────────
 
@@ -366,11 +373,13 @@ class RelGrid {
         return at ? this._control.may(at.id) : false;
     }
 
-    /** Offer the cursor's cell control. True when it was taken. */
+    /** Offer the cursor's cell control. True when it was taken - and then what was copied may change: the copy is cancelled. */
     takeControlAtCursor() {
         if (this._locked()) return false;
         var at = this._deepAt();
-        return at ? this._control.take(at) : false;
+        var taken = at ? this._control.take(at) : false;
+        if (taken) this.cancelCopy();
+        return taken;
     }
 
     // ── the surface ────────────────────────────────────────────────────────
@@ -440,6 +449,7 @@ class RelGrid {
         this._channel.destroy();
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._layout.el().removeEventListener("wheel", this._wheel);
+        this._copied.clear();
         this._cells.destroy();
         this._headers.destroy();
         this._layout.destroy();

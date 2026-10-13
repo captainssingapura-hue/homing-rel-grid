@@ -37,6 +37,7 @@
 //   openOverlay(i, j) / closeOverlay() / overlay()
 //   openMask() / openPanel(el) / closePanel() / closeMask() / mask() / panel()
 //   openGroup(i, j, n) / groupAt(i, j) / placeGroups() / closeGroups() / groups()
+//   paintCopied(rects) / copied()   the copied state shown: an overlay over each block (RelGridCopiedOverlay)
 // =============================================================================
 
 class RelGridLayout {
@@ -92,6 +93,11 @@ class RelGridLayout {
         });
         this._overlays = new RelGridOverlays({
             branch: this._branch, wrap: this._wrap, container: this._container, design: this._design,
+            slotAt: function (i, j) { return self._slots.slotAt(i, j); }
+        });
+        // THE COPIED RANGE: an overlay over each block the grid last copied, shown at the facade's direction.
+        this._copied = new RelGridCopiedOverlay({
+            branch: this._branch, wrap: this._wrap, design: this._design,
             slotAt: function (i, j) { return self._slots.slotAt(i, j); }
         });
         // THE MARKS: where the user is and what they have chosen, painted at the facade's direction.
@@ -193,9 +199,11 @@ class RelGridLayout {
     panel()             { return this._overlays.panel(); }
     openGroup(i, j, n)  { return this._overlays.openGroup(i, j, n); }
     groupAt(i, j)       { return this._overlays.groupAt(i, j); }
-    placeGroups()       { this._overlays.placeGroups(); return this; }
+    placeGroups()       { this._overlays.placeGroups(); this._copied.place(); return this; }   // the copied overlays follow the slots too
     closeGroups()       { this._overlays.closeGroups(); return this; }
     groups()            { return this._overlays.groups(); }
+    paintCopied(rects)  { this._copied.paint(rects); return this; }
+    copied()            { return this._copied.boxes(); }
 
     // ── the states the table wears, and the keyboard ───────────────────────
 
@@ -246,6 +254,7 @@ class RelGridLayout {
         if (this._box !== this._wrap) this._design.shed(GRID_FRAME.GRID_EDGE, this._box);   // the host's element, given back bare
         if (this._ro) { this._ro.disconnect(); this._ro = null; }
         this._overlays.destroy();
+        this._copied.close();
         this._slots.destroy();
         // The wrapper, table and header band stay the branch's: the host dissolves it.
         if (this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);

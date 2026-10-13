@@ -38,6 +38,8 @@ public final class RelGridCrate implements Crate {
                 // structural primitive: a grid is a component a widget composes, not
                 // a pane the shell is made of.
                 CrateEntry.of(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                // The copied state: the blocks last copied, by identity, and where they stand.
+                CrateEntry.of(RelGridCopiedModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The frame's leaves, generated from the house's taxonomy: what the grid asks its design to wear.
                 CrateEntry.of(GridFrameModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The looks, typed: generated CSS modules, one for the grid's chrome and one for the stock cell.
@@ -46,6 +48,7 @@ public final class RelGridCrate implements Crate {
                 CrateEntry.of(RelGridRevealModule.INSTANCE),
                 CrateEntry.of(RelGridSlotsModule.INSTANCE),
                 CrateEntry.of(RelGridOverlaysModule.INSTANCE),
+                CrateEntry.of(RelGridCopiedOverlayModule.INSTANCE),
                 CrateEntry.of(RelGridMarksModule.INSTANCE),
                 CrateEntry.of(RelGridLayoutModule.INSTANCE),
                 CrateEntry.of(RelGridClipboardModule.INSTANCE),
