@@ -48,6 +48,26 @@ class HouseGridTest extends JsModuleTestBase {
     }
 
     @Test
+    void whatWasCopied_marchesInEveryStyle_andSweepsInTheStylesOfLightAndMotion() {
+        for (String slug : HouseStyles.THEMES.keySet()) {
+            String css = HouseGridSheet.INSTANCE.css(slug);
+            assertTrue(css.contains("@keyframes effect-marching-ants {"), slug + " keyframes no ants:\n" + css);
+            assertTrue(css.indexOf("@keyframes effect-marching-ants {") < css.indexOf(".house-grid___"), slug + ": the keyframes ahead of the classes");
+            assertTrue(css.contains(".house-grid___copied-border__animation-effect {\n    stroke-width: 1.5px;\n    stroke-dasharray: 5 4;\n"
+                    + "    animation: effect-marching-ants 0.6s linear infinite;"), slug + ":\n" + css);
+            assertTrue(css.contains(".house-grid___copied-border__animation-effect-still {\n    stroke-width: 1.5px;\n    stroke-dasharray: 5 4;\n    animation: none;\n}"),
+                    slug + ": the ants' still dual, the dashes standing");
+            assertTrue(css.contains("prefers-reduced-motion: reduce"), slug + ": still where motion is reduced");
+            assertTrue(css.contains(".house-grid___copied-border__color-stroke {\n    stroke: "), slug + ": in the accent");
+        }
+        String futurism = HouseGridSheet.INSTANCE.css(slug("neo-futurism")), editorial = HouseGridSheet.INSTANCE.css(slug("editorial"));
+        assertTrue(futurism.contains("animation: effect-moving-gradient 1.6s linear infinite;"), "a band sweeps across what was copied:\n" + futurism);
+        assertTrue(futurism.contains("@keyframes effect-moving-gradient {"), futurism);
+        assertFalse(editorial.contains("effect-moving-gradient"), "editorial's ants march alone:\n" + editorial);
+        assertTrue(editorial.contains(".house-grid___copied-area__animation-effect {\n    animation: none;\n}"), editorial);
+    }
+
+    @Test
     void itsObject_wearsALeafOfTheFrame_andRefusesAnotherBranchs() {
         js = buildContext();
         js.eval("js", "var house_grid_sheet = 'the sheet';"
@@ -62,6 +82,9 @@ class HouseGridTest extends JsModuleTestBase {
                 js.eval("js", "var c = new El(); HouseGrid.wear(GRID_FRAME.HELD_CURSOR_BORDER, c); c.classes()").asString());
         assertTrue(js.eval("js", "(function () { try { HouseGrid.wear({ branch: 'tree-frame', token: 'lattice' }, new El()); return ''; } catch (e) { return e.message; } })()")
                 .asString().contains("a leaf of grid-frame is asked"));
+        assertEquals("house-grid___copied-border__animation-effect-still house-grid___copied-border__color-stroke",
+                js.eval("js", "var b = new El(); HouseGrid.wear(GRID_FRAME.COPIED_BORDER, b); HouseGrid.still(GRID_FRAME.COPIED_BORDER, b); b.classes()").asString(),
+                "the ants switched off: their class swapped for their still dual's");
     }
 
     @Test

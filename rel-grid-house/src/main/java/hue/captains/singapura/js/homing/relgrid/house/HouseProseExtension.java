@@ -11,6 +11,6 @@ public record HouseProseExtension() implements DesignExtension {
         return List.of(HouseProse.Edge.INSTANCE, HouseProse.Lattice.INSTANCE, HouseProse.Cursor.INSTANCE, HouseProse.HeldCursor.INSTANCE,
                        HouseProse.LentCursor.INSTANCE, HouseProse.Selection.INSTANCE, HouseProse.Header.INSTANCE, HouseProse.Gutter.INSTANCE,
                        HouseProse.Anchor.INSTANCE, HouseProse.Veil.INSTANCE, HouseProse.Panel.INSTANCE, HouseProse.Merged.INSTANCE,
-                       HouseProse.Guide.INSTANCE);
+                       HouseProse.Guide.INSTANCE, HouseProse.CopiedArea.INSTANCE, HouseProse.CopiedBorder.INSTANCE);
     }
 }

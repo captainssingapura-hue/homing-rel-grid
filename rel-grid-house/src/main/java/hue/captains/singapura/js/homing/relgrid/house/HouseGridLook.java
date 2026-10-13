@@ -51,6 +51,15 @@ record HouseGridLook() implements StatelessFunctionalObject {
                 + " --background-ramp-to: transparent; --background-mark: transparent;";
     }
 
+    /** No ground of its own, and a ramp an effect may sweep: clear at its ends, the colour in its middle. */
+    String ramp(String via) {
+        return "background-color: transparent; --background-ramp-from: transparent; --background-ramp-via: " + via + ";"
+                + " --background-ramp-to: transparent; --background-mark: transparent;";
+    }
+
+    /** Whether a copied range's box sweeps a band of its tint across, in the style worn: the styles of light and motion. */
+    boolean sweeps(Dressed theme) { return theme.style() instanceof NeoFuturism || theme.style() instanceof RetroFuturism; }
+
     /** One colour so much over another. */
     String mix(String colour, int percent, String over) { return "color-mix(in srgb, " + colour + " " + percent + "%, " + over + ")"; }
 

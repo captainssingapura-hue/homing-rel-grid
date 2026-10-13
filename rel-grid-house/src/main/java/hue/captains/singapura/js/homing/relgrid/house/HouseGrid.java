@@ -1,6 +1,7 @@
 package hue.captains.singapura.js.homing.relgrid.house;
 
 import hue.captains.singapura.js.homing.component.taxonomy.Design;
+import hue.captains.singapura.js.homing.design.AnimationEffect;
 import hue.captains.singapura.js.homing.design.State;
 import hue.captains.singapura.js.homing.design.Target;
 import hue.captains.singapura.js.homing.design.semantic.Answer;
@@ -8,6 +9,7 @@ import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
+import hue.captains.singapura.js.homing.ui.styles.HouseEffects;
 import hue.captains.singapura.js.homing.ui.styles.Seeds;
 
 import java.util.List;
@@ -17,7 +19,9 @@ import java.util.List;
  * drawn, in every house style and palette. The grid stands on the page's ground inside a hairline edge that lights in
  * the accent while the keys are with it; the lattice rules each cell off at its end and its foot; the cursor is a ring,
  * quiet while the keys are elsewhere, in the accent while they act on it, broken while its cell holds control; the
- * selection a wash of the accent; the header and the gutter bands on the raised layer, the header ruled heavier.
+ * selection a wash of the accent; the header and the gutter bands on the raised layer, the header ruled heavier; what
+ * was last copied, marching ants in the accent round it - and, in the styles of light and motion, a band of the accent
+ * sweeping across it.
  *
  * <p>The out-of-the-box design: a grid a page makes without naming another draws in it. A document's table, which
  * rules its rows only, is a design of its own.</p>
@@ -180,6 +184,28 @@ public record HouseGrid() implements Design<GridFrame> {
         public static final Guide INSTANCE = new Guide();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(GROUND, LOOK.ground(LOOK.seeds(theme).accent())));
+        }
+    }
+
+    /**
+     * A copied block's box: no ground of its own, the accent's tint the ramp an effect sweeps - a band of it moving
+     * across in the styles of light and motion, nothing moving in the others.
+     */
+    public record CopiedArea() implements GridFrame.CopiedArea.Concrete<HouseGrid>, Drawn {
+        public static final CopiedArea INSTANCE = new CopiedArea();
+        @Override public List<Drawing<?>> drawings(Dressed theme) {
+            Seeds s = LOOK.seeds(theme);
+            return List.of(new Drawing.Own<>(GROUND, LOOK.ramp(LOOK.mix(s.accent(), 28, "transparent"))),
+                           new Drawing.Animated(LOOK.sweeps(theme) ? HouseEffects.MovingGradient.INSTANCE : AnimationEffect.None.INSTANCE));
+        }
+    }
+
+    /** The line round a copied block: marching ants, in the accent - a spreadsheet's mark of what was copied. */
+    public record CopiedBorder() implements GridFrame.CopiedBorder.Concrete<HouseGrid>, Drawn {
+        public static final CopiedBorder INSTANCE = new CopiedBorder();
+        @Override public List<Drawing<?>> drawings(Dressed theme) {
+            return List.of(new Drawing.Own<>(Target.Color.Stroke.INSTANCE, "stroke: " + LOOK.seeds(theme).accent() + ";"),
+                           new Drawing.Animated(HouseEffects.MarchingAnts.INSTANCE));
         }
     }
 }

@@ -135,4 +135,22 @@ public record HouseProse() implements Design<GridFrame> {
         public static final Guide INSTANCE = new Guide();
         @Override public List<Drawing<?>> drawings(Dressed theme) { return List.of(new Drawing.As<>(GROUND, HouseGrid.Guide.INSTANCE)); }
     }
+
+    /** What was last copied: a document has no word for it - the house grid's box. */
+    public record CopiedArea() implements GridFrame.CopiedArea.Concrete<HouseProse>, Drawn {
+        public static final CopiedArea INSTANCE = new CopiedArea();
+        @Override public List<Drawing<?>> drawings(Dressed theme) {
+            return List.of(new Drawing.As<>(GROUND, HouseGrid.CopiedArea.INSTANCE),
+                           new Drawing.As<>(Target.Animation.Effect.INSTANCE, HouseGrid.CopiedArea.INSTANCE));
+        }
+    }
+
+    /** And the line round it: the house grid's marching ants. */
+    public record CopiedBorder() implements GridFrame.CopiedBorder.Concrete<HouseProse>, Drawn {
+        public static final CopiedBorder INSTANCE = new CopiedBorder();
+        @Override public List<Drawing<?>> drawings(Dressed theme) {
+            return List.of(new Drawing.As<>(Target.Color.Stroke.INSTANCE, HouseGrid.CopiedBorder.INSTANCE),
+                           new Drawing.As<>(Target.Animation.Effect.INSTANCE, HouseGrid.CopiedBorder.INSTANCE));
+        }
+    }
 }

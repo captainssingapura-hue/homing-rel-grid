@@ -12,6 +12,6 @@ public record HouseGridExtension() implements DesignExtension {
         return List.of(HouseGrid.Edge.INSTANCE, HouseGrid.Lattice.INSTANCE, HouseGrid.Cursor.INSTANCE, HouseGrid.HeldCursor.INSTANCE,
                        HouseGrid.LentCursor.INSTANCE, HouseGrid.Selection.INSTANCE, HouseGrid.Header.INSTANCE, HouseGrid.Gutter.INSTANCE,
                        HouseGrid.Anchor.INSTANCE, HouseGrid.Veil.INSTANCE, HouseGrid.Panel.INSTANCE, HouseGrid.Merged.INSTANCE,
-                       HouseGrid.Guide.INSTANCE);
+                       HouseGrid.Guide.INSTANCE, HouseGrid.CopiedArea.INSTANCE, HouseGrid.CopiedBorder.INSTANCE);
     }
 }
