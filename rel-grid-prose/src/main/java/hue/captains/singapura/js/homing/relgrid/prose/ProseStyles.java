@@ -53,9 +53,9 @@ public record ProseStyles() implements CssGroup<ProseStyles> {
     public record prose_center() implements CssClass<ProseStyles> { @Override public String body() { return "text-align: center;\n"; } }
     public record prose_right() implements CssClass<ProseStyles> { @Override public String body() { return "text-align: right;\n"; } }
 
-    /** A badge's box: inline, a block of its own, so its room and its corner hold. */
+    /** A badge's box: inline, a block of its own, so its room and its corner hold - and one line, never a pill broken in two. */
     public record prose_badge() implements CssClass<ProseStyles> {
-        @Override public String body() { return "display: inline-block;\n"; }
+        @Override public String body() { return "display: inline-block;\nwhite-space: nowrap;\n"; }
     }
 
     @Override public List<CssClass<ProseStyles>> cssClasses() {
