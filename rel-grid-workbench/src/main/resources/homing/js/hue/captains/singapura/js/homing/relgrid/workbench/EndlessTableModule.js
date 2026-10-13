@@ -29,7 +29,7 @@ class EndlessTable extends BenchWidget {
         this._domainB = this.branch.createBranch("domain");
         this._domainB.activate(Object.freeze({ toString: function () { return "endless"; } }));
 
-        hint.textContent = "ENDLESS — a million rows, twenty shown, and the grid never told there are more. The wheel over the table, ↑/↓ at the top or bottom row, PageUp/PageDown, and the buttons ask the relation for the View a few rows on; the grid arranges what comes back on the same twenty rows of slots. Every column but id edits (Enter), and an edit survives its row being scrolled away and back: the value is the relation’s. The readouts below are the party’s numbers, not the DOM’s: the grid’s branch must hold a constant count on the slots it started with, the domain’s at most two windows of rows, and the registry exactly the window.";
+        hint.textContent = "ENDLESS — a million rows, twenty shown, and the grid never told there are more. The wheel over the table, ↑/↓ at the top or bottom row, PageUp/PageDown, and the buttons ask the relation for the View a few rows on; the grid arranges what comes back on the same twenty rows of slots. Ctrl+C copies, and what was copied stays marked where it stands as the window moves - only its part in view. Every column but id edits (Enter), and an edit survives its row being scrolled away and back: the value is the relation’s. The readouts below are the party’s numbers, not the DOM’s: the grid’s branch must hold a constant count on the slots it started with, the domain’s at most two windows of rows, and the registry exactly the window.";
 
         this._N = N;
         this._W = W;
@@ -49,7 +49,18 @@ class EndlessTable extends BenchWidget {
             label: "Endless",
             onArranged: function () { self._afterChange(); },
             onCursorMoved: function () { self._report(); },
-            onEdge: function () { self._edges++; self._report(); }
+            onEdge: function () { self._edges++; self._report(); },
+            // Ctrl+C: the selected blocks as tab-separated text, each value the relation's - and what was copied is
+            // marked where it stands, however far the window travels from it
+            ask: function (q) {
+                if (!(q instanceof RelGridCopyRequested)) return Promise.resolve();
+                var rel = self._relation, text = q.blocks.map(function (b) {
+                    return b.pks.map(function (pk) {
+                        return b.columns.map(function (c) { return rel.valueOf(pk, c); }).join("\t");
+                    }).join("\n");
+                }).join("\n\n");
+                return Promise.resolve(new RelGridClipboardContent(text, undefined));
+            }
         });
         this._grid.setColumnWidths({ id: 70, name: 140, qty: 64, price: 70, note: 130 });
         this.keysTo = this._grid;

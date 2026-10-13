@@ -26,6 +26,8 @@
 //     the domain's, and the cell was only ever showing it.
 //   · at() / rows() / window() / held() / cellCount() / mints() / frees() —
 //     the gauges a bench reads; none of them is anything an arranger asks.
+//   · valueOf(pk, col) — what a cell says, by identity, an edit kept: what the
+//     bench's own copy reads. The domain's, never the arranger's.
 // =============================================================================
 
 var _WB_ENDLESS_NAMES = ["Anise", "Basil", "Caraway", "Dill", "Fennel", "Ginger", "Hyssop", "Juniper",
@@ -114,6 +116,7 @@ class EndlessRelation {
     mints()     { return this._mints; }
     frees()     { return this._frees; }
     edited(pk, col) { var key = this._indexOf(pk) + " " + col; return this._edits.has(key) ? this._edits.get(key) : null; }
+    valueOf(pk, col) { var k = this._indexOf(pk); return k < 0 ? "" : String(this._shown(k, col)); }
 
     dispose() {
         this._held.forEach(function (row) { row.cells.forEach(function (c) { c.dispose(); }); });

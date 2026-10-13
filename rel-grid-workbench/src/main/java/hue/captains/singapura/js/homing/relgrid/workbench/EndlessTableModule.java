@@ -10,6 +10,7 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.relgrid.RelGridModule;
+import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 import hue.captains.singapura.js.homing.relgrid.house.HouseGridModule;
 import hue.captains.singapura.js.homing.workspace.widgets.SelfContainedWidget;
 
@@ -38,6 +39,9 @@ public record EndlessTableModule() implements DomModule<EndlessTableModule> {
         return ImportsFor.<EndlessTableModule>builder()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
+                // the copy question it answers, and the content it answers with
+                .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridCopyRequested(), new RelGridProtocolModule.RelGridClipboardContent()),
+                        RelGridProtocolModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with
                 .add(new ModuleImports<>(List.of(new EndlessRelationModule.EndlessRelation()), EndlessRelationModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new WorkbenchStyles.wb_hint(), new WorkbenchStyles.wb_bar(),
