@@ -27,7 +27,8 @@ public final class Benches {
             EndlessBench.Workspace.INSTANCE,
             JsonTreeBench.Workspace.INSTANCE,
             ColourExtentsBench.Workspace.INSTANCE,
-            DocumentTableBench.Workspace.INSTANCE);
+            DocumentTableBench.Workspace.INSTANCE,
+            MinesweeperBench.Workspace.INSTANCE);
 
     /** The one group, its sections by what a bench asks of the grid. */
     public static final WorkspaceGroups GROUPS = WorkspaceGroups.of(
@@ -39,11 +40,12 @@ public final class Benches {
                     .section("Scale", GroupedWorkspace.of(EndlessBench.Workspace.INSTANCE.name(), "Endless Table"))
                     .section("Offerings", GroupedWorkspace.of(JsonTreeBench.Workspace.INSTANCE.name(), "JSON Tree"),
                                          GroupedWorkspace.of(DocumentTableBench.Workspace.INSTANCE.name(), "Document Table"))
-                    .section("Substrate", GroupedWorkspace.of(ColourExtentsBench.Workspace.INSTANCE.name(), "Colour Extents"))
+                    .section("Substrate", GroupedWorkspace.of(ColourExtentsBench.Workspace.INSTANCE.name(), "Colour Extents"),
+                                          GroupedWorkspace.of(MinesweeperBench.Workspace.INSTANCE.name(), "Minesweeper"))
                     .defaultTo(WorkspaceKind.of(ReplicatingTablesBench.Workspace.INSTANCE.name()))
                     .build());
 
     /** What the site serves: each bench declared, each filed, each arranged the first time. */
     public static final GroupedWorkspaces SITE = new GroupedWorkspaces(GROUPS, ALL)
-            .arranged(ReplicatingTablesBench.ARRANGED, HanArticleBench.ARRANGED, GamesBenches.CATALOGUE_ARRANGED, GamesBenches.TREE_ARRANGED, EndlessBench.ARRANGED, JsonTreeBench.ARRANGED, ColourExtentsBench.ARRANGED, DocumentTableBench.ARRANGED);
+            .arranged(ReplicatingTablesBench.ARRANGED, HanArticleBench.ARRANGED, GamesBenches.CATALOGUE_ARRANGED, GamesBenches.TREE_ARRANGED, EndlessBench.ARRANGED, JsonTreeBench.ARRANGED, ColourExtentsBench.ARRANGED, DocumentTableBench.ARRANGED, MinesweeperBench.ARRANGED);
 }

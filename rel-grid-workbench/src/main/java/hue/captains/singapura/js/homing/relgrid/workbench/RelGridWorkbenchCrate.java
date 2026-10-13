@@ -145,6 +145,14 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(ExtentStyles.INSTANCE),
                 CrateEntry.of(ExtentTableModule.INSTANCE),
                 CrateEntry.of(ExtentCardModule.INSTANCE),
+                // Minesweeper: the game pure, its tiles the cells, Vista's design of the frame, the widget that glues them.
+                CrateEntry.of(MinesweeperStyles.INSTANCE),
+                CrateEntry.of(MinesweeperBoardModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),   // the game alone: no DOM
+                CrateEntry.of(MineCellModule.INSTANCE),
+                CrateEntry.of(MinesweeperRelationModule.INSTANCE),
+                CrateEntry.of(MinesweeperVistaSheet.INSTANCE),
+                CrateEntry.of(MinesweeperVistaModule.INSTANCE),
+                CrateEntry.of(MinesweeperGameModule.INSTANCE),
                 // The benches' page: their manifests, where they are filed and how arranged, and the app.
                 CrateEntry.of(BenchesModule.INSTANCE),
                 CrateEntry.of(BenchLayoutModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
