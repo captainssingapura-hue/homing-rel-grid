@@ -182,15 +182,42 @@ class ProseTableTest extends JsModuleTestBase {
     }
 
     @Test
-    void aCopy_carriesWhatItsCellsSay() {
+    void aCopy_carriesTheHeadOverTheRows_asTextAndAsATable() {
         assertTrue(evalBool("""
                 (() => {
                     var t = releases();
                     var c = t._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1'])]));
-                    return c instanceof RelGridClipboardContent && c.text === '1.0\\t1,204\\n1.1\\t980'
-                        && c.html === '<table><tr><td>1.0</td><td>1,204</td></tr><tr><td>1.1</td><td>980</td></tr></table>'
+                    return c instanceof RelGridClipboardContent && c.text === 'Version\\tDownloads\\n1.0\\t1,204\\n1.1\\t980'
+                        && c.html === '<table><thead><tr><th>Version</th><th>Downloads</th></tr></thead>'
+                                    + '<tbody><tr><td>1.0</td><td>1,204</td></tr><tr><td>1.1</td><td>980</td></tr></tbody></table>'
                         && t._answer({}) === undefined;
-                })()"""), "a block a run of tab-separated lines, and a table; any other question, nothing");
+                })()"""), "two cells or more: the selected columns' titles over the rows, tab-separated and as a table with its head");
+    }
+
+    @Test
+    void aCopyOfOneCell_isItsValueAlone() {
+        assertTrue(evalBool("""
+                (() => {
+                    var c = releases()._answer(new RelGridCopyRequested([new RelGridBlock(['r1'], ['c1'])]));
+                    return c.text === '980' && c.html === undefined;
+                })()"""), "a single cell: its value, no head, no table");
+    }
+
+    @Test
+    void aCopy_takesEachRangeWithItsHead_aSpanAColspan_andNoHeadWhereThereIsNone() {
+        assertTrue(evalBool("""
+                (() => {
+                    var two = releases()._answer(new RelGridCopyRequested([new RelGridBlock(['r0'], ['c0']), new RelGridBlock(['r1'], ['c1'])]));
+                    if (two.text !== 'Version\\n1.0\\n\\nDownloads\\n980') return false;
+                    var spans = new ProseTable(testBranch(), new DocTableRelation({ columns: ['a', 'b', 'c'],
+                                                                                  rows: [[{ text: 'all', colSpan: 3 }], ['x', 'y', 'z']] }));
+                    var s = spans._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1', 'c2'])]));
+                    if (s.text !== 'a\\tb\\tc\\nall\\t\\t\\nx\\ty\\tz') return false;
+                    if (s.html.indexOf('<tr><td colspan="3">all</td></tr>') < 0) return false;
+                    var bare = new ProseTable(testBranch(), new DocTableRelation({ columns: ['', ''], rows: [['k', 'v'], ['k2', 'v2']] }));
+                    var b = bare._answer(new RelGridCopyRequested([new RelGridBlock(['r0', 'r1'], ['c0', 'c1'])]));
+                    return b.text === 'k\\tv\\nk2\\tv2' && b.html.indexOf('<thead>') < 0;
+                })()"""), "a block a range, each with its head; a span a colspan, empty under it in the text; no titles, no head");
     }
 
     @Test

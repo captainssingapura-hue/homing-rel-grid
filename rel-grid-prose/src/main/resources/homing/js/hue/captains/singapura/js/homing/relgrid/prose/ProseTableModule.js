@@ -97,19 +97,42 @@ class ProseTable {
         });
     }
 
-    /** A copy: what the cells say, as text a block apart, and as a table. Any other question: nothing. */
+    /**
+     * A copy, what the relation says: one cell, its value alone; two or more, each block its columns' titles over its
+     * rows - tab-separated lines, a blank line between blocks, and a table with its head, a span a colspan. A relation
+     * with no titles copies its rows alone. Any other question: nothing.
+     */
     _answer(question) {
         if (!(question instanceof RelGridCopyRequested)) return undefined;
-        var relation = this._relation, texts = [], html = [];
-        question.blocks.forEach(function (block) {
-            var lines = [], trs = [];
+        var relation = this._relation, blocks = question.blocks;
+        if (blocks.length === 1 && blocks[0].pks.length === 1 && blocks[0].columns.length === 1) {
+            var one = relation.cell(blocks[0].pks[0], blocks[0].columns[0]);
+            return new RelGridClipboardContent(one ? one.text : "", undefined);
+        }
+        var esc = ProseTable._escaped, texts = [], html = [];
+        blocks.forEach(function (block) {
+            var lines = [], rows = [];
+            if (relation.titled()) {
+                var titles = block.columns.map(function (col) { return relation.column(col).title; });
+                lines.push(titles.join("\t"));
+                rows.push("<thead><tr>" + titles.map(function (t) { return "<th>" + esc(t) + "</th>"; }).join("") + "</tr></thead>");
+            }
+            var body = [];
             block.pks.forEach(function (pk) {
-                var said = block.columns.map(function (col) { var c = relation.cell(pk, col); return c ? c.text : ""; });
+                var said = [], tds = [];
+                for (var k = 0; k < block.columns.length; k++) {
+                    var c = relation.cell(pk, block.columns[k]);
+                    said.push(c ? c.text : "");
+                    var span = c ? Math.min(c.colSpan, block.columns.length - k) : 1;
+                    tds.push("<td" + (span > 1 ? " colspan=\"" + span + "\"" : "") + ">" + esc(c ? c.text : "") + "</td>");
+                    for (var s = 1; s < span; s++) said.push(c ? relation.cell(pk, block.columns[++k]).text : "");   // what it reaches over: in the text, empty
+                }
                 lines.push(said.join("\t"));
-                trs.push("<tr>" + said.map(function (t) { return "<td>" + ProseTable._escaped(t) + "</td>"; }).join("") + "</tr>");
+                body.push("<tr>" + tds.join("") + "</tr>");
             });
+            rows.push("<tbody>" + body.join("") + "</tbody>");
             texts.push(lines.join("\n"));
-            html.push("<table>" + trs.join("") + "</table>");
+            html.push("<table>" + rows.join("") + "</table>");
         });
         return new RelGridClipboardContent(texts.join("\n\n"), html.join(""));
     }
