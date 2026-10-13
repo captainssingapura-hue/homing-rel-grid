@@ -24,7 +24,7 @@
 // Keys: arrows move (a bare arrow at an edge goes nowhere and is REPORTED, so
 // a host stacking tables may step over); Shift+arrow extends; Ctrl+A selects
 // all; Ctrl+C asks the copy; Alt+Enter hands the rows' arrangement over; Enter
-// offers the cell control; Escape cancels in two stages - the copy first, the
+// offers the cell control, consumed when it was taken; Escape cancels in two stages - the copy first, the
 // selection kept, then the selection, the cursor's cell remaining - and with
 // nothing to cancel is not the grid's. A key is consumed only when it did something. An
 // arrow held with Alt, Ctrl or Meta is not the grid's: it is the browser's —
@@ -228,7 +228,9 @@ class RelGridGestures {
                 });
             }
         }
-        else if (key === "Enter")      grid.takeControlAtCursor();
+        // Enter: control offered to the cell under the cursor. Consumed only when it took it: a cell that takes
+        // none - a tile whose moves are its domain's - leaves the key to bubble on to whoever holds the grid.
+        else if (key === "Enter") { if (!grid.takeControlAtCursor()) return; }
         // Escape, in two stages (appendix The Copied Range): the copy cancelled and the selection kept; then the
         // selection cancelled, the cursor's cell remaining. With nothing to cancel it is not the grid's: it bubbles.
         else if (key === "Escape") {
