@@ -26,7 +26,8 @@ public final class Benches {
             GamesBenches.TreeBench.INSTANCE,
             EndlessBench.Workspace.INSTANCE,
             JsonTreeBench.Workspace.INSTANCE,
-            ColourExtentsBench.Workspace.INSTANCE);
+            ColourExtentsBench.Workspace.INSTANCE,
+            DocumentTableBench.Workspace.INSTANCE);
 
     /** The one group, its sections by what a bench asks of the grid. */
     public static final WorkspaceGroups GROUPS = WorkspaceGroups.of(
@@ -36,12 +37,13 @@ public final class Benches {
                     .section("Ordering", GroupedWorkspace.of(GamesBenches.CatalogueBench.INSTANCE.name(), "Games Catalogue"),
                                          GroupedWorkspace.of(GamesBenches.TreeBench.INSTANCE.name(), "Games Tree"))
                     .section("Scale", GroupedWorkspace.of(EndlessBench.Workspace.INSTANCE.name(), "Endless Table"))
-                    .section("Offerings", GroupedWorkspace.of(JsonTreeBench.Workspace.INSTANCE.name(), "JSON Tree"))
+                    .section("Offerings", GroupedWorkspace.of(JsonTreeBench.Workspace.INSTANCE.name(), "JSON Tree"),
+                                         GroupedWorkspace.of(DocumentTableBench.Workspace.INSTANCE.name(), "Document Table"))
                     .section("Substrate", GroupedWorkspace.of(ColourExtentsBench.Workspace.INSTANCE.name(), "Colour Extents"))
                     .defaultTo(WorkspaceKind.of(ReplicatingTablesBench.Workspace.INSTANCE.name()))
                     .build());
 
     /** What the site serves: each bench declared, each filed, each arranged the first time. */
     public static final GroupedWorkspaces SITE = new GroupedWorkspaces(GROUPS, ALL)
-            .arranged(ReplicatingTablesBench.ARRANGED, HanArticleBench.ARRANGED, GamesBenches.CATALOGUE_ARRANGED, GamesBenches.TREE_ARRANGED, EndlessBench.ARRANGED, JsonTreeBench.ARRANGED, ColourExtentsBench.ARRANGED);
+            .arranged(ReplicatingTablesBench.ARRANGED, HanArticleBench.ARRANGED, GamesBenches.CATALOGUE_ARRANGED, GamesBenches.TREE_ARRANGED, EndlessBench.ARRANGED, JsonTreeBench.ARRANGED, ColourExtentsBench.ARRANGED, DocumentTableBench.ARRANGED);
 }

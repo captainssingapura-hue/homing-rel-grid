@@ -30,7 +30,7 @@ public record GridWorkbenchCatalogue() implements L0_Catalogue<GridWorkbenchCata
                 Leaf.of(this, new NodeName(group.id().value()), group.title(),
                                 "Open the benches. Each is arranged the first time; dock more specimens from the picker - each a control for "
                               + "the others, and comparing them is the point. Switch between benches from the workspace controls.",
-                                mpa.page(GridBenchesApp.INSTANCE, new GroupedWorkspacePageModule.Params(group.id().value(), true, "")))
+                                mpa.fillingPage(GridBenchesApp.INSTANCE, new GroupedWorkspacePageModule.Params(group.id().value(), true, "")))
                         .badge("WORKSPACE").icon("🧪"));
     }
 }

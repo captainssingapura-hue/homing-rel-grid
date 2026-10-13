@@ -13,11 +13,14 @@ import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
 import hue.captains.singapura.js.homing.relgrid.house.RelGridHouseCrate;
 import hue.captains.singapura.js.homing.relgrid.cells.RelGridCellsCrate;
+import hue.captains.singapura.js.homing.relgrid.prose.RelGridProseCrate;
 import hue.captains.singapura.js.homing.reltree.RelTreeCrate;
 import hue.captains.singapura.js.homing.server.ServerCrate;
 import hue.captains.singapura.js.homing.workspace.parties.WorkspacePartiesCrate;
 import hue.captains.singapura.js.homing.workspace.site.WorkspaceSiteCrate;
 import hue.captains.singapura.js.homing.workspace.widgets.WorkspaceWidgetsCrate;
+import hue.captains.singapura.js.homing.ui.elements.UiElementsCrate;
+import hue.captains.singapura.js.homing.ui.look.UiLookCrate;
 
 import java.util.List;
 
@@ -50,6 +53,8 @@ public final class RelGridWorkbenchCrate implements Crate {
                 RelTreeCrate.INSTANCE,
                 // And the JSON kit, the first out-of-the-box offering on it.
                 JsonKitCrate.INSTANCE,
+                // And the document table, the second: its pages in the house's words.
+                RelGridProseCrate.INSTANCE, UiElementsCrate.INSTANCE, UiLookCrate.INSTANCE,
                 // The workspace each bench is: its widgets' contract, their parties, the grouped page.
                 WorkspaceWidgetsCrate.INSTANCE,
                 WorkspacePartiesCrate.INSTANCE,
@@ -132,6 +137,10 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(JsonTextSecretaryModule.INSTANCE, StandardJsModuleType.SECRETARY),
                 CrateEntry.of(JsonInputModule.INSTANCE),
                 CrateEntry.of(JsonDisplayModule.INSTANCE),
+                CrateEntry.of(ProsePagesModule.INSTANCE),
+                CrateEntry.of(ProseNotesModule.INSTANCE),
+                CrateEntry.of(ProseReferenceModule.INSTANCE),
+                CrateEntry.of(ProseFiguresModule.INSTANCE),
                 // The Colour Extents bench: its looks, its two widgets.
                 CrateEntry.of(ExtentStyles.INSTANCE),
                 CrateEntry.of(ExtentTableModule.INSTANCE),

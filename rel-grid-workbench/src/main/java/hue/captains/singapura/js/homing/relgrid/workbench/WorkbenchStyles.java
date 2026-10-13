@@ -14,6 +14,19 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     public static final WorkbenchStyles INSTANCE = new WorkbenchStyles();
 
+    /** A page of words and tables, as a document sets them: a column, room between its parts, never wider than reads well. */
+    public record wb_page() implements CssClass<WorkbenchStyles> {
+        @Override public String body() { return """
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                max-width: 72rem;
+                min-width: 0;
+                padding: 6px 4px 16px;
+                """;
+        }
+    }
+
     public record wb_root() implements CssClass<WorkbenchStyles> {
         @Override public String body() { return """
                 display: flex;
@@ -177,7 +190,7 @@ public record WorkbenchStyles() implements CssGroup<WorkbenchStyles> {
 
     @Override
     public List<CssClass<WorkbenchStyles>> cssClasses() {
-        return List.of(new wb_root(), new wb_host(), new wb_frame(), new wb_port(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_json_text(), new wb_input(), new wb_status());
+        return List.of(new wb_page(), new wb_root(), new wb_host(), new wb_frame(), new wb_port(), new wb_han_host(), new wb_window_host(), new wb_han_text(), new wb_hint(), new wb_bar(), new wb_btn(), new wb_json_text(), new wb_input(), new wb_status());
     }
 
 }
