@@ -42,6 +42,7 @@
         <module>rel-grid-cells</module>
         <module>rel-grid</module>
         <module>rel-grid-house</module>
+        <module>rel-grid-prose</module>
         <module>rel-grid-selection</module>
         <module>rel-grid-group</module>
         <module>rel-tree</module>
