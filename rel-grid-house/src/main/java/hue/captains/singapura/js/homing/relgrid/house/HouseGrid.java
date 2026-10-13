@@ -90,13 +90,14 @@ public record HouseGrid() implements Design<GridFrame> {
         }
     }
 
-    /** The selection: a wash of the accent while a slot is selected, nothing otherwise. */
+    /** The selection: a wash of the accent while a slot is selected, but the cursor's own slot - its ring shows it, as a sheet's active cell is. */
     public record Selection() implements GridFrame.SelectionFill.Concrete<HouseGrid>, Drawn {
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             Seeds s = LOOK.seeds(theme);
             return List.of(new Drawing.Own<>(GROUND, new Answer.Own<Target.Color.Background>(LOOK.ground("transparent"))
-                    .at(State.SELECTED, LOOK.ground(LOOK.mix(s.accent(), 16, "transparent")))));
+                    .at(State.SELECTED, LOOK.ground(LOOK.mix(s.accent(), 16, "transparent")))
+                    .at(State.CURRENT, LOOK.ground("transparent"))));
         }
     }
 
@@ -160,13 +161,14 @@ public record HouseGrid() implements Design<GridFrame> {
         }
     }
 
-    /** A merged cell's box: the page's ground, ruled as a cell is, its rule in the accent while the cursor is on it. */
+    /** A merged cell's box: the page's ground, ruled as a cell is, washed while selected but not while the cursor is on it - its rule in the accent then. */
     public record Merged() implements GridFrame.MergeHost.Concrete<HouseGrid>, Drawn {
         public static final Merged INSTANCE = new Merged();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             Seeds s = LOOK.seeds(theme);
             return List.of(new Drawing.Own<>(GROUND, new Answer.Own<Target.Color.Background>(LOOK.ground(s.ground()))
-                                   .at(State.SELECTED, LOOK.ground(LOOK.mix(s.accent(), 16, s.ground())))),
+                                   .at(State.SELECTED, LOOK.ground(LOOK.mix(s.accent(), 16, s.ground())))
+                                   .at(State.CURRENT, LOOK.ground(s.ground()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + LOOK.rule(theme) + " " + LOOK.rule(theme) + " 0; border-style: solid;"),
                            new Drawing.Own<>(BORDER_COLOUR, new Answer.Own<Target.Color.Border>("border-color: " + s.border() + ";")
                                    .at(State.CURRENT, "border-color: " + s.accent() + ";")));

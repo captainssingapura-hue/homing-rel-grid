@@ -3,9 +3,9 @@
 // they have chosen, painted on the slots at the facade's direction, and nothing
 // else. The cursor's slot wears the cursor's fact and the frame's leaf for where
 // the keys are - elsewhere, with the grid, lent to its cell - and wears another
-// as they move; a selected slot wears the selection's fact and aria-selected,
-// which the design's selection fill shows by. The cursor's row's number is
-// current, the numbers of rows selected whole selected; a merged cell's host
+// as they move, and is current (aria-current); a selected slot wears the
+// selection's fact and aria-selected, which the design's selection fill shows
+// by. The cursor's row's number is current too, the numbers of rows selected whole selected; a merged cell's host
 // mirrors both, so the group reads as one cell. The marks decide nothing: they
 // paint the facade's answers, and never learn a class of the design's.
 //
@@ -54,8 +54,8 @@ class RelGridMarks {
     paintCursor(ij) {
         var td = ij ? this._slotAt(ij.i, ij.j) : null;
         if (this._cursorTd !== td) {
-            if (this._cursorTd) { css.removeClass(this._cursorTd, hrg_cursor); this._shedCursor(); }
-            if (td) css.addClass(td, hrg_cursor);
+            if (this._cursorTd) { css.removeClass(this._cursorTd, hrg_cursor); this._cursorTd.removeAttribute("aria-current"); this._shedCursor(); }
+            if (td) { css.addClass(td, hrg_cursor); td.setAttribute("aria-current", "true"); }
             this._cursorTd = td;
             this._wearCursor();
         }

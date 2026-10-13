@@ -327,6 +327,18 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
         @Override public String body() { return ""; }
     }
 
+    /**
+     * A merged cell's leading slot, while the cell is taller than its row's slots alone would make it: the row held
+     * at the height the cell needs, which the layout measures ({@code --hrg-row-floor}). A slot's height is its
+     * row's least height.
+     */
+    public record hrg_row_floor() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                height: var(--hrg-row-floor);
+                """;
+        }
+    }
+
     /** A slot a merged cell reaches over. A fact: the lattice is shed from it too. */
     public record hrg_covered() implements CssClass<RelGridStyles> {
         @Override public String body() { return ""; }
@@ -372,7 +384,7 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
                 new hrg_mask(), new hrg_panel(), new hrg_scratch(),
                 // states, after the looks they qualify
                 new hrg_fixed(),
-                new hrg_lead(), new hrg_covered(), new hrg_group_end(),
+                new hrg_lead(), new hrg_row_floor(), new hrg_covered(), new hrg_group_end(),
                 new hrg_sel(), new hrg_cursor(), new hrg_deep(), new hrg_masked());
     }
 }

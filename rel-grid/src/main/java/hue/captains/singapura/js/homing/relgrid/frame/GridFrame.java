@@ -76,11 +76,11 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<LentCursorBorder, GridFrame, D> {}
     }
 
-    /** A body slot's ground, shown while the slot is selected. */
+    /** A body slot's ground, shown while the slot is selected; the cursor's own slot is current, which a design may show by its ring alone. */
     public record SelectionFill() implements VirtualComponent<GridFrame>, Owns {
         public static final SelectionFill INSTANCE = new SelectionFill();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
-        @Override public List<StateType<?>> states() { return List.of(HouseStates.Selected.INSTANCE); }
+        @Override public List<StateType<?>> states() { return List.of(HouseStates.Selected.INSTANCE, HouseStates.Current.INSTANCE); }
         @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE); }
         public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<SelectionFill, GridFrame, D> {}
     }

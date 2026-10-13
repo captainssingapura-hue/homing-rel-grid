@@ -270,8 +270,8 @@ class RelGridOverlays {
     /** The marks off a group's slots: they are plain slots again. */
     _unmark(grp) {
         var lead = grp.marked[0];
-        css.removeClass(lead, hrg_lead);
-        if (lead.style && lead.style.removeProperty) lead.style.removeProperty("--hrg-span");
+        css.removeClass(lead, hrg_lead, hrg_row_floor);
+        if (lead.style && lead.style.removeProperty) { lead.style.removeProperty("--hrg-span"); lead.style.removeProperty("--hrg-row-floor"); }
         for (var k = 1; k < grp.marked.length; k++) css.removeClass(grp.marked[k], hrg_covered, hrg_group_end);
         for (var m = 0; m < grp.marked.length; m++) this._design.wear(GRID_FRAME.LATTICE, grp.marked[m]);   // their own rules again
     }
@@ -285,10 +285,27 @@ class RelGridOverlays {
         return null;
     }
 
-    /** Size and place every merged cell's host over its slots, as they are now. */
+    /**
+     * Size and place every merged cell's host over its slots, as they are now. A cell in a host stands outside its
+     * row, so a row its slots alone would leave shorter than the cell is held at the height the cell needs - its
+     * leading slot floored (--hrg-row-floor) - and the hosts placed again over the rows as they then are.
+     */
     placeGroups() {
-        for (var g = 0; g < this._groups.length; g++) {
-            var grp = this._groups[g];
+        var g, grp, floored = false;
+        for (g = 0; g < this._groups.length; g++) {
+            grp = this._groups[g];
+            _hrgPlace(grp.el, this._unionRect(grp.i, grp.j, grp.n));
+        }
+        for (g = 0; g < this._groups.length; g++) {
+            grp = this._groups[g];
+            var lead = grp.marked[0], need = grp.el.scrollHeight, has = grp.el.clientHeight;
+            if (!lead || !lead.style || !(need > has)) continue;
+            lead.style.setProperty("--hrg-row-floor", need + "px");
+            css.addClass(lead, hrg_row_floor);
+            floored = true;
+        }
+        if (floored) for (g = 0; g < this._groups.length; g++) {
+            grp = this._groups[g];
             _hrgPlace(grp.el, this._unionRect(grp.i, grp.j, grp.n));
         }
         return this;

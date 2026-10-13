@@ -30,7 +30,7 @@ public record RelGridOverlaysModule() implements DomModule<RelGridOverlaysModule
                 .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(
                         new RelGridStyles.hrg_edit(), new RelGridStyles.hrg_mask(), new RelGridStyles.hrg_panel(),
-                        new RelGridStyles.hrg_merge(), new RelGridStyles.hrg_lead(), new RelGridStyles.hrg_covered(),
+                        new RelGridStyles.hrg_merge(), new RelGridStyles.hrg_lead(), new RelGridStyles.hrg_row_floor(), new RelGridStyles.hrg_covered(),
                         new RelGridStyles.hrg_group_end()), RelGridStyles.INSTANCE))
                 .build();
     }
