@@ -2,6 +2,7 @@ package hue.captains.singapura.js.homing.relgrid.house;
 
 import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.Target;
+import hue.captains.singapura.js.homing.design.color.ColorScheme;
 import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
@@ -20,7 +21,7 @@ import java.util.List;
  * selection, the boxes laid over a slot - it draws as the house's grid does ({@link Drawing.As}); the cursor shows only
  * while the keys are with the table, so at rest it reads as prose.
  */
-public record HouseProse() implements Design<GridFrame> {
+public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
 
     public static final HouseProse INSTANCE = new HouseProse();
 
@@ -92,7 +93,7 @@ public record HouseProse() implements Design<GridFrame> {
         public static final Gutter INSTANCE = new Gutter();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Of<>(GROUND, HEADER_CELL), new Drawing.Of<>(BORDER, HEADER_CELL), new Drawing.Of<>(BORDER_COLOUR, HEADER_CELL),
-                           new Drawing.Of<>(Target.Color.Ink.INSTANCE, CAPTION), new Drawing.Of<>(Target.Type.Scale.INSTANCE, CAPTION));
+                           new Drawing.Of<>(Target.Color.Text.INSTANCE, CAPTION), new Drawing.Of<>(Target.Type.Scale.INSTANCE, CAPTION));
         }
     }
 

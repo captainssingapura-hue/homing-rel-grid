@@ -41,7 +41,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
             return List.of(Target.Color.Background.INSTANCE, Target.Shape.Border.INSTANCE, Target.Color.Border.INSTANCE,
                            Target.Shape.Outline.INSTANCE, Target.Color.Outline.INSTANCE, Target.Shape.Corner.INSTANCE);
         }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<GridEdge, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<GridEdge, GridFrame, D> {}
     }
 
     /** A body slot's share of the lattice: the rules after it, along its row and down its column. */
@@ -49,7 +49,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final Lattice INSTANCE = new Lattice();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Shape.Border.INSTANCE, Target.Color.Border.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<Lattice, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<Lattice, GridFrame, D> {}
     }
 
     /** The cursor's slot, while the keys are elsewhere: the place the grid would go on from. */
@@ -57,7 +57,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final CursorBorder INSTANCE = new CursorBorder();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Shape.Outline.INSTANCE, Target.Color.Outline.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<CursorBorder, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<CursorBorder, GridFrame, D> {}
     }
 
     /** The cursor's slot, while the grid holds the keys: where they act. */
@@ -65,7 +65,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final HeldCursorBorder INSTANCE = new HeldCursorBorder();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Shape.Outline.INSTANCE, Target.Color.Outline.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<HeldCursorBorder, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<HeldCursorBorder, GridFrame, D> {}
     }
 
     /** The cursor's slot, while its cell holds control: the grid has handed the keys in. */
@@ -73,7 +73,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final LentCursorBorder INSTANCE = new LentCursorBorder();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Shape.Outline.INSTANCE, Target.Color.Outline.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<LentCursorBorder, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<LentCursorBorder, GridFrame, D> {}
     }
 
     /** A body slot's ground, shown while the slot is selected; the cursor's own slot is current, which a design may show by its ring alone. */
@@ -82,7 +82,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<StateType<?>> states() { return List.of(HouseStates.Selected.INSTANCE, HouseStates.Current.INSTANCE); }
         @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<SelectionFill, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<SelectionFill, GridFrame, D> {}
     }
 
     /** A header slot: the band the columns' heads stand in, and its rules. */
@@ -92,7 +92,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         @Override public List<Target> owns() {
             return List.of(Target.Color.Background.INSTANCE, Target.Shape.Border.INSTANCE, Target.Color.Border.INSTANCE);
         }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<HeaderBand, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<HeaderBand, GridFrame, D> {}
     }
 
     /** A gutter slot: the band the rows' numbers stand in, the numbers' ink and size, and its rules. */
@@ -102,9 +102,9 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         @Override public List<StateType<?>> states() { return List.of(HouseStates.Current.INSTANCE, HouseStates.Selected.INSTANCE); }
         @Override public List<Target> owns() {
             return List.of(Target.Color.Background.INSTANCE, Target.Shape.Border.INSTANCE, Target.Color.Border.INSTANCE,
-                           Target.Color.Ink.INSTANCE, Target.Type.Scale.INSTANCE);
+                           Target.Color.Text.INSTANCE, Target.Type.Scale.INSTANCE);
         }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<GutterBand, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<GutterBand, GridFrame, D> {}
     }
 
     /** The box an open editor is laid in over its slot: the cell's editor is the cell's, the box the grid's. */
@@ -112,7 +112,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final EditorAnchor INSTANCE = new EditorAnchor();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Shape.Shadow.INSTANCE, Target.Color.BoxShadow.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<EditorAnchor, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<EditorAnchor, GridFrame, D> {}
     }
 
     /** The veil over the table while a question is put. */
@@ -120,7 +120,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final Mask INSTANCE = new Mask();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<Mask, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<Mask, GridFrame, D> {}
     }
 
     /** The plate a question stands on over the veil: the domain's answer is placed in it. */
@@ -132,7 +132,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
                            Target.Shape.Corner.INSTANCE, Target.Shape.Shadow.INSTANCE, Target.Color.BoxShadow.INSTANCE,
                            Target.Size.Inset.INSTANCE);
         }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<QuestionPanel, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<QuestionPanel, GridFrame, D> {}
     }
 
     /** The box a merged cell is placed in, over the slots it reaches across: its ground and its rules. */
@@ -143,7 +143,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         @Override public List<Target> owns() {
             return List.of(Target.Color.Background.INSTANCE, Target.Shape.Border.INSTANCE, Target.Color.Border.INSTANCE);
         }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<MergeHost, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<MergeHost, GridFrame, D> {}
     }
 
     /** The line a column's resizing draws, where its edge will land. */
@@ -151,7 +151,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final ResizeGuide INSTANCE = new ResizeGuide();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<ResizeGuide, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<ResizeGuide, GridFrame, D> {}
     }
 
     /**
@@ -163,7 +163,7 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final CopiedArea INSTANCE = new CopiedArea();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Color.Background.INSTANCE, Target.Animation.Effect.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<CopiedArea, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<CopiedArea, GridFrame, D> {}
     }
 
     /**
@@ -174,6 +174,6 @@ public record GridFrame() implements L2_ComponentBranch<HouseBranches.Region>, D
         public static final CopiedBorder INSTANCE = new CopiedBorder();
         @Override public GridFrame parent() { return GridFrame.INSTANCE; }
         @Override public List<Target> owns() { return List.of(Target.Color.Stroke.INSTANCE, Target.Animation.Effect.INSTANCE); }
-        public interface Concrete<D extends Design<GridFrame>> extends ConcreteComponent<CopiedBorder, GridFrame, D> {}
+        public interface Concrete<D extends Design<?, GridFrame>> extends ConcreteComponent<CopiedBorder, GridFrame, D> {}
     }
 }

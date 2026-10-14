@@ -55,7 +55,7 @@ class RelGridLabelHeader {
             this._el = this._branch.createElement("label", "div");
             css.addClass(this._el, hrg_label, this._overflow);
             if (!RelGridLabelHeader._look) RelGridLabelHeader._look = new Look(Object.freeze({ LEAF: "header-cell" }), ROLE.STANDALONE);
-            RelGridLabelHeader._look.wear(this._el, { only: ["color-ink", "type-face", "type-weight", "type-scale", "type-treatment"] });
+            RelGridLabelHeader._look.wear(this._el, { only: ["color-text", "type-face", "type-weight", "type-scale", "type-treatment"] });
             this._el.textContent = this._label;
         }
         return this._el;

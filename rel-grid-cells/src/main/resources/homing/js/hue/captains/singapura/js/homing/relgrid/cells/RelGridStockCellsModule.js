@@ -76,7 +76,7 @@ function _hrgTextOverflow(choice, who) {
 function _hrgWearHouse(leaf, el) {
     var looks = _hrgWearHouse._looks || (_hrgWearHouse._looks = {});
     var look = looks[leaf] || (looks[leaf] = new Look(Object.freeze({ LEAF: leaf }), ROLE.STANDALONE));
-    look.wear(el, { only: ["color-ink", "type-face", "type-weight", "type-scale", "type-treatment"] });
+    look.wear(el, { only: ["color-text", "type-face", "type-weight", "type-scale", "type-treatment"] });
     return el;
 }
 

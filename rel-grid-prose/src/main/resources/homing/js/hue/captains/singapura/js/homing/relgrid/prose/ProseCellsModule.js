@@ -71,10 +71,10 @@ class ProseCell {
         _proseAligned(el, this._align);
         var except = _PROSE_NO_RULES.slice();
         if (this._emphasis === "strong") except.push("type-weight");
-        if (this._emphasis === "muted") except.push("color-ink");
+        if (this._emphasis === "muted") except.push("color-text");
         _proseWear("data-cell", el, { except: except });
         if (this._emphasis === "strong") _proseWear("header-cell", el, { only: ["type-weight"] });   // a strong cell: a header's weight
-        if (this._emphasis === "muted") _proseWear("caption", el, { only: ["color-ink"] });         // a muted one: a caption's ink
+        if (this._emphasis === "muted") _proseWear("caption", el, { only: ["color-text"] });         // a muted one: a caption's ink
         var into = el;
         if (this._badge) {
             into = this._branch.createElement("badge", "span");

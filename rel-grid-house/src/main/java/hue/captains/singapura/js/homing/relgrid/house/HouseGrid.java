@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.AnimationEffect;
 import hue.captains.singapura.js.homing.design.State;
 import hue.captains.singapura.js.homing.design.Target;
+import hue.captains.singapura.js.homing.design.color.ColorScheme;
 import hue.captains.singapura.js.homing.design.semantic.Answer;
 import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
@@ -26,7 +27,7 @@ import java.util.List;
  * <p>The out-of-the-box design: a grid a page makes without naming another draws in it. A document's table, which
  * rules its rows only, is a design of its own.</p>
  */
-public record HouseGrid() implements Design<GridFrame> {
+public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
 
     public static final HouseGrid INSTANCE = new HouseGrid();
 
@@ -127,7 +128,7 @@ public record HouseGrid() implements Design<GridFrame> {
                                    .at(State.CURRENT, LOOK.ground(LOOK.mix(s.accent(), 12, s.raised())))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + rule + " " + rule + " 0; border-style: solid;"),
                            new Drawing.Own<>(BORDER_COLOUR, "border-color: " + s.border() + ";"),
-                           new Drawing.Own<>(Target.Color.Ink.INSTANCE, new Answer.Own<Target.Color.Ink>("color: " + LOOK.mix(s.text(), 60, "transparent") + ";")
+                           new Drawing.Own<>(Target.Color.Text.INSTANCE, new Answer.Own<Target.Color.Text>("color: " + LOOK.mix(s.text(), 60, "transparent") + ";")
                                    .at(State.CURRENT, "color: " + s.text() + ";")),
                            new Drawing.Own<>(Target.Type.Scale.INSTANCE, "font-size: 0.85em; line-height: inherit;"));
         }

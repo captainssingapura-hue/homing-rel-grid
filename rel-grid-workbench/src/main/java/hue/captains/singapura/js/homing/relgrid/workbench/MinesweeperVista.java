@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.Owns;
 import hue.captains.singapura.js.homing.design.State;
 import hue.captains.singapura.js.homing.design.Target;
+import hue.captains.singapura.js.homing.design.color.ColorScheme;
 import hue.captains.singapura.js.homing.design.semantic.Answer;
 import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
@@ -21,7 +22,7 @@ import java.util.List;
  * air between the tiles; a question on a glass plate over a pale veil. The tiles bevel themselves - they are the game's
  * cells, with a design of their own - so no rule is drawn between them, and what the game never shows draws nothing.
  */
-public record MinesweeperVista() implements Design<GridFrame> {
+public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> {
 
     public static final MinesweeperVista INSTANCE = new MinesweeperVista();
 
