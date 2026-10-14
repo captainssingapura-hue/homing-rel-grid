@@ -142,17 +142,22 @@ class ProseTableTest extends JsModuleTestBase {
     }
 
     @Test
-    void aCellsEmphasisAndBadge_areTheHousesWords() {
+    void aCell_isAContainer_itsWordsTheHouses() {
         assertTrue(evalBool("""
                 (() => {
                     var t = new ProseTable(testBranch(), new DocTableRelation({ columns: ['Area', 'State', 'Note'], rows: [[
                         { text: 'Grid', emphasis: 'strong' }, { text: 'done', badge: 'success' }, { text: 'later', emphasis: 'muted', align: 'center' }]] }));
                     var cells = all(t.root, 'prose-cell');
-                    if (!has(cells[0], 'look-data-cell') || !has(cells[0], 'look-header-cell')) return false;   // strong: a header cell's weight
+                    if (!cells.every(function (c) { return has(c, 'look-data-cell') && !has(c, 'look-strong') && !has(c, 'look-muted'); })) return false;
+                    var strong = cells[0].children[0];                                                          // its words said strongly
+                    if (!strong || !has(strong, 'look-strong') || strong.textContent !== 'Grid') return false;
                     var badge = find(cells[1], 'prose-badge');
                     if (!badge || !has(badge, 'look-success-badge') || badge.textContent !== 'done') return false;
-                    return has(cells[2], 'look-caption') && has(cells[2], 'prose-center');                     // muted: a caption's ink
-                })()"""), "strong is a header cell's weight, muted a caption's ink, a badge the house's of its tone");
+                    var muted = cells[2].children[0];                                                           // its words under the rest
+                    if (!muted || !has(muted, 'look-muted') || muted.textContent !== 'later' || !has(cells[2], 'prose-center')) return false;
+                    var head = all(t.root, 'prose-head')[0].children[0];                                        // a header's title said strongly
+                    return !!head && has(head, 'look-strong') && head.textContent === 'Area';
+                })()"""), "a cell is a container, the house's data cell; its words its own - strong, muted - and a badge the house's of its tone");
     }
 
     @Test

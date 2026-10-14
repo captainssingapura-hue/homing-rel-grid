@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The house's document table: complete over the grid's frame in every house theme, its rules and its head the theme's
- * own for a document's table - taken, not copied - and what a document has no word for the house grid's.
+ * The house's document table: complete over the grid's frame in every house theme, its rules and its head its own -
+ * none taken from a cell, a container - measured per style as the house's document tables were, and what a document has
+ * no word for the house grid's.
  */
 class HouseProseTest {
 
@@ -27,12 +28,12 @@ class HouseProseTest {
     }
 
     @Test
-    void itsRules_areTheThemesForADocumentsTable_inEveryHouseTheme() {
+    void itsRules_areItsOwn_measuredAsTheHousesDocumentTablesWere_inEveryHouseTheme() {
         for (String slug : HouseStyles.THEMES.keySet()) {
             String css = HouseProseSheet.INSTANCE.css(slug);
-            assertTrue(css.contains("/* the theme's data-cell */\n.house-prose___lattice__shape-border {"), slug + " takes no rule from the data cell:\n" + css);
-            assertTrue(css.contains("/* the theme's data-cell */\n.house-prose___lattice__color-border {\n    border-color: "), slug);
-            assertTrue(css.contains("/* the theme's header-cell */\n.house-prose___header-band__shape-border {"), slug);
+            assertFalse(css.contains("/* the theme's "), slug + ": nothing taken from a cell - a cell is a container, its room and no line:\n" + css);
+            assertTrue(css.contains(".house-prose___lattice__color-border {\n    border-color: "), slug + ": its rows ruled in the hairline");
+            assertTrue(css.contains(".house-prose___header-band__shape-border {"), slug);
             assertFalse(css.contains(".house-prose___grid-edge__"), slug + ": a document's table has no edge:\n" + css);
             assertFalse(css.contains(".house-prose___cursor-border__"), slug + ": no cursor while the keys are elsewhere");
             assertTrue(css.contains("/* from house-grid___held-cursor-border__color-outline */\n.house-prose___held-cursor-border__color-outline {"),

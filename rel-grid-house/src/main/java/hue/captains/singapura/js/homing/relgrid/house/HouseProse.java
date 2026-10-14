@@ -3,21 +3,27 @@ package hue.captains.singapura.js.homing.relgrid.house;
 import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.Target;
 import hue.captains.singapura.js.homing.design.color.ColorScheme;
+import hue.captains.singapura.js.homing.design.color.Paint;
+import hue.captains.singapura.js.homing.design.semantic.DesignStyle;
 import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
-import hue.captains.singapura.js.homing.ui.taxonomy.HouseRegions;
-import hue.captains.singapura.js.homing.ui.taxonomy.HouseText;
+import hue.captains.singapura.js.homing.ui.styles.HouseColours.Border;
+import hue.captains.singapura.js.homing.ui.styles.HouseColours.Clear;
+import hue.captains.singapura.js.homing.ui.styles.HouseColours.TextFaded;
+import hue.captains.singapura.js.homing.ui.styles.NeoBrutalism;
+import hue.captains.singapura.js.homing.ui.styles.NeoFuturism;
+import hue.captains.singapura.js.homing.ui.styles.Sketchy;
 
 import java.util.List;
 
 /**
  * The house's design of a document's table (RFC 0050 · Episode 2 — Appendix: The Frame): the grid's frame drawn as the
- * house draws a table in a document, and nothing of its own where the document has a word for it. Its rules are a data
- * cell's, taken from the theme ({@link Drawing.Of}) - so a style that rules its tables heavier rules this one heavier -
- * its header band a header cell's, its gutter a header cell's with a caption's ink and size; it has no edge and no
- * ground, and stands on the page as a document's table does. What a document has no word for - where the keys are, a
+ * house draws a table in a document. Its lines are its own, never its cells': a cell is a container, its room and no line
+ * (the owner, 15 Oct). Each row ruled underneath in the hairline - heavier in the styles that draw heavy lines - its head
+ * unruled but where a style rules a table's head; its gutter's numbers in the faded ink, at a caption's measure; it has
+ * no edge and no ground, and stands on the page as a document's table does. What a document has no word for - where the keys are, a
  * selection, the boxes laid over a slot - it draws as the house's grid does ({@link Drawing.As}); the cursor shows only
  * while the keys are with the table, so at rest it reads as prose.
  */
@@ -31,9 +37,22 @@ public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
     private static final Target.Shape.Outline RING = Target.Shape.Outline.INSTANCE;
     private static final Target.Color.Outline RING_COLOUR = Target.Color.Outline.INSTANCE;
 
-    private static final HouseRegions.DataCell DATA_CELL = HouseRegions.DataCell.INSTANCE;
-    private static final HouseRegions.HeaderCell HEADER_CELL = HouseRegions.HeaderCell.INSTANCE;
-    private static final HouseText.Caption CAPTION = HouseText.Caption.INSTANCE;
+    /** A row's rule, along its foot, in the style worn: two pixels where the style draws heavy lines, else a hairline's one. */
+    private static String rowRule(Dressed theme) {
+        DesignStyle<?> s = theme.style();
+        return foot(s instanceof NeoBrutalism || s instanceof Sketchy ? "2px" : "1px");
+    }
+
+    /** The head's rule: none, but where a style rules a table's head - neo-futurism's one pixel, sketchy's two. */
+    private static String headRule(Dressed theme) {
+        DesignStyle<?> s = theme.style();
+        return s instanceof Sketchy ? foot("2px") : s instanceof NeoFuturism ? foot("1px") : "border-width: 0;";
+    }
+
+    private static String foot(String width) { return "border-width: 0 0 " + width + " 0; border-style: solid;"; }
+
+    /** Its lines' colour: the hairline. */
+    private static final Paint.With<ColorScheme.Base, Target.Color.Border> HAIRLINE = new Paint.With<>(new Border());
 
     /** No edge, no ground, no corner, no light: a document's table stands on the page. */
     public record Edge() implements GridFrame.GridEdge.Concrete<HouseProse>, Drawn {
@@ -44,11 +63,11 @@ public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
         }
     }
 
-    /** Every rule a data cell's, as the theme rules a document's table: under each row. */
+    /** Every row ruled underneath, in the hairline. */
     public record Lattice() implements GridFrame.Lattice.Concrete<HouseProse>, Drawn {
         public static final Lattice INSTANCE = new Lattice();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Of<>(BORDER, DATA_CELL), new Drawing.Of<>(BORDER_COLOUR, DATA_CELL));
+            return List.of(new Drawing.Own<>(BORDER, rowRule(theme)), new Drawing.Painted<>(BORDER_COLOUR, HAIRLINE));
         }
     }
 
@@ -80,20 +99,23 @@ public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
         @Override public List<Drawing<?>> drawings(Dressed theme) { return List.of(new Drawing.As<>(GROUND, HouseGrid.Selection.INSTANCE)); }
     }
 
-    /** The header band: a header cell's ground and foot, as the theme draws a document's table's head. */
+    /** The header band: no ground, its foot ruled where a style rules a table's head. */
     public record Header() implements GridFrame.HeaderBand.Concrete<HouseProse>, Drawn {
         public static final Header INSTANCE = new Header();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Of<>(GROUND, HEADER_CELL), new Drawing.Of<>(BORDER, HEADER_CELL), new Drawing.Of<>(BORDER_COLOUR, HEADER_CELL));
+            return List.of(new Drawing.Painted<>(GROUND, new Paint.Ground<>(new Clear())), new Drawing.Own<>(BORDER, headRule(theme)),
+                           new Drawing.Painted<>(BORDER_COLOUR, HAIRLINE));
         }
     }
 
-    /** The gutter band: a header cell's ground and rules, its numbers in a caption's ink and size. */
+    /** The gutter band: ruled as the head is, its numbers in the faded ink, at a caption's measure. */
     public record Gutter() implements GridFrame.GutterBand.Concrete<HouseProse>, Drawn {
         public static final Gutter INSTANCE = new Gutter();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Of<>(GROUND, HEADER_CELL), new Drawing.Of<>(BORDER, HEADER_CELL), new Drawing.Of<>(BORDER_COLOUR, HEADER_CELL),
-                           new Drawing.Of<>(Target.Color.Text.INSTANCE, CAPTION), new Drawing.Of<>(Target.Type.Scale.INSTANCE, CAPTION));
+            return List.of(new Drawing.Painted<>(GROUND, new Paint.Ground<>(new Clear())), new Drawing.Own<>(BORDER, headRule(theme)),
+                           new Drawing.Painted<>(BORDER_COLOUR, HAIRLINE),
+                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Paint.With<>(new TextFaded())),
+                           new Drawing.Own<>(Target.Type.Scale.INSTANCE, "font-size: calc(13px * pow(1.2, var(--size))); line-height: 1.5;"));
         }
     }
 
@@ -123,11 +145,12 @@ public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
         }
     }
 
-    /** A merged cell's box: ruled as a data cell is, on the house grid's ground, which covers the slots it reaches over. */
+    /** A merged cell's box: ruled as a row is, on the house grid's ground, which covers the slots it reaches over. */
     public record Merged() implements GridFrame.MergeHost.Concrete<HouseProse>, Drawn {
         public static final Merged INSTANCE = new Merged();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.As<>(GROUND, HouseGrid.Merged.INSTANCE), new Drawing.Of<>(BORDER, DATA_CELL), new Drawing.Of<>(BORDER_COLOUR, DATA_CELL));
+            return List.of(new Drawing.As<>(GROUND, HouseGrid.Merged.INSTANCE), new Drawing.Own<>(BORDER, rowRule(theme)),
+                           new Drawing.Painted<>(BORDER_COLOUR, HAIRLINE));
         }
     }
 
