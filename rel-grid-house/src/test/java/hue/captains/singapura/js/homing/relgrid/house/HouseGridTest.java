@@ -4,12 +4,14 @@ import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
 import hue.captains.singapura.js.homing.design.semantic.DesignLeaves;
 import hue.captains.singapura.js.homing.design.semantic.DesignRead;
+import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameExtension;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
 import hue.captains.singapura.js.homing.ui.taxonomy.HouseTaxonomy;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -24,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class HouseGridTest extends JsModuleTestBase {
 
+    /** The house's styling, installed as a site installs it at bootstrap: the designs are judged in its themes. */
+    @BeforeAll
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling()); }
+
     @Test
     void theHouseGrid_isCompleteOverTheFrame_inEveryHouseTheme() {
         DesignRead grid = HouseDesigns.INSTANCE.of(HouseGrid.INSTANCE);   // read and judged in every house theme
@@ -35,7 +41,7 @@ class HouseGridTest extends JsModuleTestBase {
 
     @Test
     void itsSheet_isFlattenedInEveryHouseTheme_ruledAsTheStyleRules() {
-        for (String slug : HouseStyles.THEMES.keySet()) {
+        for (String slug : HouseStyles.INSTANCE.styling().themes().keySet()) {
             String css = HouseGridSheet.INSTANCE.css(slug);
             assertTrue(css.contains(".house-grid___lattice__shape-border {"), slug + " rules no lattice:\n" + css);
             assertTrue(css.contains(".house-grid___grid-edge__color-outline {"), slug);
@@ -49,7 +55,7 @@ class HouseGridTest extends JsModuleTestBase {
 
     @Test
     void whatWasCopied_marchesInEveryStyle_andSweepsInTheStylesOfLightAndMotion() {
-        for (String slug : HouseStyles.THEMES.keySet()) {
+        for (String slug : HouseStyles.INSTANCE.styling().themes().keySet()) {
             String css = HouseGridSheet.INSTANCE.css(slug);
             assertTrue(css.contains("@keyframes effect-marching-ants {"), slug + " keyframes no ants:\n" + css);
             assertTrue(css.indexOf("@keyframes effect-marching-ants {") < css.indexOf(".house-grid___"), slug + ": the keyframes ahead of the classes");
@@ -95,7 +101,7 @@ class HouseGridTest extends JsModuleTestBase {
 
     /** A style in its own palette, by the theme's slug. */
     private static String slug(String style) {
-        for (var e : HouseStyles.THEMES.entrySet()) if (e.getValue().style().token().equals(style)) return e.getKey();
+        for (var e : HouseStyles.INSTANCE.styling().themes().entrySet()) if (e.getValue().style().token().equals(style)) return e.getKey();
         throw new IllegalArgumentException(style);
     }
 }

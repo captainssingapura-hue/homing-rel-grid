@@ -1,10 +1,12 @@
 package hue.captains.singapura.js.homing.relgrid.house;
 
 import hue.captains.singapura.js.homing.design.semantic.DesignRead;
+import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameExtension;
 import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class HouseProseTest {
 
+    /** The house's styling, installed as a site installs it at bootstrap: the designs are judged in its themes. */
+    @BeforeAll
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling()); }
+
     @Test
     void theHouseProse_isCompleteOverTheFrame_inEveryHouseTheme() {
         DesignRead prose = HouseDesigns.INSTANCE.of(HouseProse.INSTANCE);   // read and judged in every house theme
@@ -29,7 +35,7 @@ class HouseProseTest {
 
     @Test
     void itsRules_areItsOwn_measuredAsTheHousesDocumentTablesWere_inEveryHouseTheme() {
-        for (String slug : HouseStyles.THEMES.keySet()) {
+        for (String slug : HouseStyles.INSTANCE.styling().themes().keySet()) {
             String css = HouseProseSheet.INSTANCE.css(slug);
             assertFalse(css.contains("/* the theme's "), slug + ": nothing taken from a cell - a cell is a container, its room and no line:\n" + css);
             assertTrue(css.contains(".house-prose___lattice__color-border {\n    border-color: "), slug + ": its rows ruled in the hairline");
@@ -57,7 +63,7 @@ class HouseProseTest {
 
     /** A style in its own palette, by the theme's slug. */
     private static String slug(String style) {
-        for (var e : HouseStyles.THEMES.entrySet()) if (e.getValue().style().token().equals(style)) return e.getKey();
+        for (var e : HouseStyles.INSTANCE.styling().themes().entrySet()) if (e.getValue().style().token().equals(style)) return e.getKey();
         throw new IllegalArgumentException(style);
     }
 }
