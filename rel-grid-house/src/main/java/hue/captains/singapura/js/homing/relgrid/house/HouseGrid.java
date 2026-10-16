@@ -12,13 +12,6 @@ import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridCast;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridCursorRing;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridGutterInk;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridHeadRule;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridMergedSelected;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridSelection;
-import hue.captains.singapura.js.homing.relgrid.house.GridColours.GridVeil;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.Accent;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentEdge;
@@ -42,8 +35,8 @@ import java.util.List;
  * was last copied, marching ants in the accent round it - and, in the styles of light and motion, a band of the accent
  * sweeping across it.
  *
- * <p>Every colour is painted in the tree's (RFC 0067, appendix Semantic Colours and Flavours): the house's, and the
- * grid's own mixes of them that {@link GridColours} grafts - never a value, so the grid follows the palette worn.</p>
+ * <p>Every colour is the house's own (RFC 0067, D43): an extension invents none, and gives its own meanings to the
+ * house's colours - never a value, so the grid follows the palette worn.</p>
  *
  * <p>The out-of-the-box design: a grid a page makes without naming another draws in it. A document's table, which
  * rules its rows only, is a design of its own.</p>
@@ -95,7 +88,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
         public static final Cursor INSTANCE = new Cursor();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -2px;"),
-                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new GridCursorRing())));
+                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new HouseColours.GrooveEdge())));
         }
     }
 
@@ -122,7 +115,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new Clear()))
-                    .at(State.SELECTED, ground(new GridSelection()))
+                    .at(State.SELECTED, ground(new HouseColours.AccentWashSoft()))
                     .at(State.CURRENT, ground(new Clear()))));
         }
     }
@@ -133,7 +126,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, ground(new Raised())),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + LOOK.rule(theme) + " " + LOOK.headRule(theme) + " 0; border-style: solid;"),
-                           new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new GridHeadRule())));
+                           new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new HouseColours.GrooveEdge())));
         }
     }
 
@@ -147,7 +140,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
                                    .at(State.CURRENT, ground(new AccentTintFaint()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + rule + " " + rule + " 0; border-style: solid;"),
                            new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new Border())),
-                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Answer.Painted<ColorScheme.Base, Target.Color.Text>(new Paint.With<>(new GridGutterInk()))
+                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Answer.Painted<ColorScheme.Base, Target.Color.Text>(new Paint.With<>(new HouseColours.TextFaded()))
                                    .at(State.CURRENT, new Paint.With<>(new Text()))),
                            new Drawing.Own<>(Target.Type.Scale.INSTANCE, "font-size: 0.85em; line-height: inherit;"));
         }
@@ -158,14 +151,14 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
         public static final Anchor INSTANCE = new Anchor();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(Target.Shape.Shadow.INSTANCE, "box-shadow: 0 6px 18px -6px var(--box-shadow-cast);"),
-                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new GridCast())));
+                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new HouseColours.ShadeDense())));
         }
     }
 
     /** The veil: the page's ground, half through. */
     public record Veil() implements GridFrame.Mask.Concrete<HouseGrid>, Drawn {
         public static final Veil INSTANCE = new Veil();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return List.of(new Drawing.Painted<>(GROUND, ground(new GridVeil()))); }
+        @Override public List<Drawing<?>> drawings(Dressed theme) { return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Sheen()))); }
     }
 
     /** The question's plate: the raised layer in a hairline, rounded as the style rounds, cast over the veil, with room inside. */
@@ -177,7 +170,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
                            new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new Border())),
                            new Drawing.Own<>(Target.Shape.Corner.INSTANCE, "border-radius: " + LOOK.corner(theme) + ";"),
                            new Drawing.Own<>(Target.Shape.Shadow.INSTANCE, "box-shadow: 0 12px 32px -12px var(--box-shadow-cast);"),
-                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new GridCast())),
+                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new HouseColours.ShadeDense())),
                            new Drawing.Own<>(Target.Size.Inset.INSTANCE, "padding-block: 16px; padding-inline: 20px;"));
         }
     }
@@ -187,7 +180,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
         public static final Merged INSTANCE = new Merged();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new HouseColours.Ground()))
-                                   .at(State.SELECTED, ground(new GridMergedSelected()))
+                                   .at(State.SELECTED, ground(new HouseColours.AccentTintFaint()))
                                    .at(State.CURRENT, ground(new HouseColours.Ground()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + LOOK.rule(theme) + " " + LOOK.rule(theme) + " 0; border-style: solid;"),
                            new Drawing.Painted<>(BORDER_COLOUR, new Answer.Painted<ColorScheme.Base, Target.Color.Border>(new Paint.With<>(new Border()))

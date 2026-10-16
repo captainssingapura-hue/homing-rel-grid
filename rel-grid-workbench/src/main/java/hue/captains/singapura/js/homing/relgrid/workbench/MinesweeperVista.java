@@ -12,19 +12,7 @@ import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaCursor;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaCursorHeld;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaEdgeLit;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaEdgeShade;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaEdgeSide;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaGlowCandidate;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaGlowHeld;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaPlate;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaPlateCast;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaPlateRim;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaSelected;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaSelectedCursor;
-import hue.captains.singapura.js.homing.relgrid.workbench.VistaColours.VistaVeil;
+import hue.captains.singapura.js.homing.ui.styles.HouseColours;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentTintFaint;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.Clear;
 
@@ -37,8 +25,8 @@ import java.util.List;
  * air between the tiles; a question on a glass plate over a pale veil. The tiles bevel themselves - they are the game's
  * cells, with a design of their own - so no rule is drawn between them, and what the game never shows draws nothing.
  *
- * <p>Every colour is painted in the tree's (RFC 0067, appendix Semantic Colours and Flavours): the house's, and the
- * board's own mixes of them that {@link VistaColours} grafts - never a value, so the board follows the palette worn.</p>
+ * <p>Every colour is the house's own (RFC 0067, D43): an extension invents none, and gives its own meanings to the
+ * house's colours - never a value, so the board follows the palette worn.</p>
  */
 public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> {
 
@@ -61,12 +49,12 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
             return List.of(new Drawing.Painted<>(GROUND, ground(new AccentTintFaint())),
                            new Drawing.Own<>(Target.Shape.Border.INSTANCE, "border-width: 1px; border-style: solid;"),
                            new Drawing.Painted<>(Target.Color.Border.INSTANCE,
-                                   new Paint.Sides<>(new VistaEdgeLit(), new VistaEdgeSide(), new VistaEdgeShade(), new VistaEdgeSide())),
+                                   new Paint.Sides<>(new HouseColours.AccentTint(), new HouseColours.LineHovered(), new HouseColours.Ring(), new HouseColours.LineHovered())),
                            new Drawing.Own<>(RING, "outline-width: 3px; outline-style: solid; outline-offset: 2px;"),
                            new Drawing.Painted<>(RING_COLOUR, new Answer.Painted<ColorScheme.Base, Target.Color.Outline>(new Paint.With<>(new Clear()))
-                                   .at(State.CANDIDATE, new Paint.With<>(new VistaGlowCandidate()))
-                                   .at(State.LENT, new Paint.With<>(new VistaGlowHeld()))
-                                   .at(State.HELD, new Paint.With<>(new VistaGlowHeld()))),
+                                   .at(State.CANDIDATE, new Paint.With<>(new HouseColours.KeysLent()))
+                                   .at(State.LENT, new Paint.With<>(new HouseColours.KeysCandidate()))
+                                   .at(State.HELD, new Paint.With<>(new HouseColours.KeysCandidate()))),
                            new Drawing.Own<>(Target.Shape.Corner.INSTANCE, "border-radius: 10px;"));
         }
     }
@@ -82,14 +70,14 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
         public static final Cursor INSTANCE = new Cursor();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -1px;"),
-                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new VistaCursor())));
+                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new HouseColours.AccentWashStrong())));
         }
     }
 
     /** The cursor's ring while the board holds the keys: the accent's, soft, where the next move lands. */
     static List<Drawing<?>> heldRing(Dressed theme) {
         return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -1px;"),
-                       new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new VistaCursorHeld())));
+                       new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new HouseColours.Accent())));
     }
 
     /** The cursor while the board holds the keys. */
@@ -109,8 +97,8 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new Clear()))
-                    .at(State.SELECTED, ground(new VistaSelected()))
-                    .at(State.CURRENT, ground(new VistaSelectedCursor()))));
+                    .at(State.SELECTED, ground(new HouseColours.KeysCandidate()))
+                    .at(State.CURRENT, ground(new HouseColours.AccentWashStrong()))));
         }
     }
 
@@ -136,7 +124,7 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
     public record Veil() implements GridFrame.Mask.Concrete<MinesweeperVista>, Drawn {
         public static final Veil INSTANCE = new Veil();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, ground(new VistaVeil())));
+            return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Sheen())));
         }
     }
 
@@ -144,12 +132,12 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
     public record Panel() implements GridFrame.QuestionPanel.Concrete<MinesweeperVista>, Drawn {
         public static final Panel INSTANCE = new Panel();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, ground(new VistaPlate())),
+            return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Raised())),
                            new Drawing.Own<>(Target.Shape.Border.INSTANCE, "border-width: 1px; border-style: solid;"),
-                           new Drawing.Painted<>(Target.Color.Border.INSTANCE, new Paint.With<>(new VistaPlateRim())),
+                           new Drawing.Painted<>(Target.Color.Border.INSTANCE, new Paint.With<>(new HouseColours.AccentTint())),
                            new Drawing.Own<>(Target.Shape.Corner.INSTANCE, "border-radius: 12px;"),
                            new Drawing.Own<>(Target.Shape.Shadow.INSTANCE, "box-shadow: 0 12px 30px -10px var(--box-shadow-cast);"),
-                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new VistaPlateCast())),
+                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new HouseColours.KeysCandidate())),
                            new Drawing.Own<>(Target.Size.Inset.INSTANCE, "padding-block: 16px; padding-inline: 20px;"));
         }
     }

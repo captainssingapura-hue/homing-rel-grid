@@ -13,7 +13,7 @@ import hue.captains.singapura.tao.ontology.StatelessFunctionalObject;
 
 /**
  * What the house's grid is drawn in, theme by theme: the few measures a style sets apart - how heavy a rule is, how
- * round a corner, whether a copied range sweeps. Its colours are the tree's, painted (GridColours grafts its own). A line is heavy where the style draws heavy lines
+ * round a corner, whether a copied range sweeps. Its colours are the house's own (D43). A line is heavy where the style draws heavy lines
  * (neo-brutalism, sketchy), as the old lattice had it.
  */
 record HouseGridLook() implements StatelessFunctionalObject {
