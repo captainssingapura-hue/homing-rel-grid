@@ -4,7 +4,6 @@ import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.Owns;
 import hue.captains.singapura.js.homing.design.State;
 import hue.captains.singapura.js.homing.design.Target;
-import hue.captains.singapura.js.homing.design.color.ColorScheme;
 import hue.captains.singapura.js.homing.design.color.Paint;
 import hue.captains.singapura.js.homing.design.color.SemanticColor;
 import hue.captains.singapura.js.homing.design.semantic.Answer;
@@ -12,6 +11,7 @@ import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
+import hue.captains.singapura.js.homing.ui.styles.BaseScheme;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentTintFaint;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.Clear;
@@ -28,7 +28,7 @@ import java.util.List;
  * <p>Every colour is the house's own (RFC 0067, D43): an extension invents none, and gives its own meanings to the
  * house's colours - never a value, so the board follows the palette worn.</p>
  */
-public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> {
+public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
 
     public static final MinesweeperVista INSTANCE = new MinesweeperVista();
 
@@ -37,7 +37,7 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
     private static final Target.Color.Outline RING_COLOUR = Target.Color.Outline.INSTANCE;
 
     /** A ground said whole: a colour, and no ramp nor mark over it. */
-    static Paint.Ground<ColorScheme.Base> ground(SemanticColor<? super ColorScheme.Base> colour) { return new Paint.Ground<>(colour); }
+    static Paint.Ground<BaseScheme> ground(SemanticColor<? super BaseScheme> colour) { return new Paint.Ground<>(colour); }
 
     /** Nothing, for every target a leaf owns: what the game never shows. */
     static List<Drawing<?>> nothing(Owns leaf) { return leaf.owns().stream().<Drawing<?>>map(t -> new Drawing.None<>(t)).toList(); }
@@ -51,7 +51,7 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
                            new Drawing.Painted<>(Target.Color.Border.INSTANCE,
                                    new Paint.Sides<>(new HouseColours.AccentTint(), new HouseColours.LineHovered(), new HouseColours.Ring(), new HouseColours.LineHovered())),
                            new Drawing.Own<>(RING, "outline-width: 3px; outline-style: solid; outline-offset: 2px;"),
-                           new Drawing.Painted<>(RING_COLOUR, new Answer.Painted<ColorScheme.Base, Target.Color.Outline>(new Paint.With<>(new Clear()))
+                           new Drawing.Painted<>(RING_COLOUR, new Answer.Painted<BaseScheme, Target.Color.Outline>(new Paint.With<>(new Clear()))
                                    .at(State.CANDIDATE, new Paint.With<>(new HouseColours.KeysLent()))
                                    .at(State.LENT, new Paint.With<>(new HouseColours.KeysCandidate()))
                                    .at(State.HELD, new Paint.With<>(new HouseColours.KeysCandidate()))),
@@ -96,7 +96,7 @@ public record MinesweeperVista() implements Design<ColorScheme.Base, GridFrame> 
     public record Selection() implements GridFrame.SelectionFill.Concrete<MinesweeperVista>, Drawn {
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new Clear()))
+            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new Clear()))
                     .at(State.SELECTED, ground(new HouseColours.KeysCandidate()))
                     .at(State.CURRENT, ground(new HouseColours.AccentWashStrong()))));
         }

@@ -2,13 +2,13 @@ package hue.captains.singapura.js.homing.relgrid.house;
 
 import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.Target;
-import hue.captains.singapura.js.homing.design.color.ColorScheme;
 import hue.captains.singapura.js.homing.design.color.Paint;
 import hue.captains.singapura.js.homing.design.semantic.DesignStyle;
 import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
+import hue.captains.singapura.js.homing.ui.styles.BaseScheme;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.Border;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.Clear;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.TextFaded;
@@ -27,7 +27,7 @@ import java.util.List;
  * selection, the boxes laid over a slot - it draws as the house's grid does ({@link Drawing.As}); the cursor shows only
  * while the keys are with the table, so at rest it reads as prose.
  */
-public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
+public record HouseProse() implements Design<BaseScheme, GridFrame> {
 
     public static final HouseProse INSTANCE = new HouseProse();
 
@@ -52,7 +52,7 @@ public record HouseProse() implements Design<ColorScheme.Base, GridFrame> {
     private static String foot(String width) { return "border-width: 0 0 " + width + " 0; border-style: solid;"; }
 
     /** Its lines' colour: the hairline. */
-    private static final Paint.With<ColorScheme.Base, Target.Color.Border> HAIRLINE = new Paint.With<>(new Border());
+    private static final Paint.With<BaseScheme, Target.Color.Border> HAIRLINE = new Paint.With<>(new Border());
 
     /** No edge, no ground, no corner, no light: a document's table stands on the page. */
     public record Edge() implements GridFrame.GridEdge.Concrete<HouseProse>, Drawn {

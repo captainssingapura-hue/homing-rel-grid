@@ -4,7 +4,6 @@ import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.AnimationEffect;
 import hue.captains.singapura.js.homing.design.State;
 import hue.captains.singapura.js.homing.design.Target;
-import hue.captains.singapura.js.homing.design.color.ColorScheme;
 import hue.captains.singapura.js.homing.design.color.Paint;
 import hue.captains.singapura.js.homing.design.color.SemanticColor;
 import hue.captains.singapura.js.homing.design.semantic.Answer;
@@ -12,6 +11,7 @@ import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
+import hue.captains.singapura.js.homing.ui.styles.BaseScheme;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.Accent;
 import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentEdge;
@@ -41,7 +41,7 @@ import java.util.List;
  * <p>The out-of-the-box design: a grid a page makes without naming another draws in it. A document's table, which
  * rules its rows only, is a design of its own.</p>
  */
-public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
+public record HouseGrid() implements Design<BaseScheme, GridFrame> {
 
     public static final HouseGrid INSTANCE = new HouseGrid();
 
@@ -54,7 +54,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
     private static final Target.Color.Outline RING_COLOUR = Target.Color.Outline.INSTANCE;
 
     /** A ground said whole: a colour, and no ramp nor mark over it. */
-    private static Paint.Ground<ColorScheme.Base> ground(SemanticColor<? super ColorScheme.Base> colour) { return new Paint.Ground<>(colour); }
+    private static Paint.Ground<BaseScheme> ground(SemanticColor<? super BaseScheme> colour) { return new Paint.Ground<>(colour); }
 
     /** The box: the page's ground, a hairline edge drawn inside it, lit in the accent while the keys are with the grid. */
     public record Edge() implements GridFrame.GridEdge.Concrete<HouseGrid>, Drawn {
@@ -65,7 +65,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
                            new Drawing.None<>(BORDER),
                            new Drawing.None<>(BORDER_COLOUR),
                            new Drawing.Own<>(RING, "outline-width: " + rule + "; outline-style: solid; outline-offset: -" + rule + ";"),
-                           new Drawing.Painted<>(RING_COLOUR, new Answer.Painted<ColorScheme.Base, Target.Color.Outline>(new Paint.With<>(new Border()))
+                           new Drawing.Painted<>(RING_COLOUR, new Answer.Painted<BaseScheme, Target.Color.Outline>(new Paint.With<>(new Border()))
                                    .at(State.CANDIDATE, new Paint.With<>(new AccentEdge()))
                                    .at(State.LENT, new Paint.With<>(new Accent()))
                                    .at(State.HELD, new Paint.With<>(new Accent()))),
@@ -114,7 +114,7 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
     public record Selection() implements GridFrame.SelectionFill.Concrete<HouseGrid>, Drawn {
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new Clear()))
+            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new Clear()))
                     .at(State.SELECTED, ground(new HouseColours.AccentWashSoft()))
                     .at(State.CURRENT, ground(new Clear()))));
         }
@@ -135,12 +135,12 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
         public static final Gutter INSTANCE = new Gutter();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             String rule = LOOK.rule(theme);
-            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new Raised()))
+            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new Raised()))
                                    .at(State.SELECTED, ground(new AccentTint()))
                                    .at(State.CURRENT, ground(new AccentTintFaint()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + rule + " " + rule + " 0; border-style: solid;"),
                            new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new Border())),
-                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Answer.Painted<ColorScheme.Base, Target.Color.Text>(new Paint.With<>(new HouseColours.TextFaded()))
+                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Answer.Painted<BaseScheme, Target.Color.Text>(new Paint.With<>(new HouseColours.TextFaded()))
                                    .at(State.CURRENT, new Paint.With<>(new Text()))),
                            new Drawing.Own<>(Target.Type.Scale.INSTANCE, "font-size: 0.85em; line-height: inherit;"));
         }
@@ -179,11 +179,11 @@ public record HouseGrid() implements Design<ColorScheme.Base, GridFrame> {
     public record Merged() implements GridFrame.MergeHost.Concrete<HouseGrid>, Drawn {
         public static final Merged INSTANCE = new Merged();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<ColorScheme.Base, Target.Color.Background>(ground(new HouseColours.Ground()))
+            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new HouseColours.Ground()))
                                    .at(State.SELECTED, ground(new HouseColours.AccentTintFaint()))
                                    .at(State.CURRENT, ground(new HouseColours.Ground()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + LOOK.rule(theme) + " " + LOOK.rule(theme) + " 0; border-style: solid;"),
-                           new Drawing.Painted<>(BORDER_COLOUR, new Answer.Painted<ColorScheme.Base, Target.Color.Border>(new Paint.With<>(new Border()))
+                           new Drawing.Painted<>(BORDER_COLOUR, new Answer.Painted<BaseScheme, Target.Color.Border>(new Paint.With<>(new Border()))
                                    .at(State.CURRENT, new Paint.With<>(new Accent()))));
         }
     }
