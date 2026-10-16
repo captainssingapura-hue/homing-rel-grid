@@ -12,9 +12,9 @@ import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.ui.styles.BaseScheme;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentTintFaint;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.Clear;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.AccentTintFaint;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.Clear;
 
 import java.util.List;
 
@@ -49,12 +49,12 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
             return List.of(new Drawing.Painted<>(GROUND, ground(new AccentTintFaint())),
                            new Drawing.Own<>(Target.Shape.Border.INSTANCE, "border-width: 1px; border-style: solid;"),
                            new Drawing.Painted<>(Target.Color.Border.INSTANCE,
-                                   new Paint.Sides<>(new HouseColours.AccentTint(), new HouseColours.LineHovered(), new HouseColours.Ring(), new HouseColours.LineHovered())),
+                                   new Paint.Sides<>(new BaseColours.AccentTint(), new BaseColours.LineHovered(), new BaseColours.Ring(), new BaseColours.LineHovered())),
                            new Drawing.Own<>(RING, "outline-width: 3px; outline-style: solid; outline-offset: 2px;"),
                            new Drawing.Painted<>(RING_COLOUR, new Answer.Painted<BaseScheme, Target.Color.Outline>(new Paint.With<>(new Clear()))
-                                   .at(State.CANDIDATE, new Paint.With<>(new HouseColours.KeysLent()))
-                                   .at(State.LENT, new Paint.With<>(new HouseColours.KeysCandidate()))
-                                   .at(State.HELD, new Paint.With<>(new HouseColours.KeysCandidate()))),
+                                   .at(State.CANDIDATE, new Paint.With<>(new BaseColours.KeysLent()))
+                                   .at(State.LENT, new Paint.With<>(new BaseColours.KeysCandidate()))
+                                   .at(State.HELD, new Paint.With<>(new BaseColours.KeysCandidate()))),
                            new Drawing.Own<>(Target.Shape.Corner.INSTANCE, "border-radius: 10px;"));
         }
     }
@@ -70,14 +70,14 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
         public static final Cursor INSTANCE = new Cursor();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -1px;"),
-                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new HouseColours.AccentWashStrong())));
+                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new BaseColours.AccentWashStrong())));
         }
     }
 
     /** The cursor's ring while the board holds the keys: the accent's, soft, where the next move lands. */
     static List<Drawing<?>> heldRing(Dressed theme) {
         return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -1px;"),
-                       new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new HouseColours.Accent())));
+                       new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new BaseColours.Accent())));
     }
 
     /** The cursor while the board holds the keys. */
@@ -97,8 +97,8 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new Clear()))
-                    .at(State.SELECTED, ground(new HouseColours.KeysCandidate()))
-                    .at(State.CURRENT, ground(new HouseColours.AccentWashStrong()))));
+                    .at(State.SELECTED, ground(new BaseColours.KeysCandidate()))
+                    .at(State.CURRENT, ground(new BaseColours.AccentWashStrong()))));
         }
     }
 
@@ -124,7 +124,7 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     public record Veil() implements GridFrame.Mask.Concrete<MinesweeperVista>, Drawn {
         public static final Veil INSTANCE = new Veil();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Sheen())));
+            return List.of(new Drawing.Painted<>(GROUND, ground(new BaseColours.Sheen())));
         }
     }
 
@@ -132,12 +132,12 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     public record Panel() implements GridFrame.QuestionPanel.Concrete<MinesweeperVista>, Drawn {
         public static final Panel INSTANCE = new Panel();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Raised())),
+            return List.of(new Drawing.Painted<>(GROUND, ground(new BaseColours.Raised())),
                            new Drawing.Own<>(Target.Shape.Border.INSTANCE, "border-width: 1px; border-style: solid;"),
-                           new Drawing.Painted<>(Target.Color.Border.INSTANCE, new Paint.With<>(new HouseColours.AccentTint())),
+                           new Drawing.Painted<>(Target.Color.Border.INSTANCE, new Paint.With<>(new BaseColours.AccentTint())),
                            new Drawing.Own<>(Target.Shape.Corner.INSTANCE, "border-radius: 12px;"),
                            new Drawing.Own<>(Target.Shape.Shadow.INSTANCE, "box-shadow: 0 12px 30px -10px var(--box-shadow-cast);"),
-                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new HouseColours.KeysCandidate())),
+                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new BaseColours.KeysCandidate())),
                            new Drawing.Own<>(Target.Size.Inset.INSTANCE, "padding-block: 16px; padding-inline: 20px;"));
         }
     }

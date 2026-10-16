@@ -12,16 +12,16 @@ import hue.captains.singapura.js.homing.design.semantic.Drawn;
 import hue.captains.singapura.js.homing.design.semantic.Dressed;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.ui.styles.BaseScheme;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.Accent;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentEdge;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentTint;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentTintFaint;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.AccentWashStrong;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.Border;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.Clear;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.Raised;
-import hue.captains.singapura.js.homing.ui.styles.HouseColours.Text;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.Accent;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.AccentEdge;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.AccentTint;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.AccentTintFaint;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.AccentWashStrong;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.Border;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.Clear;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.Raised;
+import hue.captains.singapura.js.homing.ui.styles.BaseColours.Text;
 import hue.captains.singapura.js.homing.ui.styles.HouseEffects;
 
 import java.util.List;
@@ -61,7 +61,7 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
         public static final Edge INSTANCE = new Edge();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             String rule = LOOK.rule(theme);
-            return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Ground())),
+            return List.of(new Drawing.Painted<>(GROUND, ground(new BaseColours.Ground())),
                            new Drawing.None<>(BORDER),
                            new Drawing.None<>(BORDER_COLOUR),
                            new Drawing.Own<>(RING, "outline-width: " + rule + "; outline-style: solid; outline-offset: -" + rule + ";"),
@@ -88,7 +88,7 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
         public static final Cursor INSTANCE = new Cursor();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -2px;"),
-                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new HouseColours.GrooveEdge())));
+                           new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new BaseColours.GrooveEdge())));
         }
     }
 
@@ -115,7 +115,7 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
         public static final Selection INSTANCE = new Selection();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new Clear()))
-                    .at(State.SELECTED, ground(new HouseColours.AccentWashSoft()))
+                    .at(State.SELECTED, ground(new BaseColours.AccentWashSoft()))
                     .at(State.CURRENT, ground(new Clear()))));
         }
     }
@@ -126,7 +126,7 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Painted<>(GROUND, ground(new Raised())),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + LOOK.rule(theme) + " " + LOOK.headRule(theme) + " 0; border-style: solid;"),
-                           new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new HouseColours.GrooveEdge())));
+                           new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new BaseColours.GrooveEdge())));
         }
     }
 
@@ -140,7 +140,7 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
                                    .at(State.CURRENT, ground(new AccentTintFaint()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + rule + " " + rule + " 0; border-style: solid;"),
                            new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new Border())),
-                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Answer.Painted<BaseScheme, Target.Color.Text>(new Paint.With<>(new HouseColours.TextFaded()))
+                           new Drawing.Painted<>(Target.Color.Text.INSTANCE, new Answer.Painted<BaseScheme, Target.Color.Text>(new Paint.With<>(new BaseColours.TextFaded()))
                                    .at(State.CURRENT, new Paint.With<>(new Text()))),
                            new Drawing.Own<>(Target.Type.Scale.INSTANCE, "font-size: 0.85em; line-height: inherit;"));
         }
@@ -151,14 +151,14 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
         public static final Anchor INSTANCE = new Anchor();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
             return List.of(new Drawing.Own<>(Target.Shape.Shadow.INSTANCE, "box-shadow: 0 6px 18px -6px var(--box-shadow-cast);"),
-                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new HouseColours.ShadeDense())));
+                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new BaseColours.ShadeDense())));
         }
     }
 
     /** The veil: the page's ground, half through. */
     public record Veil() implements GridFrame.Mask.Concrete<HouseGrid>, Drawn {
         public static final Veil INSTANCE = new Veil();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return List.of(new Drawing.Painted<>(GROUND, ground(new HouseColours.Sheen()))); }
+        @Override public List<Drawing<?>> drawings(Dressed theme) { return List.of(new Drawing.Painted<>(GROUND, ground(new BaseColours.Sheen()))); }
     }
 
     /** The question's plate: the raised layer in a hairline, rounded as the style rounds, cast over the veil, with room inside. */
@@ -170,7 +170,7 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
                            new Drawing.Painted<>(BORDER_COLOUR, new Paint.With<>(new Border())),
                            new Drawing.Own<>(Target.Shape.Corner.INSTANCE, "border-radius: " + LOOK.corner(theme) + ";"),
                            new Drawing.Own<>(Target.Shape.Shadow.INSTANCE, "box-shadow: 0 12px 32px -12px var(--box-shadow-cast);"),
-                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new HouseColours.ShadeDense())),
+                           new Drawing.Painted<>(Target.Color.BoxShadow.INSTANCE, new Paint.Cast<>(new BaseColours.ShadeDense())),
                            new Drawing.Own<>(Target.Size.Inset.INSTANCE, "padding-block: 16px; padding-inline: 20px;"));
         }
     }
@@ -179,9 +179,9 @@ public record HouseGrid() implements Design<BaseScheme, GridFrame> {
     public record Merged() implements GridFrame.MergeHost.Concrete<HouseGrid>, Drawn {
         public static final Merged INSTANCE = new Merged();
         @Override public List<Drawing<?>> drawings(Dressed theme) {
-            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new HouseColours.Ground()))
-                                   .at(State.SELECTED, ground(new HouseColours.AccentTintFaint()))
-                                   .at(State.CURRENT, ground(new HouseColours.Ground()))),
+            return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new BaseColours.Ground()))
+                                   .at(State.SELECTED, ground(new BaseColours.AccentTintFaint()))
+                                   .at(State.CURRENT, ground(new BaseColours.Ground()))),
                            new Drawing.Own<>(BORDER, "border-width: 0 " + LOOK.rule(theme) + " " + LOOK.rule(theme) + " 0; border-style: solid;"),
                            new Drawing.Painted<>(BORDER_COLOUR, new Answer.Painted<BaseScheme, Target.Color.Border>(new Paint.With<>(new Border()))
                                    .at(State.CURRENT, new Paint.With<>(new Accent()))));
