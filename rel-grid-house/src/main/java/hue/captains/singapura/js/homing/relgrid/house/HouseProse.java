@@ -29,6 +29,8 @@ import java.util.List;
  */
 public record HouseProse() implements Design<BaseScheme, GridFrame> {
 
+    @Override public BaseScheme scheme() { return BaseScheme.INSTANCE; }
+
     public static final HouseProse INSTANCE = new HouseProse();
 
     private static final Target.Color.Background GROUND = Target.Color.Background.INSTANCE;

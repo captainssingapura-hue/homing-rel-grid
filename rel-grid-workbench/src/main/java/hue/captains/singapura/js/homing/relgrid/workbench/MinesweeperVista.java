@@ -30,6 +30,8 @@ import java.util.List;
  */
 public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
 
+    @Override public BaseScheme scheme() { return BaseScheme.INSTANCE; }
+
     public static final MinesweeperVista INSTANCE = new MinesweeperVista();
 
     private static final Target.Color.Background GROUND = Target.Color.Background.INSTANCE;

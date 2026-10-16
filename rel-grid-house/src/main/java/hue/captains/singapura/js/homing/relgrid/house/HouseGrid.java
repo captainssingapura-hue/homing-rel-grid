@@ -43,6 +43,8 @@ import java.util.List;
  */
 public record HouseGrid() implements Design<BaseScheme, GridFrame> {
 
+    @Override public BaseScheme scheme() { return BaseScheme.INSTANCE; }
+
     public static final HouseGrid INSTANCE = new HouseGrid();
 
     private static final HouseGridLook LOOK = HouseGridLook.INSTANCE;
