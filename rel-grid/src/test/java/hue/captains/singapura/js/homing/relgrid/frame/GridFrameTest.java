@@ -28,13 +28,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class GridFrameTest {
 
-    private static final Taxonomy HOUSE = HouseTaxonomy.INSTANCE.read();
+    /** The house with the grid: the house's modules and the frame's, as an instance with the grid registers them. */
+    private static final Taxonomy HOUSE = HouseTaxonomy.INSTANCE.read(java.util.stream.Stream.concat(HouseTaxonomy.MODULES.stream(),
+            java.util.stream.Stream.of(GridFrameComponentModule.INSTANCE)).toList());
 
     @Test
-    void theFrameIsADesignBranchOfTheHouse_itsLeavesTheExtensions() {
-        assertTrue(HOUSE.branches().contains(GridFrame.INSTANCE), "in the house's tree wherever the grid is on the classpath");
+    void theFrameIsADesignBranchOfTheHouse_itsLeavesItsModules() {
+        assertTrue(HOUSE.branches().contains(GridFrame.INSTANCE), "in the house's tree wherever an instance registers the frame");
         var leaves = HOUSE.children(GridFrame.INSTANCE);
-        assertEquals(GridFrameExtension.INSTANCE.components(), leaves, "every leaf the extension lists, in its order, and nothing else");
+        assertEquals(GridFrameComponentModule.INSTANCE.components(), leaves, "every leaf the module lists, in its order, and nothing else");
         assertTrue(leaves.stream().allMatch(l -> l instanceof VirtualComponent<?>), "every leaf virtual");
     }
 
@@ -46,7 +48,7 @@ class GridFrameTest {
 
     @Test
     void everyLeafOwnsTargetsASheetCarries_eachOnce() {
-        for (Component<?> leaf : GridFrameExtension.INSTANCE.components()) {
+        for (Component<?> leaf : GridFrameComponentModule.INSTANCE.components()) {
             List<Target> owned = ((Owns) leaf).owns();
             assertFalse(owned.isEmpty(), leaf.token() + " owns nothing");
             assertEquals(owned.size(), new HashSet<>(owned).size(), leaf.token() + " owns a target twice");

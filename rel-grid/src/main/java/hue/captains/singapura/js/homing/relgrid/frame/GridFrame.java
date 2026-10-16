@@ -17,7 +17,7 @@ import java.util.List;
  * The grid's frame (RFC 0050 · Episode 2 — Appendix: The Frame): everything the cells do not handle, as a design
  * branch of virtual leaves named from what the grid makes. A design of it - the house's, or a domain's - draws every
  * leaf; the grid wears a leaf through the design it is made with, and never learns a class. In the house's taxonomy
- * wherever the grid is on the classpath ({@link GridFrameExtension}).
+ * wherever an instance registers its module ({@link GridFrameComponentModule}).
  *
  * <p>A condition the grid alone has - the cursor while the grid holds the keys, while its cell holds control - is a
  * leaf of its own, which the grid wears in its place: the states a design answers are core's, and a component in a

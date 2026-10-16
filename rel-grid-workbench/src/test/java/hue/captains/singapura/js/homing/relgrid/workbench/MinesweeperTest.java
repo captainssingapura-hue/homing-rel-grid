@@ -4,13 +4,16 @@ import hue.captains.singapura.js.homing.design.semantic.DesignRead;
 import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
-import hue.captains.singapura.js.homing.relgrid.frame.GridFrameExtension;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
+import hue.captains.singapura.js.homing.relgrid.house.GridFrameBaseModule;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,7 +28,7 @@ class MinesweeperTest extends JsModuleTestBase {
 
     /** The house's styling, installed as a site installs it at bootstrap: the designs are judged in its themes. */
     @BeforeAll
-    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling()); }
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE))); }
 
     private static final String BENCH_DIR = RelGridTestDom.DIR + "workbench/";
 
@@ -188,9 +191,9 @@ class MinesweeperTest extends JsModuleTestBase {
     void vista_isCompleteOverTheFrame_inEveryHouseTheme() {
         DesignRead vista = HouseDesigns.INSTANCE.of(MinesweeperVista.INSTANCE);   // read and judged in every house theme
         assertEquals(GridFrame.INSTANCE, vista.branch());
-        assertEquals(GridFrameExtension.INSTANCE.components(), vista.concretes().stream().map(c -> c.virtual()).toList(),
+        assertEquals(GridFrameComponentModule.INSTANCE.components(), vista.concretes().stream().map(c -> c.virtual()).toList(),
                 "a concrete leaf for every leaf of the frame, in the frame's order");
-        for (String slug : HouseStyles.INSTANCE.styling().themes().keySet()) {
+        for (String slug : HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE)).themes().keySet()) {
             String css = MinesweeperVistaSheet.INSTANCE.css(slug);
             assertTrue(css.contains(".minesweeper-vista___grid-edge__shape-corner {\n    border-radius: 10px;\n}"), slug + ":\n" + css);
             assertTrue(css.contains(".minesweeper-vista___grid-edge__color-outline {"), slug + ": the edge glows while the board holds the keys");

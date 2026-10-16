@@ -2,11 +2,13 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.catalogue.gate.CatalogueGate;
 import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
+import hue.captains.singapura.js.homing.relgrid.house.GridFrameBaseModule;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The workbench's gate, strict as the new stack's sites have it: every served module declared,
@@ -20,7 +22,7 @@ class GridWorkbenchGateTest {
 
     /** The site's styling, installed as the server installs it at bootstrap: the modules are served in it. */
     @BeforeAll
-    static void theSitesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling()); }
+    static void theSitesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE))); }
 
     @Test void theCrateIsStructurallyComplete()             { CatalogueGate.structurallyComplete(CRATE); }
     @Test void everyServedModuleKeepsItsLane_strictly()      { CatalogueGate.strict(CRATE); }

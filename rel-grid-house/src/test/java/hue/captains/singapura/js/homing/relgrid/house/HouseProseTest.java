@@ -3,7 +3,7 @@ package hue.captains.singapura.js.homing.relgrid.house;
 import hue.captains.singapura.js.homing.design.semantic.DesignRead;
 import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
-import hue.captains.singapura.js.homing.relgrid.frame.GridFrameExtension;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
 import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
 
 /**
  * The house's document table: complete over the grid's frame in every house theme, its rules and its head its own -
@@ -22,20 +23,20 @@ class HouseProseTest {
 
     /** The house's styling, installed as a site installs it at bootstrap: the designs are judged in its themes. */
     @BeforeAll
-    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling()); }
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE))); }
 
     @Test
     void theHouseProse_isCompleteOverTheFrame_inEveryHouseTheme() {
         DesignRead prose = HouseDesigns.INSTANCE.of(HouseProse.INSTANCE);   // read and judged in every house theme
         assertEquals(GridFrame.INSTANCE, prose.branch());
-        assertEquals(GridFrameExtension.INSTANCE.components(), prose.concretes().stream().map(c -> c.virtual()).toList(),
+        assertEquals(GridFrameComponentModule.INSTANCE.components(), prose.concretes().stream().map(c -> c.virtual()).toList(),
                 "a concrete leaf for every leaf of the frame, in the frame's order");
         assertEquals("house-prose", prose.token());
     }
 
     @Test
     void itsRules_areItsOwn_measuredAsTheHousesDocumentTablesWere_inEveryHouseTheme() {
-        for (String slug : HouseStyles.INSTANCE.styling().themes().keySet()) {
+        for (String slug : HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE)).themes().keySet()) {
             String css = HouseProseSheet.INSTANCE.css(slug);
             assertFalse(css.contains("/* the theme's "), slug + ": nothing taken from a cell - a cell is a container, its room and no line:\n" + css);
             assertTrue(css.contains(".house-prose___lattice__color-border {\n    border-color: "), slug + ": its rows ruled in the hairline");
@@ -63,7 +64,7 @@ class HouseProseTest {
 
     /** A style in its own palette, by the theme's slug. */
     private static String slug(String style) {
-        for (var e : HouseStyles.INSTANCE.styling().themes().entrySet()) if (e.getValue().style().token().equals(style)) return e.getKey();
+        for (var e : HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE)).themes().entrySet()) if (e.getValue().style().token().equals(style)) return e.getKey();
         throw new IllegalArgumentException(style);
     }
 }

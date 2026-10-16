@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * The grid's frame as a page has it: {@code GRID_FRAME}, one frozen constant per leaf of the {@link GridFrame} branch,
- * generated from the house's taxonomy - by which the grid asks the design it is made with to wear a leaf on an element,
+ * generated from the frame's own module - by which the grid asks the design it is made with to wear a leaf on an element,
  * never by a string. Each carries its branch, so a design of another branch refuses it, and the grid refuses a design
  * that is not of this one.
  */
@@ -33,6 +33,6 @@ public record GridFrameModule() implements EsModule<GridFrameModule>, SelfConten
     /** The constant's script, generated once. */
     private static final class Lines {
         private Lines() {}
-        static final List<String> LINES = DesignLeaves.INSTANCE.lines(HouseTaxonomy.INSTANCE.read(), GridFrame.INSTANCE);
+        static final List<String> LINES = DesignLeaves.INSTANCE.lines(HouseTaxonomy.INSTANCE.read(List.of(GridFrameComponentModule.INSTANCE)), GridFrame.INSTANCE);
     }
 }
