@@ -158,8 +158,8 @@ class RelGridHeaderCellTest extends JsModuleTestBase {
                     var cell = f.cellEl('mapo', 'ingredient'), label = null, th = f.thAt(0);
                     for (var k = 0; k < th.children.length; k++) if (has(th.children[k], 'hrg-label')) label = th.children[k];
                     // ellipsis unless a cell says otherwise; the house's data cell and header cell worn
-                    if (!has(cell, 'hrg-text') || !has(cell, 'hrg-text-ellipsis') || !has(cell, 'look-data-cell')) return false;
-                    if (!label || !has(label, 'hrg-text-ellipsis') || !has(label, 'look-header-cell')) return false;
+                    if (!has(cell, 'hrg-text') || !has(cell, 'hrg-text-ellipsis') || !has(cell, 'look-text-cell_value')) return false;
+                    if (!label || !has(label, 'hrg-text-ellipsis') || !has(label, 'look-text-cell_title')) return false;
                     // and the grid's table says nothing of overflow
                     if (/hrg-ov-/.test(f.table().className)) return false;
                     var b = hostBranch();

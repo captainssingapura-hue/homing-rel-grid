@@ -61,8 +61,10 @@
 
 // ITS ROOM AND ITS OVERFLOW ARE ITS OWN — RelGridStockStyles: hrg_text on the
 // element, the overflow's class beside it, hrg_text_ro when it cannot edit,
-// hrg_text_edit on the editor. ITS INK, FACE AND WEIGHT ARE THE HOUSE'S: the
-// element and its editor wear the house's data cell, as a table's cells do.
+// hrg_text_edit on the editor. ITS WORDS ARE A TEXT CELL'S: the house's
+// component, made on the cell's branch and cast as a data cell's value (RFC
+// 0067, D42), its look the style's. The editor takes its ink and type from the
+// anchor it is placed in.
 
 /** What a stock cell does with text too wide for its column: its own class, ellipsis unless it says otherwise. */
 function _hrgTextOverflow(choice, who) {
@@ -72,14 +74,6 @@ function _hrgTextOverflow(choice, who) {
     throw new Error("[" + who + "] overflow is 'ellipsis', 'clip' or 'wrap', not " + JSON.stringify(choice));
 }
 
-/** A leaf of the house, as a stock cell wears it: its ink and its type, never a table's rules or room. Made once per leaf. */
-function _hrgWearHouse(leaf, el) {
-    var looks = _hrgWearHouse._looks || (_hrgWearHouse._looks = {});
-    var look = looks[leaf] || (looks[leaf] = new Look(Object.freeze({ LEAF: leaf }), ROLE.STANDALONE));
-    look.wear(el, { only: ["color-text", "type-face", "type-weight", "type-scale", "type-treatment"] });
-    return el;
-}
-
 class RelGridTextCell {
 
     constructor(opts) {
@@ -87,7 +81,8 @@ class RelGridTextCell {
         if (!opts.branch) throw new Error("[RelGridTextCell] opts.branch is required: the cell's own");
         this._branch = opts.branch;
         this._branch.activate(this);
-        this._el = null;           // minted on first cellElement()
+        this._cell = null;         // its words, a text cell - made on first cellElement()
+        this._el = null;           // the text cell's element
         this._value = (opts.value === undefined) ? null : opts.value;
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
         this._overflow = _hrgTextOverflow(opts.overflow, "RelGridTextCell");
@@ -102,22 +97,22 @@ class RelGridTextCell {
     _text() { return (this._value == null) ? "" : String(this._value); }
 
     _paint() {
-        if (!this._el || this._editing) return;
-        this._el.textContent = this._text();
+        if (!this._cell || this._editing) return;
+        this._cell.text = this._text();
     }
 
     /**
-     * The cell's element, minted once on its branch and answered the same
-     * every time. Nothing is wired: the grid captures. A cell with no commit
-     * target names itself read-only.
+     * The cell's element: its text cell's, made once on its branch - the
+     * house's, cast as a data cell's value - and answered the same every time.
+     * Nothing is wired: the grid captures. A cell with no commit target names
+     * itself read-only.
      */
     cellElement() {
         if (!this._el) {
-            this._el = this._branch.createElement("cell", "div");
+            this._cell = new TextCell(this._branch.elementMaker("cell"), { text: this._text() }, ROLE.VALUE);
+            this._el = this._cell.el;
             css.addClass(this._el, hrg_text, this._overflow);
-            _hrgWearHouse("data-cell", this._el);
             if (!this._onCommit) css.addClass(this._el, hrg_text_ro);
-            this._paint();
         }
         return this._el;
     }
@@ -154,7 +149,6 @@ class RelGridTextCell {
         if (!this._input) {
             this._input = this._branch.createElement("editor", "input");
             css.addClass(this._input, hrg_text_edit);
-            _hrgWearHouse("data-cell", this._input);
         }
         return this._input;
     }
@@ -211,6 +205,7 @@ class RelGridTextCell {
     /** The OWNER's to call, when it decides the cell is done. Never the grid's. Dissolves the cell's branch. */
     dispose() {
         if (this._editing) this._end(false);
+        this._cell = null;
         this._el = null;
         this._input = null;
         this._branch.dissolve();

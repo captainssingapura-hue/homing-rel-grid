@@ -20,10 +20,16 @@
     </description>
 
     <dependencies>
-        <!-- The house's look, whose data and header cells the stock cells wear. -->
+        <!-- The house's roles, which the stock cells cast their text cells in. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-ui-look</artifactId>
+            <version>${homing.components.version}</version>
+        </dependency>
+        <!-- The house's text cell, which holds a stock cell's words and a label's (RFC 0067, D42). -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ui-elements</artifactId>
             <version>${homing.components.version}</version>
         </dependency>
         <dependency>

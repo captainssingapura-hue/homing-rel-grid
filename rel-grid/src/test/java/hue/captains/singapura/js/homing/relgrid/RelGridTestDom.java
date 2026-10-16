@@ -79,13 +79,19 @@ public final class RelGridTestDom {
 
     /**
      * The house's look as the stock cells wear it, for tests: a {@code Look} that wears its leaf as a class named for
-     * it - {@code look-data-cell} - and the one role the stock cells ask for. The real one is the house's; the cells
-     * only ask it to wear.
+     * it - {@code look-data-cell} - and a {@code TextCell} that makes its element with the maker it is handed and wears
+     * its casting as a class - {@code look-text-cell_value} - with the roles the stock cells cast it in (D42). The real
+     * ones are the house's; the cells only make them.
      */
     public static final String LOOK = """
-            var ROLE = Object.freeze({ STANDALONE: 'standalone' });
+            var ROLE = Object.freeze({ STANDALONE: 'standalone', TITLE: 'title', VALUE: 'value' });
             var Look = function (leaf, role) { this._leaf = leaf.LEAF; this._role = role; };
             Look.prototype.wear = function (el) { el.classList.add('look-' + this._leaf); return el; };
+            var TextCell = class {
+                constructor(make, props, role) { this.el = make('div'); this.role = role; this.el.classList.add('look-text-cell_' + role); this.text = (props || {}).text; }
+                get text() { return this.el.textContent; }
+                set text(words) { this.el.textContent = words == null ? '' : String(words); }
+            };
             """;
 
     /** The grid's and the stock cells' handles, the frame's leaves and a design, and the look, for every test that loads the grid's modules. */

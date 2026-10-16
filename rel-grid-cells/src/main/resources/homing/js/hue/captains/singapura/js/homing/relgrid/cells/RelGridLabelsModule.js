@@ -25,8 +25,8 @@
 //   dispose()             every header made, and the branch
 //
 // ITS ROOM AND ITS OVERFLOW ARE ITS OWN — RelGridStockStyles: hrg_label, and
-// the overflow's class. ITS INK, FACE AND WEIGHT ARE THE HOUSE'S: it wears the
-// house's header cell, as a table's header does.
+// the overflow's class. ITS WORDS ARE A TEXT CELL'S: the house's component,
+// cast as a header cell's title (RFC 0067, D42), its look the style's.
 // =============================================================================
 
 /** What a label does with text too wide for its column: ellipsis unless it says otherwise. */
@@ -46,17 +46,16 @@ class RelGridLabelHeader {
         this._branch.activate(this);
         this._label = (opts.label === undefined || opts.label === null) ? "" : String(opts.label);
         this._overflow = _hrgLabelOverflow(opts.overflow);
+        this._cell = null;           // its words, a text cell - made on first headerElement()
         this._el = null;
     }
 
-    /** The header cell's element, minted once on its branch: the label, in the house's header ink and weight. */
+    /** The header cell's element: its text cell's, made once on its branch - the house's, cast as a header cell's title. */
     headerElement() {
         if (!this._el) {
-            this._el = this._branch.createElement("label", "div");
+            this._cell = new TextCell(this._branch.elementMaker("label"), { text: this._label }, ROLE.TITLE);
+            this._el = this._cell.el;
             css.addClass(this._el, hrg_label, this._overflow);
-            if (!RelGridLabelHeader._look) RelGridLabelHeader._look = new Look(Object.freeze({ LEAF: "header-cell" }), ROLE.STANDALONE);
-            RelGridLabelHeader._look.wear(this._el, { only: ["color-text", "type-face", "type-weight", "type-scale", "type-treatment"] });
-            this._el.textContent = this._label;
         }
         return this._el;
     }
@@ -64,7 +63,7 @@ class RelGridLabelHeader {
     /** The owner renamed the column. */
     set(label) {
         this._label = (label === undefined || label === null) ? "" : String(label);
-        if (this._el) this._el.textContent = this._label;
+        if (this._cell) this._cell.text = this._label;
         return this;
     }
 
@@ -72,6 +71,7 @@ class RelGridLabelHeader {
 
     /** The owner's to call, never the grid's. Dissolves the header cell's branch. */
     dispose() {
+        this._cell = null;
         this._el = null;
         this._branch.dissolve();
     }

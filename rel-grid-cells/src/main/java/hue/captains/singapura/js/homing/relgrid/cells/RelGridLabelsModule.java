@@ -5,8 +5,8 @@ import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
+import hue.captains.singapura.js.homing.ui.elements.TextCellModule;
 import hue.captains.singapura.js.homing.ui.look.CastingsModule;
-import hue.captains.singapura.js.homing.ui.look.LookModule;
 
 import java.util.List;
 
@@ -27,8 +27,8 @@ public record RelGridLabelsModule() implements DomModule<RelGridLabelsModule> {
         return ImportsFor.<RelGridLabelsModule>builder()
                 .add(new ModuleImports<>(List.of(new RelGridStockStyles.hrg_label(), new RelGridStockStyles.hrg_text_ellipsis(),
                         new RelGridStockStyles.hrg_text_clip(), new RelGridStockStyles.hrg_text_wrap()), RelGridStockStyles.INSTANCE))
-                // the house's header cell, its ink and weight worn
-                .add(new ModuleImports<>(List.of(new LookModule.Look()), LookModule.INSTANCE))
+                // its words: the house's text cell, cast as a header cell's title (D42)
+                .add(new ModuleImports<>(List.of(new TextCellModule.TextCell()), TextCellModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new CastingsModule.ROLE()), CastingsModule.INSTANCE))
                 .build();
     }
