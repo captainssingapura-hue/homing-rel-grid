@@ -7,6 +7,8 @@ import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
 import hue.captains.singapura.js.homing.relgrid.house.GridFrameBaseModule;
+import hue.captains.singapura.js.homing.workspace.tree.TreeBaseModule;
+import hue.captains.singapura.js.homing.docview.widgets.DocViewBaseModule;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +30,7 @@ class MinesweeperTest extends JsModuleTestBase {
 
     /** The house's styling, installed as a site installs it at bootstrap: the board's local style is drawn in its styles. */
     @BeforeAll
-    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE))); }
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE, TreeBaseModule.INSTANCE, DocViewBaseModule.INSTANCE))); }
 
     private static final String BENCH_DIR = RelGridTestDom.DIR + "workbench/";
 
