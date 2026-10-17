@@ -23,9 +23,12 @@
 //
 // Keys: arrows move (a bare arrow at an edge goes nowhere and is REPORTED, so
 // a host stacking tables may step over); Shift+arrow extends; Ctrl+A selects
-// all; Ctrl+C asks the copy; Alt+Left/Right resizes the cursor's column;
-// Alt+Enter hands the rows' arrangement over; Enter offers the cell control.
-// A key is consumed only when it did something.
+// all; Ctrl+C asks the copy; Alt+Enter hands the rows' arrangement over; Enter
+// offers the cell control, consumed when it was taken; Escape cancels in two stages - the copy first, the
+// selection kept, then the selection, the cursor's cell remaining - and with
+// nothing to cancel is not the grid's. A key is consumed only when it did something. An
+// arrow held with Alt, Ctrl or Meta is not the grid's: it is the browser's —
+// Alt+← and Alt+→ are back and forward — and is left alone, not prevented.
 //
 // THE WINDOW. A bare arrow at the top or bottom edge first asks the grid to
 // move the window one row — the relation answers a View, or nothing. A View
@@ -37,7 +40,7 @@
 // the key bubbles, the wheel scrolls what the browser will — a static table
 // in a scrollport scrolls as it always did.
 //
-//   new RelGridGestures({ grid, maps, selection, cursor, locked, afterSelection, stepJ, stepWidth, rowHeight, onEdge? })
+//   new RelGridGestures({ grid, maps, selection, cursor, locked, afterSelection, stepJ, rowHeight, onEdge? })
 //   onDown / onDragTo / onDragEnd / onClick / onDblClick / onKey / onWheel    the layout's reports
 //   bareMove(fn) / extendTo(i, j) / press(i, j, mods)              the routes, for the surface's twins
 // =============================================================================
@@ -52,7 +55,6 @@ class RelGridGestures {
         this._locked = opts.locked;               // () → boolean
         this._afterSelection = opts.afterSelection;   // () — paint, and tell the domain
         this._stepJ = opts.stepJ;                 // (i, j, dj): one horizontal step, over a merged cell entirely
-        this._stepWidth = opts.stepWidth;         // (column, dir): one Alt+arrow of the cursor's column
         this._rowHeight = opts.rowHeight;         // () → px: one row, for a wheel that speaks pixels
         this._onEdge = opts.onEdge || null;
         this._wheelRest = 0;                      // the part of a row the wheel has not yet moved
@@ -82,6 +84,13 @@ class RelGridGestures {
         this._selection.extend({ i: this._cursor.clampI(i), j: this._cursor.clampJ(j) }, pos);
         this._afterSelection();
         return true;
+    }
+
+    /** Whether the selection holds more than the cursor's own cell: then Escape has a selection to cancel. */
+    _beyondCursor() {
+        if (this._selection.count() === 0) return false;
+        var pos = this._cursor.pos(), rs = this._selection.resolve(pos);
+        return !(pos && rs.length === 1 && rs[0].i0 === pos.i && rs[0].i1 === pos.i && rs[0].j0 === pos.j && rs[0].j1 === pos.j);
     }
 
     /** Shift+arrow: step the corner extension moves, from the cursor on the first one. */
@@ -171,13 +180,6 @@ class RelGridGestures {
     onKey(e) {
         if (this._locked()) return;            // the keyboard is the cell's, or an answer is owed
         var key = e.key, self = this, grid = this._grid;
-        // Alt+Left/Right: the pointer-free resize of the CURSOR's column. The cursor does not move.
-        if (e.altKey && (key === "ArrowLeft" || key === "ArrowRight")) {
-            var id = this._cursor.id();
-            if (id) this._stepWidth(id.column, key === "ArrowRight" ? 1 : -1);
-            if (e.preventDefault) e.preventDefault();
-            return;
-        }
         // Alt+Enter: hand the rows' arrangement to the domain — the table's own
         // road to the verb. Consumed only when it was actually asked, as Ctrl+C is.
         if (e.altKey && key === "Enter") {
@@ -196,6 +198,8 @@ class RelGridGestures {
         else if ((e.ctrlKey || e.metaKey) && (key === "c" || key === "C")) {
             if (!grid.copy()) return;
         }
+        // An arrow in a chord is the browser's - Alt+arrows are back and forward - and not the grid's: left alone.
+        else if (arrow && (e.altKey || e.ctrlKey || e.metaKey)) return;
         // Shift+arrow: extension. The cursor stays here too (law 39).
         else if (e.shiftKey && arrow) this._extendBy(key);
         else if (arrow) {
@@ -224,7 +228,18 @@ class RelGridGestures {
                 });
             }
         }
-        else if (key === "Enter")      grid.takeControlAtCursor();
+        // Enter: control offered to the cell under the cursor. Consumed only when it took it: a cell that takes
+        // none - a tile whose moves are its domain's - leaves the key to bubble on to whoever holds the grid.
+        else if (key === "Enter") { if (!grid.takeControlAtCursor()) return; }
+        // Escape, in two stages (appendix The Copied Range): the copy cancelled and the selection kept; then the
+        // selection cancelled, the cursor's cell remaining. With nothing to cancel it is not the grid's: it bubbles.
+        else if (key === "Escape") {
+            if (!grid.cancelCopy()) {
+                if (!this._beyondCursor()) return;
+                this._selection.clear();
+                this._afterSelection();
+            }
+        }
         // PageUp/PageDown: the window's height of rows. Consumed only when the
         // relation moved the window; a static table leaves the key to the browser.
         else if (key === "PageDown" || key === "PageUp") {

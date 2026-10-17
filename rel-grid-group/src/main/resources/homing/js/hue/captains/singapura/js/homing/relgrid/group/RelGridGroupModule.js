@@ -15,12 +15,15 @@
 //                           // group activates it; its boxes and fence slots are minted on it,
 //                           // every member's grid gets a sub-branch of it to activate as its
 //                           // own, and dissolving it is the host's
+//       design,             // the design of the grid's frame every grid in the group is made with -
+//                           // the group's header and each member's - so the stack reads as one
+//                           // table; a member's grid options never name one of their own
 //       members: [{         // in order, top to bottom
 //           id,             // the member's IDENTITY — unique in the group, never empty
 //           grid,           // the ordinary RelGrid options this member is built from:
 //                           // its relation, its ask, its callbacks. Verbatim, but for the
 //                           // container (the group's box), the branch (the group's gift)
-//                           // and what is shared.
+//                           // and what is shared - the design among it.
 //           fence?          // the cell for the slot ABOVE this member (see RelGridGroupMint)
 //       }, ...],
 //       fence?,             // the cell for the trailing slot, below the last member
@@ -28,6 +31,9 @@
 //       header?,            // 'group' (default): ONE header, the group's, at the top above every
 //                           // fence, and no member shows its own; 'each': every member keeps
 //                           // its own header option, and the group adds none
+//       headerFor?,         // (column) → the header cell for the group's header: the group's own,
+//                           // never a member's - a member's would sort that member alone. Needed
+//                           // when the header is the group's; RelGridLabels answers labels
 //       stickyHeader?,      // true: the group's header stays at the top of whatever scrolls the
 //                           // group, and every member reveals its cursor clear of it. 'group'
 //                           // mode only: in 'each' mode NO header sticks — a member's own
@@ -126,7 +132,7 @@ class RelGridGroup {
             if (!mv.grid) throw new Error("[RelGridGroup] member '" + mv.id + "' has no grid options");
         }
         this._mint = new RelGridGroupMint({
-            branch: this._branch, root: this._root, headerMode: headerMode, sticky: sticky,
+            branch: this._branch, root: this._root, headerMode: headerMode, sticky: sticky, design: opts.design, headerFor: opts.headerFor,
             hooks: {
                 onResized:  function (id, column, px) { self._onMemberResized(id, column, px); },
                 onReleased: function (id) { self._level(id); },

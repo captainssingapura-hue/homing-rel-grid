@@ -51,6 +51,7 @@ class HanStress extends BenchWidget {
         this._grid = new RelGrid({
             container: host,
             branch: gridB,
+            design: HouseGrid,
             relation: relation,
             header: { show: true, sticky: true },          // the labels are the relation's
             columnView: relation.presentedColumns(),

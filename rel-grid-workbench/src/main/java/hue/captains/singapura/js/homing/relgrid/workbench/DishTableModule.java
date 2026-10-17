@@ -6,8 +6,8 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.relgrid.RelGridModule;
-import hue.captains.singapura.js.homing.relgrid.RelGridStyles;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
+import hue.captains.singapura.js.homing.relgrid.house.HouseGridModule;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public record DishTableModule() implements DomModule<DishTableModule> {
         return ImportsFor.<DishTableModule>builder()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
-                .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_frame(), new RelGridStyles.hrg_lit()), RelGridStyles.INSTANCE))
+                .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with
                 // The protocol, so the bench can recognise what the grid asks. The widget imports
                 // this and NOT the grid's internals - a domain answers through the protocol.
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridSelectionChanged(),

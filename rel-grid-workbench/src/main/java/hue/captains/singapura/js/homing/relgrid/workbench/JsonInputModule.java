@@ -3,6 +3,8 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 import hue.captains.singapura.js.homing.component.keyboard.Key;
 import hue.captains.singapura.js.homing.component.keyboard.KeyBinding;
 import hue.captains.singapura.js.homing.component.keyboard.NeedKeyboard;
+import hue.captains.singapura.js.homing.conformance.rules.ConformanceDebt;
+import hue.captains.singapura.js.homing.conformance.rules.WidgetDrawsOnlyComponentsRule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
@@ -15,6 +17,8 @@ import java.util.List;
  * The JSON Tree bench's input: {@code new JsonInput(container, params)} - a plain textarea over
  * the bench's one document, every keystroke told to the {@code json-text} party.
  */
+@ConformanceDebt(rule = WidgetDrawsOnlyComponentsRule.class, findings = 8,
+        reason = "It makes its hint, bar, text area and status of its own, labels the text area, writes their text and reaches the document: it waits for the designed containers, the widget slot and the content components to draw only components.")
 public record JsonInputModule() implements DomModule<JsonInputModule> {
 
     public record JsonInput() implements SelfContainedWidget<JsonInputModule>, NeedKeyboard {

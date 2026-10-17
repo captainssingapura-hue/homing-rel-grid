@@ -4,6 +4,7 @@ import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -97,23 +98,20 @@ class RelGridResizeTest extends JsModuleTestBase {
                 })()"""), "law 54: a staged gesture mints one intent on release; Escape mints nothing; only the handle arms; the keys are the handle's, and the focus goes back");
     }
 
+    /** An arrow in a chord is the browser's - Alt+← and Alt+→ are back and forward - so the grid neither acts on it nor prevents it. */
     @Test
-    void altArrowsResizeTheCursorsColumnWithoutMovingItAndAreInertWhileDeep() {
-        assertTrue(evalBool("""
+    void anArrowInAChord_isTheBrowsers_notTheGrids() {
+        assertEquals("false false false false calories mapo calories true true", js.eval("js", """
                 (() => {
                     var f = fixture({ editable: true }), g = f.grid;
                     f.key('ArrowRight');                                         // cursor → calories
-                    f.key('ArrowRight', { alt: true });
-                    f.key('ArrowRight', { alt: true });
-                    var grew = f.colWidth(1) === '140px';                        // 120 default + 2 × 10
-                    f.key('ArrowLeft', { alt: true });
-                    var back = f.colWidth(1) === '130px';
-                    var stayed = g.cursor().column === 'calories' && f.moves.join() === 'mapo calories';
-                    f.key('Enter');                                              // deep: the keyboard is the cell's
-                    f.key('ArrowRight', { alt: true });
-                    var inert = f.colWidth(1) === '130px' && g.isDeep();
-                    return grew && back && stayed && inert;
-                })()"""), "Alt+arrows are the pointer-free resize of the cursor's column; the cursor stays; deep makes them inert");
+                    var width = f.colWidth(1);
+                    var left = f.key('ArrowLeft', { alt: true }), right = f.key('ArrowRight', { alt: true });
+                    var ctrl = f.key('ArrowDown', { ctrl: true }), meta = f.key('ArrowLeft', { meta: true });
+                    var at = g.cursor().column, moves = f.moves.join(), same = f.colWidth(1) === width;   // after the chords: as before them
+                    var bare = f.key('ArrowLeft') && g.cursor().column !== 'calories';    // the bare arrow is still the grid's
+                    return [left, right, ctrl, meta, at, moves, same, bare].join(' ');
+                })()""").asString(), "Alt, Ctrl or Meta with an arrow is left alone: no move, no resize, not prevented; the bare arrow still moves");
     }
 
     @Test
@@ -197,7 +195,7 @@ class RelGridResizeTest extends JsModuleTestBase {
                     var handle = th.children[th.children.length - 1];
                     handle.dispatch('mousedown', { clientX: 398 });
                     var guide = document.body.children[document.body.children.length - 1];
-                    if (!guide || guide.className !== 'hrg-resize-guide') return false;
+                    if (!guide || !guide.classList.contains('hrg-resize-guide') || !guide.classList.contains('frame-resize-guide')) return false;   // its mechanics, and its leaf as the design wears it
                     var top = guide.style.getPropertyValue('--hrg-guide-top'), h = guide.style.getPropertyValue('--hrg-guide-h');
                     handle.dispatch('keydown', { key: 'Escape' });
                     if (top !== '40px' || h !== '600px') return false;

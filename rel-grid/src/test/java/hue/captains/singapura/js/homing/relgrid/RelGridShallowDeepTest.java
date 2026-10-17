@@ -102,6 +102,18 @@ class RelGridShallowDeepTest extends JsModuleTestBase {
     }
 
     @Test
+    void enterIsConsumedOnlyWhenTheCellTookControl() {
+        assertTrue(evalBool("""
+                (() => {
+                    // A cell that takes none - a game's tile, whose moves are its domain's - leaves Enter to bubble on.
+                    var f = fixture();
+                    if (f.key('Enter') || f.grid.isDeep()) return false;
+                    var g = fixture({ editable: true });
+                    return g.key('Enter') === true && g.grid.isDeep();
+                })()"""), "Enter is the grid's only when the cell took control: refused, it bubbles");
+    }
+
+    @Test
     void theEditorLivesOutsideTheTableEntirely() {
         assertTrue(evalBool("""
                 (() => {

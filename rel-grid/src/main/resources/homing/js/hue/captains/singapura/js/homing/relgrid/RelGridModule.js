@@ -29,17 +29,19 @@
 //                         // chrome, slots, overlays, mask — is on it or a sub-branch of it.
 //                         // Dissolving it is the host's. Never a cell's element.
 //       relation,         // { view(intent?), columns(), cellFor(pk, column) } — and, optionally,
-//                         // readOnlyColumns(), labels(), headerFor(column). See RootRelationContract.
+//                         // readOnlyColumns(), headerFor(column). See RootRelationContract.
 //                         // ONE ROOT: view() answers the rows to PRESENT now, in order — the whole
 //                         // of a static relation, a window of an endless one. The grid asks it at
 //                         // construction and holds what it answered, and no other list; there is
 //                         // no enumeration to ask for. view({ by: n }) is the same seam asked to
 //                         // MOVE — keys back, or nothing — and is asked at the window's edges.
 //       label?,           // aria-label
-//       frame?,           // false: the grid draws no frame of its own — the HOST frames it, around
-//                         // whatever scrolls the table, so the scrollbar sits inside the light. The
-//                         // host wears hrg_frame and hrg_lit on that element; the cursor's colour
-//                         // follows, since hrg_lit's property inherits. Default: the grid frames its wrap.
+//       design,           // THE FRAME'S DESIGN: a typed design of grid-frame - the house's HouseGrid, or a
+//                         // domain's - which the grid asks to wear a leaf of the frame on every element it
+//                         // makes (GRID_FRAME). Required: no design, no grid. The grid never learns a class.
+//       box?,             // the element the grid's box is drawn on - its edge, its ground, its corner: the
+//                         // grid's wrapper, unless the HOST scrolls the table and names its scrollport, so
+//                         // the edge stands round what is seen and the scrollbar inside it.
 //       rowNumbers?,      // true: a GUTTER — a leading column of row numbers, the grid's own, locked to
 //                         // the left of whatever scrolls the table. A number is a position, 1-based,
 //                         // never a value; a press on one selects the row. Not a column: hide, reorder,
@@ -47,12 +49,12 @@
 //       header?,          // { show?, sticky? } — grid chrome, the host's, read once (map 12).
 //                         // sticky: the header stays at the top of whatever scrolls the table,
 //                         // and the cursor is revealed clear of it. What a header SAYS is the
-//                         // relation's: labels(), or a header cell from headerFor(column), placed
-//                         // in the <th> as a cell is placed in a <td> (law 86). No labels here.
+//                         // relation's: a header cell from headerFor(column), placed in the <th>
+//                         // as a cell is placed in a <td> (law 86) - a label is a stock header
+//                         // cell's (RelGridLabels, rel-grid-cells). The grid writes no text there:
+//                         // a header shown needs header cells, and the grid refuses without them.
 //       stickyInset?,     // () → px: a band the HOST keeps stuck above the table — a group's
 //                         // header — that a revealed slot must clear. Geometry, asked when needed
-//       overflow?,        // wrap | clip | ellipsis — what a slot does with content
-//                         // too wide for it. Default ellipsis.
 //       columnView?,      // a subset of relation.columns() — the column axis IS listed. A
 //                         // relation may declare columns it shows only sometimes. (There is
 //                         // no rowView: what is presented is what relation.view() answers,
@@ -120,6 +122,13 @@
 // LOCKED while a cell is deep OR a question is pending — the two are exclusive
 // (law 228) — every intent is refused, not deferred (law 221): keys, clicks,
 // drags, the handover, a resize, the window, and the programmatic twins of each.
+//
+// THE COPIED RANGE (appendix The Copied Range) is state kept here with the
+// cursor and the selection - RelGridCopied: the blocks of the last copy written,
+// by identity - set when a copy is written, before the host hears of it, and
+// cancelled by Escape's first stage (cancelCopy), a cell given control, a View
+// under which its blocks no longer stand as rectangles, and the grid's end. The
+// layout shows it, an overlay over each block; the grid never says how it looks.
 // =============================================================================
 
 class RelGrid {
@@ -135,6 +144,12 @@ class RelGrid {
         if (opts.rowView) throw new Error("[RelGrid] there is no rowView: what is presented is what relation.view() answers");
         var start = r.view();                    // the rows to present now — the relation's answer, held as the View
         if (!Array.isArray(start)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + start);
+        if (opts.frame !== undefined)
+            throw new Error("[RelGrid] frame is gone: the grid is made with a design (opts.design), and a host that scrolls the table names its box (opts.box)");
+        var design = opts.design, branch = GRID_FRAME.GRID_EDGE.branch;
+        if (!design || typeof design.wear !== "function" || typeof design.shed !== "function" || design.branch !== branch)
+            throw new Error("[RelGrid] opts.design is required: a design of " + branch + " - the house's HouseGrid, or a domain's; not "
+                    + (design && design.branch ? "a design of " + design.branch : design));
         var self = this;
         opts.branch.activate(this);              // the grid's own: the party refuses one that is already somebody's
         this._relation = r;
@@ -142,12 +157,15 @@ class RelGrid {
         this._cbArranged = opts.onArranged || null;
         this._destroyed = false;
         var head = opts.header || {};
-        if (head.labels) throw new Error("[RelGrid] header.labels is gone: what a column is called is the relation's — labels(), or headerFor(column) (map 12, law 86)");
-        // What a column is CALLED: the relation's, read once (structure). A relation that
-        // answers header cells says it in the cell; a plain one in labels(); else the name.
-        var labels = (typeof r.labels === "function") ? (r.labels() || {}) : {};
-        this._labelOf = function (c) { return Object.prototype.hasOwnProperty.call(labels, c) ? labels[c] : c; };
-        this._headerFor = (typeof r.headerFor === "function") ? function (c) { return r.headerFor(c); } : null;
+        if (head.labels) throw new Error("[RelGrid] header.labels is gone: what a column is called is the relation's header cell, from headerFor(column) (map 12, law 86)");
+        if (opts.overflow !== undefined)
+            throw new Error("[RelGrid] overflow is gone: what a cell does with text too wide for its column is the cell's own - RelGridTextCell({ overflow })");
+        // What a column is CALLED is said by the relation's header cell; the grid writes no text of its own,
+        // and a header hidden asks for none.
+        this._headerFor = (head.show !== false && typeof r.headerFor === "function") ? function (c) { return r.headerFor(c); } : null;
+        if (head.show !== false && !this._headerFor)
+            throw new Error("[RelGrid] a header shown is the relation's header cells: answer headerFor(column) - RelGridLabels (rel-grid-cells) answers labels"
+                    + ((typeof r.labels === "function") ? "; labels() is no longer read" : "") + " - or make the grid with header: { show: false }");
         // The column constraint: read ONCE, here, because it is structure and
         // not a question about a moment. Absent means no constraint.
         var readOnly = new Set();
@@ -156,17 +174,18 @@ class RelGrid {
             for (var d = 0; d < declared.length; d++) readOnly.add(declared[d]);
         }
         this._selection = new RelGridSelection();  // POSITIONS, and nothing else
+        this._copied = new RelGridCopied();        // the blocks last copied, by IDENTITY
         this._maps = new RelGridViewMaps({
             rowView: start, columns: r.columns(),
             columnView: opts.columnView || null,
             onViewChanged: function (kind) { self._arrange(kind); }
         });
         this._layout = new RelGridLayout({
-            branch: opts.branch, container: opts.container, label: opts.label || null, frame: opts.frame,
+            branch: opts.branch, container: opts.container, label: opts.label || null, design: design, box: opts.box || null,
             rowNumbers: opts.rowNumbers === true,
             onGutterClick:  function (i) { self._gestures.onGutterClick(i); },
             showHeader: head.show !== false, stickyHeader: head.sticky === true, stickyInset: opts.stickyInset || null,
-            overflow: opts.overflow || null, resizeGuide: opts.resizeGuide || null,
+            resizeGuide: opts.resizeGuide || null,
             onCellClick:    function (i, j, mods) { self._gestures.onClick(i, j, mods); },
             onCellDblClick: function (i, j) { self._gestures.onDblClick(i, j); },
             onCellDown:     function (i, j, mods) { self._gestures.onDown(i, j, mods); },
@@ -202,6 +221,7 @@ class RelGrid {
             layout: this._layout, maps: this._maps, selection: this._selection,
             cursorPos: function () { return self._cursor.pos(); },
             clipboard: opts.clipboard || new RelGridClipboard({ branch: opts.branch }),
+            onWritten: function (blocks) { self._copied.set(blocks); self._showCopied(); },
             onCopied: opts.onCopied
         });
         this._gestures = new RelGridGestures({
@@ -209,7 +229,6 @@ class RelGrid {
             locked: function () { return self._locked(); },
             afterSelection: function () { self._afterSelection(); },
             stepJ: function (i, j, dj) { return self._spans.stepJ(i, j, dj); },
-            stepWidth: function (column, dir) { self.setColumnWidth(column, self._widths.stepped(column, dir)); },
             rowHeight: function () { return self._layout.rowHeight(); },
             onEdge: opts.onEdge
         });
@@ -226,8 +245,8 @@ class RelGrid {
     // ── the arrangement cycle: structure, then re-place ────────────────────
 
     _arrange(kind) {
-        var maps = this._maps, headers = [], ids = [], i, j, id;
-        for (var j0 = 0; j0 < maps.cols(); j0++) headers.push(this._labelOf(maps.columnAt(j0)));
+        var maps = this._maps, columns = [], ids = [], i, j, id;
+        for (var j0 = 0; j0 < maps.cols(); j0++) columns.push(maps.columnAt(j0));
         // One ask per identity per presentation — and every ask BEFORE a slot moves:
         // a refusal here leaves the pass with nothing changed, and the maps undo the View.
         // The header cells first, one per presented column, when the relation answers them.
@@ -239,7 +258,7 @@ class RelGrid {
                 ids.push(id);
             }
         }
-        this._layout.render({ headers: headers, rows: maps.rows(), labelled: !this._headerFor });
+        this._layout.render({ columns: columns, rows: maps.rows() });
         this._layout.setColWidths(this._widths.positional());   // widths ride identity onto the new positions
         // The header cells into the header slots; whatever column left the view is forgotten.
         if (this._headerFor) {
@@ -257,6 +276,7 @@ class RelGrid {
         this._spans.settle();                                 // every cell is in; measure the hosts
         this._cursor.resolve(this._control.isDeep());         // first: a cell the cursor leaves is told while it is still known
         this._cells.detachInvisible(function (pk, col) { return maps.locate(pk, col) !== null; });   // alive, out of the tree, forgotten
+        this._showCopied();                                   // the copy where it stands, measured once the cells let go have left their slots
         this._selection.clear();                              // law 43: every range goes with the presented space
         this._afterSelection();
         if (this._cbArranged) {
@@ -274,6 +294,9 @@ class RelGrid {
         this._layout.paintSelection(rects);
         this._channel.selectionChanged(rects);
     }
+
+    /** The copied state shown: an overlay over each block where it stands; a block that no longer stands cancels the copy. */
+    _showCopied() { var layout = this._layout; this._copied.show(this._maps, function (rects) { layout.paintCopied(rects); }); }
 
     /** Arrange again. The domain calls this after changing something the grid
      *  cannot see; it carries nothing and the grid asks nothing. */
@@ -309,6 +332,12 @@ class RelGrid {
         return this._channel.copy();
     }
 
+    /** The copy cancelled - nothing copied from here any more - and the selection kept: Escape's first stage. Whether there was one. */
+    cancelCopy() { if (!this._copied.clear()) return false; this._layout.paintCopied([]); return true; }
+
+    /** What was last copied from here, by identity - a block each, pks down and columns across - or nothing. */
+    copied() { return this._copied.identities(); }
+
     /** Hand the arrangement of the rows to the domain. The twin of Alt+Enter; the grid offers no control of its own. */
     handoverView() {
         if (this._locked() || !this._channel.has()) return false;
@@ -318,22 +347,10 @@ class RelGrid {
     // ── told, unasked: the channel's other direction ───────────────────────
 
     /**
-     * The domain saying, unasked, through the host. A protocol value by kind:
-     * RelGridViewChanged — the View changed underneath the grid — is answered
-     * by asking view() again and presenting the answer, as any remap; an
-     * unknown kind is recorded and refused. Whether anything was done.
+     * The domain saying, unasked, through the host - RelGridViewChanged: the View changed underneath the grid, and the
+     * window asks view() again and presents it; a stranger is refused. Whether anything was done.
      */
-    tell(message) {
-        if (this._destroyed) return false;
-        if (message instanceof RelGridViewChanged) {
-            var keys = this._relation.view();
-            if (!Array.isArray(keys)) throw new Error("[RelGrid] relation.view() must answer the rows to present, as a list; got: " + keys);
-            this._maps.setRowView(keys);                      // → arrange("rows")
-            return true;
-        }
-        console.error("[RelGrid] told something it does not understand:", message);
-        return false;
-    }
+    tell(message) { return this._destroyed ? false : this._window.told(message); }
 
     // ── the window: the same seam, asked to move ───────────────────────────
 
@@ -356,11 +373,13 @@ class RelGrid {
         return at ? this._control.may(at.id) : false;
     }
 
-    /** Offer the cursor's cell control. True when it was taken. */
+    /** Offer the cursor's cell control. True when it was taken - and then what was copied may change: the copy is cancelled. */
     takeControlAtCursor() {
         if (this._locked()) return false;
         var at = this._deepAt();
-        return at ? this._control.take(at) : false;
+        var taken = at ? this._control.take(at) : false;
+        if (taken) this.cancelCopy();
+        return taken;
     }
 
     // ── the surface ────────────────────────────────────────────────────────
@@ -430,6 +449,7 @@ class RelGrid {
         this._channel.destroy();
         this._layout.el().removeEventListener("keydown", this._keydown);
         this._layout.el().removeEventListener("wheel", this._wheel);
+        this._copied.clear();
         this._cells.destroy();
         this._headers.destroy();
         this._layout.destroy();

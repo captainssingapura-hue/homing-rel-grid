@@ -4,6 +4,8 @@ import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
+import hue.captains.singapura.js.homing.core.ModuleImports;
+import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolModule;
 
 import java.util.List;
 
@@ -21,7 +23,12 @@ public record RelGridWindowModule() implements DomModule<RelGridWindowModule> {
 
     public static final RelGridWindowModule INSTANCE = new RelGridWindowModule();
 
-    @Override public ImportsFor<RelGridWindowModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridWindowModule> imports() {
+        return ImportsFor.<RelGridWindowModule>builder()
+                // what the domain says unasked: the View changed underneath the grid
+                .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridViewChanged()), RelGridProtocolModule.INSTANCE))
+                .build();
+    }
 
     @Override public ExportsOf<RelGridWindowModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridWindow()));

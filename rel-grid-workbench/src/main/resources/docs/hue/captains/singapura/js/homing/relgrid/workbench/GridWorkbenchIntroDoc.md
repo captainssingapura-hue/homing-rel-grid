@@ -96,7 +96,7 @@ only ever been proved against the one thing it was written for.
   which columns) and got back finished text; it composed nothing, read nothing, and wrote
   what it was given. The readout under the table says what was chosen and how much was
   written; the first half is the bench remembering, the second half is the grid reporting.
-- Drag a header's right edge, or press **Alt+←/→** on a column. Widths are the grid's own
+- Drag a header's right edge. Widths are the grid's own
   geometry — held by column, applied in place — and are not remembered, because remembering is
   the domain's half.
 - Press **re-arrange** on any table: the slots are rebuilt and the same cells are placed again.
@@ -333,7 +333,7 @@ and **Stress**, when the question is the layout rather than the article.
   cut let the halves grow to a full em each and the pair spilled out of the square.
 - Dock **Stress**: the same engine over hypothetical text — runs of every length, pairs,
   squeezes, a run longer than a row — with the header shown so every column **resizes**, down to
-  12px. Drag a header's edge, or Alt+←/→ on the cursor's column; the buttons widen, narrow and
+  12px. Drag a header's edge; the buttons widen, narrow and
   randomise every width at once, and regenerate the text so the spans move under the same
   widths. Here the side is a **number** the host sets (`--han-side`) rather than the column's
   width, so a resize moves only the width and never a row: a narrow column clips its glyph, a
@@ -437,8 +437,8 @@ agreeing through the surface every host already uses, and reaches into no member
 **Outlets** (in Replicating Tables): the six dishes sold at three outlets, one book each over a
 shared ledger, every column read-only. The group's one header **sticks** — shorten the pane and
 scroll the books under it; arrow up to a row hidden beneath it and the port moves the header's
-height, no more. Drag a header edge on Downtown, or Alt+←/→ on any of
-the three — Airport and Harbour have no header at all — and every table follows, the group's
+height, no more. Drag a header edge on Downtown
+— Airport and Harbour have no header at all — and every table follows, the group's
 line under them reporting the widths once. *Trade at Harbour*: Harbour's cells move, Harbour's
 fence moves, the ledger's fence moves, and no other book hears a thing — the path is store →
 that outlet's relation → its own cells, with neither the table nor the group on it. The ▾ on a

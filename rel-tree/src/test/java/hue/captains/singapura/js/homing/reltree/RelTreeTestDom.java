@@ -115,6 +115,11 @@ public final class RelTreeTestDom {
                     var ev = { key: k, prevented: false }; ev.preventDefault = function () { ev.prevented = true; };
                     treeEl().dispatch('keydown', ev); return ev.prevented;
                 }
+                // a key held with modifiers: { altKey, ctrlKey, metaKey, shiftKey }
+                function chord(k, mods) {
+                    var ev = Object.assign({ key: k, prevented: false }, mods); ev.preventDefault = function () { ev.prevented = true; };
+                    treeEl().dispatch('keydown', ev); return ev.prevented;
+                }
                 function click(i) { row(i).dispatch('click', {}); }
                 function dblclick(i) { row(i).dispatch('dblclick', {}); }
                 function clickCaret(i) { caret(i).dispatch('click', {}); }
@@ -146,7 +151,7 @@ public final class RelTreeTestDom {
                 function lastSent(type) { for (var k = sent.length - 1; k >= 0; k--) if (sent[k] instanceof type) return sent[k]; return null; }
                 return { tree: tree, relation: relation, container: container, branch: branch, cellsBranch: cellsBranch,
                          wrap: wrap, treeEl: treeEl, row: row, caret: caret, folder: folder, cellEl: cellEl, mask: mask, panel: panel,
-                         key: key, click: click, dblclick: dblclick, clickCaret: clickCaret,
+                         key: key, chord: chord, click: click, dblclick: dblclick, clickCaret: clickCaret,
                          shown: shown, drawn: drawn, current: current, lastSent: lastSent,
                          sent: sent, handles: handles, arranged: arranged, moves: moves, activated: activated, edges: edges,
                          asked: function () { return asked.length; }, mints: function () { return mints; } };

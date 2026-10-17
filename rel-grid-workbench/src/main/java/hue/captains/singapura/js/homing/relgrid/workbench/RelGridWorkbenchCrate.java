@@ -5,18 +5,22 @@ import hue.captains.singapura.js.homing.core.Crate;
 import hue.captains.singapura.js.homing.core.CrateEntry;
 import hue.captains.singapura.js.homing.core.StandardJsModuleType;
 import hue.captains.singapura.js.homing.core.js.CoreJsCrate;
-import hue.captains.singapura.js.homing.design.DesignCrate;
 import hue.captains.singapura.js.homing.docview.app.DocViewAppCrate;
 import hue.captains.singapura.js.homing.docview.site.DocViewSiteCrate;
 import hue.captains.singapura.js.homing.jsonkit.JsonKitCrate;
 import hue.captains.singapura.js.homing.relgrid.RelGridCrate;
 import hue.captains.singapura.js.homing.relgrid.group.RelGridGroupCrate;
 import hue.captains.singapura.js.homing.relgrid.protocol.RelGridProtocolCrate;
+import hue.captains.singapura.js.homing.relgrid.house.RelGridHouseCrate;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridCellsCrate;
+import hue.captains.singapura.js.homing.relgrid.prose.RelGridProseCrate;
 import hue.captains.singapura.js.homing.reltree.RelTreeCrate;
 import hue.captains.singapura.js.homing.server.ServerCrate;
 import hue.captains.singapura.js.homing.workspace.parties.WorkspacePartiesCrate;
 import hue.captains.singapura.js.homing.workspace.site.WorkspaceSiteCrate;
 import hue.captains.singapura.js.homing.workspace.widgets.WorkspaceWidgetsCrate;
+import hue.captains.singapura.js.homing.ui.elements.UiElementsCrate;
+import hue.captains.singapura.js.homing.ui.look.UiLookCrate;
 
 import java.util.List;
 
@@ -39,10 +43,9 @@ public final class RelGridWorkbenchCrate implements Crate {
         return List.of(
                 CoreJsCrate.INSTANCE,
                 ServerCrate.INSTANCE,
-                DesignCrate.INSTANCE,
                 // The grid under test, and the protocol it speaks: a domain answers
                 // through the protocol, so the bench depends on it directly.
-                RelGridCrate.INSTANCE,
+                RelGridCrate.INSTANCE, RelGridHouseCrate.INSTANCE, RelGridCellsCrate.INSTANCE,
                 RelGridProtocolCrate.INSTANCE,
                 // And the group the two group benches stack their tables in.
                 RelGridGroupCrate.INSTANCE,
@@ -50,6 +53,8 @@ public final class RelGridWorkbenchCrate implements Crate {
                 RelTreeCrate.INSTANCE,
                 // And the JSON kit, the first out-of-the-box offering on it.
                 JsonKitCrate.INSTANCE,
+                // And the document table, the second: its pages in the house's words.
+                RelGridProseCrate.INSTANCE, UiElementsCrate.INSTANCE, UiLookCrate.INSTANCE,
                 // The workspace each bench is: its widgets' contract, their parties, the grouped page.
                 WorkspaceWidgetsCrate.INSTANCE,
                 WorkspacePartiesCrate.INSTANCE,
@@ -132,10 +137,22 @@ public final class RelGridWorkbenchCrate implements Crate {
                 CrateEntry.of(JsonTextSecretaryModule.INSTANCE, StandardJsModuleType.SECRETARY),
                 CrateEntry.of(JsonInputModule.INSTANCE),
                 CrateEntry.of(JsonDisplayModule.INSTANCE),
+                CrateEntry.of(ProsePagesModule.INSTANCE),
+                CrateEntry.of(ProseNotesModule.INSTANCE),
+                CrateEntry.of(ProseReferenceModule.INSTANCE),
+                CrateEntry.of(ProseFiguresModule.INSTANCE),
                 // The Colour Extents bench: its looks, its two widgets.
                 CrateEntry.of(ExtentStyles.INSTANCE),
                 CrateEntry.of(ExtentTableModule.INSTANCE),
                 CrateEntry.of(ExtentCardModule.INSTANCE),
+                // Minesweeper: the game pure, its tiles the cells, Vista's design of the frame, the widget that glues them.
+                CrateEntry.of(MinesweeperStyles.INSTANCE),
+                CrateEntry.of(MinesweeperBoardModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),   // the game alone: no DOM
+                CrateEntry.of(MineCellModule.INSTANCE),
+                CrateEntry.of(MinesweeperRelationModule.INSTANCE),
+                CrateEntry.of(MinesweeperVistaSheet.INSTANCE),
+                CrateEntry.of(MinesweeperVistaModule.INSTANCE),
+                CrateEntry.of(MinesweeperGameModule.INSTANCE),
                 // The benches' page: their manifests, where they are filed and how arranged, and the app.
                 CrateEntry.of(BenchesModule.INSTANCE),
                 CrateEntry.of(BenchLayoutModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),

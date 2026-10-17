@@ -72,6 +72,12 @@ class DishRelation {
 
     columns() { return this._store.columns(); }
 
+    /** The header cell for a column: a stock label header, made once on a branch of the relation's own. */
+    headerFor(col) {
+        if (!this._heads) this._heads = new RelGridLabels({ branch: this._branch.createBranch("heads"), labels: {} });
+        return this._heads.headerFor(col);
+    }
+
     // THE COLUMN CONSTRAINT (map 16, law 112). sold moves only by selling
     // and popularity is derived from it, so no cell in either column is
     // ever asked — the grid does not consult them, and they are not asked

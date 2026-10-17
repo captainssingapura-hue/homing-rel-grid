@@ -76,6 +76,12 @@ class OutletRelation {
 
     columns() { return this._store.columns(); }
 
+    /** The header cell for a column: a stock label header, made once on a branch of the relation's own. */
+    headerFor(col) {
+        if (!this._heads) this._heads = new RelGridLabels({ branch: this._branch.createBranch("heads"), labels: this.labels() });
+        return this._heads.headerFor(col);
+    }
+
     // A book is read, never edited: every column is a constraint, so the
     // table never asks any cell here whether it may take control.
     readOnlyColumns() { return this._store.columns(); }

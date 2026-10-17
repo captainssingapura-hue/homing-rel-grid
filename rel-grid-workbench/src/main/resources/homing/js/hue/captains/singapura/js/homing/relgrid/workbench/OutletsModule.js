@@ -75,13 +75,17 @@ class Outlets extends BenchWidget {
             return { id: o.id, fence: fence, grid: { relation: relation, label: "Outlet — " + o.name } };
         });
         var ledger = new LedgerFence(store, { branch: domainB.createBranch("fence-ledger") });
+        // The group's header cells, its own: the ledger's columns, called as an outlet calls them.
+        var heads = new RelGridLabels({ branch: domainB.createBranch("heads"), labels: members.length ? members[0].grid.relation.labels() : {} });
         fences.push(ledger);
         var group = new RelGridGroup({
             container: this._host,
             branch: gridB,
+            design: HouseGrid,
             members: members,
             fence: ledger,
             header: mode,                      // 'group': one header at the top; 'each': one per table
+            headerFor: function (col) { return heads.headerFor(col); },
             stickyHeader: true,                // 'group': the one header stays while the books scroll under it
             columnWidths: kept.widths,
             folded: kept.folded,

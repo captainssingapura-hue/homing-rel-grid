@@ -3,80 +3,48 @@ package hue.captains.singapura.js.homing.relgrid;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.util.CssClassName;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /**
- * RFC 0050 · Episode 2 — the grid's LOOKS, typed. One class per thing the
- * layout mints and one per STATE it paints; nothing here is a descendant
- * selector, because the substrate renders one rule per class and the grid
- * paints its predicates itself.
+ * RFC 0050 · Episode 2 — the grid's MECHANICS and its FACTS, typed; never its looks. Every visual the grid shows
+ * is the design's it is made with (Appendix: The Frame): the grid asks the design to wear a leaf of the frame
+ * on each element it makes, and never learns a class.
  *
- * <h2>What a class wears, and what it reads</h2>
+ * <p>What stays here is what no style could want otherwise: positioning, stickiness, stacking order, the width
+ * variables, {@code user-select}, the resize pointer, the clipboard's off-screen scratch. And the grid's FACTS -
+ * {@code hrg_cursor}, {@code hrg_sel}, {@code hrg_deep}, {@code hrg_masked}, a merged group's lead and covered
+ * slots - as predicates with no body: a fact about an element, asserted by the grid and tested without looking
+ * (ext3), never a style hook. The facts a design shows are reflected besides, where core's states read them:
+ * {@code aria-selected}, {@code aria-current}.</p>
  *
- * <p>The grid says nothing about colour, type, depth or line weight of its
- * own: every such value is a <b>design's word</b> (RFC 0065). A class
- * {@code wears()} the pairs its element means — the table is the base
- * surface in the body ink, a header cell the raised surface in the muted
- * ink, a slot draws the {@code Lattice}, a panel is a raised plate under
- * the overlay's shadow — and the design fills them.</p>
+ * <p>Geometry the layout measures - an overlay's box, the panel's, a merged cell's, the table's least width -
+ * rides {@code --hrg-left / --hrg-top / --hrg-width / --hrg-height / --hrg-table-w} on the element, never an
+ * inline style. A column's width rides {@code --hrg-col-w} on its {@code <col>}.</p>
  *
- * <p>Where the old sheet said <i>"a cursor inside a wrapper that holds the
- * focus is full accent"</i> with a descendant selector, this says it with a
- * custom property: {@code hrg_lit} — the wrapper, under {@code :focus-within}
- * — sets {@code --hrg-cursor-color}, and {@code hrg_cursor} draws its outline
- * in it. Custom properties inherit, so a state painted on an ancestor reaches
- * every slot beneath it without a selector that reaches down. The properties
- * are the grid's published vocabulary — a host or a group may set them on any
- * ancestor — and what they carry is the design's: a class that fills or
- * draws from a channel {@code reads()} the pair whose binding it names, so
- * the value is the design's ring, the design's selection, passed down.</p>
- *
- * <ul>
- *   <li>{@code --hrg-cursor-color} — the cursor's outline colour; the ring dimmed
- *       towards the lattice at rest, the ring while lit, transparent while dormant</li>
- *   <li>{@code --hrg-cursor-style} — the ring's style, or dashed while a cell holds control</li>
- *   <li>{@code --hrg-sel-color} — the selection surface; transparent while dormant</li>
- *   <li>{@code --hrg-frame-shadow} — the wrapper's frame: an inset hairline, and lit, the design's focus glow</li>
- *   <li>{@code --hrg-text-overflow} — what the slot asks of a cell's text: ellipsis
- *       under {@code hrg_ov_ellipsis}; a cell that shows text honours it</li>
- * </ul>
- *
- * <p>Geometry the layout measures — an overlay's box, the panel's, a merged
- * cell's, the table's least width — rides {@code --hrg-left / --hrg-top /
- * --hrg-width / --hrg-height / --hrg-table-w} on the element, never an inline
- * style. A column's width rides {@code --hrg-col-w} on its {@code <col>}.</p>
- *
- * <p>Order matters within one specificity: a state class listed after a look
- * wins over it, which is why the states come last. A state that must win
- * over a worn word — a merged cell dropping a lattice line — says so with a
- * nested selector one step more specific, since the design's sheet is the
- * later one.</p>
+ * <p>Two classes outlive the grid's own use of them: {@code hrg_frame} and {@code hrg_lit}, and the colours they
+ * are drawn in. The grid wears neither - its edge is its design's - but the tree's hosts and the group's fence
+ * still do, until each has a frame of its own.</p>
  */
 public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     public static final RelGridStyles INSTANCE = new RelGridStyles();
 
-    // ── the words the channels carry — the ring, the selection, the lattice — by name, for anything that draws from a channel ──
+    // ── what the channels carry — the ring, the selection, the lattice — by name, for anything that draws from a channel.
+    //    Each takes the ink the grid stands on, until the grid wears the house's look: a ring in the ink, a lattice
+    //    and a selection washed with it - seen in every theme, naming no colour. ──
 
-    public static final String RING_COLOUR  = of(Focus.class, Color.Edge.class).var("outline-color");
-    public static final String RING_BORDER  = of(Focus.class, Color.Edge.class).var("border-color");
-    public static final String RING_WIDTH   = of(Focus.class, Shape.Rule.class).var("outline-width");
-    public static final String RING_STYLE   = of(Focus.class, Shape.Rule.class).var("outline-style");
-    public static final String RING_OFFSET  = of(Focus.class, Shape.Rule.class).var("outline-offset");
-    public static final String RING_GLOW    = of(Focus.class, Shape.Shadow.class).var();
-    public static final String LATTICE_LINE = of(Lattice.class, Color.Edge.class).var("border-color");
-    public static final String SEL_SURFACE  = of(Selected.class, Color.Surface.class).var("background-color");
-    public static final String SEL_INK      = of(Selected.class, Color.Ink.class).var();
+    public static final String RING_COLOUR  = "currentColor";
+    public static final String RING_BORDER  = "currentColor";
+    public static final String RING_WIDTH   = "2px";
+    public static final String RING_STYLE   = "solid";
+    public static final String RING_OFFSET  = "-2px";
+    public static final String RING_GLOW    = "0 0 0 1px color-mix(in srgb, currentColor 20%, transparent)";
+    public static final String LATTICE_LINE = "color-mix(in srgb, currentColor 18%, transparent)";
+    public static final String SEL_SURFACE  = "color-mix(in srgb, currentColor 12%, transparent)";
+    public static final String SEL_INK      = "inherit";
 
     // ── the wrapper: the positioned parent, and the frame that catches the focus ──
 
@@ -89,7 +57,8 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
     }
 
     /**
-     * LIT, NOT LIFTED. A frame drawn OVER the table, taking no pointer, under
+     * A STOPGAP, NOT THE GRID'S: the grid wears none, its edge is its design's; the tree's hosts still frame a
+     * tree with it, until the tree has a frame of its own. LIT, NOT LIFTED. A frame drawn OVER the table, taking no pointer, under
      * the editor (50) and the mask (60). At rest a hairline in the lattice's
      * colour, inset; lit, whatever {@code --hrg-frame-shadow} says. The
      * hairline is INSET — it lives on the edge and covers nothing — and any
@@ -100,7 +69,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      */
     public record hrg_frame() implements CssClass<RelGridStyles> {
         @Override public String pseudoState() { return "::after"; }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Lattice.class, Color.Edge.class)); }
         @Override public String body() { return """
                 content: "";
                 position: absolute;
@@ -113,6 +81,7 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
     }
 
     /**
+     * A STOPGAP, NOT THE GRID'S: worn by the tree's hosts and the group's fence, until each has a frame of its own.
      * The grid that holds the focus is visibly the grid that holds the focus,
      * and it says so with the design's ring: the frame's hairline in the
      * ring's colour under the ring's glow, and a cursor at full strength.
@@ -123,7 +92,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      */
     public record hrg_lit() implements CssClass<RelGridStyles> {
         @Override public String pseudoState() { return ":focus-within"; }
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 --hrg-cursor-color: %s;
                 --hrg-frame-shadow: inset 0 0 0 1px %s, %s;
@@ -141,7 +109,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * collapsed border — the table's — never does.
      */
     public record hrg_table() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Body.class, Type.Face.class), of(Label.class, Type.Scale.class)); }
         @Override public String body() { return """
                 border-collapse: separate;
                 border-spacing: 0;
@@ -155,11 +122,9 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     /** A header cell: the raised surface in the muted ink at the label's weight, drawing its share of the lattice. */
     public record hrg_th() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Muted.class, Color.Ink.class), of(Label.class, Type.Weight.class), of(Lattice.class, Color.Edge.class), of(Lattice.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 position: relative;
                 text-align: left;
-                padding: 6px 10px;
                 white-space: nowrap;
                 """;
         }
@@ -203,7 +168,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     /** The guide a header drag draws: one segment per box of the extent, in fixed coordinates the drag sets, in the primary surface. */
     public record hrg_resize_guide() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Surface.class)); }
         @Override public String body() { return """
                 position: fixed;
                 top: var(--hrg-guide-top);
@@ -224,7 +188,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * column.
      */
     public record hrg_td() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Lattice.class, Color.Edge.class), of(Lattice.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 padding: 0;
                 position: relative;
@@ -241,7 +204,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * wears the group's state — cursor, selection — mirrored from the slots.
      */
     public record hrg_merge() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 position: absolute;
                 z-index: 30;
@@ -255,6 +217,44 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
     }
 
     /**
+     * A copied block's box (RFC 0050 · Episode 2, appendix The Copied Range): laid over the block's slots in the
+     * wrapper, over the slots' marks and a merged cell's host, under the sticky header, the editor's anchor and the
+     * mask; never in the pointer's way. Its ground and its effect are the design's (CopiedArea).
+     */
+    public record hrg_copied() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                position: absolute;
+                z-index: 32;
+                box-sizing: border-box;
+                pointer-events: none;
+                left: var(--hrg-left); top: var(--hrg-top);
+                width: var(--hrg-width); height: var(--hrg-height);
+                """;
+        }
+    }
+
+    /** The drawing a copied block's border is made in: the box's whole, its line free to stand on the box's edge. */
+    public record hrg_copied_line() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                overflow: visible;
+                pointer-events: none;
+                """;
+        }
+    }
+
+    /** The border's rectangle: a line, never filled. Its ink and its effect are the design's (CopiedBorder). */
+    public record hrg_copied_rect() implements CssClass<RelGridStyles> {
+        @Override public String body() { return """
+                fill: none;
+                """;
+        }
+    }
+
+    /**
      * An editor's anchor: laid over the slot, in the wrapper, OUTSIDE the
      * table — so an editor cannot widen a column, stretch a row, or be clipped
      * by its own cell, and a cell may open something larger than itself. On
@@ -262,7 +262,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * holds control is the one with the ring.
      */
     public record hrg_edit() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Base.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 position: absolute;
                 z-index: 50;
@@ -281,7 +280,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * share of the lattice like any slot.
      */
     public record hrg_gutter() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Muted.class, Color.Ink.class), of(Lattice.class, Color.Edge.class), of(Lattice.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 position: sticky;
                 left: 0;
@@ -320,7 +318,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
      * replaces: the context stays.
      */
     public record hrg_mask() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Backdrop.class, Color.Surface.class)); }
         @Override public String body() { return """
                 position: absolute;
                 left: 0; top: 0; right: 0; bottom: 0;
@@ -332,7 +329,6 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
 
     /** THE PANEL: the grid's box for the domain's element. A raised plate under the overlay's shadow, scrolling inside itself. */
     public record hrg_panel() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Surface.class), of(Body.class, Color.Ink.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Raised.class, Shape.Corner.class), of(Overlay.class, Shape.Shadow.class)); }
         @Override public String body() { return """
                 position: absolute;
                 box-sizing: border-box;
@@ -364,99 +360,52 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
         }
     }
 
-    /**
-     * What a slot asks of content too wide for it: an ellipsis. Ellipsis by
-     * default, because wrapping makes one row six lines tall while its
-     * neighbours stay at one. nowrap is inherited by every cell; the ellipsis
-     * itself is the cell's to draw, from {@code --hrg-text-overflow} — the
-     * stock text cell does — because the text is the cell's element, not the
-     * slot's. It engages only once a column has a definite width.
-     */
-    public record hrg_ov_ellipsis() implements CssClass<RelGridStyles> {
-        @Override public String body() { return """
-                --hrg-text-overflow: ellipsis;
-                white-space: nowrap;
-                """;
-        }
-    }
-
-    /** Clip without an ellipsis. */
-    public record hrg_ov_clip() implements CssClass<RelGridStyles> {
-        @Override public String body() { return """
-                white-space: nowrap;
-                """;
-        }
-    }
-
-    /** Wrap — what plain CSS does. A predicate with nothing to add. */
-    public record hrg_ov_wrap() implements CssClass<RelGridStyles> {
+    /** The leading slot of a merged cell. A fact: the lattice is shed from it, and the group's host draws the rules. */
+    public record hrg_lead() implements CssClass<RelGridStyles> {
         @Override public String body() { return ""; }
     }
 
     /**
-     * The leading slot of a merged cell: the line it reaches across is
-     * dropped. One step more specific than the lattice's word, which is in
-     * the later sheet and would otherwise put the line back.
+     * A merged cell's leading slot, while the cell is taller than its row's slots alone would make it: the row held
+     * at the height the cell needs, which the layout measures ({@code --hrg-row-floor}). A slot's height is its
+     * row's least height.
      */
-    public record hrg_lead() implements CssClass<RelGridStyles> {
+    public record hrg_row_floor() implements CssClass<RelGridStyles> {
         @Override public String body() { return """
-                &:is(td) { border-right-color: transparent; }
+                height: var(--hrg-row-floor);
                 """;
         }
     }
 
-    /** A slot a merged cell reaches over: its line is dropped too — except the last one's, which is the group's edge. */
+    /** A slot a merged cell reaches over. A fact: the lattice is shed from it too. */
     public record hrg_covered() implements CssClass<RelGridStyles> {
-        @Override public String body() { return """
-                &:is(td):not(.%s) { border-right-color: transparent; }
-                """.formatted(CssClassName.toCssName(hrg_group_end.class));
-        }
+        @Override public String body() { return ""; }
     }
 
-    /** The last slot a merged cell reaches over: its right line is the group's edge, and stays. A predicate. */
+    /** The last slot a merged cell reaches over. A fact. */
     public record hrg_group_end() implements CssClass<RelGridStyles> {
         @Override public String body() { return ""; }
     }
 
     /**
-     * The selection: the design's selected surface and ink on every slot the
-     * resolved list covers, and on a merged cell's host when any of its slots
-     * is — through the channel, so a group can make a dormant member's
-     * selection transparent without touching a slot.
+     * The selection, as a fact: on every slot the resolved list covers, and on a merged cell's host when any of its
+     * slots is - reflected besides as aria-selected, which the design's selection fill shows by.
      */
     public record hrg_sel() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> reads() { return List.of(of(Selected.class, Color.Surface.class), of(Selected.class, Color.Ink.class)); }
-        @Override public String body() { return """
-                background-color: var(--hrg-sel-color, %s);
-                color: var(--hrg-sel-ink, %s);
-                """.formatted(SEL_SURFACE, SEL_INK);
-        }
+        @Override public String body() { return ""; }
     }
 
     /**
-     * The cursor: painted on the slot, never on the cell. The design's focus
-     * ring — its width, its style, how far in it sits — in the ring's colour
-     * dimmed towards the lattice at rest, so a cursor in a table that is NOT
-     * listening does not look like one that is; the ring itself while lit;
-     * dashed while the cell is deep, so the handover is visible.
+     * The cursor, as a fact: on the slot, never on the cell. What it looks like is the leaf the slot wears beside it -
+     * the cursor while the keys are elsewhere, while the grid holds them, while its cell holds control.
      */
     public record hrg_cursor() implements CssClass<RelGridStyles> {
-        @Override public List<? extends Wearable> reads() { return List.of(of(Focus.class, Color.Edge.class), of(Focus.class, Shape.Rule.class), of(Lattice.class, Color.Edge.class)); }
-        @Override public String body() { return """
-                outline-width: %s;
-                outline-style: var(--hrg-cursor-style, %s);
-                outline-offset: %s;
-                outline-color: var(--hrg-cursor-color, color-mix(in srgb, %s 45%%, %s));
-                """.formatted(RING_WIDTH, RING_STYLE, RING_OFFSET, RING_COLOUR, LATTICE_LINE);
-        }
+        @Override public String body() { return ""; }
     }
 
-    /** A cell holds control: the cursor goes dashed. Worn by the wrapper and the table. */
+    /** A cell holds control. A fact, worn by the wrapper and the table; the cursor wears the lent leaf meanwhile. */
     public record hrg_deep() implements CssClass<RelGridStyles> {
-        @Override public String body() { return """
-                --hrg-cursor-style: dashed;
-                """;
-        }
+        @Override public String body() { return ""; }
     }
 
     /** A question is pending and the mask is up. A predicate with nothing to add. */
@@ -469,11 +418,12 @@ public record RelGridStyles() implements CssGroup<RelGridStyles> {
                 // looks
                 new hrg_wrap(), new hrg_frame(), new hrg_lit(),
                 new hrg_table(), new hrg_th(), new hrg_sticky(), new hrg_resize_handle(), new hrg_col(), new hrg_resize_guide(),
-                new hrg_td(), new hrg_merge(), new hrg_edit(), new hrg_gutter(), new hrg_gutter_head(), new hrg_gutter_col(),
+                new hrg_td(), new hrg_merge(), new hrg_copied(), new hrg_copied_line(), new hrg_copied_rect(),
+                new hrg_edit(), new hrg_gutter(), new hrg_gutter_head(), new hrg_gutter_col(),
                 new hrg_mask(), new hrg_panel(), new hrg_scratch(),
                 // states, after the looks they qualify
-                new hrg_fixed(), new hrg_ov_ellipsis(), new hrg_ov_clip(), new hrg_ov_wrap(),
-                new hrg_lead(), new hrg_covered(), new hrg_group_end(),
+                new hrg_fixed(),
+                new hrg_lead(), new hrg_row_floor(), new hrg_covered(), new hrg_group_end(),
                 new hrg_sel(), new hrg_cursor(), new hrg_deep(), new hrg_masked());
     }
 }

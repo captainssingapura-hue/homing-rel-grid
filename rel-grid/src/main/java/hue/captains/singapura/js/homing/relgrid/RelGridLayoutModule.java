@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
@@ -29,17 +30,20 @@ public record RelGridLayoutModule() implements DomModule<RelGridLayoutModule> {
     @Override
     public ImportsFor<RelGridLayoutModule> imports() {
         return ImportsFor.<RelGridLayoutModule>builder()
+                // the frame's leaves, by which the design it is made with is asked to wear one
+                .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridHeaderDragModule.RelGridHeaderDrag()), RelGridHeaderDragModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridSlotsModule.RelGridSlots()), RelGridSlotsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridOverlaysModule.RelGridOverlays()), RelGridOverlaysModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridMarksModule.RelGridMarks()), RelGridMarksModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridCopiedOverlayModule.RelGridCopiedOverlay()), RelGridCopiedOverlayModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridRevealModule.RelGridReveal()),
                         RelGridRevealModule.INSTANCE))
                 // The looks, typed: every class the layout mints or paints.
                 .add(new ModuleImports<>(List.of(
-                        new RelGridStyles.hrg_wrap(), new RelGridStyles.hrg_frame(), new RelGridStyles.hrg_lit(),
-                        new RelGridStyles.hrg_table(), new RelGridStyles.hrg_fixed(), new RelGridStyles.hrg_ov_ellipsis(),
-                        new RelGridStyles.hrg_ov_clip(), new RelGridStyles.hrg_ov_wrap(), new RelGridStyles.hrg_sel(),
-                        new RelGridStyles.hrg_cursor(), new RelGridStyles.hrg_deep(), new RelGridStyles.hrg_masked()),
+                        new RelGridStyles.hrg_wrap(),
+                        new RelGridStyles.hrg_table(), new RelGridStyles.hrg_fixed(),
+                        new RelGridStyles.hrg_deep(), new RelGridStyles.hrg_masked()),
                         RelGridStyles.INSTANCE))
                 .build();
     }

@@ -6,6 +6,7 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.relgrid.RelGridModule;
+import hue.captains.singapura.js.homing.relgrid.house.HouseGridModule;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public record HanArticleViewModule() implements DomModule<HanArticleViewModule> 
         return ImportsFor.<HanArticleViewModule>builder()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with
                 .add(new ModuleImports<>(List.of(new HanStoreModule.HanStore()), HanStoreModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HanRelationModule.HanRelation()), HanRelationModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HanArticleModule.HAN_ARTICLE()), HanArticleModule.INSTANCE))

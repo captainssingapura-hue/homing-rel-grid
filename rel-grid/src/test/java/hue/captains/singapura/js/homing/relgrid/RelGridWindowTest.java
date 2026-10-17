@@ -46,7 +46,7 @@ class RelGridWindowTest extends JsModuleTestBase {
                     }
                 };
                 var container = makeEl('div'), branch = testBranch(), edges = [];
-                var grid = new RelGrid({ container: container, branch: branch, relation: relation, onEdge: function (d) { edges.push(d); } });
+                var grid = new RelGrid({ design: TEST_DESIGN, header: { show: false }, container: container, branch: branch, relation: relation, onEdge: function (d) { edges.push(d); } });
                 function table() { return container.children[0].children[0]; }
                 function tbody() { var t = table(); for (var k = 0; k < t.children.length; k++) if (t.children[k].tagName === 'tbody') return t.children[k]; return null; }
                 function td(i, j) { return tbody().children[i].children[j]; }

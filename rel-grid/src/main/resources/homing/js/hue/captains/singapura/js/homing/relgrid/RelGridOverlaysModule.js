@@ -107,6 +107,7 @@ class RelGridOverlays {
         this._wrap = opts.wrap;
         this._container = opts.container;
         this._slotAt = opts.slotAt;          // (i, j) → td | null, the layout's
+        this._design = opts.design;          // what wears the frame's leaves on the overlays
         this._overlay = null;  this._overlayBranch = null;
         this._mask = null;     this._maskBranch = null;
         this._panel = null;    this._panelBranch = null;
@@ -144,6 +145,7 @@ class RelGridOverlays {
         ov.activate(this);
         var el = ov.createElement("overlay", "div");
         css.addClass(el, hrg_edit);
+        this._design.wear(GRID_FRAME.EDITOR_ANCHOR, el);
         _hrgPlace(el, r);
         this._wrap.appendChild(el);
         this._overlay = el;
@@ -173,6 +175,7 @@ class RelGridOverlays {
         mb.activate(this);
         var el = mb.createElement("mask", "div");
         css.addClass(el, hrg_mask);
+        this._design.wear(GRID_FRAME.MASK, el);
         el.setAttribute("tabindex", "-1");         // focusable, and not in the tab order
         this._wrap.appendChild(el);
         this._mask = el;
@@ -202,6 +205,7 @@ class RelGridOverlays {
         var box = _hrgGoldenBox(seen.width, seen.height);
         var el = pb.createElement("panel", "div");
         css.addClass(el, hrg_panel);
+        this._design.wear(GRID_FRAME.QUESTION_PANEL, el);
         el.setAttribute("tabindex", "-1");
         _hrgPlace(el, { left: seen.left + box.left, top: seen.top + box.top, width: box.width, height: box.height });
         mask.appendChild(el);
@@ -241,11 +245,13 @@ class RelGridOverlays {
         if (!lead) return null;
         var marked = [lead];                                  // remembered, to be unmarked: the slots may outlive the group
         css.addClass(lead, hrg_lead);
+        this._design.shed(GRID_FRAME.LATTICE, lead);         // the host draws the group's rules
         if (lead.style && lead.style.setProperty) lead.style.setProperty("--hrg-span", String(n));
         for (var k = 1; k < n; k++) {
             var td = this._slotAt(i, j + k);
             if (!td) break;
             css.addClass(td, hrg_covered);
+            this._design.shed(GRID_FRAME.LATTICE, td);
             if (k === n - 1) css.addClass(td, hrg_group_end);
             marked.push(td);
         }
@@ -255,6 +261,7 @@ class RelGridOverlays {
         }
         var el = this._mergedBranch.createElement("merged-" + this._groups.length, "div");
         css.addClass(el, hrg_merge);
+        this._design.wear(GRID_FRAME.MERGE_HOST, el);
         this._wrap.appendChild(el);
         this._groups.push({ i: i, j: j, n: n, el: el, marked: marked });
         return el;
@@ -263,9 +270,10 @@ class RelGridOverlays {
     /** The marks off a group's slots: they are plain slots again. */
     _unmark(grp) {
         var lead = grp.marked[0];
-        css.removeClass(lead, hrg_lead);
-        if (lead.style && lead.style.removeProperty) lead.style.removeProperty("--hrg-span");
+        css.removeClass(lead, hrg_lead, hrg_row_floor);
+        if (lead.style && lead.style.removeProperty) { lead.style.removeProperty("--hrg-span"); lead.style.removeProperty("--hrg-row-floor"); }
         for (var k = 1; k < grp.marked.length; k++) css.removeClass(grp.marked[k], hrg_covered, hrg_group_end);
+        for (var m = 0; m < grp.marked.length; m++) this._design.wear(GRID_FRAME.LATTICE, grp.marked[m]);   // their own rules again
     }
 
     /** The group a position is in, or null. */
@@ -277,10 +285,27 @@ class RelGridOverlays {
         return null;
     }
 
-    /** Size and place every merged cell's host over its slots, as they are now. */
+    /**
+     * Size and place every merged cell's host over its slots, as they are now. A cell in a host stands outside its
+     * row, so a row its slots alone would leave shorter than the cell is held at the height the cell needs - its
+     * leading slot floored (--hrg-row-floor) - and the hosts placed again over the rows as they then are.
+     */
     placeGroups() {
-        for (var g = 0; g < this._groups.length; g++) {
-            var grp = this._groups[g];
+        var g, grp, floored = false;
+        for (g = 0; g < this._groups.length; g++) {
+            grp = this._groups[g];
+            _hrgPlace(grp.el, this._unionRect(grp.i, grp.j, grp.n));
+        }
+        for (g = 0; g < this._groups.length; g++) {
+            grp = this._groups[g];
+            var lead = grp.marked[0], need = grp.el.scrollHeight, has = grp.el.clientHeight;
+            if (!lead || !lead.style || !(need > has)) continue;
+            lead.style.setProperty("--hrg-row-floor", need + "px");
+            css.addClass(lead, hrg_row_floor);
+            floored = true;
+        }
+        if (floored) for (g = 0; g < this._groups.length; g++) {
+            grp = this._groups[g];
             _hrgPlace(grp.el, this._unionRect(grp.i, grp.j, grp.n));
         }
         return this;

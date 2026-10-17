@@ -35,9 +35,9 @@
 //                      onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?, onGutterClick? })
 //   sticky: the header cells stay at the top of whatever scrolls the table
 //   gutter: a leading column of row numbers, stuck to the left; onGutterClick(i) reports a press on one
-//   render({ headers, rows, labelled? })   the matrix for a shape: true when minted fresh, false when kept.
-//                                  labelled false: the header cells' text is somebody else's — a header
-//                                  cell the facade places — so the <th> is left empty for it
+//   render({ columns, rows })      the matrix for a shape: true when minted fresh, false when kept.
+//                                  A header slot is left empty: what it says is a header cell's, placed
+//                                  by the facade
 //   slotAt(i, j) / rows() / cols() / colAt(j) / thAt(j) / gutterAt(i) / hasGutter()
 //   pressed() / release()          the press-drag's state, for the document-level release
 //   destroy()
@@ -57,6 +57,7 @@ class RelGridSlots {
         this._colgroup = opts.colgroup;
         this._headerRow = opts.headerRow || null;
         this._drag = opts.drag || null;         // the header drag, wired per <th>
+        this._design = opts.design;             // what wears the frame's leaves on the slots
         this._sticky = opts.sticky === true;    // the header cells wear hrg_sticky
         this._gutter = opts.gutter === true;    // a leading column of row numbers, the grid's own
         this._onGutterClick = opts.onGutterClick || null;     // (i) — a press on a row's number
@@ -66,7 +67,7 @@ class RelGridSlots {
         this._onCellDragTo = opts.onCellDragTo || null;       // (i, j) — reached while held
         this._onDragEnd = opts.onDragEnd || null;             // () — released
         this._slotsBranch = null;               // the current shape's
-        this._shape = null;                     // { headers, rows } the matrix was minted for
+        this._shape = null;                     // { columns, rows } the matrix was minted for
         this._tbody = null;
         this._slots = [];                       // [i][j] → td
         this._gutters = [];                     // [i] → the row's number cell, when there is a gutter
@@ -105,29 +106,28 @@ class RelGridSlots {
         });
     }
 
-    /** The same headers, in the same order, and the same number of rows. */
-    _sameShape(headers, rows) {
+    /** The same columns, in the same order, and the same number of rows. */
+    _sameShape(columns, rows) {
         var s = this._shape;
-        if (!s || s.rows !== rows || s.headers.length !== headers.length) return false;
-        for (var h = 0; h < headers.length; h++) if (s.headers[h] !== headers[h]) return false;
+        if (!s || s.rows !== rows || s.columns.length !== columns.length) return false;
+        for (var h = 0; h < columns.length; h++) if (s.columns[h] !== columns[h]) return false;
         return true;
     }
 
     /**
-     * The matrix for a shape: { headers: string[], rows: n }. An unchanged
+     * The matrix for a shape: { columns: string[], rows: n }. An unchanged
      * shape keeps the matrix it has and answers false — nothing minted,
      * nothing released. A new shape dissolves the last shape's branch first
      * and mints everything fresh on a new one; true.
      */
     render(shape) {
-        var headers = (shape && shape.headers) || [];
+        var columns = (shape && shape.columns) || [];
         var rows = (shape && shape.rows) || 0;
-        if (this._slotsBranch && this._sameShape(headers, rows)) return false;
+        if (this._slotsBranch && this._sameShape(columns, rows)) return false;
         if (this._slotsBranch) this._slotsBranch.dissolve();
         var slots = this._slotsBranch = this._branch.createBranch("slots");
         slots.activate(this);
-        this._shape = { headers: headers.slice(), rows: rows };
-        var labelled = !(shape && shape.labelled === false);
+        this._shape = { columns: columns.slice(), rows: rows };
         this._cols = [];
         this._ths = [];
         this._gutters = [];
@@ -138,11 +138,12 @@ class RelGridSlots {
             if (this._headerRow) {
                 var gth = slots.createElement("th-gutter", "th");
                 css.addClass(gth, hrg_th, hrg_gutter, hrg_gutter_head);
+                this._design.wear(GRID_FRAME.GUTTER_BAND, gth);
                 if (this._sticky) css.addClass(gth, hrg_sticky);
                 this._headerRow.appendChild(gth);
             }
         }
-        for (var h = 0; h < headers.length; h++) {
+        for (var h = 0; h < columns.length; h++) {
             var col = slots.createElement("col-" + h, "col");   // widths need cols regardless
             css.addClass(col, hrg_col);
             this._colgroup.appendChild(col);
@@ -150,8 +151,8 @@ class RelGridSlots {
             if (!this._headerRow) continue;
             var th = slots.createElement("th-" + h, "th");
             css.addClass(th, hrg_th);
+            this._design.wear(GRID_FRAME.HEADER_BAND, th);
             if (this._sticky) css.addClass(th, hrg_sticky);
-            if (labelled) th.textContent = headers[h];
             this._ths.push(th);
             if (this._drag) this._drag.wire(th, h, slots);
             this._headerRow.appendChild(th);
@@ -162,9 +163,11 @@ class RelGridSlots {
             var tr = slots.createElement("tr-" + i, "tr");
             var rowSlots = [];
             if (this._gutter) tr.appendChild(this._mintGutter(slots, i));
-            for (var j = 0; j < headers.length; j++) {
+            for (var j = 0; j < columns.length; j++) {
                 var td = slots.createElement("td-" + i + "-" + j, "td");
                 css.addClass(td, hrg_td);
+                this._design.wear(GRID_FRAME.LATTICE, td);
+                this._design.wear(GRID_FRAME.SELECTION_FILL, td);
                 this._wire(td, i, j);
                 tr.appendChild(td);
                 rowSlots.push(td);
@@ -181,6 +184,7 @@ class RelGridSlots {
         var self = this;
         var g = slots.createElement("gutter-" + i, "th");
         css.addClass(g, hrg_gutter);
+        this._design.wear(GRID_FRAME.GUTTER_BAND, g);
         g.setAttribute("scope", "row");
         g.textContent = String(i + 1);
         g.addEventListener("click", function () { if (self._onGutterClick) self._onGutterClick(i); });

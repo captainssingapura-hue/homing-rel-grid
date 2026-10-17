@@ -37,7 +37,7 @@ class EndlessTest extends JsModuleTestBase {
                 domainB.activate({ toString: function () { return 'bench'; } });
                 var relation = new EndlessRelation({ branch: domainB.createBranch('cells'), rows: opts.rows || 1000, window: opts.window || 5 });
                 var container = makeEl('div'), edges = [];
-                var grid = new RelGrid({ container: container, branch: gridB, relation: relation, onEdge: function (d) { edges.push(d); } });
+                var grid = new RelGrid({ container: container, branch: gridB, relation: relation, design: TEST_DESIGN, onEdge: function (d) { edges.push(d); } });
                 var W = relation.window(), cols = relation.columns().length;
                 var slots0 = gridB.getBranch('slots'), grid0 = countTree(gridB);
                 // The bench's invariants, as the widget reads them.

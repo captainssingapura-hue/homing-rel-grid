@@ -14,7 +14,6 @@
 //   get(column)          what is HELD, or null — never what was measured
 //   snapshot()           every held width, by column: a plain object the host may keep
 //   positional()         px | null per presented column, in view order — the layout's form
-//   stepped(column, dir) the width one keyboard step (Alt+arrow) from what is held, or the default
 //
 // The floor of the legal range is the host's, within reason. A column
 // narrower than the default is a host's deliberate geometry — a half-square
@@ -24,8 +23,6 @@
 
 var _HRG_MIN_W = 40, _HRG_MAX_W = 2000;   // the legal range — normalisation's bound
 var _HRG_MIN_W_FLOOR = 8;                 // and the least a host may lower the floor to
-var _HRG_DEFAULT_W = 120;                 // what a keyboard resize starts from when nothing is held
-var _HRG_KEY_STEP = 10;                   // one Alt+arrow
 
 class RelGridWidths {
 
@@ -94,10 +91,5 @@ class RelGridWidths {
             out.push(this._widths.has(c) ? this._widths.get(c) : null);
         }
         return out;
-    }
-
-    stepped(column, dir) {
-        var held = this.get(column);
-        return ((held == null) ? _HRG_DEFAULT_W : held) + (dir > 0 ? _HRG_KEY_STEP : -_HRG_KEY_STEP);
     }
 }

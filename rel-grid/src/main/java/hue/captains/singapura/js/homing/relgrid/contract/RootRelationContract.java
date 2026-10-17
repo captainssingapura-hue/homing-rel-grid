@@ -68,12 +68,12 @@ import java.util.List;
  * it once for {@code headerElement()} and places it in the header slot its
  * column maps to, and what the slot says is the domain's from then on — the
  * label, a sort caret, a filter. Asked once per presentation of the column,
- * forgotten when the column leaves the column view. {@code labels()} — OPTIONAL
- * — is the plain relation's way: a map {@code column → text} read once at
- * construction; a column not in it is labelled by its name. Map 12's law 86:
- * a label is a fact about a column, and the relation is the party that knows
- * its columns. A relation that answers {@code headerFor} needs no labels; one
- * that answers neither has its columns' names for headers.</p>
+ * forgotten when the column leaves the column view. Map 12's law 86: a label
+ * is a fact about a column, and the relation is the party that knows its
+ * columns - so the grid writes no header text of its own. A relation whose
+ * header is only labels answers stock label header cells ({@code RelGridLabels},
+ * rel-grid-cells); a grid whose header is shown refuses a relation that answers
+ * no {@code headerFor}.</p>
  *
  * <h2>The optional declarations</h2>
  *
@@ -102,13 +102,11 @@ public interface RootRelationContract {
 
     /** OPTIONAL. Columns the grid must never ask for control; read once, at construction. */
     List<String> readOnlyColumns();
-    /** OPTIONAL. What a column is called: column → text, read once; a column not named is labelled by its name. */
-    Object       labels();
     /** OPTIONAL. The header cell for a column — the domain's noun, placed in the grid's header slot. */
     Object       headerFor(String column);
 
     /** The method names the JS relation object must expose. Nothing about values. */
     String[] METHOD_NAMES = { "view", "columns", "cellFor" };
-    /** Read once at construction if present (readOnlyColumns, labels); asked per presentation (headerFor). Absence is the default. */
-    String[] OPTIONAL_METHOD_NAMES = { "readOnlyColumns", "labels", "headerFor" };
+    /** Read once at construction if present (readOnlyColumns); asked per presentation (headerFor). Absence is the default - a header shown needs headerFor. */
+    String[] OPTIONAL_METHOD_NAMES = { "readOnlyColumns", "headerFor" };
 }

@@ -1,7 +1,8 @@
 // =============================================================================
-// RelGridStockCellsModule — RFC 0050 · Episode 2's stock cells. DOMAIN-side code
-// that ships with the grid: a relation's cell manager may build from these,
-// and the grid never imports them.
+// RelGridStockCellsModule — RFC 0050 · Episode 2's stock text cell, one of the
+// out-of-the-box cells (rel-grid-cells, Appendix: The Frame). DOMAIN-side code:
+// a relation's cell manager may build from it, through the same factory as any
+// domain's cell, privileged by nothing; the grid never imports it.
 //
 // A CELL IS A NOUN. It holds what it shows, and it OWNS what it is made of:
 // its element is minted on the branch it was handed — a DomOpsParty branch
@@ -32,7 +33,7 @@
 // store, fire twice, or fire after the grid is gone. While deep the cell owns
 // the keyboard: keys inside its input do not reach the grid.
 //
-//   new RelGridTextCell({ branch, value?, onCommit? })
+//   new RelGridTextCell({ branch, value?, onCommit?, overflow? })
 //     · branch — the cell's OWN DomOpsParty branch (unactivated; the cell
 //       activates it, and dispose() dissolves it). The owner mints one per
 //       cell from a branch of its own.
@@ -42,6 +43,9 @@
 //       owner decides (persist, replicate, refuse) and the cell shows whatever
 //       it then set()s. A cell without onCommit answers no to mayTakeControl,
 //       is never offered the handover, and the grid stays shallow.
+//     · overflow — what the cell does with text too wide for its column:
+//       'ellipsis' (the default), 'clip' or 'wrap'. The cell's own: a slot
+//       only places it.
 //
 // No focused node is ever removed by the cell: ending an edit detaches the
 // input's listeners FIRST, then repaints, then reports, then hands control
@@ -51,16 +55,24 @@
 //
 // A cell that cannot edit marks its element hrg-text-ro — the predicate map
 // 16 argues for (law 116): an uneditable cell has no resting affordance to be
-// missing, so the property has to be named. Whether it is painted is the
-// theme's business; the stock cell ships one muted rule as a default. And it
-// honours what the slot asks of its text: nowrap is inherited, the ellipsis
-// is read from --hrg-text-overflow — the grid's published property — because
-// the text is this element's, and the slot only clips.
+// missing, so the property has to be named. Whether it is painted is a
+// design's business.
 // =============================================================================
 
-// THE LOOKS ARE TYPED — RelGridStockStyles, the cell's own group, applied
-// through the css manager: hrg_text on the element, hrg_text_ro when it
-// cannot edit, hrg_text_edit on the editor.
+// ITS ROOM AND ITS OVERFLOW ARE ITS OWN — RelGridStockStyles: hrg_text on the
+// element, the overflow's class beside it, hrg_text_ro when it cannot edit,
+// hrg_text_edit on the editor. ITS WORDS ARE A TEXT CELL'S: the house's
+// component, made on the cell's branch and cast as a data cell's value (RFC
+// 0067, D42), its look the style's. The editor takes its ink and type from the
+// anchor it is placed in.
+
+/** What a stock cell does with text too wide for its column: its own class, ellipsis unless it says otherwise. */
+function _hrgTextOverflow(choice, who) {
+    if (choice === undefined || choice === null || choice === "ellipsis") return hrg_text_ellipsis;
+    if (choice === "clip") return hrg_text_clip;
+    if (choice === "wrap") return hrg_text_wrap;
+    throw new Error("[" + who + "] overflow is 'ellipsis', 'clip' or 'wrap', not " + JSON.stringify(choice));
+}
 
 class RelGridTextCell {
 
@@ -69,9 +81,11 @@ class RelGridTextCell {
         if (!opts.branch) throw new Error("[RelGridTextCell] opts.branch is required: the cell's own");
         this._branch = opts.branch;
         this._branch.activate(this);
-        this._el = null;           // minted on first cellElement()
+        this._cell = null;         // its words, a text cell - made on first cellElement()
+        this._el = null;           // the text cell's element
         this._value = (opts.value === undefined) ? null : opts.value;
         this._onCommit = (typeof opts.onCommit === "function") ? opts.onCommit : null;
+        this._overflow = _hrgTextOverflow(opts.overflow, "RelGridTextCell");
         this._mode = "none";
         this._input = null;        // minted on first editorElement(), kept
         this._editing = false;     // true between takeControl() and its settle
@@ -83,21 +97,22 @@ class RelGridTextCell {
     _text() { return (this._value == null) ? "" : String(this._value); }
 
     _paint() {
-        if (!this._el || this._editing) return;
-        this._el.textContent = this._text();
+        if (!this._cell || this._editing) return;
+        this._cell.text = this._text();
     }
 
     /**
-     * The cell's element, minted once on its branch and answered the same
-     * every time. Nothing is wired: the grid captures. A cell with no commit
-     * target names itself read-only.
+     * The cell's element: its text cell's, made once on its branch - the
+     * house's, cast as a data cell's value - and answered the same every time.
+     * Nothing is wired: the grid captures. A cell with no commit target names
+     * itself read-only.
      */
     cellElement() {
         if (!this._el) {
-            this._el = this._branch.createElement("cell", "div");
-            css.addClass(this._el, hrg_text);
+            this._cell = new TextCell(this._branch.elementMaker("cell"), { text: this._text() }, ROLE.VALUE);
+            this._el = this._cell.el;
+            css.addClass(this._el, hrg_text, this._overflow);
             if (!this._onCommit) css.addClass(this._el, hrg_text_ro);
-            this._paint();
         }
         return this._el;
     }
@@ -190,6 +205,7 @@ class RelGridTextCell {
     /** The OWNER's to call, when it decides the cell is done. Never the grid's. Dissolves the cell's branch. */
     dispose() {
         if (this._editing) this._end(false);
+        this._cell = null;
         this._el = null;
         this._input = null;
         this._branch.dissolve();

@@ -2,18 +2,10 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
-import hue.captains.singapura.js.homing.core.Wearable;
 
 import java.util.List;
 
-import static hue.captains.singapura.js.homing.design.DesignClass.of;
 import static hue.captains.singapura.js.homing.design.Target.*;
-import static hue.captains.singapura.js.homing.design.Box.*;
-import static hue.captains.singapura.js.homing.design.Emphasis.*;
-import static hue.captains.singapura.js.homing.design.Interaction.*;
-import static hue.captains.singapura.js.homing.design.Layer.*;
-import static hue.captains.singapura.js.homing.design.Structure.*;
-import static hue.captains.singapura.js.homing.design.Text.*;
 
 /** The view panel's looks, typed: a list of profiles, the held one ticked. */
 public record DishViewStyles() implements CssGroup<DishViewStyles> {
@@ -21,7 +13,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     public static final DishViewStyles INSTANCE = new DishViewStyles();
 
     public record wb_view() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Body.class, Type.Face.class), of(Caption.class, Type.Scale.class)); }
         @Override public String body() { return """
                 display: flex;
                 flex-direction: column;
@@ -46,7 +37,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_title() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Label.class, Type.Weight.class)); }
         @Override public String body() { return """
                 font-size: 14px;
                 """;
@@ -54,7 +44,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_sub() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -64,7 +53,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
 
     /** The list fills what the head and foot leave, and scrolls if the box is short. */
     public record wb_view_list() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 flex: 1 1 auto;
                 min-height: 0;
@@ -78,7 +66,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_item() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Hairline.class, Color.Edge.class), of(Hairline.class, Shape.Rule.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: baseline;
@@ -102,7 +89,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     /** An item under the pointer or the focus. Worn by every item. */
     public record wb_view_item_hot() implements CssClass<DishViewStyles> {
         @Override public String pseudoState() { return ":is(:hover, :focus)"; }
-        @Override public List<? extends Wearable> wears() { return List.of(of(Current.class, Color.Surface.class)); }
         @Override public String body() { return "";
         }
     }
@@ -115,7 +101,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     /** The held profile's label wears a tick. */
     public record wb_view_tick() implements CssClass<DishViewStyles> {
         @Override public String pseudoState() { return "::after"; }
-        @Override public List<? extends Wearable> wears() { return List.of(of(Primary.class, Color.Ink.class)); }
         @Override public String body() { return """
                 content: ' \\2713';
                 """;
@@ -123,7 +108,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_num() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 width: 1.2em;
                 """;
@@ -131,7 +115,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_label() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Label.class, Type.Weight.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 """;
@@ -139,7 +122,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_rule() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 flex: 1 1 auto;
                 white-space: nowrap;
@@ -150,7 +132,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_count() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class), of(Kicker.class, Type.Scale.class)); }
         @Override public String body() { return """
                 flex: 0 0 auto;
                 font-variant-numeric: tabular-nums;
@@ -159,7 +140,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_foot() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Muted.class, Color.Ink.class)); }
         @Override public String body() { return """
                 display: flex;
                 align-items: center;
@@ -181,7 +161,6 @@ public record DishViewStyles() implements CssGroup<DishViewStyles> {
     }
 
     public record wb_view_cancel() implements CssClass<DishViewStyles> {
-        @Override public List<? extends Wearable> wears() { return List.of(of(Kicker.class, Type.Scale.class), of(Raised.class, Color.Edge.class), of(Raised.class, Shape.Rule.class), of(Control.class, Shape.Corner.class), of(Body.class, Color.Ink.class)); }
         @Override public String body() { return """
                 font: inherit;
                 padding: 2px 9px;

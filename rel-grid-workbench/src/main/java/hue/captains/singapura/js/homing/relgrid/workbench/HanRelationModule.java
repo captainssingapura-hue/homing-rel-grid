@@ -5,6 +5,7 @@ import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridLabelsModule;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public record HanRelationModule() implements DomModule<HanRelationModule> {
         return ImportsFor.<HanRelationModule>builder()
                 .add(new ModuleImports<>(List.of(new HanLayoutModule.HanLayout()), HanLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HanCellModule.HanCell()), HanCellModule.INSTANCE))
+                .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells
                 .build();
     }
 

@@ -17,6 +17,11 @@
 // A press lands the cursor; a press on the caret lands it and asks the fold;
 // a double-click lands it and activates.
 //
+// The tree owns the bare keys and nothing more: a key held with Alt, Ctrl or
+// Meta is not the tree's, and is left alone — not acted on, not prevented —
+// so the browser's own chords work wherever the tree has the keys: Alt+← and
+// Alt+→ are back and forward, not a fold.
+//
 //   new RelTreeGestures({ tree, places, cursor, locked, pageRows, onEdge? })
 //   onKey(e) / onRowClick(i) / onRowDblClick(i) / onCaretClick(i)
 // =============================================================================
@@ -47,6 +52,7 @@ class RelTreeGestures {
     }
 
     onKey(e) {
+        if (e.altKey || e.ctrlKey || e.metaKey) return;   // a chord is not the tree's: the browser's, or the host's
         if (this._locked() || this._places.rows() === 0) return;
         var c = this._cursor, i = c.pos(), last = this._places.rows() - 1, handled = true;
         switch (e.key) {

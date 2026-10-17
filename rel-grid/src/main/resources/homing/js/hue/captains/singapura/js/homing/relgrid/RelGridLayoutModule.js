@@ -4,9 +4,9 @@
 // in; the slot matrix of one arrangement is RelGridSlots, and what is laid
 // OVER the slots — the editor's anchor, the mask and its panel, a merged
 // cell's host — is RelGridOverlays. Positional only — everything is addressed
-// by (i, j) and nothing here sees an identity; headers arrive as display
-// labels and widths arrive per visible position. It never touches slot
-// content: a slot's children are the domain's, placed by the facade.
+// by (i, j); the columns' identities arrive only to say the shape, and widths
+// arrive per visible position. It never touches slot content: a slot's
+// children are the domain's, a header slot's too, placed by the facade.
 //
 // It is the KEYBOARD HOST: the table is focusable, and the cursor and the
 // selection are painted on the slots at the facade's direction — and
@@ -21,29 +21,24 @@
 // for it and dissolved with it — the slots of one arrangement, an overlay,
 // the mask, the merged cells' hosts, a drag's guide — so a rebuild releases
 // exactly what it replaces and nothing is ever removed by hand. The looks
-// are TYPED — RelGridStyles — with theme tokens only, under the hrg- prefix
-// so this grid and the live one can share a page.
+// classes are its MECHANICS and its FACTS (RelGridStyles); every look is the
+// design's it is made with, worn on what it makes - its box, its slots, its
+// overlays - and the cursor and the selection are RelGridMarks'.
 //
-//   new RelGridLayout({ container, branch, label?, frame?, rowNumbers?, showHeader?, stickyHeader?, stickyInset?, overflow?,
+//   new RelGridLayout({ container, branch, design, box?, label?, rowNumbers?, showHeader?, stickyHeader?, stickyInset?,
 //                       onCellClick?, onCellDblClick?, onCellDown?, onCellDragTo?, onDragEnd?,
 //                       onColResize?, resizeGuide? })   resizeGuide: an element, or a list of them
 //   stickyHeader: the header cells stay at the top of whatever scrolls the table, and a
 //                 revealed slot clears them; stickyInset: () → px of a band the HOST keeps stuck
 //                 above the table — a group's header — that a revealed slot must clear too
-//   render({ headers, rows, labelled? }) / setColWidths(widths) / slotAt(i, j) / headerSlotAt(j) / rows() / cols()
+//   render({ columns, rows }) / setColWidths(widths) / slotAt(i, j) / headerSlotAt(j) / rows() / cols()
 //   paintCursor(ij) / paintSelection(rects) / setDeep(on) / setMasked(on)
 //   focus() / revealSlot(i, j) / hasKeyboard() / el() / rowHeight()
 //   openOverlay(i, j) / closeOverlay() / overlay()
 //   openMask() / openPanel(el) / closePanel() / closeMask() / mask() / panel()
 //   openGroup(i, j, n) / groupAt(i, j) / placeGroups() / closeGroups() / groups()
+//   paintCopied(rects) / copied()   the copied state shown: an overlay over each block (RelGridCopiedOverlay)
 // =============================================================================
-
-/** wrap | clip | ellipsis — ellipsis unless the host says otherwise. */
-function _hrgOverflowClass(choice) {
-    if (choice === "wrap") return hrg_ov_wrap;
-    if (choice === "clip") return hrg_ov_clip;
-    return hrg_ov_ellipsis;
-}
 
 class RelGridLayout {
 
@@ -54,8 +49,9 @@ class RelGridLayout {
         var self = this;
         this._container = opts.container;
         this._branch = opts.branch;                           // the grid's own; the host dissolves it
+        this._design = opts.design;                           // what wears every leaf of the frame; the layout never learns a class
         this._table = this._branch.createElement("table", "table");
-        css.addClass(this._table, hrg_table, _hrgOverflowClass(opts.overflow));
+        css.addClass(this._table, hrg_table);
         this._table.setAttribute("tabindex", "0");            // the keyboard host
         if (opts.label) this._table.setAttribute("aria-label", opts.label);
         // The resize gesture lives in RelGridHeaderDrag; wired per <th> at render.
@@ -63,7 +59,7 @@ class RelGridLayout {
         // extent the host names — a host stacking tables names their stack.
         this._colW = null;                                    // the last positional widths applied
         this._drag = opts.onColResize
-                   ? new RelGridHeaderDrag({ branch: this._branch, table: this._table, onColResize: opts.onColResize,
+                   ? new RelGridHeaderDrag({ branch: this._branch, table: this._table, design: this._design, onColResize: opts.onColResize,
                                              heldWidth: function (j) { return (self._colW && self._colW[j] != null) ? self._colW[j] : null; },
                                              extent: opts.resizeGuide || null })
                    : null;
@@ -82,25 +78,36 @@ class RelGridLayout {
         // table in the wrapper's coordinates.
         this._wrap = this._branch.createElement("wrap", "div");
         css.addClass(this._wrap, hrg_wrap);                        // positioned
-        // Framed and lit while it holds the focus — unless the HOST frames the grid: a host that
-        // scrolls the table draws the frame around its own scrollport, so the scrollbar is inside
-        // the light, and tells the grid to draw none of its own (frame: false).
-        if (opts.frame !== false) css.addClass(this._wrap, hrg_frame, hrg_lit);
+        // THE BOX: the grid's edge, ground and corner, as the design draws them - on the wrapper, or on
+        // the scrollport a host that scrolls the table names, so the edge stands round what is seen.
+        this._box = opts.box || this._wrap;
+        this._design.wear(GRID_FRAME.GRID_EDGE, this._box);
         this._wrap.appendChild(this._table);
         this._container.appendChild(this._wrap);
 
         this._slots = new RelGridSlots({
-            branch: this._branch, table: this._table, colgroup: this._colgroup, headerRow: this._headerRow, drag: this._drag,
+            branch: this._branch, table: this._table, colgroup: this._colgroup, headerRow: this._headerRow, drag: this._drag, design: this._design,
             sticky: this._sticky, gutter: opts.rowNumbers === true,
             onCellClick: opts.onCellClick, onCellDblClick: opts.onCellDblClick, onCellDown: opts.onCellDown,
             onCellDragTo: opts.onCellDragTo, onDragEnd: opts.onDragEnd, onGutterClick: opts.onGutterClick
         });
         this._overlays = new RelGridOverlays({
-            branch: this._branch, wrap: this._wrap, container: this._container,
+            branch: this._branch, wrap: this._wrap, container: this._container, design: this._design,
             slotAt: function (i, j) { return self._slots.slotAt(i, j); }
         });
-        this._cursorTd = null;   // the slot currently painted as the cursor
-        this._selTds = [];       // the slots currently painted as selected
+        // THE COPIED RANGE: an overlay over each block the grid last copied, shown at the facade's direction.
+        this._copied = new RelGridCopiedOverlay({
+            branch: this._branch, wrap: this._wrap, design: this._design,
+            slotAt: function (i, j) { return self._slots.slotAt(i, j); }
+        });
+        // THE MARKS: where the user is and what they have chosen, painted at the facade's direction.
+        this._marks = new RelGridMarks({
+            design: this._design, wrap: this._wrap,
+            slotAt:   function (i, j) { return self._slots.slotAt(i, j); },
+            gutterAt: function (i) { return self._slots.gutterAt(i); },
+            cols:     function () { return self._slots.cols(); },
+            groups:   function () { return self._overlays.groups(); }
+        });
         // The one change the grid is never told about is a row growing because
         // some cell's content did; the observer catches it and re-measures.
         this._ro = null;
@@ -116,7 +123,7 @@ class RelGridLayout {
     }
 
     /**
-     * The structure for a shape: { headers: string[], rows: n }. The merged
+     * The structure for a shape: { columns: string[], rows: n }. The merged
      * cells' hosts go first — spans are read afresh on every pass, and the
      * slots they marked are unmarked, since those slots may live on — then
      * the matrix: kept when the shape is unchanged, minted fresh when not.
@@ -126,10 +133,7 @@ class RelGridLayout {
      */
     render(shape) {
         this.closeGroups();
-        if (this._slots.render(shape)) {                      // a fresh matrix: the old paint went with the old slots
-            this._cursorTd = null;
-            this._selTds = [];
-        }
+        if (this._slots.render(shape)) this._marks.forget();   // a fresh matrix: the old paint went with the old slots
         return this;
     }
 
@@ -176,56 +180,11 @@ class RelGridLayout {
         return h > 0 ? h : 24;
     }
 
-    /** Paint the cursor on one slot ({ i, j }) or on none (null). A diff, not a sweep. */
-    paintCursor(ij) {
-        var td = ij ? this.slotAt(ij.i, ij.j) : null;
-        if (this._cursorTd !== td) {
-            if (this._cursorTd) css.removeClass(this._cursorTd, hrg_cursor);
-            if (td) css.addClass(td, hrg_cursor);
-            this._cursorTd = td;
-        }
-        // The merged cells mirror: a group wears the cursor when it is on any of its slots.
-        var groups = this._overlays.groups();
-        for (var g = 0; g < groups.length; g++) {
-            var grp = groups[g];
-            css.toggleClass(grp.el, hrg_cursor, !!ij && ij.i === grp.i && ij.j >= grp.j && ij.j < grp.j + grp.n);
-        }
-        return this;
-    }
+    /** Paint the cursor on one slot ({ i, j }) or on none (null): the marks' to do. */
+    paintCursor(ij) { this._marks.paintCursor(ij); return this; }
 
-    /**
-     * Paint the selection: a list of rectangles in the presented space,
-     * { i0, j0, i1, j1 } inclusive of both corners. The layout is told WHICH
-     * SLOTS, never why — overlap between rectangles is nothing it has to
-     * resolve, since a slot either wears the predicate or does not.
-     */
-    paintSelection(rects) {
-        for (var k = 0; k < this._selTds.length; k++) css.removeClass(this._selTds[k], hrg_sel);
-        this._selTds = [];
-        var list = rects || [];
-        for (var r = 0; r < list.length; r++) {
-            var box = list[r];
-            for (var i = box.i0; i <= box.i1; i++) {
-                for (var j = box.j0; j <= box.j1; j++) {
-                    var td = this.slotAt(i, j);
-                    if (!td || css.hasClass(td, hrg_sel)) continue;      // already painted by an overlap
-                    css.addClass(td, hrg_sel);
-                    this._selTds.push(td);
-                }
-            }
-        }
-        // The merged cells mirror: a group is selected when any of its slots is.
-        var groups = this._overlays.groups();
-        for (var g = 0; g < groups.length; g++) {
-            var grp = groups[g], on = false;
-            for (var q = 0; q < list.length && !on; q++) {
-                var b = list[q];
-                on = b.i0 <= grp.i && grp.i <= b.i1 && b.j0 <= grp.j + grp.n - 1 && b.j1 >= grp.j;
-            }
-            css.toggleClass(grp.el, hrg_sel, on);
-        }
-        return this;
-    }
+    /** Paint the selection - rectangles in the presented space, { i0, j0, i1, j1 }: the marks' to do. */
+    paintSelection(rects) { this._marks.paintSelection(rects); return this; }
 
     // ── the overlays: the anchor, the mask and its panel, the merged hosts ─
 
@@ -240,16 +199,19 @@ class RelGridLayout {
     panel()             { return this._overlays.panel(); }
     openGroup(i, j, n)  { return this._overlays.openGroup(i, j, n); }
     groupAt(i, j)       { return this._overlays.groupAt(i, j); }
-    placeGroups()       { this._overlays.placeGroups(); return this; }
+    placeGroups()       { this._overlays.placeGroups(); this._copied.place(); return this; }   // the copied overlays follow the slots too
     closeGroups()       { this._overlays.closeGroups(); return this; }
     groups()            { return this._overlays.groups(); }
+    paintCopied(rects)  { this._copied.paint(rects); return this; }
+    copied()            { return this._copied.boxes(); }
 
     // ── the states the table wears, and the keyboard ───────────────────────
 
-    /** The table and the wrapper wear the deep state, so CSS and tests can see the handover. */
+    /** The table and the wrapper wear the deep fact, so tests can see the handover; the cursor wears the lent leaf. */
     setDeep(on) {
         css.toggleClass(this._table, hrg_deep, on);
         css.toggleClass(this._wrap, hrg_deep, on);
+        this._marks.setDeep(on);
         return this;
     }
 
@@ -288,12 +250,13 @@ class RelGridLayout {
 
     destroy() {
         document.removeEventListener("mouseup", this._mouseup);
+        this._marks.destroy();
+        if (this._box !== this._wrap) this._design.shed(GRID_FRAME.GRID_EDGE, this._box);   // the host's element, given back bare
         if (this._ro) { this._ro.disconnect(); this._ro = null; }
         this._overlays.destroy();
+        this._copied.close();
         this._slots.destroy();
         // The wrapper, table and header band stay the branch's: the host dissolves it.
         if (this._wrap.parentNode) this._wrap.parentNode.removeChild(this._wrap);
-        this._cursorTd = null;
-        this._selTds = [];
     }
 }

@@ -1,5 +1,10 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.relgrid.cells.RelGridStockStyles;
+import hue.captains.singapura.js.homing.design.semantic.LocalStyleLeaves;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
+import hue.captains.singapura.js.homing.ui.taxonomy.HouseTaxonomy;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
 import hue.captains.singapura.js.homing.core.util.CssClassName;
@@ -37,10 +42,10 @@ public final class RelGridTestDom {
 
     public static final String[] MODULES = {
             "RelGridViewMapsModule.js", "RelGridHeaderDragModule.js",
-            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridLayoutModule.js",
-            "RelGridCellsModule.js", "RelGridStockCellsModule.js",
+            "RelGridRevealModule.js", "RelGridSlotsModule.js", "RelGridOverlaysModule.js", "RelGridCopiedOverlayModule.js", "RelGridMarksModule.js", "RelGridLayoutModule.js",
+            "RelGridCellsModule.js", "cells/RelGridStockCellsModule.js", "cells/RelGridLabelsModule.js",
             "RelGridClipboardModule.js", "RelGridWidthsModule.js", "RelGridWindowModule.js", "RelGridHeadersModule.js", "RelGridSpansModule.js", "RelGridCursorModule.js", "RelGridControlModule.js",
-            "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridModule.js" };
+            "RelGridChannelModule.js", "RelGridGesturesModule.js", "RelGridCopiedModule.js", "RelGridModule.js" };
 
     /** The selection lives in its own module, and its own jar. */
     public static final String SELECTION =
@@ -59,8 +64,43 @@ public final class RelGridTestDom {
         return sb.toString();
     }
 
-    /** The grid's and the stock cell's handles, for every test that loads the grid's modules. */
-    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE);
+    /**
+     * The frame's leaves, as the grid's own module generates them ({@code GRID_FRAME}) - here from the frame's own module,
+     * where a site's are the installed instance's - and a local style of the frame for tests: it wears each leaf as a class
+     * named for it - {@code frame-lattice} - so a test sees what the grid asked to wear, and where; and it refuses a leaf
+     * of another branch, as a local style does.
+     */
+    public static final String FRAME = String.join("\n", LocalStyleLeaves.INSTANCE.lines(
+            HouseTaxonomy.INSTANCE.read(java.util.List.of(GridFrameComponentModule.INSTANCE)), GridFrame.INSTANCE)) + "\n" + """
+            var TEST_DESIGN = Object.freeze({
+                branch: "grid-frame", name: "test-design",
+                wear: function (leaf, el) {
+                    if (!leaf || leaf.branch !== "grid-frame") throw new Error("[TEST_DESIGN] a leaf of grid-frame is asked, not " + leaf);
+                    el.classList.add("frame-" + leaf.token); return el;
+                },
+                shed: function (leaf, el) { el.classList.remove("frame-" + leaf.token); return el; }
+            });
+            """;
+
+    /**
+     * The house's look as the stock cells wear it, for tests: a {@code Look} that wears its leaf as a class named for
+     * it - {@code look-data-cell} - and a {@code TextCell} that makes its element with the maker it is handed and wears
+     * its casting as a class - {@code look-text-cell_value} - with the roles the stock cells cast it in (D42). The real
+     * ones are the house's; the cells only make them.
+     */
+    public static final String LOOK = """
+            var ROLE = Object.freeze({ STANDALONE: 'standalone', TITLE: 'title', VALUE: 'value' });
+            var Look = function (leaf, role) { this._leaf = leaf.LEAF; this._role = role; };
+            Look.prototype.wear = function (el) { el.classList.add('look-' + this._leaf); return el; };
+            var TextCell = class {
+                constructor(make, props, role) { this.el = make('div'); this.role = role; this.el.classList.add('look-text-cell_' + role); this.text = (props || {}).text; }
+                get text() { return this.el.textContent; }
+                set text(words) { this.el.textContent = words == null ? '' : String(words); }
+            };
+            """;
+
+    /** The grid's and the stock cells' handles, the frame's leaves and a design, and the look, for every test that loads the grid's modules. */
+    public static final String STYLES = handles(RelGridStyles.INSTANCE, RelGridStockStyles.INSTANCE) + FRAME + LOOK;
 
     /** The DomOpsParty — the real one, from homing-core-js: base first, then the levels and the root singleton. */
     public static final String[] PARTY = {
@@ -100,8 +140,19 @@ public final class RelGridTestDom {
             }
             function makeEl(tag) {
                 var el = {
-                    tagName: tag, id: "", className: "", textContent: "", value: "",
+                    tagName: tag, id: "", className: "", value: "",
                     children: [], parentNode: null, style: makeStyle(),
+                    // Faithful: an element's text is its own and then its children's, in order; setting it
+                    // replaces its children, as Node.textContent does.
+                    _text: "",
+                    get textContent() { return this._text + this.children.map(function (c) { return c.textContent; }).join(""); },
+                    set textContent(v) {
+                        this.children.forEach(function (c) { c.parentNode = null; });
+                        this.children.length = 0;
+                        this._text = (v === null || v === undefined) ? "" : String(v);
+                    },
+                    // What was written on it, not its children's: how a test tells an element's own text from what it holds.
+                    get ownText() { return this._text; },
                     appendChild: function (c) {
                         if (c.parentNode) c.parentNode.removeChild(c);
                         c.parentNode = this; this.children.push(c); return c;
@@ -115,12 +166,23 @@ public final class RelGridTestDom {
                         if (__focused === c) { __focused = null; c.dispatch('blur', {}); }
                         c.parentNode = null; return c;
                     },
+                    // Before a child, or last when there is none to stand before, as Node.insertBefore does.
+                    insertBefore: function (c, ref) {
+                        if (c.parentNode) c.parentNode.removeChild(c);
+                        var i = ref ? this.children.indexOf(ref) : -1;
+                        if (ref && i < 0) throw new Error("NotFoundError: the node before which to insert is not a child of this node");
+                        c.parentNode = this;
+                        if (i < 0) this.children.push(c); else this.children.splice(i, 0, c);
+                        return c;
+                    },
                     replaceChild: function (nu, old) {
                         var i = this.children.indexOf(old);
                         if (nu.parentNode) nu.parentNode.removeChild(nu);
                         this.children[i] = nu; old.parentNode = null;
                         nu.parentNode = this; return old;
                     },
+                    // Whether a node is this one or inside it, as Node.contains answers.
+                    contains: function (n) { for (var x = n; x; x = x.parentNode) if (x === this) return true; return false; },
                     // What a branch's dissolve calls on every element it owns.
                     remove: function () { if (this.parentNode) this.parentNode.removeChild(this); },
                     // What the css manager drives: a classList over the className string.
@@ -168,6 +230,8 @@ public final class RelGridTestDom {
                 head: makeEl("head"),
                 body: makeEl("body"),
                 createElement: function (tag) { return makeEl(tag); },
+                // an SVG element: the same stand-in, in SVG's namespace
+                createElementNS: function (ns, tag) { var el = makeEl(tag); el.namespaceURI = ns; return el; },
                 getElementById: function (id) {
                     for (var i = 0; i < this.head.children.length; i++)
                         if (this.head.children[i].id === id) return this.head.children[i];
@@ -233,14 +297,16 @@ public final class RelGridTestDom {
                 // The DOMAIN's branch: every cell's element is minted under it, never under the
                 // grid's. Activated here, as a relation activates its own.
                 var cellsBranch = hostBranch(), cellSeq = 0, mints = 0;
+                // The stock label headers, on a branch of the domain's own: what a column is called.
+                var heads = new RelGridLabels({ branch: testBranch(), labels: opts.labels || {} });
                 var relation = {
                     // ONE ROOT: the View is answered, never listed — the whole of it here, and a
                     // movement goes nowhere, so nothing is the answer and the rows stay.
                     view:    function (intent) { return intent ? null : (shown || Object.keys(data)); },
                     columns: function () { return ['ingredient', 'calories']; },
-                    // The relation's declarations, when a test names them: labels, header cells.
-                    labels:    opts.labels ? function () { return opts.labels; } : undefined,
-                    headerFor: opts.headerFor || undefined,
+                    // The header: the relation's header cells - a test's own, or the stock label
+                    // headers, with the labels a test names.
+                    headerFor: opts.headerFor || function (col) { return heads.headerFor(col); },
                     // What the relation presents from now on; the grid is told through the host.
                     show:    function (keys) { shown = keys; },
                     cellFor: function (pk, col) {
@@ -283,7 +349,7 @@ public final class RelGridTestDom {
                 var arranged = [], moves = [], started = [], ended = [], resized = [], sent = [];
                 var written = [], copied = [], handles = [], edges = [];
                 var grid = new RelGrid({
-                    container: container, branch: branch, relation: relation,
+                    container: container, branch: branch, relation: relation, design: opts.design || TEST_DESIGN, box: opts.box,
                     onArranged:      function (k) { arranged.push(k); },
                     onCursorMoved:   function (pk, col) { moves.push(pk + ' ' + col); },
                     onControlTaken:    function (pk, col) { started.push(pk + " " + col); },
@@ -333,9 +399,13 @@ public final class RelGridTestDom {
                     var at = grid.viewMaps().locate(pk, col);
                     return at ? td(at.i, at.j).children[0] : null;
                 }
+                // → whether the grid took the key: prevented its default
                 function key(k, mods) {
                     mods = mods || {};
-                    table().dispatch('keydown', { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl });
+                    var ev = { key: k, altKey: !!mods.alt, shiftKey: !!mods.shift, ctrlKey: !!mods.ctrl, metaKey: !!mods.meta, prevented: false };
+                    ev.preventDefault = function () { ev.prevented = true; };
+                    table().dispatch('keydown', ev);
+                    return ev.prevented;
                 }
                 // A click as a browser actually sends one: mousedown, mouseup, click.
                 // Dispatching the click alone is not faithful — the grid arms a
@@ -376,7 +446,14 @@ public final class RelGridTestDom {
                     }
                     return out.join(' ');
                 }
-                return { grid: grid, relation: relation, container: container, data: data,
+                // What a header slot says: the text of the label header placed in it, or null.
+                function headText(j) {
+                    var th = thAt(j);
+                    for (var k = 0; k < th.children.length; k++)
+                        if ((th.children[k].className || '').split(' ').indexOf('hrg-label') >= 0) return th.children[k].textContent;
+                    return null;
+                }
+                return { grid: grid, relation: relation, container: container, data: data, headText: headText,
                          table: table, tbody: tbody, headerRow: headerRow, thAt: thAt, colWidth: colWidth,
                          td: td, cellEl: cellEl, key: key, click: click, drag: drag, painted: painted,
                          wrap: wrap, overlay: overlay, mask: mask, panel: panel,

@@ -14,7 +14,8 @@
 // shape cannot drift from its declaration. The grid mints them and never
 // reads them back; an answer is applied exactly as given, or not at all.
 //
-//   new RelGridChannel({ ask, layout, maps, selection, cursorPos, clipboard, onCopied? })
+//   new RelGridChannel({ ask, layout, maps, selection, cursorPos, clipboard, onWritten?, onCopied? })
+//   onWritten(blocks): the grid's own - a copy written, and the blocks it was asked about - before the report
 //   selectionChanged(rects)   the notification
 //   copy()                    the question: what the selection is worth on a clipboard; the answer is written
 //   handoverView()            the question: the rows' arrangement; the answer is presented
@@ -29,6 +30,7 @@ class RelGridChannel {
         this._selection = opts.selection;
         this._cursorPos = opts.cursorPos;         // () → { i, j } | null
         this._clipboard = opts.clipboard;
+        this._onWritten = opts.onWritten || null;
         this._onCopied = opts.onCopied || null;
     }
 
@@ -69,12 +71,12 @@ class RelGridChannel {
 
     /** Ask what the selection is worth on a clipboard, and write the answer. True when asked. */
     copy() {
-        var self = this;
-        return this._core.ask(new RelGridCopyRequested(this._blocks()), function (answer) { self._applyCopy(answer); });
+        var self = this, blocks = this._blocks();
+        return this._core.ask(new RelGridCopyRequested(blocks), function (answer) { self._applyCopy(answer, blocks); });
     }
 
-    /** Content is written and reported; absence writes nothing (law 49). */
-    _applyCopy(answer) {
+    /** Content is written and reported; absence writes nothing (law 49). Written, the grid hears which blocks were, then the host. */
+    _applyCopy(answer, blocks) {
         if (answer == null) return;
         if (!(answer instanceof RelGridClipboardContent)) {
             console.error("[RelGrid] a copy was answered with something that is not clipboard content:", answer);
@@ -85,6 +87,7 @@ class RelGridChannel {
         catch (e) { console.error("[RelGrid] the clipboard write threw:", e); return; }
         var p = (out && typeof out.then === "function") ? out : Promise.resolve();
         p.then(function () {
+            if (self._onWritten) self._onWritten(blocks);
             if (self._onCopied) {
                 try { self._onCopied(answer); }
                 catch (e) { console.error("[RelGrid] onCopied threw:", e); }

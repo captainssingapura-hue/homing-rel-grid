@@ -104,9 +104,9 @@ class RelGridContractConformanceTest extends JsModuleTestBase {
         for (String m : mandatory) if (guard.contains(m)) named.add(m);
         assertEquals(new ArrayList<>(mandatory), named,
                 "the constructor's guard names every mandatory method");
-        assertEquals(new TreeSet<>(List.of("readOnlyColumns", "labels", "headerFor")),
+        assertEquals(new TreeSet<>(List.of("readOnlyColumns", "headerFor")),
                 new TreeSet<>(Arrays.asList(RootRelationContract.OPTIONAL_METHOD_NAMES)),
-                "the optional declarations: the column constraint, the labels, the header cells");
+                "the optional declarations: the column constraint, the header cells");
         assertEquals(new TreeSet<>(List.of("headerElement")),
                 new TreeSet<>(Arrays.asList(RelGridHeaderCellContract.REQUIRED_METHODS)),
                 "the one thing every header cell must answer is its element");

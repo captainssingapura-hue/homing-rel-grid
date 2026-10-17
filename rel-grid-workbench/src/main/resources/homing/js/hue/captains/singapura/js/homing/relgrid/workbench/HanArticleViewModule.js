@@ -47,6 +47,7 @@ class HanArticleView extends BenchWidget {
         var grid = this._grid = new RelGrid({
             container: host,
             branch: gridB,
+            design: HouseGrid,
             relation: relation,
             header: { show: false },
             // The rows in use are what the relation answers to view(); the columns

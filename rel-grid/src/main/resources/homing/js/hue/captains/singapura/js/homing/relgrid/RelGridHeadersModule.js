@@ -43,11 +43,11 @@ class RelGridHeaders {
     /** The live entry, or null — no side effects. */
     get(col) { return this._entries.get(col) || null; }
 
-    /** Place the header cell's element into a layout-owned header slot. */
+    /** Place the header cell's element into a layout-owned header slot: first, so the grid's handle stays at its trailing edge. */
     place(col, slotEl) {
         var entry = this.get(col);
         if (!entry || !slotEl) return false;
-        if (entry.el.parentNode !== slotEl) slotEl.appendChild(entry.el);
+        if (entry.el.parentNode !== slotEl) slotEl.insertBefore(entry.el, slotEl.firstChild);
         return true;
     }
 

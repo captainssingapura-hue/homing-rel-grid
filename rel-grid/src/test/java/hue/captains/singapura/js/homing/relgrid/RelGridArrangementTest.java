@@ -38,7 +38,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     if (typeof f.relation.get !== 'undefined') return false;   // there is nothing to read
                     var headerRow = f.headerRow();
                     if (headerRow.children.length !== 2) return false;
-                    if (headerRow.children[0].textContent !== 'ingredient') return false;
+                    if (f.headText(0) !== 'ingredient') return false;
                     if (f.tbody().children.length !== 3) return false;
                     for (var i = 0; i < maps.rows(); i++) for (var j = 0; j < maps.cols(); j++) {
                         var td = f.td(i, j);
@@ -147,9 +147,11 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     // knows what it owns: a stranger is refused at cellFor.
                     var asked = [], cellsB = hostBranch(), seq = 0;              // the domain's branch, a sub-branch per cell
                     var shown = ['r0', 'r1', 'r2'];                                // what the relation presents right now
+                    var heads = new RelGridLabels({ branch: testBranch() });
                     var relation = {
                         view:    function (intent) { return intent ? null : shown.slice(); },
                         columns: function () { return ['a', 'b']; },
+                        headerFor: function (col) { return heads.headerFor(col); },
                         cellFor: function (pk, col) {
                             if (!/^r([0-9]|[1-4][0-9])$/.test(pk)) throw new Error('no such row: ' + pk);
                             asked.push(pk + ' ' + col);
@@ -157,7 +159,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
                         }
                     };
                     var container = makeEl('div');
-                    var grid = new RelGrid({ container: container, branch: testBranch(), relation: relation });
+                    var grid = new RelGrid({ design: TEST_DESIGN, container: container, branch: testBranch(), relation: relation });
                     if (grid.viewMaps().rows() !== 3 || typeof grid.viewMaps().basePks === 'function') return false;
                     if (typeof relation.pks !== 'undefined') return false;         // nothing enumerates
                     if (asked.length !== 6) return false;                          // three rows, two columns
@@ -182,17 +184,17 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     if (!refused || grid.viewMaps().rows() !== 2) return false;
                     // And at construction, the same refusal, out of the constructor.
                     refused = false; shown = ['r0', 'nope'];
-                    try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation }); }
+                    try { new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: testBranch(), relation: relation }); }
                     catch (e) { refused = /no such row/.test(String(e)); }
                     if (!refused) return false;
                     // A host that still says rowView is told there is none.
                     refused = false; shown = ['r0'];
-                    try { new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation, rowView: ['r0'] }); }
+                    try { new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: testBranch(), relation: relation, rowView: ['r0'] }); }
                     catch (e) { refused = /no rowView/.test(String(e)); }
                     if (!refused) return false;
                     // And the same for columns: a relation may declare a column it shows only
                     // sometimes — a half-square for a squeezed mark — and present it later.
-                    var narrow = new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation,
+                    var narrow = new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: testBranch(), relation: relation,
                                                columnView: ['b'], minColumnWidth: 24 });
                     if (narrow.viewMaps().cols() !== 1 || narrow.viewMaps().columnAt(0) !== 'b') return false;
                     narrow.viewMaps().setColumnView(['a', 'b']);
@@ -201,7 +203,7 @@ class RelGridArrangementTest extends JsModuleTestBase {
                     // 24 here, where the default grid would have held 40; 2 is still 8.
                     if (!narrow.setColumnWidth('a', 24) || narrow.columnWidth('a') !== 24) return false;
                     if (!narrow.setColumnWidth('b', 2) || narrow.columnWidth('b') !== 24) return false;
-                    var floorless = new RelGrid({ container: makeEl('div'), branch: testBranch(), relation: relation,
+                    var floorless = new RelGrid({ design: TEST_DESIGN, container: makeEl('div'), branch: testBranch(), relation: relation,
                                                   minColumnWidth: 2 });
                     floorless.setColumnWidth('a', 2);
                     return floorless.columnWidth('a') === 8;

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+        <artifactId>homing-rel-grid</artifactId>
+        <version>LOCAL-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rel-grid-cells</artifactId>
+
+    <description>
+        The grid's stock cells, out of the box (RFC 0050 · Episode 2 — Appendix: The
+        Frame): a text cell, and a header cell that shows a label, each with its own
+        room and overflow and wearing the house's cell leaves. Domain-side code, handed
+        to the grid through the same factories as any domain's cells and privileged by
+        nothing: the grid never imports them.
+    </description>
+
+    <dependencies>
+        <!-- The house's roles, which the stock cells cast their text cells in. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ui-look</artifactId>
+            <version>${homing.components.version}</version>
+        </dependency>
+        <!-- The house's text cell, which holds a stock cell's words and a label's (RFC 0067, D42). -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ui-elements</artifactId>
+            <version>${homing.components.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-conformance-rules</artifactId>
+            <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -75,6 +75,12 @@ class HanRelation {
 
     columns() { return this._columns.slice(); }
 
+    /** The header cell for a column: a stock label header, made once on a branch of the relation's own. */
+    headerFor(col) {
+        if (!this._heads) this._heads = new RelGridLabels({ branch: this._branch.createBranch("heads"), labels: this.labels() });
+        return this._heads.headerFor(col);
+    }
+
     // What a column is called, when a header is shown at all: the squares by number,
     // the half-squares by the mark they hold (law 86: the relation's, not the host's).
     labels() {

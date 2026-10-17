@@ -1,5 +1,6 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.core.SelfContent;
 import hue.captains.singapura.js.homing.conformance.engine.ConformanceEngine;
 import hue.captains.singapura.js.homing.conformance.engine.ServedModuleRenderer;
 import hue.captains.singapura.js.homing.conformance.rules.Baseline;
@@ -74,6 +75,7 @@ public final class RelGridConformanceSweep {
             try {
                 Class<?> c = Class.forName(cls);
                 if (isWidget(c)) continue;                                                // its body is Java-emitted
+                if (SelfContent.class.isAssignableFrom(c)) continue;                      // generated: its body is Java-emitted too
                 if (SvgGroup.class.isAssignableFrom(c)) continue;                         // generated from its .svg assets
                 if (DomModule.class.isAssignableFrom(c) || EsModule.class.isAssignableFrom(c))
                     out.add(cls + " has no /homing/js/" + cls.replace('.', '/') + ".js — is the file named after the class?");

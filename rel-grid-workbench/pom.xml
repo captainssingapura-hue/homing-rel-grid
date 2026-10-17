@@ -39,6 +39,26 @@
         </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-house</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-cells</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-prose</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ui-elements</artifactId>
+            <version>${homing.components.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid-protocol</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -77,6 +97,12 @@
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-design-core</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <!-- Minesweeper's Vista: a local style of the grid's frame. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-design-local-style</artifactId>
             <version>${homing.core.version}</version>
         </dependency>
         <dependency>
@@ -145,12 +171,13 @@
         </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-designs</artifactId>
-            <version>${homing.core.version}</version>
+            <artifactId>homing-site-mpa-standard</artifactId>
+            <version>${homing.components.version}</version>
         </dependency>
+        <!-- The house's styles ready-made: the styling the site's MPA installs (The Style Jars). -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-site-mpa-standard</artifactId>
+            <artifactId>homing-ui-styles</artifactId>
             <version>${homing.components.version}</version>
         </dependency>
         <dependency>
@@ -181,11 +208,12 @@
             <version>${homing.studio.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The debts the benches' widgets declare, and the gate, headless: provided, as the widgets' own. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-conformance-rules</artifactId>
             <version>${homing.core.version}</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <!-- The grid's and the tree's test harnesses, for the benches' domain tests. -->
         <dependency>

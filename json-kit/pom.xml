@@ -96,5 +96,12 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- The grid's test DOM names the stock cells' styles: test scope. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
+            <artifactId>rel-grid-cells</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

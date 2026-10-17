@@ -2,6 +2,9 @@ package hue.captains.singapura.js.homing.relgrid;
 
 import hue.captains.singapura.js.homing.conformance.rules.CrateDependencyRule;
 import hue.captains.singapura.js.homing.conformance.rules.OrphanCheck;
+import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
+import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -12,6 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** RFC 0044 — every served module is crated, and every import stays inside the crate. */
 class RelGridCrateConformanceTest {
+
+    /** The house's styling with the frame, installed as a site installs it: the frame's constants come from its taxonomy. */
+    @BeforeAll
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(FrameBaseModule.INSTANCE))); }
 
     @Test
     void everyServedModuleIsCrated() {
