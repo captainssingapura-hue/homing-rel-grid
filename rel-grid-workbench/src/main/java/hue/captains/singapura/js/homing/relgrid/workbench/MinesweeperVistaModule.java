@@ -1,7 +1,5 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
-import hue.captains.singapura.js.homing.conformance.rules.ConformanceDebt;
-import hue.captains.singapura.js.homing.conformance.rules.NoRawCssRule;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
@@ -18,8 +16,6 @@ import java.util.List;
  * design - the typed design the game's grid is made with. It wears a leaf of the grid's frame on an element, and imports
  * the design's sheet so the sheet loads wherever the design is used.
  */
-@ConformanceDebt(rule = NoRawCssRule.class, findings = 5,
-        reason = "Not a debt in kind: the generated design object IS the design's manager, as Look is the look's - the classes it puts on are its derived sheet's, which the CSS manager does not handle (RFC 0064, D25). The components' conformance carries this as an Allowance; the catalogue gate has no allowance to declare it by yet.")
 public record MinesweeperVistaModule() implements DomModule<MinesweeperVistaModule>, SelfContent {
 
     public static final MinesweeperVistaModule INSTANCE = new MinesweeperVistaModule();

@@ -77,6 +77,9 @@ class HouseGridTest extends JsModuleTestBase {
     void itsObject_wearsALeafOfTheFrame_andRefusesAnotherBranchs() {
         js = buildContext();
         js.eval("js", "var house_grid_sheet = 'the sheet';"
+                + " var css = { cls: function (n) { return { name: n }; },"
+                + " addClass: function (el, c) { if (!c || typeof c.name !== 'string') throw new Error('not a handle: ' + c); el.classList.add(c.name); },"
+                + " removeClass: function (el, c) { if (!c || typeof c.name !== 'string') throw new Error('not a handle: ' + c); el.classList.remove(c.name); } };"
                 + " function El() { var s = new Set(); this.classList = { add: function (c) { s.add(c); }, remove: function (c) { s.delete(c); } };"
                 + " this.classes = function () { return Array.from(s).sort().join(' '); }; }");
         js.eval("js", String.join("\n", DesignLeaves.INSTANCE.lines(InstalledStyling.get().taxonomy(), GridFrame.INSTANCE)));
