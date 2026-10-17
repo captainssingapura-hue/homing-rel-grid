@@ -7,21 +7,21 @@ import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.core.ModuleNameResolver;
 import hue.captains.singapura.js.homing.core.SelfContent;
-import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
+import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 
 import java.util.List;
 
 /**
- * The house's grid as a page has it: one stateless object, {@code HouseGrid}, generated from the design - the typed
- * design a grid is made with. It wears and sheds a leaf of the grid's frame on an element, asked by the leaf's constant,
- * and refuses a leaf of another branch; it imports the design's sheet, so the sheet loads wherever the design is used.
+ * The house's grid as a page has it: one stateless object, {@code HouseGrid}, generated from the local style - the typed
+ * local style a grid is made with. It wears and sheds a leaf of the grid's frame on an element, asked by the leaf's constant,
+ * and refuses a leaf of another branch; it imports the local style's sheet, so the sheet loads wherever the local style is used.
  * A DOM module, honestly: what it does is put its classes on an element, as the look and the icon do theirs.
  */
 public record HouseGridModule() implements DomModule<HouseGridModule>, SelfContent {
 
     public static final HouseGridModule INSTANCE = new HouseGridModule();
 
-    /** The design's object: {@code HouseGrid.wear(GRID_FRAME.LATTICE, el)}. */
+    /** The local style's object: {@code HouseGrid.wear(GRID_FRAME.LATTICE, el)}. */
     public record HouseGrid() implements Exportable._Constant<HouseGridModule> {}
 
     @Override
@@ -35,6 +35,6 @@ public record HouseGridModule() implements DomModule<HouseGridModule>, SelfConte
 
     @Override
     public List<String> selfContent(ModuleNameResolver resolver) {
-        return HouseDesigns.INSTANCE.object(hue.captains.singapura.js.homing.relgrid.house.HouseGrid.INSTANCE, "house_grid_sheet");
+        return InstalledStyling.get().localStyleObject(hue.captains.singapura.js.homing.relgrid.house.HouseGrid.INSTANCE, HouseGridSheet.INSTANCE);
     }
 }

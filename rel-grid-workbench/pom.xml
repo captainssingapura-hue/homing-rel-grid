@@ -99,6 +99,12 @@
             <artifactId>homing-design-core</artifactId>
             <version>${homing.core.version}</version>
         </dependency>
+        <!-- Minesweeper's Vista: a local style of the grid's frame. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-design-local-style</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-server</artifactId>

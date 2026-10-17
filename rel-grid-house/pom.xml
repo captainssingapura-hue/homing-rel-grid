@@ -21,24 +21,19 @@
     </description>
 
     <dependencies>
-        <!-- The branch it designs. -->
+        <!-- The branch it styles. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-grid</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- The house's styles and palettes it draws in, and the house's designs served. -->
+        <!-- The house's styles and palettes its local styles are drawn in. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-ui-styles</artifactId>
             <version>${homing.components.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
-            <artifactId>homing-ui-look</artifactId>
-            <version>${homing.components.version}</version>
-        </dependency>
-        <!-- A design's meta, its drawings, and the modules that serve it. -->
+        <!-- A local style's branch, its drawings, and the styling that serves it. -->
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-component-taxonomy</artifactId>
@@ -47,6 +42,11 @@
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-semantic-class</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-design-local-style</artifactId>
             <version>${homing.core.version}</version>
         </dependency>
         <dependency>

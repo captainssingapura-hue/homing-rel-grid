@@ -7,20 +7,20 @@ import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
 import hue.captains.singapura.js.homing.core.ModuleNameResolver;
 import hue.captains.singapura.js.homing.core.SelfContent;
-import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
+import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 
 import java.util.List;
 
 /**
  * Minesweeper's Vista board as a page has it: one stateless object, {@code MinesweeperVista}, generated from the
- * design - the typed design the game's grid is made with. It wears a leaf of the grid's frame on an element, and imports
- * the design's sheet so the sheet loads wherever the design is used.
+ * local style - the typed local style the game's grid is made with. It wears a leaf of the grid's frame on an element, and imports
+ * the local style's sheet so the sheet loads wherever the local style is used.
  */
 public record MinesweeperVistaModule() implements DomModule<MinesweeperVistaModule>, SelfContent {
 
     public static final MinesweeperVistaModule INSTANCE = new MinesweeperVistaModule();
 
-    /** The design's object: {@code MinesweeperVista.wear(GRID_FRAME.GRID_EDGE, el)}. */
+    /** The local style's object: {@code MinesweeperVista.wear(GRID_FRAME.GRID_EDGE, el)}. */
     public record MinesweeperVista() implements Exportable._Constant<MinesweeperVistaModule> {}
 
     @Override
@@ -34,6 +34,6 @@ public record MinesweeperVistaModule() implements DomModule<MinesweeperVistaModu
 
     @Override
     public List<String> selfContent(ModuleNameResolver resolver) {
-        return HouseDesigns.INSTANCE.object(hue.captains.singapura.js.homing.relgrid.workbench.MinesweeperVista.INSTANCE, "minesweeper_vista_sheet");
+        return InstalledStyling.get().localStyleObject(hue.captains.singapura.js.homing.relgrid.workbench.MinesweeperVista.INSTANCE, MinesweeperVistaSheet.INSTANCE);
     }
 }

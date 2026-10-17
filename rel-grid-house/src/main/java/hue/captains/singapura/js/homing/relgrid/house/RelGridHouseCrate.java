@@ -6,7 +6,7 @@ import hue.captains.singapura.js.homing.core.CrateEntry;
 import java.util.List;
 
 /**
- * The house's designs of the grid's frame - its grid, and its document table - each a sheet and an object. It requires
+ * The house's local styles of the grid's frame - its grid, and its document table - each a sheet and an object. It requires
  * nothing - an object wears its own classes, and its sheet is its own - so a page that makes a grid with one requires
  * this crate beside the grid's.
  */

@@ -22,7 +22,7 @@ class GridWorkbenchGateTest {
 
     /** The site's styling, installed as the server installs it at bootstrap: the modules are served in it. */
     @BeforeAll
-    static void theSitesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE))); }
+    static void theSitesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE))); }
 
     @Test void theCrateIsStructurallyComplete()             { CatalogueGate.structurallyComplete(CRATE); }
     @Test void everyServedModuleKeepsItsLane_strictly()      { CatalogueGate.strict(CRATE); }

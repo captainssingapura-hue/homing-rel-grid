@@ -60,6 +60,12 @@
             <artifactId>homing-semantic-class</artifactId>
             <version>${homing.core.version}</version>
         </dependency>
+        <!-- The frame is a local-style branch: its leaves' Concrete names a local style. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-design-local-style</artifactId>
+            <version>${homing.core.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
             <artifactId>rel-channel</artifactId>
@@ -100,6 +106,13 @@
             <groupId>io.github.captainssingapura-hue.homing.js</groupId>
             <artifactId>homing-ssjs-test-fixtures</artifactId>
             <version>${homing.core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- The house's styling, installed by the conformance sweep: the frame's constants come from the installed taxonomy. -->
+        <dependency>
+            <groupId>io.github.captainssingapura-hue.homing.js</groupId>
+            <artifactId>homing-ui-styles</artifactId>
+            <version>${homing.components.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- The real DomOpsParty: every element the grid mints is minted on a

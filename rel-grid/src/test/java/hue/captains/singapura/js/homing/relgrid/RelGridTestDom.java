@@ -1,7 +1,10 @@
 package hue.captains.singapura.js.homing.relgrid;
 
 import hue.captains.singapura.js.homing.relgrid.cells.RelGridStockStyles;
-import hue.captains.singapura.js.homing.relgrid.frame.GridFrameModule;
+import hue.captains.singapura.js.homing.design.semantic.LocalStyleLeaves;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
+import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
+import hue.captains.singapura.js.homing.ui.taxonomy.HouseTaxonomy;
 import hue.captains.singapura.js.homing.core.CssClass;
 import hue.captains.singapura.js.homing.core.CssGroup;
 import hue.captains.singapura.js.homing.core.util.CssClassName;
@@ -62,11 +65,13 @@ public final class RelGridTestDom {
     }
 
     /**
-     * The frame's leaves, as the grid's own module generates them ({@code GRID_FRAME}), and a design of the frame for
-     * tests: it wears each leaf as a class named for it - {@code frame-lattice} - so a test sees what the grid asked to
-     * wear, and where; and it refuses a leaf of another branch, as a design does.
+     * The frame's leaves, as the grid's own module generates them ({@code GRID_FRAME}) - here from the frame's own module,
+     * where a site's are the installed instance's - and a local style of the frame for tests: it wears each leaf as a class
+     * named for it - {@code frame-lattice} - so a test sees what the grid asked to wear, and where; and it refuses a leaf
+     * of another branch, as a local style does.
      */
-    public static final String FRAME = String.join("\n", GridFrameModule.INSTANCE.selfContent(null)) + "\n" + """
+    public static final String FRAME = String.join("\n", LocalStyleLeaves.INSTANCE.lines(
+            HouseTaxonomy.INSTANCE.read(java.util.List.of(GridFrameComponentModule.INSTANCE)), GridFrame.INSTANCE)) + "\n" + """
             var TEST_DESIGN = Object.freeze({
                 branch: "grid-frame", name: "test-design",
                 wear: function (leaf, el) {

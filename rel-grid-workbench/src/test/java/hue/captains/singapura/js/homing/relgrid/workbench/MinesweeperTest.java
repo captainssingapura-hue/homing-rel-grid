@@ -1,13 +1,13 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
-import hue.captains.singapura.js.homing.design.semantic.DesignRead;
+import hue.captains.singapura.js.homing.design.semantic.DesignStyle;
+import hue.captains.singapura.js.homing.design.semantic.LocalStyleRead;
 import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
 import hue.captains.singapura.js.homing.relgrid.house.GridFrameBaseModule;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
-import hue.captains.singapura.js.homing.ui.look.HouseDesigns;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * The Minesweeper bench, in its parts: the board alone - mines laid at the first reveal and never under it nor beside
  * it, the flood, flags, the chord, a board lost and a board won, a seed that repeats - then the board as a relation under
  * the real grid, which leaves every key a move is pressed by to bubble on to the game; and Vista's design of the frame,
- * complete in every house theme. Runs on the grid's own test DOM and the real party.
+ * complete in every house style. Runs on the grid's own test DOM and the real party.
  */
 class MinesweeperTest extends JsModuleTestBase {
 
-    /** The house's styling, installed as a site installs it at bootstrap: the designs are judged in its themes. */
+    /** The house's styling, installed as a site installs it at bootstrap: the board's local style is drawn in its styles. */
     @BeforeAll
-    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE))); }
+    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE))); }
 
     private static final String BENCH_DIR = RelGridTestDom.DIR + "workbench/";
 
@@ -188,16 +188,18 @@ class MinesweeperTest extends JsModuleTestBase {
     }
 
     @Test
-    void vista_isCompleteOverTheFrame_inEveryHouseTheme() {
-        DesignRead vista = HouseDesigns.INSTANCE.of(MinesweeperVista.INSTANCE);   // read and judged in every house theme
+    void vista_isCompleteOverTheFrame_inEveryHouseStyle() {
+        LocalStyleRead vista = InstalledStyling.get().localStyle(MinesweeperVista.INSTANCE);   // drawn in every house style as the styling was made
         assertEquals(GridFrame.INSTANCE, vista.branch());
         assertEquals(GridFrameComponentModule.INSTANCE.components(), vista.concretes().stream().map(c -> c.virtual()).toList(),
                 "a concrete leaf for every leaf of the frame, in the frame's order");
-        for (String slug : HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE)).themes().keySet()) {
+        for (String slug : InstalledStyling.get().styles().stream().map(DesignStyle::token).toList()) {
             String css = MinesweeperVistaSheet.INSTANCE.css(slug);
             assertTrue(css.contains(".minesweeper-vista___grid-edge__shape-corner {\n    border-radius: 10px;\n}"), slug + ":\n" + css);
             assertTrue(css.contains(".minesweeper-vista___grid-edge__color-outline {"), slug + ": the edge glows while the board holds the keys");
             assertTrue(css.contains(".minesweeper-vista___question-panel__shape-corner {"), slug + ": a question's glass plate");
+            assertTrue(css.contains(".minesweeper-vista___held-cursor-border__color-outline {\n    outline-color: var(--fp-accent);\n}"),
+                    slug + ": the cursor in the accent, as the palette worn defines it");
         }
     }
 }

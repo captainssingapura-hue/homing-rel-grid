@@ -23,14 +23,14 @@ import java.util.List;
 /**
  * The grid's frame as a component module (RFC 0067, D51): the {@link GridFrame} branch's virtual leaves, which an instance
  * registers beside the house's modules wherever it has the grid - nothing found on the classpath. Its leaves are drawn by
- * designs, never by a style: a base module of it bundles no look. Meta only: the frame is declared in the house's branches,
+ * local styles, never by a style: a base module of it bundles no look. Meta only: the frame is declared in the house's branches,
  * and lists nothing of the house's components.
  */
 public record GridFrameComponentModule() implements ComponentModule {
 
     public static final GridFrameComponentModule INSTANCE = new GridFrameComponentModule();
 
-    /** Every leaf of the frame, in the order a design draws them. */
+    /** Every leaf of the frame, in the order a local style draws them. */
     @Override public List<Component<?>> components() {
         return List.of(GridEdge.INSTANCE, Lattice.INSTANCE, CursorBorder.INSTANCE, HeldCursorBorder.INSTANCE, LentCursorBorder.INSTANCE,
                        SelectionFill.INSTANCE, HeaderBand.INSTANCE, GutterBand.INSTANCE, EditorAnchor.INSTANCE, Mask.INSTANCE,

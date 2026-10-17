@@ -1,15 +1,16 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
-import hue.captains.singapura.js.homing.component.taxonomy.Design;
 import hue.captains.singapura.js.homing.design.Owns;
 import hue.captains.singapura.js.homing.design.State;
 import hue.captains.singapura.js.homing.design.Target;
 import hue.captains.singapura.js.homing.design.color.Paint;
 import hue.captains.singapura.js.homing.design.color.SemanticColor;
+import hue.captains.singapura.js.homing.design.local.ConcreteComponent;
+import hue.captains.singapura.js.homing.design.local.LocalStyle;
 import hue.captains.singapura.js.homing.design.semantic.Answer;
 import hue.captains.singapura.js.homing.design.semantic.Drawing;
 import hue.captains.singapura.js.homing.design.semantic.Drawn;
-import hue.captains.singapura.js.homing.design.semantic.Dressed;
+import hue.captains.singapura.js.homing.design.semantic.DesignStyle;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.ui.styles.BaseScheme;
 import hue.captains.singapura.js.homing.ui.styles.BaseColours;
@@ -19,20 +20,27 @@ import hue.captains.singapura.js.homing.ui.styles.BaseColours.Clear;
 import java.util.List;
 
 /**
- * Minesweeper's Vista design of the grid's frame (RFC 0050 · Episode 2, appendix The Frame, "A worked example"): a
- * domain's design, beside the house's. The board stands in a rounded edge tinted by the palette, lit along its top, that
+ * Minesweeper's Vista local style of the grid's frame (RFC 0050 · Episode 2, appendix The Frame, "A worked example";
+ * RFC 0067, appendix Local Styles): a domain's local style, beside the house's. The board stands in a rounded edge tinted by the palette, lit along its top, that
  * glows in the accent while the board holds the keys; the cursor a soft ring in the accent; a selection shown in the
  * air between the tiles; a question on a glass plate over a pale veil. The tiles bevel themselves - they are the game's
- * cells, with a design of their own - so no rule is drawn between them, and what the game never shows draws nothing.
+ * cells, with a look of their own - so no rule is drawn between them, and what the game never shows draws nothing.
  *
  * <p>Every colour is the house's own (RFC 0067, D43): an extension invents none, and gives its own meanings to the
- * house's colours - never a value, so the board follows the palette worn.</p>
+ * house's colours - never a value, so the board follows the palette worn, its palettable colours the palette's variables.</p>
  */
-public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
+public record MinesweeperVista() implements LocalStyle<BaseScheme, GridFrame> {
+
+    public static final MinesweeperVista INSTANCE = new MinesweeperVista();
 
     @Override public BaseScheme scheme() { return BaseScheme.INSTANCE; }
 
-    public static final MinesweeperVista INSTANCE = new MinesweeperVista();
+    /** A concrete leaf of every leaf of the frame. */
+    @Override public List<ConcreteComponent<?, GridFrame, ?>> concretes() {
+        return List.of(Edge.INSTANCE, Lattice.INSTANCE, Cursor.INSTANCE, HeldCursor.INSTANCE, LentCursor.INSTANCE, Selection.INSTANCE,
+                       Header.INSTANCE, Gutter.INSTANCE, Anchor.INSTANCE, Veil.INSTANCE, Panel.INSTANCE, Merged.INSTANCE, Guide.INSTANCE,
+                       CopiedArea.INSTANCE, CopiedBorder.INSTANCE);
+    }
 
     private static final Target.Color.Background GROUND = Target.Color.Background.INSTANCE;
     private static final Target.Shape.Outline RING = Target.Shape.Outline.INSTANCE;
@@ -47,7 +55,7 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     /** The board's edge: rounded, tinted by the palette, lit along its top and shaded below - and a glow in the accent while it holds the keys. */
     public record Edge() implements GridFrame.GridEdge.Concrete<MinesweeperVista>, Drawn {
         public static final Edge INSTANCE = new Edge();
-        @Override public List<Drawing<?>> drawings(Dressed theme) {
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) {
             return List.of(new Drawing.Painted<>(GROUND, ground(new AccentTintFaint())),
                            new Drawing.Own<>(Target.Shape.Border.INSTANCE, "border-width: 1px; border-style: solid;"),
                            new Drawing.Painted<>(Target.Color.Border.INSTANCE,
@@ -64,20 +72,20 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     /** No rule between the tiles: they bevel themselves. */
     public record Lattice() implements GridFrame.Lattice.Concrete<MinesweeperVista>, Drawn {
         public static final Lattice INSTANCE = new Lattice();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.Lattice.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.Lattice.INSTANCE); }
     }
 
     /** The cursor while the keys are elsewhere: a faint ring in the accent. */
     public record Cursor() implements GridFrame.CursorBorder.Concrete<MinesweeperVista>, Drawn {
         public static final Cursor INSTANCE = new Cursor();
-        @Override public List<Drawing<?>> drawings(Dressed theme) {
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) {
             return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -1px;"),
                            new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new BaseColours.AccentWashStrong())));
         }
     }
 
     /** The cursor's ring while the board holds the keys: the accent's, soft, where the next move lands. */
-    static List<Drawing<?>> heldRing(Dressed theme) {
+    static List<Drawing<?>> heldRing() {
         return List.of(new Drawing.Own<>(RING, "outline-width: 2px; outline-style: solid; outline-offset: -1px;"),
                        new Drawing.Painted<>(RING_COLOUR, new Paint.With<>(new BaseColours.Accent())));
     }
@@ -85,19 +93,19 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     /** The cursor while the board holds the keys. */
     public record HeldCursor() implements GridFrame.HeldCursorBorder.Concrete<MinesweeperVista>, Drawn {
         public static final HeldCursor INSTANCE = new HeldCursor();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return heldRing(theme); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return heldRing(); }
     }
 
     /** A tile never holds control - its moves are momentary - but were one to, the held ring. */
     public record LentCursor() implements GridFrame.LentCursorBorder.Concrete<MinesweeperVista>, Drawn {
         public static final LentCursor INSTANCE = new LentCursor();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return heldRing(theme); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return heldRing(); }
     }
 
     /** The tiles selected - flagged or revealed at once - shown in the accent in the air round them; the cursor's own by its ring. */
     public record Selection() implements GridFrame.SelectionFill.Concrete<MinesweeperVista>, Drawn {
         public static final Selection INSTANCE = new Selection();
-        @Override public List<Drawing<?>> drawings(Dressed theme) {
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) {
             return List.of(new Drawing.Painted<>(GROUND, new Answer.Painted<BaseScheme, Target.Color.Background>(ground(new Clear()))
                     .at(State.SELECTED, ground(new BaseColours.KeysCandidate()))
                     .at(State.CURRENT, ground(new BaseColours.AccentWashStrong()))));
@@ -107,25 +115,25 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     /** The board has no head. */
     public record Header() implements GridFrame.HeaderBand.Concrete<MinesweeperVista>, Drawn {
         public static final Header INSTANCE = new Header();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.HeaderBand.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.HeaderBand.INSTANCE); }
     }
 
     /** Nor rows numbered. */
     public record Gutter() implements GridFrame.GutterBand.Concrete<MinesweeperVista>, Drawn {
         public static final Gutter INSTANCE = new Gutter();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.GutterBand.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.GutterBand.INSTANCE); }
     }
 
     /** Nor an editor: a move is momentary. */
     public record Anchor() implements GridFrame.EditorAnchor.Concrete<MinesweeperVista>, Drawn {
         public static final Anchor INSTANCE = new Anchor();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.EditorAnchor.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.EditorAnchor.INSTANCE); }
     }
 
     /** The veil a question puts over the board: pale, the board showing through. */
     public record Veil() implements GridFrame.Mask.Concrete<MinesweeperVista>, Drawn {
         public static final Veil INSTANCE = new Veil();
-        @Override public List<Drawing<?>> drawings(Dressed theme) {
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) {
             return List.of(new Drawing.Painted<>(GROUND, ground(new BaseColours.Sheen())));
         }
     }
@@ -133,7 +141,7 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     /** A question's plate: glass - the raised layer, half clear, rimmed in light, rounded, a soft cast below. */
     public record Panel() implements GridFrame.QuestionPanel.Concrete<MinesweeperVista>, Drawn {
         public static final Panel INSTANCE = new Panel();
-        @Override public List<Drawing<?>> drawings(Dressed theme) {
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) {
             return List.of(new Drawing.Painted<>(GROUND, ground(new BaseColours.Raised())),
                            new Drawing.Own<>(Target.Shape.Border.INSTANCE, "border-width: 1px; border-style: solid;"),
                            new Drawing.Painted<>(Target.Color.Border.INSTANCE, new Paint.With<>(new BaseColours.AccentTint())),
@@ -147,23 +155,23 @@ public record MinesweeperVista() implements Design<BaseScheme, GridFrame> {
     /** No tile spans another. */
     public record Merged() implements GridFrame.MergeHost.Concrete<MinesweeperVista>, Drawn {
         public static final Merged INSTANCE = new Merged();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.MergeHost.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.MergeHost.INSTANCE); }
     }
 
     /** No column is resized. */
     public record Guide() implements GridFrame.ResizeGuide.Concrete<MinesweeperVista>, Drawn {
         public static final Guide INSTANCE = new Guide();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.ResizeGuide.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.ResizeGuide.INSTANCE); }
     }
 
     /** Nothing is copied from the board. */
     public record CopiedArea() implements GridFrame.CopiedArea.Concrete<MinesweeperVista>, Drawn {
         public static final CopiedArea INSTANCE = new CopiedArea();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.CopiedArea.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.CopiedArea.INSTANCE); }
     }
 
     public record CopiedBorder() implements GridFrame.CopiedBorder.Concrete<MinesweeperVista>, Drawn {
         public static final CopiedBorder INSTANCE = new CopiedBorder();
-        @Override public List<Drawing<?>> drawings(Dressed theme) { return nothing(GridFrame.CopiedBorder.INSTANCE); }
+        @Override public List<Drawing<?>> drawings(DesignStyle<?> style) { return nothing(GridFrame.CopiedBorder.INSTANCE); }
     }
 }

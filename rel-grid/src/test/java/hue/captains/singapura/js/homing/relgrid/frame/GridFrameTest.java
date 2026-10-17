@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The grid's frame in the house's taxonomy (RFC 0050 · Episode 2 — Appendix: The Frame): a design branch whose
+ * The grid's frame in the house's taxonomy (RFC 0050 · Episode 2 — Appendix: The Frame): a local-style branch whose
  * leaves are all virtual, never cast, each owning targets a sheet carries - and those worn together on a slot owning
  * different ones.
  */
@@ -33,7 +33,7 @@ class GridFrameTest {
             java.util.stream.Stream.of(GridFrameComponentModule.INSTANCE)).toList());
 
     @Test
-    void theFrameIsADesignBranchOfTheHouse_itsLeavesItsModules() {
+    void theFrameIsALocalStyleBranchOfTheHouse_itsLeavesItsModules() {
         assertTrue(HOUSE.branches().contains(GridFrame.INSTANCE), "in the house's tree wherever an instance registers the frame");
         var leaves = HOUSE.children(GridFrame.INSTANCE);
         assertEquals(GridFrameComponentModule.INSTANCE.components(), leaves, "every leaf the module lists, in its order, and nothing else");
@@ -43,7 +43,7 @@ class GridFrameTest {
     @Test
     void noLeafOfTheFrameIsCast() {
         assertFalse(HOUSE.castings().stream().anyMatch(c -> c.component() instanceof VirtualComponent<?>),
-                "a design's concrete leaf is worn, never the leaf");
+                "a local style's concrete leaf is worn, never the leaf");
     }
 
     @Test

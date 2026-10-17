@@ -6,16 +6,16 @@ import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleNameResolver;
 import hue.captains.singapura.js.homing.core.SelfContent;
-import hue.captains.singapura.js.homing.design.semantic.DesignLeaves;
-import hue.captains.singapura.js.homing.ui.taxonomy.HouseTaxonomy;
+import hue.captains.singapura.js.homing.design.semantic.LocalStyleLeaves;
+import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 
 import java.util.List;
 
 /**
  * The grid's frame as a page has it: {@code GRID_FRAME}, one frozen constant per leaf of the {@link GridFrame} branch,
- * generated from the frame's own module - by which the grid asks the design it is made with to wear a leaf on an element,
- * never by a string. Each carries its branch, so a design of another branch refuses it, and the grid refuses a design
- * that is not of this one.
+ * generated from the installed instance's taxonomy - by which the grid asks the local style it is made with to wear a
+ * leaf on an element, never by a string. Each carries its branch, so a local style of another branch refuses it, and the
+ * grid refuses a local style that is not of this one.
  */
 public record GridFrameModule() implements EsModule<GridFrameModule>, SelfContent {
 
@@ -28,11 +28,7 @@ public record GridFrameModule() implements EsModule<GridFrameModule>, SelfConten
 
     @Override public ExportsOf<GridFrameModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new GRID_FRAME())); }
 
-    @Override public List<String> selfContent(ModuleNameResolver resolver) { return Lines.LINES; }
-
-    /** The constant's script, generated once. */
-    private static final class Lines {
-        private Lines() {}
-        static final List<String> LINES = DesignLeaves.INSTANCE.lines(HouseTaxonomy.INSTANCE.read(List.of(GridFrameComponentModule.INSTANCE)), GridFrame.INSTANCE);
+    @Override public List<String> selfContent(ModuleNameResolver resolver) {
+        return LocalStyleLeaves.INSTANCE.lines(InstalledStyling.get().taxonomy(), GridFrame.INSTANCE);
     }
 }
