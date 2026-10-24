@@ -6,7 +6,7 @@
 
     <groupId>io.github.captainssingapura-hue.homing.ssjs</groupId>
     <artifactId>homing-rel-grid</artifactId>
-    <version>LOCAL-SNAPSHOT</version>
+    <version>LOCAL-SNAPSHOT-T1</version>
     <packaging>pom</packaging>
 
     <description>
@@ -58,10 +58,10 @@
              substrate (RFC 0065/0066 — Wearable, DesignClass, the semantics the
              grid and the tree wear) is released, the local snapshot: install
              core first. Re-pin to the release that carries it. -->
-        <homing.core.version>LOCAL-SNAPSHOT</homing.core.version>
+        <homing.core.version>LOCAL-SNAPSHOT-T1</homing.core.version>
         <!-- The house's components repository: its taxonomy is the meta the grid's frame is declared in, and its
              styles what the house's design of the frame is drawn in. Never an implementation. -->
-        <homing.components.version>LOCAL-SNAPSHOT</homing.components.version>
+        <homing.components.version>LOCAL-SNAPSHOT-T1</homing.components.version>
         <junit.version>5.11.3</junit.version>
     </properties>
 
