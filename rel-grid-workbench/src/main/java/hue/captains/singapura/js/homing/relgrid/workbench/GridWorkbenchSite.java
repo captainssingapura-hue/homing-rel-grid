@@ -2,6 +2,8 @@ package hue.captains.singapura.js.homing.relgrid.workbench;
 
 import hue.captains.singapura.js.homing.catalogue.site.AppListing;
 import hue.captains.singapura.js.homing.relgrid.house.GridFrameBaseModule;
+import hue.captains.singapura.js.homing.workspace.tree.TreeBaseModule;
+import hue.captains.singapura.js.homing.docview.widgets.DocViewBaseModule;
 import hue.captains.singapura.js.homing.site.Path;
 import hue.captains.singapura.js.homing.site.Router;
 import hue.captains.singapura.js.homing.site.Site;
@@ -21,7 +23,7 @@ public record GridWorkbenchSite() implements Site {
     public static final GridWorkbenchSite INSTANCE = new GridWorkbenchSite();
 
     /** The site's one MPA: its brand, the designs it offers, and the crate it serves. */
-    public static final StandardMpa MPA = StandardMpa.of(Brand.of("Homing · grid benches"), HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE)), RelGridWorkbenchCrate.INSTANCE);
+    public static final StandardMpa MPA = StandardMpa.of(Brand.of("Homing · grid benches"), HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE, TreeBaseModule.INSTANCE, DocViewBaseModule.INSTANCE)), RelGridWorkbenchCrate.INSTANCE);
 
     /** Read once: the tree is checked when the site is made, not when a request arrives. */
     public static final CatalogueRouter ROUTER = CatalogueRouter.at(Path.ROOT, GridWorkbenchCatalogue.INSTANCE, MPA).listing(AppListing.INSTANCE);
