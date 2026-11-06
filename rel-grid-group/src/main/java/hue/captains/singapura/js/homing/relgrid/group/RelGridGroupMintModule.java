@@ -27,7 +27,7 @@ public record RelGridGroupMintModule() implements DomModule<RelGridGroupMintModu
 
     @Override
     public ImportsFor<RelGridGroupMintModule> imports() {
-        return ImportsFor.<RelGridGroupMintModule>builder()
+        return new ImportsFor._Builder<RelGridGroupMintModule>()
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridGroupStyles.hrg_member(), new RelGridGroupStyles.hrg_group_header(), new RelGridGroupStyles.hrg_group_header_sticky(),
                         new RelGridGroupStyles.hrg_fence(), new RelGridGroupStyles.hrg_fence_empty()), RelGridGroupStyles.INSTANCE))

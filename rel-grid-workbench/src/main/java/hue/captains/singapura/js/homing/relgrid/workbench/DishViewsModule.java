@@ -36,7 +36,7 @@ public record DishViewsModule() implements DomModule<DishViewsModule> {
     public record DishViews() implements BranchComponent<DishViewsModule>, NeedKeyboard {
         @Override public String summary() { return "The order of the dishes, chosen on the grid's panel from a set of profiles; the explanation kept here."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.DIGIT_1, "the first profile chosen - and so on, to 9"), KeyBinding.of(Key.ARROW_UP, "the previous profile"), KeyBinding.of(Key.ARROW_DOWN, "the next profile"), KeyBinding.of(Key.ENTER, "the profile focused chosen"), KeyBinding.of(Key.ESCAPE, "the handover cancelled"));
+            return List.of(new KeyBinding(Key.DIGIT_1, "the first profile chosen - and so on, to 9"), new KeyBinding(Key.ARROW_UP, "the previous profile"), new KeyBinding(Key.ARROW_DOWN, "the next profile"), new KeyBinding(Key.ENTER, "the profile focused chosen"), new KeyBinding(Key.ESCAPE, "the handover cancelled"));
         }
     }
 
@@ -44,7 +44,7 @@ public record DishViewsModule() implements DomModule<DishViewsModule> {
 
     @Override
     public ImportsFor<DishViewsModule> imports() {
-        return ImportsFor.<DishViewsModule>builder()
+        return new ImportsFor._Builder<DishViewsModule>()
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridView()),
                         RelGridProtocolModule.INSTANCE))

@@ -24,7 +24,7 @@ public record JsonInputModule() implements DomModule<JsonInputModule> {
     public record JsonInput() implements SelfContainedWidget<JsonInputModule>, NeedKeyboard {
         @Override public String summary() { return "A plain textarea over the bench's one JSON document; every keystroke told to the bench."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the text did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the text did not take it"));
         }
     }
 
@@ -32,7 +32,7 @@ public record JsonInputModule() implements DomModule<JsonInputModule> {
 
     @Override
     public ImportsFor<JsonInputModule> imports() {
-        return ImportsFor.<JsonInputModule>builder()
+        return new ImportsFor._Builder<JsonInputModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new JsonDocStoreModule.JsonDocStore()), JsonDocStoreModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new JsonTextModule.JSON_TEXT()), JsonTextModule.INSTANCE))

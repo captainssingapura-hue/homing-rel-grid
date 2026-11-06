@@ -26,7 +26,7 @@ public record ProseTableModule() implements DomModule<ProseTableModule> {
     public record ProseTable() implements Exportable._Class<ProseTableModule> {}
 
     @Override public ImportsFor<ProseTableModule> imports() {
-        return ImportsFor.<ProseTableModule>builder()
+        return new ImportsFor._Builder<ProseTableModule>()
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 // the design it is made with, unless it is handed another
                 .add(new ModuleImports<>(List.of(new HouseProseModule.HouseProse()), HouseProseModule.INSTANCE))

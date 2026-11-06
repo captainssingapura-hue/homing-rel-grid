@@ -22,7 +22,7 @@ public record DishesSecretaryModule() implements EsModule<DishesSecretaryModule>
 
     @Override
     public ImportsFor<DishesSecretaryModule> imports() {
-        return ImportsFor.<DishesSecretaryModule>builder()
+        return new ImportsFor._Builder<DishesSecretaryModule>()
                 .add(new ModuleImports<>(List.of(new DishStoreModule.DishStore()), DishStoreModule.INSTANCE))
                 .build();
     }

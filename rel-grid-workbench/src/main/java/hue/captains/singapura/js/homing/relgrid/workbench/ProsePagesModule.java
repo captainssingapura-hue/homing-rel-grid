@@ -28,7 +28,7 @@ public record ProsePagesModule() implements DomModule<ProsePagesModule> {
     public record ProseFiguresPage() implements Exportable._Class<ProsePagesModule> {}
 
     @Override public ImportsFor<ProsePagesModule> imports() {
-        return ImportsFor.<ProsePagesModule>builder()
+        return new ImportsFor._Builder<ProsePagesModule>()
                 .add(new ModuleImports<>(List.of(new DocTableRelationModule.DocTableRelation()), DocTableRelationModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new ProseTableModule.ProseTable()), ProseTableModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new Heading2Module.Heading2()), Heading2Module.INSTANCE))

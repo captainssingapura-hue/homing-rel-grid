@@ -27,7 +27,7 @@ public record BenchWidgetModule() implements DomModule<BenchWidgetModule> {
 
     @Override
     public ImportsFor<BenchWidgetModule> imports() {
-        return ImportsFor.<BenchWidgetModule>builder()
+        return new ImportsFor._Builder<BenchWidgetModule>()
                 .add(new ModuleImports<>(List.of(new domOpsParties()), DomOpsPartyModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new focusParties()), FocusPartyModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new KeysModule.Keys()), KeysModule.INSTANCE))

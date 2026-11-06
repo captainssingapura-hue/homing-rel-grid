@@ -30,7 +30,7 @@ public record DishStoreModule() implements EsModule<DishStoreModule> {
 
     public static final DishStoreModule INSTANCE = new DishStoreModule();
 
-    @Override public ImportsFor<DishStoreModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<DishStoreModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<DishStoreModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new DishStore()));

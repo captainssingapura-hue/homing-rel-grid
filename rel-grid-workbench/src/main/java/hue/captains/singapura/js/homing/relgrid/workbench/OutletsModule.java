@@ -27,14 +27,14 @@ public record OutletsModule() implements DomModule<OutletsModule> {
 
     public record Outlets() implements SelfContainedWidget<OutletsModule>, NeedKeyboard {
         @Override public String summary() { return "Six dishes sold at three outlets, a table each, stacked in a group; the fences the domain's."; }
-        @Override public List<KeyBinding> keys() { return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the group did not take it")); }
+        @Override public List<KeyBinding> keys() { return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the group did not take it")); }
     }
 
     public static final OutletsModule INSTANCE = new OutletsModule();
 
     @Override
     public ImportsFor<OutletsModule> imports() {
-        return ImportsFor.<OutletsModule>builder()
+        return new ImportsFor._Builder<OutletsModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridGroupModule.RelGridGroup()), RelGridGroupModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // the group's header: label header cells

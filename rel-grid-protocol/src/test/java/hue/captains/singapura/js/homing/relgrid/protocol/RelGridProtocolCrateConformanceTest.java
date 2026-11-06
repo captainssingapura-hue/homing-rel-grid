@@ -23,13 +23,13 @@ class RelGridProtocolCrateConformanceTest {
 
     @Test
     void everyServedModuleIsCrated() {
-        assertEquals(List.of(), OrphanCheck.check(RelGridProtocolCrate.INSTANCE),
+        assertEquals(List.of(), OrphanCheck.INSTANCE.check(RelGridProtocolCrate.INSTANCE),
                 "every served JS module in rel-grid-protocol must be declared in its crate");
     }
 
     @Test
     void importsRespectCrateBoundaries() {
-        assertEquals(List.of(), CrateDependencyRule.check(RelGridProtocolCrate.INSTANCE),
+        assertEquals(List.of(), CrateDependencyRule.INSTANCE.check(RelGridProtocolCrate.INSTANCE),
                 "the protocol is data: it imports nothing, so nothing can cross a boundary");
     }
 

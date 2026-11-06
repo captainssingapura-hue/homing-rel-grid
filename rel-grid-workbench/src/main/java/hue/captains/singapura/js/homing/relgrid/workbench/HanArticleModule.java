@@ -19,7 +19,7 @@ public record HanArticleModule() implements EsModule<HanArticleModule>, SelfCont
 
     public record HAN_ARTICLE() implements Exportable._Constant<HanArticleModule> {}
 
-    @Override public ImportsFor<HanArticleModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<HanArticleModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<HanArticleModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new HAN_ARTICLE())); }

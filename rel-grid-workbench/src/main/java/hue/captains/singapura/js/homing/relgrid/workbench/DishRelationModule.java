@@ -36,7 +36,7 @@ public record DishRelationModule() implements DomModule<DishRelationModule> {
         // The relation builds its manager from two cells — both domain-side.
         // One ships with the grid; one is the bench's own, and the grid cannot
         // tell which is which.
-        return ImportsFor.<DishRelationModule>builder()
+        return new ImportsFor._Builder<DishRelationModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells
                 .add(new ModuleImports<>(List.of(new DishStarsCellModule.DishStarsCell()), DishStarsCellModule.INSTANCE))

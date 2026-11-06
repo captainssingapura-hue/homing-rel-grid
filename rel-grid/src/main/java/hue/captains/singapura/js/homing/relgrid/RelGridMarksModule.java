@@ -22,7 +22,7 @@ public record RelGridMarksModule() implements DomModule<RelGridMarksModule> {
 
     @Override
     public ImportsFor<RelGridMarksModule> imports() {
-        return ImportsFor.<RelGridMarksModule>builder()
+        return new ImportsFor._Builder<RelGridMarksModule>()
                 // the frame's leaves, by which the design it is made with is asked to wear one
                 .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_sel(), new RelGridStyles.hrg_cursor()), RelGridStyles.INSTANCE))

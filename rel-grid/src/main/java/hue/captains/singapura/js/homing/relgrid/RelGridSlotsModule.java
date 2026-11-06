@@ -25,7 +25,7 @@ public record RelGridSlotsModule() implements DomModule<RelGridSlotsModule> {
 
     @Override
     public ImportsFor<RelGridSlotsModule> imports() {
-        return ImportsFor.<RelGridSlotsModule>builder()
+        return new ImportsFor._Builder<RelGridSlotsModule>()
                 // the frame's leaves, by which the design it is made with is asked to wear one
                 .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_col(), new RelGridStyles.hrg_th(), new RelGridStyles.hrg_sticky(), new RelGridStyles.hrg_td(),

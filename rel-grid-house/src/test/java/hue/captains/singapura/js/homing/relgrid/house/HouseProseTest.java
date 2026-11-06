@@ -1,12 +1,11 @@
 package hue.captains.singapura.js.homing.relgrid.house;
 
+import hue.captains.singapura.js.homing.design.styling.Styling;
 import hue.captains.singapura.js.homing.design.semantic.DesignStyle;
 import hue.captains.singapura.js.homing.design.semantic.LocalStyleRead;
-import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,13 +20,12 @@ import java.util.List;
  */
 class HouseProseTest {
 
-    /** The house's styling, installed as a site installs it at bootstrap: the frame's local styles are drawn in its styles. */
-    @BeforeAll
-    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE))); }
+    /** What the test serves and reads from. */
+    private static final Styling STYLING = HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE));
 
     @Test
     void theHouseProse_isCompleteOverTheFrame_inEveryHouseStyle() {
-        LocalStyleRead prose = InstalledStyling.get().localStyle(HouseProse.INSTANCE);   // drawn in every house style as the styling was made
+        LocalStyleRead prose = STYLING.localStyle(HouseProse.INSTANCE);   // drawn in every house style as the styling was made
         assertEquals(GridFrame.INSTANCE, prose.branch());
         assertEquals(GridFrameComponentModule.INSTANCE.components(), prose.concretes().stream().map(c -> c.virtual()).toList(),
                 "a concrete leaf for every leaf of the frame, in the frame's order");
@@ -37,7 +35,7 @@ class HouseProseTest {
     @Test
     void itsRules_areItsOwn_measuredAsTheHousesDocumentTablesWere_inEveryHouseStyle() {
         for (String slug : styles()) {
-            String css = HouseProseSheet.INSTANCE.css(slug);
+            String css = HouseProseSheet.INSTANCE.css(STYLING, slug);
             assertFalse(css.contains("/* the theme's "), slug + ": nothing taken from a cell - a cell is a container, its room and no line:\n" + css);
             assertTrue(css.contains(".house-prose___lattice__color-border {\n    border-color: "), slug + ": its rows ruled in the hairline");
             assertTrue(css.contains(".house-prose___header-band__shape-border {"), slug);
@@ -46,13 +44,13 @@ class HouseProseTest {
             assertTrue(css.contains("/* from house-grid___held-cursor-border__color-outline */\n.house-prose___held-cursor-border__color-outline {"),
                     slug + ": where the keys are is the house grid's");
         }
-        String editorial = HouseProseSheet.INSTANCE.css("editorial");
+        String editorial = HouseProseSheet.INSTANCE.css(STYLING, "editorial");
         assertTrue(editorial.contains(".house-prose___lattice__shape-border {\n    border-width: 0 0 1px 0; border-style: solid;\n}"),
                 "each row ruled underneath, as the editorial style rules a document's table:\n" + editorial);
         assertTrue(editorial.contains(".house-prose___header-band__shape-border {\n    border-width: 0;\n}"), "and its head unruled:\n" + editorial);
-        assertTrue(HouseProseSheet.INSTANCE.css("neo-brutalism").contains(".house-prose___lattice__shape-border {\n    border-width: 0 0 2px 0;"),
+        assertTrue(HouseProseSheet.INSTANCE.css(STYLING, "neo-brutalism").contains(".house-prose___lattice__shape-border {\n    border-width: 0 0 2px 0;"),
                 "a heavy style rules its document's tables heavier");
-        assertTrue(HouseProseSheet.INSTANCE.css("sketchy").contains(".house-prose___header-band__shape-border {\n    border-width: 0 0 2px 0;"),
+        assertTrue(HouseProseSheet.INSTANCE.css(STYLING, "sketchy").contains(".house-prose___header-band__shape-border {\n    border-width: 0 0 2px 0;"),
                 "a style that rules its tables' heads rules this one's");
     }
 
@@ -63,5 +61,5 @@ class HouseProseTest {
     }
 
     /** Every style the house serves, by its token: a local style's sheet is one a style, the same in every palette. */
-    private static List<String> styles() { return InstalledStyling.get().styles().stream().map(DesignStyle::token).toList(); }
+    private static List<String> styles() { return STYLING.styles().stream().map(DesignStyle::token).toList(); }
 }

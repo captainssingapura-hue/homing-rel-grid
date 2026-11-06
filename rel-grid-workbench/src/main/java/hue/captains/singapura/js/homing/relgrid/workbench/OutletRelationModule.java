@@ -36,7 +36,7 @@ public record OutletRelationModule() implements DomModule<OutletRelationModule> 
 
     @Override
     public ImportsFor<OutletRelationModule> imports() {
-        return ImportsFor.<OutletRelationModule>builder()
+        return new ImportsFor._Builder<OutletRelationModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridGroupFold()), RelGridProtocolModule.INSTANCE))

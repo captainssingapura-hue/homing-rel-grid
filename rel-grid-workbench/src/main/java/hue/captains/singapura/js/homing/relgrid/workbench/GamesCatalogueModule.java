@@ -28,7 +28,7 @@ public record GamesCatalogueModule() implements DomModule<GamesCatalogueModule> 
     public record GamesCatalogue() implements SelfContainedWidget<GamesCatalogueModule>, NeedKeyboard {
         @Override public String summary() { return "Seven hundred releases, sorted and filtered from header cells that are the relation's own; the grid knows none of it."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it"));
         }
     }
 
@@ -36,7 +36,7 @@ public record GamesCatalogueModule() implements DomModule<GamesCatalogueModule> 
 
     @Override
     public ImportsFor<GamesCatalogueModule> imports() {
-        return ImportsFor.<GamesCatalogueModule>builder()
+        return new ImportsFor._Builder<GamesCatalogueModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with

@@ -18,7 +18,7 @@ public record JsonDocStoreModule() implements EsModule<JsonDocStoreModule> {
 
     public static final JsonDocStoreModule INSTANCE = new JsonDocStoreModule();
 
-    @Override public ImportsFor<JsonDocStoreModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<JsonDocStoreModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<JsonDocStoreModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new JsonDocStore()));

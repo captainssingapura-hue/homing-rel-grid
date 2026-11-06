@@ -28,7 +28,7 @@ public record HanCellModule() implements DomModule<HanCellModule> {
     @Override
     public ImportsFor<HanCellModule> imports() {
         // What a mark is, is the engine's to say; the cell only draws it.
-        return ImportsFor.<HanCellModule>builder()
+        return new ImportsFor._Builder<HanCellModule>()
                 .add(new ModuleImports<>(List.of(new HanLayoutModule.HanLayout()), HanLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HanCellStyles.han_glyph(), new HanCellStyles.han_ink(), new HanCellStyles.han_punct(),
                         new HanCellStyles.han_half(), new HanCellStyles.han_open(), new HanCellStyles.han_narrow(),

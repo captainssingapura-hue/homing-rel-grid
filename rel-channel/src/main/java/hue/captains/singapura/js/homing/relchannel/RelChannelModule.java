@@ -26,7 +26,7 @@ public record RelChannelModule() implements DomModule<RelChannelModule> {
 
     public static final RelChannelModule INSTANCE = new RelChannelModule();
 
-    @Override public ImportsFor<RelChannelModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelChannelModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelChannelModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelChannel()));

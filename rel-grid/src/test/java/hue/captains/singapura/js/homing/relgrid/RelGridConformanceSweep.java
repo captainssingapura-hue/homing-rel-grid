@@ -1,5 +1,8 @@
 package hue.captains.singapura.js.homing.relgrid;
 
+import hue.captains.singapura.js.homing.design.styling.StyledModule;
+import hue.captains.singapura.js.homing.design.styling.Styling;
+import hue.captains.singapura.js.homing.design.styling.StylingRenderer;
 import hue.captains.singapura.js.homing.core.SelfContent;
 import hue.captains.singapura.js.homing.conformance.engine.ConformanceEngine;
 import hue.captains.singapura.js.homing.conformance.engine.ServedModuleRenderer;
@@ -57,8 +60,10 @@ public final class RelGridConformanceSweep {
     public static final String RECORD_PROPERTY = "homing.conformance.record";
 
     /** Every finding over the crate's own modules, each graded as served, under the rule set its type owes. */
-    public static List<Finding> findings(Crate crate) {
-        return new ConformanceEngine(DefaultJsRulePolicy.INSTANCE, new ServedModuleRenderer()).checkCrates(List.of(crate));
+    public static List<Finding> findings(Crate crate) { return findings(crate, new ServedModuleRenderer()); }
+
+    private static List<Finding> findings(Crate crate, ServedModuleRenderer renderer) {
+        return new ConformanceEngine(DefaultJsRulePolicy.INSTANCE, renderer).checkCrates(List.of(crate));
     }
 
     /**
@@ -76,6 +81,7 @@ public final class RelGridConformanceSweep {
                 Class<?> c = Class.forName(cls);
                 if (isWidget(c)) continue;                                                // its body is Java-emitted
                 if (SelfContent.class.isAssignableFrom(c)) continue;                      // generated: its body is Java-emitted too
+                if (StyledModule.class.isAssignableFrom(c)) continue;                     // written by the styling it is handed
                 if (SvgGroup.class.isAssignableFrom(c)) continue;                         // generated from its .svg assets
                 if (DomModule.class.isAssignableFrom(c) || EsModule.class.isAssignableFrom(c))
                     out.add(cls + " has no /homing/js/" + cls.replace('.', '/') + ".js — is the file named after the class?");
@@ -94,21 +100,28 @@ public final class RelGridConformanceSweep {
     }
 
     /** Fail unless every finding is in the ledger and every ledger line is a finding. Records instead when asked. */
-    public static void assertLedger(Crate crate, Path ledger) throws IOException {
+    public static void assertLedger(Crate crate, Path ledger) throws IOException { assertLedger(crate, ledger, new ServedModuleRenderer()); }
+
+    /** The same, for a crate with modules the styling writes: they are swept as the styling writes them. */
+    public static void assertLedger(Crate crate, Path ledger, Styling styling) throws IOException {
+        assertLedger(crate, ledger, new ServedModuleRenderer(new StylingRenderer(styling)));
+    }
+
+    private static void assertLedger(Crate crate, Path ledger, ServedModuleRenderer renderer) throws IOException {
         var unbacked = unbacked(crate);
         if (!unbacked.isEmpty())
             fail("crate '" + crate.name() + "' has modules the server cannot serve:\n  " + String.join("\n  ", unbacked));
-        var findings = findings(crate);
+        var findings = findings(crate, renderer);
         if (Boolean.getBoolean(RECORD_PROPERTY)) {
             Files.createDirectories(ledger.getParent());
             var lines = new ArrayList<String>();
             lines.add("# RFC 0044 ledger for crate '" + crate.name() + "': pre-existing violations, one fingerprint per line.");
             lines.add("# It can only shrink. Regenerate with -D" + RECORD_PROPERTY + "=true, deliberately — never to silence a fresh violation.");
-            lines.addAll(Baseline.record(findings));
+            lines.addAll(findings.stream().map(f -> f.fingerprint()).distinct().sorted().toList());
             Files.write(ledger, lines, StandardCharsets.UTF_8);
             return;
         }
-        var baseline = Files.exists(ledger) ? Baseline.of(Files.readAllLines(ledger, StandardCharsets.UTF_8)) : Baseline.EMPTY;
+        var baseline = Files.exists(ledger) ? new Baseline(Files.readAllLines(ledger, StandardCharsets.UTF_8)) : Baseline.EMPTY;
         var graded = new FindingGrader(List.of(), baseline, true).grade(findings);
         var errors = new ArrayList<String>();
         for (GradedFinding g : graded)

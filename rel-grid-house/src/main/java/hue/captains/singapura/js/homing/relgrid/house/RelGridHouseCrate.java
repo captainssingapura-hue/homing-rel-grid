@@ -21,7 +21,7 @@ public final class RelGridHouseCrate implements Crate {
     @Override public List<Crate> requires() { return List.of(); }
 
     @Override public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(HouseGridSheet.INSTANCE), CrateEntry.of(HouseGridModule.INSTANCE),
-                       CrateEntry.of(HouseProseSheet.INSTANCE), CrateEntry.of(HouseProseModule.INSTANCE));
+        return List.of(new CrateEntry(HouseGridSheet.INSTANCE), new CrateEntry(HouseGridModule.INSTANCE),
+                       new CrateEntry(HouseProseSheet.INSTANCE), new CrateEntry(HouseProseModule.INSTANCE));
     }
 }

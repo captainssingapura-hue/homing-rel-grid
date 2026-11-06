@@ -24,7 +24,7 @@ public record RelGridStockCellsModule() implements DomModule<RelGridStockCellsMo
     public static final RelGridStockCellsModule INSTANCE = new RelGridStockCellsModule();
 
     @Override public ImportsFor<RelGridStockCellsModule> imports() {
-        return ImportsFor.<RelGridStockCellsModule>builder()
+        return new ImportsFor._Builder<RelGridStockCellsModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStockStyles.hrg_text(), new RelGridStockStyles.hrg_text_ro(),
                         new RelGridStockStyles.hrg_text_edit(), new RelGridStockStyles.hrg_text_ellipsis(),
                         new RelGridStockStyles.hrg_text_clip(), new RelGridStockStyles.hrg_text_wrap()), RelGridStockStyles.INSTANCE))

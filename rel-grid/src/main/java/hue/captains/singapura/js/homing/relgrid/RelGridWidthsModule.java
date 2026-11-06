@@ -25,7 +25,7 @@ public record RelGridWidthsModule() implements DomModule<RelGridWidthsModule> {
 
     @Override
     public ImportsFor<RelGridWidthsModule> imports() {
-        return ImportsFor.<RelGridWidthsModule>builder()
+        return new ImportsFor._Builder<RelGridWidthsModule>()
 
                 .build();
     }

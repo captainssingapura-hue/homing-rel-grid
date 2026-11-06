@@ -21,7 +21,7 @@ public record RelTreeChannelModule() implements DomModule<RelTreeChannelModule> 
     public record RelTreeChannel() implements Exportable._Constant<RelTreeChannelModule> {}
     public static final RelTreeChannelModule INSTANCE = new RelTreeChannelModule();
     @Override public ImportsFor<RelTreeChannelModule> imports() {
-        return ImportsFor.<RelTreeChannelModule>builder()
+        return new ImportsFor._Builder<RelTreeChannelModule>()
                 .add(new ModuleImports<>(List.of(new RelChannelModule.RelChannel()), RelChannelModule.INSTANCE))
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelTreeView(),

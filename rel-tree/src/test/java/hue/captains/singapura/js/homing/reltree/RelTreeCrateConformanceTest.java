@@ -16,13 +16,13 @@ class RelTreeCrateConformanceTest {
 
     @Test
     void everyServedModuleIsCrated() {
-        assertEquals(List.of(), OrphanCheck.check(RelTreeCrate.INSTANCE),
+        assertEquals(List.of(), OrphanCheck.INSTANCE.check(RelTreeCrate.INSTANCE),
                 "every served JS module in rel-tree must be declared in its crate");
     }
 
     @Test
     void importsRespectCrateBoundaries() {
-        assertEquals(List.of(), CrateDependencyRule.check(RelTreeCrate.INSTANCE),
+        assertEquals(List.of(), CrateDependencyRule.INSTANCE.check(RelTreeCrate.INSTANCE),
                 "every JS import must resolve to the crate itself or one it directly requires");
     }
 

@@ -27,7 +27,7 @@ public record GridWorkbenchCatalogue() implements L0_Catalogue<GridWorkbenchCata
                 // What a bench is, why these are their own, and how to add one.
                 DocViewLeaves.viewed(this, mpa, GridWorkbenchIntroDoc.INSTANCE),
                 // The way in: the group's page, landing on its default bench; every other bench a switch away.
-                Leaf.of(this, new NodeName(group.id().value()), group.title(),
+                new Leaf<>(this, new NodeName(group.id().value()), group.title(),
                                 "Open the benches. Each is arranged the first time; dock more specimens from the picker - each a control for "
                               + "the others, and comparing them is the point. Switch between benches from the workspace controls.",
                                 mpa.fillingPage(GridBenchesApp.INSTANCE, new GroupedWorkspacePageModule.Params(group.id().value(), true, "")))

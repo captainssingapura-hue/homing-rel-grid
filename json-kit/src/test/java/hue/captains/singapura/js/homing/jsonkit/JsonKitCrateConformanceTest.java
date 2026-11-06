@@ -16,13 +16,13 @@ class JsonKitCrateConformanceTest {
 
     @Test
     void everyServedModuleIsCrated() {
-        assertEquals(List.of(), OrphanCheck.check(JsonKitCrate.INSTANCE),
+        assertEquals(List.of(), OrphanCheck.INSTANCE.check(JsonKitCrate.INSTANCE),
                 "every served JS module in json-kit must be declared in its crate");
     }
 
     @Test
     void importsRespectCrateBoundaries() {
-        assertEquals(List.of(), CrateDependencyRule.check(JsonKitCrate.INSTANCE),
+        assertEquals(List.of(), CrateDependencyRule.INSTANCE.check(JsonKitCrate.INSTANCE),
                 "every JS import must resolve to the crate itself or one it directly requires");
     }
 

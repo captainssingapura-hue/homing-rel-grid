@@ -24,7 +24,7 @@ public record RelGridLabelsModule() implements DomModule<RelGridLabelsModule> {
     public static final RelGridLabelsModule INSTANCE = new RelGridLabelsModule();
 
     @Override public ImportsFor<RelGridLabelsModule> imports() {
-        return ImportsFor.<RelGridLabelsModule>builder()
+        return new ImportsFor._Builder<RelGridLabelsModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStockStyles.hrg_label(), new RelGridStockStyles.hrg_text_ellipsis(),
                         new RelGridStockStyles.hrg_text_clip(), new RelGridStockStyles.hrg_text_wrap()), RelGridStockStyles.INSTANCE))
                 // its words: the house's text cell, cast as a header cell's title (D42)

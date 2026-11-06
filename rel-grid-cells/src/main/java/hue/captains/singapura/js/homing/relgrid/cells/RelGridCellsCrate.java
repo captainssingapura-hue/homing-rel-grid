@@ -24,8 +24,8 @@ public final class RelGridCellsCrate implements Crate {
     @Override public List<Crate> requires() { return List.of(UiElementsCrate.INSTANCE, UiLookCrate.INSTANCE); }
 
     @Override public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(RelGridStockStyles.INSTANCE),
-                       CrateEntry.of(RelGridStockCellsModule.INSTANCE),
-                       CrateEntry.of(RelGridLabelsModule.INSTANCE));
+        return List.of(new CrateEntry(RelGridStockStyles.INSTANCE),
+                       new CrateEntry(RelGridStockCellsModule.INSTANCE),
+                       new CrateEntry(RelGridLabelsModule.INSTANCE));
     }
 }

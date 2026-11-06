@@ -27,7 +27,7 @@ public record GamesColumnMenuModule() implements DomModule<GamesColumnMenuModule
     public record GamesColumnMenu() implements BranchComponent<GamesColumnMenuModule>, NeedKeyboard {
         @Override public String summary() { return "A column's menu: its sort, and a search over its values with a count each, staged until OK."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ENTER, "the search applied"), KeyBinding.of(Key.ESCAPE, "the menu closed"));
+            return List.of(new KeyBinding(Key.ENTER, "the search applied"), new KeyBinding(Key.ESCAPE, "the menu closed"));
         }
     }
 
@@ -35,7 +35,7 @@ public record GamesColumnMenuModule() implements DomModule<GamesColumnMenuModule
 
     @Override
     public ImportsFor<GamesColumnMenuModule> imports() {
-        return ImportsFor.<GamesColumnMenuModule>builder()
+        return new ImportsFor._Builder<GamesColumnMenuModule>()
                 .add(new ModuleImports<>(List.of(new GamesStyles.wb_gmenu(), new GamesStyles.wb_gmenu_item(), new GamesStyles.wb_gmenu_item_hot(),
                         new GamesStyles.wb_gmenu_item_on(), new GamesStyles.wb_gmenu_check(), new GamesStyles.wb_gmenu_hidden(),
                         new GamesStyles.wb_gmenu_sep(), new GamesStyles.wb_gmenu_search(), new GamesStyles.wb_gmenu_range(),

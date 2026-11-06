@@ -24,14 +24,14 @@ public record ExtentTableModule() implements DomModule<ExtentTableModule> {
 
     public record ExtentTable() implements SelfContainedWidget<ExtentTableModule>, NeedKeyboard {
         @Override public String summary() { return "Six scaled words at nine extents each: every cell wears one pair at one number, and nothing names a colour."; }
-        @Override public List<KeyBinding> keys() { return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back")); }
+        @Override public List<KeyBinding> keys() { return List.of(new KeyBinding(Key.ESCAPE, "the keys given back")); }
     }
 
     public static final ExtentTableModule INSTANCE = new ExtentTableModule();
 
     @Override
     public ImportsFor<ExtentTableModule> imports() {
-        return ImportsFor.<ExtentTableModule>builder()
+        return new ImportsFor._Builder<ExtentTableModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new WorkbenchStyles.wb_hint()), WorkbenchStyles.INSTANCE))
                 .add(new ModuleImports<>(

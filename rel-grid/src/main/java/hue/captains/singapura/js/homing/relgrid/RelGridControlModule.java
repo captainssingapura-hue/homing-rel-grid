@@ -24,7 +24,7 @@ public record RelGridControlModule() implements DomModule<RelGridControlModule> 
 
     @Override
     public ImportsFor<RelGridControlModule> imports() {
-        return ImportsFor.<RelGridControlModule>builder()
+        return new ImportsFor._Builder<RelGridControlModule>()
 
                 .build();
     }

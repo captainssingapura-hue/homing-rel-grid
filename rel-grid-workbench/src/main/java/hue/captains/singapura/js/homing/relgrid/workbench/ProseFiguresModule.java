@@ -26,12 +26,12 @@ public record ProseFiguresModule() implements DomModule<ProseFiguresModule> {
     public record ProseFigures() implements SelfContainedWidget<ProseFiguresModule>, NeedKeyboard {
         @Override public String summary() { return "A table wider than its page: thirteen columns scrolling across inside its box."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the table did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the table did not take it"));
         }
     }
 
     @Override public ImportsFor<ProseFiguresModule> imports() {
-        return ImportsFor.<ProseFiguresModule>builder()
+        return new ImportsFor._Builder<ProseFiguresModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new ProsePagesModule.ProseFiguresPage()), ProsePagesModule.INSTANCE))
                 .build();

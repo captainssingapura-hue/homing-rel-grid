@@ -29,18 +29,18 @@ public final class RelTreeCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(RelTreePlacesModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
-                CrateEntry.of(RelTreeStyles.INSTANCE),
-                CrateEntry.of(RelTreeStockStyles.INSTANCE),
+                new CrateEntry(RelTreePlacesModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                new CrateEntry(RelTreeStyles.INSTANCE),
+                new CrateEntry(RelTreeStockStyles.INSTANCE),
                 // The typed SVG: generated from the assets beside it, as a style group is from its records.
-                CrateEntry.of(RelTreeSvgs.INSTANCE),
-                CrateEntry.of(RelTreeRowsModule.INSTANCE),
-                CrateEntry.of(RelTreeLayoutModule.INSTANCE),
-                CrateEntry.of(RelTreeCellsModule.INSTANCE),
-                CrateEntry.of(RelTreeCursorModule.INSTANCE),
-                CrateEntry.of(RelTreeChannelModule.INSTANCE),
-                CrateEntry.of(RelTreeGesturesModule.INSTANCE),
-                CrateEntry.of(RelTreeStockCellsModule.INSTANCE),
-                CrateEntry.of(RelTreeModule.INSTANCE));
+                new CrateEntry(RelTreeSvgs.INSTANCE),
+                new CrateEntry(RelTreeRowsModule.INSTANCE),
+                new CrateEntry(RelTreeLayoutModule.INSTANCE),
+                new CrateEntry(RelTreeCellsModule.INSTANCE),
+                new CrateEntry(RelTreeCursorModule.INSTANCE),
+                new CrateEntry(RelTreeChannelModule.INSTANCE),
+                new CrateEntry(RelTreeGesturesModule.INSTANCE),
+                new CrateEntry(RelTreeStockCellsModule.INSTANCE),
+                new CrateEntry(RelTreeModule.INSTANCE));
     }
 }

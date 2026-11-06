@@ -24,7 +24,7 @@ public record RelGridWindowModule() implements DomModule<RelGridWindowModule> {
     public static final RelGridWindowModule INSTANCE = new RelGridWindowModule();
 
     @Override public ImportsFor<RelGridWindowModule> imports() {
-        return ImportsFor.<RelGridWindowModule>builder()
+        return new ImportsFor._Builder<RelGridWindowModule>()
                 // what the domain says unasked: the View changed underneath the grid
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridViewChanged()), RelGridProtocolModule.INSTANCE))
                 .build();

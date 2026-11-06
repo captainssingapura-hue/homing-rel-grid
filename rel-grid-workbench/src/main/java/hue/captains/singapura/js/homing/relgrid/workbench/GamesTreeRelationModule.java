@@ -25,7 +25,7 @@ public record GamesTreeRelationModule() implements DomModule<GamesTreeRelationMo
     public static final GamesTreeRelationModule INSTANCE = new GamesTreeRelationModule();
 
     @Override public ImportsFor<GamesTreeRelationModule> imports() {
-        return ImportsFor.<GamesTreeRelationModule>builder()
+        return new ImportsFor._Builder<GamesTreeRelationModule>()
                 .add(new ModuleImports<>(List.of(new RelTreeStockCellsModule.RelTreeTextCell()), RelTreeStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelTreeUnfold(), new RelGridProtocolModule.RelTreeFold(),

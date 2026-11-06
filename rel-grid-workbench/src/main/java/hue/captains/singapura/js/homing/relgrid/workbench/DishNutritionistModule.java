@@ -16,14 +16,14 @@ public record DishNutritionistModule() implements DomModule<DishNutritionistModu
 
     public record DishNutritionist() implements SelfContainedWidget<DishNutritionistModule>, NeedKeyboard {
         @Override public String summary() { return "The nutritionist's table - edits calories and the rating"; }
-        @Override public List<KeyBinding> keys() { return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it")); }
+        @Override public List<KeyBinding> keys() { return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it")); }
     }
 
     public static final DishNutritionistModule INSTANCE = new DishNutritionistModule();
 
     @Override
     public ImportsFor<DishNutritionistModule> imports() {
-        return ImportsFor.<DishNutritionistModule>builder()
+        return new ImportsFor._Builder<DishNutritionistModule>()
                 .add(new ModuleImports<>(List.of(new DishTableModule.DishTable()), DishTableModule.INSTANCE))
                 .build();
     }

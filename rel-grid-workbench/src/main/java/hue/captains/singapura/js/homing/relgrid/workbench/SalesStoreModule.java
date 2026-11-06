@@ -21,7 +21,7 @@ public record SalesStoreModule() implements EsModule<SalesStoreModule> {
 
     public static final SalesStoreModule INSTANCE = new SalesStoreModule();
 
-    @Override public ImportsFor<SalesStoreModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<SalesStoreModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<SalesStoreModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new SalesStore()));

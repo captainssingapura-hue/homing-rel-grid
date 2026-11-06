@@ -42,7 +42,7 @@ public record RelGridProtocolModule() implements DomModule<RelGridProtocolModule
 
     public static final RelGridProtocolModule INSTANCE = new RelGridProtocolModule();
 
-    @Override public ImportsFor<RelGridProtocolModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridProtocolModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridProtocolModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(

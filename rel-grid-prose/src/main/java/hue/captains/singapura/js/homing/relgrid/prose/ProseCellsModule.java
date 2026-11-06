@@ -23,7 +23,7 @@ public record ProseCellsModule() implements DomModule<ProseCellsModule> {
     public record ProseHeader() implements Exportable._Class<ProseCellsModule> {}
 
     @Override public ImportsFor<ProseCellsModule> imports() {
-        return ImportsFor.<ProseCellsModule>builder()
+        return new ImportsFor._Builder<ProseCellsModule>()
                 .add(new ModuleImports<>(List.of(new ProseStyles.prose_cell(), new ProseStyles.prose_head(), new ProseStyles.prose_left(),
                         new ProseStyles.prose_center(), new ProseStyles.prose_right(), new ProseStyles.prose_badge()), ProseStyles.INSTANCE))
                 // the house's cells, captions and badges, worn

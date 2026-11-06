@@ -26,7 +26,7 @@ public record GridBenchesApp() implements AppModule<GroupedWorkspacePageModule.P
 
     @Override
     public ImportsFor<GridBenchesApp> imports() {
-        return ImportsFor.<GridBenchesApp>builder()
+        return new ImportsFor._Builder<GridBenchesApp>()
                 .add(new ModuleImports<>(List.of(new GroupedWorkspacePageModule.GroupedWorkspacePage()), GroupedWorkspacePageModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new BenchesModule.WORKBENCH_WORKSPACES()), BenchesModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new BenchLayoutModule.WORKBENCH_GROUPS(), new BenchLayoutModule.WORKBENCH_ARRANGEMENTS()), BenchLayoutModule.INSTANCE))

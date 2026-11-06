@@ -18,7 +18,7 @@ public record RelGridCopiedModule() implements EsModule<RelGridCopiedModule> {
 
     public static final RelGridCopiedModule INSTANCE = new RelGridCopiedModule();
 
-    @Override public ImportsFor<RelGridCopiedModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridCopiedModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridCopiedModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridCopied()));

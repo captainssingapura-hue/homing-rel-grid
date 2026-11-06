@@ -17,7 +17,7 @@ public record RelTreeStockCellsModule() implements DomModule<RelTreeStockCellsMo
     public record RelTreeTextCell() implements Exportable._Constant<RelTreeStockCellsModule> {}
     public static final RelTreeStockCellsModule INSTANCE = new RelTreeStockCellsModule();
     @Override public ImportsFor<RelTreeStockCellsModule> imports() {
-        return ImportsFor.<RelTreeStockCellsModule>builder()
+        return new ImportsFor._Builder<RelTreeStockCellsModule>()
                 .add(new ModuleImports<>(List.of(new RelTreeStockStyles.hrt_text_cell(), new RelTreeStockStyles.hrt_text_cell_current(),
                         new RelTreeStockStyles.hrt_text_cell_busy()),
                         RelTreeStockStyles.INSTANCE))

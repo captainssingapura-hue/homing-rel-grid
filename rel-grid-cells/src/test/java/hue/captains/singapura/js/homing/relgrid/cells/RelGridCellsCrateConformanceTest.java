@@ -13,13 +13,13 @@ class RelGridCellsCrateConformanceTest {
 
     @Test
     void everyServedModuleIsCrated() {
-        assertEquals(List.of(), OrphanCheck.check(RelGridCellsCrate.INSTANCE),
+        assertEquals(List.of(), OrphanCheck.INSTANCE.check(RelGridCellsCrate.INSTANCE),
                 "every served JS module in rel-grid-cells must be declared in its crate");
     }
 
     @Test
     void importsRespectCrateBoundaries() {
-        assertEquals(List.of(), CrateDependencyRule.check(RelGridCellsCrate.INSTANCE),
+        assertEquals(List.of(), CrateDependencyRule.INSTANCE.check(RelGridCellsCrate.INSTANCE),
                 "every JS import must resolve to the crate itself or one it directly requires");
     }
 }

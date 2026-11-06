@@ -26,7 +26,7 @@ public record RelGridChannelModule() implements DomModule<RelGridChannelModule> 
 
     @Override
     public ImportsFor<RelGridChannelModule> imports() {
-        return ImportsFor.<RelGridChannelModule>builder()
+        return new ImportsFor._Builder<RelGridChannelModule>()
                 .add(new ModuleImports<>(List.of(new RelChannelModule.RelChannel()), RelChannelModule.INSTANCE))
                 .add(new ModuleImports<>(
                         List.of(new RelGridProtocolModule.RelGridRange(),

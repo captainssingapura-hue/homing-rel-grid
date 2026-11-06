@@ -23,6 +23,6 @@ public final class RelChannelCrate implements Crate {
 
     @Override
     public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(RelChannelModule.INSTANCE));
+        return List.of(new CrateEntry(RelChannelModule.INSTANCE));
     }
 }

@@ -22,7 +22,7 @@ public record RelGridSpansModule() implements DomModule<RelGridSpansModule> {
 
     public static final RelGridSpansModule INSTANCE = new RelGridSpansModule();
 
-    @Override public ImportsFor<RelGridSpansModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridSpansModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridSpansModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridSpans()));

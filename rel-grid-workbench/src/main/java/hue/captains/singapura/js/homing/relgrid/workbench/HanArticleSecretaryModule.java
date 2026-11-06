@@ -21,7 +21,7 @@ public record HanArticleSecretaryModule() implements EsModule<HanArticleSecretar
 
     @Override
     public ImportsFor<HanArticleSecretaryModule> imports() {
-        return ImportsFor.<HanArticleSecretaryModule>builder()
+        return new ImportsFor._Builder<HanArticleSecretaryModule>()
                 .add(new ModuleImports<>(List.of(new HanStoreModule.HanStore()), HanStoreModule.INSTANCE))
                 .build();
     }

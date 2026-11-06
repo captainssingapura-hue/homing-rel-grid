@@ -28,7 +28,7 @@ public record EndlessTableModule() implements DomModule<EndlessTableModule> {
     public record EndlessTable() implements SelfContainedWidget<EndlessTableModule>, NeedKeyboard {
         @Override public String summary() { return "A window of twenty over a million rows, the grid never told there are more; the party's numbers checked after every step."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it"));
         }
     }
 
@@ -36,7 +36,7 @@ public record EndlessTableModule() implements DomModule<EndlessTableModule> {
 
     @Override
     public ImportsFor<EndlessTableModule> imports() {
-        return ImportsFor.<EndlessTableModule>builder()
+        return new ImportsFor._Builder<EndlessTableModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 // the copy question it answers, and the content it answers with

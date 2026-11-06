@@ -25,7 +25,7 @@ public record RelGridViewMapsModule() implements DomModule<RelGridViewMapsModule
 
     public static final RelGridViewMapsModule INSTANCE = new RelGridViewMapsModule();
 
-    @Override public ImportsFor<RelGridViewMapsModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridViewMapsModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridViewMapsModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridViewMaps()));

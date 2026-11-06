@@ -28,7 +28,7 @@ public record HanRelationModule() implements DomModule<HanRelationModule> {
 
     @Override
     public ImportsFor<HanRelationModule> imports() {
-        return ImportsFor.<HanRelationModule>builder()
+        return new ImportsFor._Builder<HanRelationModule>()
                 .add(new ModuleImports<>(List.of(new HanLayoutModule.HanLayout()), HanLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HanCellModule.HanCell()), HanCellModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells

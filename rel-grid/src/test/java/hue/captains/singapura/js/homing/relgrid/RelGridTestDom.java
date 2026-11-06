@@ -60,7 +60,7 @@ public final class RelGridTestDom {
         for (CssGroup<?> g : groups)
             for (CssClass<?> c : g.cssClasses())
                 sb.append("var ").append(c.getClass().getSimpleName())
-                  .append(" = css.cls(\"").append(CssClassName.toCssName(c.getClass())).append("\");\n");
+                  .append(" = css.cls(\"").append(CssClassName.INSTANCE.toCssName(c.getClass())).append("\");\n");
         return sb.toString();
     }
 

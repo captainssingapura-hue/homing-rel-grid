@@ -20,7 +20,7 @@ public record JsonTreeViewModule() implements DomModule<JsonTreeViewModule> {
     public record JsonTreeView() implements Exportable._Constant<JsonTreeViewModule> {}
     public static final JsonTreeViewModule INSTANCE = new JsonTreeViewModule();
     @Override public ImportsFor<JsonTreeViewModule> imports() {
-        return ImportsFor.<JsonTreeViewModule>builder()
+        return new ImportsFor._Builder<JsonTreeViewModule>()
                 .add(new ModuleImports<>(List.of(new RelTreeModule.RelTree()), RelTreeModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new JsonDocumentModule.JsonDocument()), JsonDocumentModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelTreeViewChanged()), RelGridProtocolModule.INSTANCE))

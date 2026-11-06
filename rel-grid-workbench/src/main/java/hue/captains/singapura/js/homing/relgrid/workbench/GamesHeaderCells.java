@@ -26,7 +26,7 @@ public record GamesHeaderCells() implements DomModule<GamesHeaderCells> {
 
     @Override
     public ImportsFor<GamesHeaderCells> imports() {
-        return ImportsFor.<GamesHeaderCells>builder()
+        return new ImportsFor._Builder<GamesHeaderCells>()
                 .add(new ModuleImports<>(List.of(new GamesStyles.wb_gh(), new GamesStyles.wb_gh_label(), new GamesStyles.wb_gh_caret(),
                         new GamesStyles.wb_gh_order(), new GamesStyles.wb_gh_mark(), new GamesStyles.wb_gh_menu(), new GamesStyles.wb_gh_menu_hot(),
                         new GamesStyles.wb_gh_menu_on(), new GamesStyles.wb_gh_menu_open()),

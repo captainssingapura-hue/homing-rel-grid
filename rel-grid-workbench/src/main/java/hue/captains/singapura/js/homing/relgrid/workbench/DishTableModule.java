@@ -25,7 +25,7 @@ public record DishTableModule() implements DomModule<DishTableModule> {
 
     @Override
     public ImportsFor<DishTableModule> imports() {
-        return ImportsFor.<DishTableModule>builder()
+        return new ImportsFor._Builder<DishTableModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with

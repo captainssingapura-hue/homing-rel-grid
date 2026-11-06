@@ -37,30 +37,30 @@ public final class RelGridCrate implements Crate {
                 // CONSUMER under the full DOM-owner discipline. Nothing here is a
                 // structural primitive: a grid is a component a widget composes, not
                 // a pane the shell is made of.
-                CrateEntry.of(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                new CrateEntry(RelGridViewMapsModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The copied state: the blocks last copied, by identity, and where they stand.
-                CrateEntry.of(RelGridCopiedModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                new CrateEntry(RelGridCopiedModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The frame's leaves, generated from the house's taxonomy: what the grid asks its design to wear.
-                CrateEntry.of(GridFrameModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                new CrateEntry(GridFrameModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
                 // The looks, typed: generated CSS modules, one for the grid's chrome and one for the stock cell.
-                CrateEntry.of(RelGridStyles.INSTANCE),
-                CrateEntry.of(RelGridHeaderDragModule.INSTANCE),
-                CrateEntry.of(RelGridRevealModule.INSTANCE),
-                CrateEntry.of(RelGridSlotsModule.INSTANCE),
-                CrateEntry.of(RelGridOverlaysModule.INSTANCE),
-                CrateEntry.of(RelGridCopiedOverlayModule.INSTANCE),
-                CrateEntry.of(RelGridMarksModule.INSTANCE),
-                CrateEntry.of(RelGridLayoutModule.INSTANCE),
-                CrateEntry.of(RelGridClipboardModule.INSTANCE),
-                CrateEntry.of(RelGridWidthsModule.INSTANCE),
-                CrateEntry.of(RelGridHeadersModule.INSTANCE),
-                CrateEntry.of(RelGridSpansModule.INSTANCE),
-                CrateEntry.of(RelGridWindowModule.INSTANCE),
-                CrateEntry.of(RelGridCursorModule.INSTANCE),
-                CrateEntry.of(RelGridControlModule.INSTANCE),
-                CrateEntry.of(RelGridChannelModule.INSTANCE),
-                CrateEntry.of(RelGridGesturesModule.INSTANCE),
-                CrateEntry.of(RelGridCellsModule.INSTANCE),
-                CrateEntry.of(RelGridModule.INSTANCE));
+                new CrateEntry(RelGridStyles.INSTANCE),
+                new CrateEntry(RelGridHeaderDragModule.INSTANCE),
+                new CrateEntry(RelGridRevealModule.INSTANCE),
+                new CrateEntry(RelGridSlotsModule.INSTANCE),
+                new CrateEntry(RelGridOverlaysModule.INSTANCE),
+                new CrateEntry(RelGridCopiedOverlayModule.INSTANCE),
+                new CrateEntry(RelGridMarksModule.INSTANCE),
+                new CrateEntry(RelGridLayoutModule.INSTANCE),
+                new CrateEntry(RelGridClipboardModule.INSTANCE),
+                new CrateEntry(RelGridWidthsModule.INSTANCE),
+                new CrateEntry(RelGridHeadersModule.INSTANCE),
+                new CrateEntry(RelGridSpansModule.INSTANCE),
+                new CrateEntry(RelGridWindowModule.INSTANCE),
+                new CrateEntry(RelGridCursorModule.INSTANCE),
+                new CrateEntry(RelGridControlModule.INSTANCE),
+                new CrateEntry(RelGridChannelModule.INSTANCE),
+                new CrateEntry(RelGridGesturesModule.INSTANCE),
+                new CrateEntry(RelGridCellsModule.INSTANCE),
+                new CrateEntry(RelGridModule.INSTANCE));
     }
 }

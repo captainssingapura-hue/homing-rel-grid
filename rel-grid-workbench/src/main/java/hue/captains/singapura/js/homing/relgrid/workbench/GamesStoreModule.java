@@ -20,7 +20,7 @@ public record GamesStoreModule() implements EsModule<GamesStoreModule> {
 
     public static final GamesStoreModule INSTANCE = new GamesStoreModule();
 
-    @Override public ImportsFor<GamesStoreModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<GamesStoreModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<GamesStoreModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new GamesStore()));

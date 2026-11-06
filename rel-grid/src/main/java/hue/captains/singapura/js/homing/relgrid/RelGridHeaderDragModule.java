@@ -23,7 +23,7 @@ public record RelGridHeaderDragModule() implements DomModule<RelGridHeaderDragMo
     public static final RelGridHeaderDragModule INSTANCE = new RelGridHeaderDragModule();
 
     @Override public ImportsFor<RelGridHeaderDragModule> imports() {
-        return ImportsFor.<RelGridHeaderDragModule>builder()
+        return new ImportsFor._Builder<RelGridHeaderDragModule>()
                 // the frame's leaves, by which the design it is made with is asked to wear one
                 .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_resize_handle(), new RelGridStyles.hrg_resize_guide()),

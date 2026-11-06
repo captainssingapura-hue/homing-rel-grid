@@ -1,8 +1,8 @@
 package hue.captains.singapura.js.homing.relgrid.workbench;
 
+import hue.captains.singapura.js.homing.design.styling.Styling;
 import hue.captains.singapura.js.homing.design.semantic.DesignStyle;
 import hue.captains.singapura.js.homing.design.semantic.LocalStyleRead;
-import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 import hue.captains.singapura.js.homing.relgrid.RelGridTestDom;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrame;
 import hue.captains.singapura.js.homing.relgrid.frame.GridFrameComponentModule;
@@ -11,7 +11,6 @@ import hue.captains.singapura.js.homing.workspace.tree.TreeBaseModule;
 import hue.captains.singapura.js.homing.docview.widgets.DocViewBaseModule;
 import hue.captains.singapura.js.homing.ssjs.test.JsModuleTestBase;
 import hue.captains.singapura.js.homing.ui.styles.HouseStyles;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class MinesweeperTest extends JsModuleTestBase {
 
-    /** The house's styling, installed as a site installs it at bootstrap: the board's local style is drawn in its styles. */
-    @BeforeAll
-    static void theHousesStyling_installed() { InstalledStyling.install(HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE, TreeBaseModule.INSTANCE, DocViewBaseModule.INSTANCE))); }
+    /** What the test serves and reads from. */
+    private static final Styling STYLING = HouseStyles.INSTANCE.styling(List.of(GridFrameBaseModule.INSTANCE, MinesweeperBaseModule.INSTANCE, TreeBaseModule.INSTANCE, DocViewBaseModule.INSTANCE));
 
     private static final String BENCH_DIR = RelGridTestDom.DIR + "workbench/";
 
@@ -191,12 +189,12 @@ class MinesweeperTest extends JsModuleTestBase {
 
     @Test
     void vista_isCompleteOverTheFrame_inEveryHouseStyle() {
-        LocalStyleRead vista = InstalledStyling.get().localStyle(MinesweeperVista.INSTANCE);   // drawn in every house style as the styling was made
+        LocalStyleRead vista = STYLING.localStyle(MinesweeperVista.INSTANCE);   // drawn in every house style as the styling was made
         assertEquals(GridFrame.INSTANCE, vista.branch());
         assertEquals(GridFrameComponentModule.INSTANCE.components(), vista.concretes().stream().map(c -> c.virtual()).toList(),
                 "a concrete leaf for every leaf of the frame, in the frame's order");
-        for (String slug : InstalledStyling.get().styles().stream().map(DesignStyle::token).toList()) {
-            String css = MinesweeperVistaSheet.INSTANCE.css(slug);
+        for (String slug : STYLING.styles().stream().map(DesignStyle::token).toList()) {
+            String css = MinesweeperVistaSheet.INSTANCE.css(STYLING, slug);
             assertTrue(css.contains(".minesweeper-vista___grid-edge__shape-corner {\n    border-radius: 10px;\n}"), slug + ":\n" + css);
             assertTrue(css.contains(".minesweeper-vista___grid-edge__color-outline {"), slug + ": the edge glows while the board holds the keys");
             assertTrue(css.contains(".minesweeper-vista___question-panel__shape-corner {"), slug + ": a question's glass plate");
