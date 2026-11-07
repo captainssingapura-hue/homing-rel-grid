@@ -21,7 +21,7 @@ public record JsonTextSecretaryModule() implements EsModule<JsonTextSecretaryMod
 
     @Override
     public ImportsFor<JsonTextSecretaryModule> imports() {
-        return ImportsFor.<JsonTextSecretaryModule>builder()
+        return new ImportsFor._Builder<JsonTextSecretaryModule>()
                 .add(new ModuleImports<>(List.of(new JsonDocStoreModule.JsonDocStore()), JsonDocStoreModule.INSTANCE))
                 .build();
     }

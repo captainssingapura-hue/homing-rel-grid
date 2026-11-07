@@ -22,37 +22,37 @@ public final class RelGridProtocolManifest {
 
     public static final List<ObjectDefinition<?>> ENTRIES = List.of(
             // A rectangle of positions: no dependencies of its own.
-            ObjectDefinition.of(RelGridRange.class),
+            new ObjectDefinition<>(RelGridRange.class),
             // The first kind, and a notification: it carries ranges, so it
             // comes after them.
-            ObjectDefinition.of(RelGridSelectionChanged.class),
+            new ObjectDefinition<>(RelGridSelectionChanged.class),
             // A range resolved to identities: depends on nothing.
-            ObjectDefinition.of(RelGridBlock.class),
+            new ObjectDefinition<>(RelGridBlock.class),
             // The first question the grid waits for — it carries blocks.
-            ObjectDefinition.of(RelGridCopyRequested.class),
+            new ObjectDefinition<>(RelGridCopyRequested.class),
             // Its answer: finished content, and no dependencies.
-            ObjectDefinition.of(RelGridClipboardContent.class),
+            new ObjectDefinition<>(RelGridClipboardContent.class),
             // The second question the grid waits for: the rows' arrangement,
             // handed to the domain. It carries nothing; no dependencies.
-            ObjectDefinition.of(RelGridViewHandover.class),
+            new ObjectDefinition<>(RelGridViewHandover.class),
             // Its answer: a View — the root's pks, in order. No dependencies.
-            ObjectDefinition.of(RelGridView.class),
+            new ObjectDefinition<>(RelGridView.class),
             // The group's first kind, and the first that travels the other way:
             // the domain telling the group to fold a member. No dependencies.
-            ObjectDefinition.of(RelGridGroupFold.class),
+            new ObjectDefinition<>(RelGridGroupFold.class),
             // The first told to a GRID: its View changed underneath it — ask again.
             // Carries nothing, on purpose. No dependencies.
-            ObjectDefinition.of(RelGridViewChanged.class),
+            new ObjectDefinition<>(RelGridViewChanged.class),
             // THE TREE'S (Episode 3-ext1) — the protocol crate is the family's. A
             // place: a node and where it stands; no dependencies. A tree's View
             // carries places, so it comes after them.
-            ObjectDefinition.of(RelTreePlace.class),
-            ObjectDefinition.of(RelTreeView.class),
+            new ObjectDefinition<>(RelTreePlace.class),
+            new ObjectDefinition<>(RelTreeView.class),
             // The two questions a tree waits for, both answered with a View or nothing.
-            ObjectDefinition.of(RelTreeUnfold.class),
-            ObjectDefinition.of(RelTreeFold.class),
+            new ObjectDefinition<>(RelTreeUnfold.class),
+            new ObjectDefinition<>(RelTreeFold.class),
             // The tree's two notifications, and what is told to it. No dependencies.
-            ObjectDefinition.of(RelTreeCursorChanged.class),
-            ObjectDefinition.of(RelTreeActivated.class),
-            ObjectDefinition.of(RelTreeViewChanged.class));
+            new ObjectDefinition<>(RelTreeCursorChanged.class),
+            new ObjectDefinition<>(RelTreeActivated.class),
+            new ObjectDefinition<>(RelTreeViewChanged.class));
 }

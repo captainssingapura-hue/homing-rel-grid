@@ -35,14 +35,14 @@ public record DishStarsCellModule() implements DomModule<DishStarsCellModule> {
     public record DishStarsCell() implements BranchComponent<DishStarsCellModule>, NeedKeyboard {
         @Override public String summary() { return "A health rating as five stars: a cell whose editor is a panel the arrows move and Enter commits."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ARROW_RIGHT, "a star more, while the rating is open"), KeyBinding.of(Key.ARROW_LEFT, "a star fewer, while the rating is open"), KeyBinding.of(Key.ENTER, "the rating committed"), KeyBinding.of(Key.ESCAPE, "the rating closed, nothing committed"));
+            return List.of(new KeyBinding(Key.ARROW_RIGHT, "a star more, while the rating is open"), new KeyBinding(Key.ARROW_LEFT, "a star fewer, while the rating is open"), new KeyBinding(Key.ENTER, "the rating committed"), new KeyBinding(Key.ESCAPE, "the rating closed, nothing committed"));
         }
     }
 
     public static final DishStarsCellModule INSTANCE = new DishStarsCellModule();
 
     @Override public ImportsFor<DishStarsCellModule> imports() {
-        return ImportsFor.<DishStarsCellModule>builder()
+        return new ImportsFor._Builder<DishStarsCellModule>()
                 .add(new ModuleImports<>(List.of(new DishClipboardFormatsModule.DishClipboardFormats()), DishClipboardFormatsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new DishStarsStyles.wb_stars(), new DishStarsStyles.wb_stars_ro(),
                         new DishStarsStyles.wb_stars_panel(), new DishStarsStyles.wb_stars_row(), new DishStarsStyles.wb_star(),

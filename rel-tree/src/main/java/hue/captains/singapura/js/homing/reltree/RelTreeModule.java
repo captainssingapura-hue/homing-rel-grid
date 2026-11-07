@@ -19,7 +19,7 @@ public record RelTreeModule() implements DomModule<RelTreeModule> {
     public record RelTree() implements Exportable._Constant<RelTreeModule> {}
     public static final RelTreeModule INSTANCE = new RelTreeModule();
     @Override public ImportsFor<RelTreeModule> imports() {
-        return ImportsFor.<RelTreeModule>builder()
+        return new ImportsFor._Builder<RelTreeModule>()
                 .add(new ModuleImports<>(List.of(new RelTreePlacesModule.RelTreePlaces()),     RelTreePlacesModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelTreeLayoutModule.RelTreeLayout()),     RelTreeLayoutModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelTreeCellsModule.RelTreeCells()),       RelTreeCellsModule.INSTANCE))

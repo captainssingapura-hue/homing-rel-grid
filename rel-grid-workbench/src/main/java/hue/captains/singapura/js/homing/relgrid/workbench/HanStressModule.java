@@ -27,7 +27,7 @@ public record HanStressModule() implements DomModule<HanStressModule> {
     public record HanStress() implements SelfContainedWidget<HanStressModule>, NeedKeyboard {
         @Override public String summary() { return "Hypothetical text over the Han engine, every column resizable; the merged cells measured against their slots."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it"));
         }
     }
 
@@ -35,7 +35,7 @@ public record HanStressModule() implements DomModule<HanStressModule> {
 
     @Override
     public ImportsFor<HanStressModule> imports() {
-        return ImportsFor.<HanStressModule>builder()
+        return new ImportsFor._Builder<HanStressModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with

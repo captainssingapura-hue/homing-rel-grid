@@ -23,6 +23,6 @@ public final class RelGridProtocolCrate implements Crate {
 
     @Override
     public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(RelGridProtocolModule.INSTANCE, StandardJsModuleType.PURE_LOGIC));
+        return List.of(new CrateEntry(RelGridProtocolModule.INSTANCE, StandardJsModuleType.PURE_LOGIC));
     }
 }

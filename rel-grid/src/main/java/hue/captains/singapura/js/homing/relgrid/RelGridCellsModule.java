@@ -22,7 +22,7 @@ public record RelGridCellsModule() implements DomModule<RelGridCellsModule> {
 
     public static final RelGridCellsModule INSTANCE = new RelGridCellsModule();
 
-    @Override public ImportsFor<RelGridCellsModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridCellsModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridCellsModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridCells()));

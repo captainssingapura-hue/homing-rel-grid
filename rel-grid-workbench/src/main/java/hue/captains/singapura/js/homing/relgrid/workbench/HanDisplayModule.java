@@ -19,14 +19,14 @@ public record HanDisplayModule() implements DomModule<HanDisplayModule> {
 
     public record HanDisplay() implements SelfContainedWidget<HanDisplayModule>, NeedKeyboard {
         @Override public String summary() { return "The bench's article as square slots, moving as the editor types; its grid never told."; }
-        @Override public List<KeyBinding> keys() { return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it")); }
+        @Override public List<KeyBinding> keys() { return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it")); }
     }
 
     public static final HanDisplayModule INSTANCE = new HanDisplayModule();
 
     @Override
     public ImportsFor<HanDisplayModule> imports() {
-        return ImportsFor.<HanDisplayModule>builder()
+        return new ImportsFor._Builder<HanDisplayModule>()
                 .add(new ModuleImports<>(List.of(new HanArticleViewModule.HanArticleView()), HanArticleViewModule.INSTANCE))
                 .build();
     }

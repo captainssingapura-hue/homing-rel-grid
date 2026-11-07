@@ -19,7 +19,7 @@ public record JsonTextModule() implements EsModule<JsonTextModule>, SelfContent 
 
     public record JSON_TEXT() implements Exportable._Constant<JsonTextModule> {}
 
-    @Override public ImportsFor<JsonTextModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<JsonTextModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<JsonTextModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new JSON_TEXT())); }

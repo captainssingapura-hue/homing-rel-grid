@@ -18,7 +18,7 @@ public record RelTreeLayoutModule() implements DomModule<RelTreeLayoutModule> {
     public record RelTreeLayout() implements Exportable._Constant<RelTreeLayoutModule> {}
     public static final RelTreeLayoutModule INSTANCE = new RelTreeLayoutModule();
     @Override public ImportsFor<RelTreeLayoutModule> imports() {
-        return ImportsFor.<RelTreeLayoutModule>builder()
+        return new ImportsFor._Builder<RelTreeLayoutModule>()
                 .add(new ModuleImports<>(List.of(new RelTreeRowsModule.RelTreeRows()), RelTreeRowsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelTreeStyles.hrt_wrap(), new RelTreeStyles.hrt_tree(), new RelTreeStyles.hrt_surface(), new RelTreeStyles.hrt_mask(),
                         new RelTreeStyles.hrt_panel(), new RelTreeStyles.hrt_current(), new RelTreeStyles.hrt_masked()), RelTreeStyles.INSTANCE))

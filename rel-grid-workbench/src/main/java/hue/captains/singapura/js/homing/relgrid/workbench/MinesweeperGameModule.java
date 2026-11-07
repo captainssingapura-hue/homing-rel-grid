@@ -26,12 +26,12 @@ public record MinesweeperGameModule() implements DomModule<MinesweeperGameModule
     public record MinesweeperGame() implements SelfContainedWidget<MinesweeperGameModule>, NeedKeyboard {
         @Override public String summary() { return "Minesweeper on the grid, in Vista's design of its frame: the whole game by the keys, or the pointer."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ENTER, "reveal the tiles selected"),
-                           KeyBinding.of(Key.SPACE, "reveal the tiles selected"),
-                           KeyBinding.of(Key.F, "flag the tiles selected, or take the flags off"),
-                           KeyBinding.of(Key.C, "chord: reveal round a number whose flags are all down"),
-                           KeyBinding.of(Key.R, "restart the board"),
-                           KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it"));
+            return List.of(new KeyBinding(Key.ENTER, "reveal the tiles selected"),
+                           new KeyBinding(Key.SPACE, "reveal the tiles selected"),
+                           new KeyBinding(Key.F, "flag the tiles selected, or take the flags off"),
+                           new KeyBinding(Key.C, "chord: reveal round a number whose flags are all down"),
+                           new KeyBinding(Key.R, "restart the board"),
+                           new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it"));
         }
     }
 
@@ -39,7 +39,7 @@ public record MinesweeperGameModule() implements DomModule<MinesweeperGameModule
 
     @Override
     public ImportsFor<MinesweeperGameModule> imports() {
-        return ImportsFor.<MinesweeperGameModule>builder()
+        return new ImportsFor._Builder<MinesweeperGameModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new MinesweeperVistaModule.MinesweeperVista()), MinesweeperVistaModule.INSTANCE))   // the design its grid is made with

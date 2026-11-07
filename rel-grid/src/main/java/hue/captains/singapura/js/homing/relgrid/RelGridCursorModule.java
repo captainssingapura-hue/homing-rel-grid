@@ -25,7 +25,7 @@ public record RelGridCursorModule() implements DomModule<RelGridCursorModule> {
 
     @Override
     public ImportsFor<RelGridCursorModule> imports() {
-        return ImportsFor.<RelGridCursorModule>builder()
+        return new ImportsFor._Builder<RelGridCursorModule>()
 
                 .build();
     }

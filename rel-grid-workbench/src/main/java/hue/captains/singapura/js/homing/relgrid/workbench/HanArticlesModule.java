@@ -27,7 +27,7 @@ public record HanArticlesModule() implements DomModule<HanArticlesModule> {
     public record HanArticles() implements SelfContainedWidget<HanArticlesModule>, NeedKeyboard {
         @Override public String summary() { return "Two poems and an illustration between them, three members of a group; the fences the domain's."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the group did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the group did not take it"));
         }
     }
 
@@ -35,7 +35,7 @@ public record HanArticlesModule() implements DomModule<HanArticlesModule> {
 
     @Override
     public ImportsFor<HanArticlesModule> imports() {
-        return ImportsFor.<HanArticlesModule>builder()
+        return new ImportsFor._Builder<HanArticlesModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridGroupModule.RelGridGroup()), RelGridGroupModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with

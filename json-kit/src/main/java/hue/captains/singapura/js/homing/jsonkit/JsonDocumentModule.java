@@ -21,7 +21,7 @@ public record JsonDocumentModule() implements DomModule<JsonDocumentModule> {
     public record JsonDocument() implements Exportable._Class<JsonDocumentModule> {}
     public static final JsonDocumentModule INSTANCE = new JsonDocumentModule();
     @Override public ImportsFor<JsonDocumentModule> imports() {
-        return ImportsFor.<JsonDocumentModule>builder()
+        return new ImportsFor._Builder<JsonDocumentModule>()
                 .add(new ModuleImports<>(List.of(new RelTreePlacesModule.RelTreePlaces()), RelTreePlacesModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new JsonNodeCellModule.JsonNodeCell()), JsonNodeCellModule.INSTANCE))
                 .add(new ModuleImports<>(

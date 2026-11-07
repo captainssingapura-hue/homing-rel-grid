@@ -15,7 +15,7 @@ import java.util.List;
 public record RelTreeGesturesModule() implements DomModule<RelTreeGesturesModule> {
     public record RelTreeGestures() implements Exportable._Constant<RelTreeGesturesModule> {}
     public static final RelTreeGesturesModule INSTANCE = new RelTreeGesturesModule();
-    @Override public ImportsFor<RelTreeGesturesModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelTreeGesturesModule> imports() { return new ImportsFor<>(); }
     @Override public ExportsOf<RelTreeGesturesModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelTreeGestures()));
     }

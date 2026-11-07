@@ -23,7 +23,7 @@ public record RelGridCopiedOverlayModule() implements DomModule<RelGridCopiedOve
 
     @Override
     public ImportsFor<RelGridCopiedOverlayModule> imports() {
-        return ImportsFor.<RelGridCopiedOverlayModule>builder()
+        return new ImportsFor._Builder<RelGridCopiedOverlayModule>()
                 // the frame's leaves, by which the design it is made with is asked to wear one
                 .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_copied(), new RelGridStyles.hrg_copied_line(),

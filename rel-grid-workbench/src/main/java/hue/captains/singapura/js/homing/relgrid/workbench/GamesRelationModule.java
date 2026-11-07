@@ -28,7 +28,7 @@ public record GamesRelationModule() implements DomModule<GamesRelationModule> {
 
     @Override
     public ImportsFor<GamesRelationModule> imports() {
-        return ImportsFor.<GamesRelationModule>builder()
+        return new ImportsFor._Builder<GamesRelationModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new GamesConditionsModule.GamesConditions()), GamesConditionsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new GamesHeaderCells.GamesHeaderCell()), GamesHeaderCells.INSTANCE))

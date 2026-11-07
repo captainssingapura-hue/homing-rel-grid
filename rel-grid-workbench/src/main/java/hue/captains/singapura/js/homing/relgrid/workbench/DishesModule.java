@@ -19,7 +19,7 @@ public record DishesModule() implements EsModule<DishesModule>, SelfContent {
 
     public record DISHES() implements Exportable._Constant<DishesModule> {}
 
-    @Override public ImportsFor<DishesModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<DishesModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<DishesModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new DISHES())); }

@@ -25,7 +25,7 @@ public record RelGridOverlaysModule() implements DomModule<RelGridOverlaysModule
 
     @Override
     public ImportsFor<RelGridOverlaysModule> imports() {
-        return ImportsFor.<RelGridOverlaysModule>builder()
+        return new ImportsFor._Builder<RelGridOverlaysModule>()
                 // the frame's leaves, by which the design it is made with is asked to wear one
                 .add(new ModuleImports<>(List.of(new GridFrameModule.GRID_FRAME()), GridFrameModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(

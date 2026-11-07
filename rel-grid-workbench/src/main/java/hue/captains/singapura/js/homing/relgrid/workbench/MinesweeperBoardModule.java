@@ -18,7 +18,7 @@ public record MinesweeperBoardModule() implements EsModule<MinesweeperBoardModul
 
     public static final MinesweeperBoardModule INSTANCE = new MinesweeperBoardModule();
 
-    @Override public ImportsFor<MinesweeperBoardModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<MinesweeperBoardModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<MinesweeperBoardModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new MinesweeperBoard())); }
 }

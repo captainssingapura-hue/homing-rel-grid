@@ -19,7 +19,7 @@ public record DocTableRelationModule() implements EsModule<DocTableRelationModul
 
     public record DocTableRelation() implements Exportable._Class<DocTableRelationModule> {}
 
-    @Override public ImportsFor<DocTableRelationModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<DocTableRelationModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<DocTableRelationModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new DocTableRelation())); }
 }

@@ -24,7 +24,7 @@ public record RelGridGesturesModule() implements DomModule<RelGridGesturesModule
 
     @Override
     public ImportsFor<RelGridGesturesModule> imports() {
-        return ImportsFor.<RelGridGesturesModule>builder()
+        return new ImportsFor._Builder<RelGridGesturesModule>()
 
                 .build();
     }

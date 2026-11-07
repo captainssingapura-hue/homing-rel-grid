@@ -35,9 +35,9 @@ public final class JsonKitCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(JsonTreeStyles.INSTANCE),
-                CrateEntry.of(JsonNodeCellModule.INSTANCE),
-                CrateEntry.of(JsonDocumentModule.INSTANCE),
-                CrateEntry.of(JsonTreeViewModule.INSTANCE));
+                new CrateEntry(JsonTreeStyles.INSTANCE),
+                new CrateEntry(JsonNodeCellModule.INSTANCE),
+                new CrateEntry(JsonDocumentModule.INSTANCE),
+                new CrateEntry(JsonTreeViewModule.INSTANCE));
     }
 }

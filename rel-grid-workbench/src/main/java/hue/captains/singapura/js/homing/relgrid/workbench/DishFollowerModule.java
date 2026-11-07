@@ -16,14 +16,14 @@ public record DishFollowerModule() implements DomModule<DishFollowerModule> {
 
     public record DishFollower() implements SelfContainedWidget<DishFollowerModule>, NeedKeyboard {
         @Override public String summary() { return "A follower - a read-only replica of the bench's dishes; dock several"; }
-        @Override public List<KeyBinding> keys() { return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the grid did not take it")); }
+        @Override public List<KeyBinding> keys() { return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the grid did not take it")); }
     }
 
     public static final DishFollowerModule INSTANCE = new DishFollowerModule();
 
     @Override
     public ImportsFor<DishFollowerModule> imports() {
-        return ImportsFor.<DishFollowerModule>builder()
+        return new ImportsFor._Builder<DishFollowerModule>()
                 .add(new ModuleImports<>(List.of(new DishTableModule.DishTable()), DishTableModule.INSTANCE))
                 .build();
     }

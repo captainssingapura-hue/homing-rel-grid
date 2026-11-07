@@ -28,7 +28,7 @@ public final class RelGridProseCrate implements Crate {
     }
 
     @Override public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(DocTableRelationModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
-                       CrateEntry.of(ProseStyles.INSTANCE), CrateEntry.of(ProseCellsModule.INSTANCE), CrateEntry.of(ProseTableModule.INSTANCE));
+        return List.of(new CrateEntry(DocTableRelationModule.INSTANCE, StandardJsModuleType.PURE_LOGIC),
+                       new CrateEntry(ProseStyles.INSTANCE), new CrateEntry(ProseCellsModule.INSTANCE), new CrateEntry(ProseTableModule.INSTANCE));
     }
 }

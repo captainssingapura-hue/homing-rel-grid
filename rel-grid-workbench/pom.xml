@@ -25,9 +25,9 @@
     </description>
 
     <properties>
-        <homing.components.version>LOCAL-SNAPSHOT</homing.components.version>
-        <homing.ws.version>LOCAL-SNAPSHOT</homing.ws.version>
-        <homing.studio.version>LOCAL-SNAPSHOT</homing.studio.version>
+        <homing.components.version>LOCAL-SNAPSHOT-T1</homing.components.version>
+        <homing.ws.version>LOCAL-SNAPSHOT-T1</homing.ws.version>
+        <homing.studio.version>LOCAL-SNAPSHOT-T1</homing.studio.version>
     </properties>
 
     <dependencies>

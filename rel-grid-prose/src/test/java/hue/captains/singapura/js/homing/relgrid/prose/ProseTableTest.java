@@ -254,7 +254,7 @@ class ProseTableTest extends JsModuleTestBase {
 
     @Test
     void theCrateHoldsEveryServedModule_andImportsOnlyWhatItRequires() {
-        assertEquals(List.of(), OrphanCheck.check(RelGridProseCrate.INSTANCE));
-        assertEquals(List.of(), CrateDependencyRule.check(RelGridProseCrate.INSTANCE));
+        assertEquals(List.of(), OrphanCheck.INSTANCE.check(RelGridProseCrate.INSTANCE));
+        assertEquals(List.of(), CrateDependencyRule.INSTANCE.check(RelGridProseCrate.INSTANCE));
     }
 }

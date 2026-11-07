@@ -21,7 +21,7 @@ public record GamesConditionsModule() implements EsModule<GamesConditionsModule>
 
     public static final GamesConditionsModule INSTANCE = new GamesConditionsModule();
 
-    @Override public ImportsFor<GamesConditionsModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<GamesConditionsModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<GamesConditionsModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new GamesConditions()));

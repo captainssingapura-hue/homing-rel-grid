@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GridFrameTest {
 
     /** The house with the grid: the house's modules and the frame's, as an instance with the grid registers them. */
-    private static final Taxonomy HOUSE = HouseTaxonomy.INSTANCE.read(java.util.stream.Stream.concat(HouseTaxonomy.MODULES.stream(),
+    private static final Taxonomy HOUSE = HouseTaxonomy.INSTANCE.read(java.util.stream.Stream.concat(HouseTaxonomy.INSTANCE.modules().stream(),
             java.util.stream.Stream.of(GridFrameComponentModule.INSTANCE)).toList());
 
     @Test

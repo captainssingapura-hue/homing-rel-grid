@@ -35,7 +35,7 @@ public record EndlessRelationModule() implements DomModule<EndlessRelationModule
 
     @Override
     public ImportsFor<EndlessRelationModule> imports() {
-        return ImportsFor.<EndlessRelationModule>builder()
+        return new ImportsFor._Builder<EndlessRelationModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStockCellsModule.RelGridTextCell()), RelGridStockCellsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridLabelsModule.RelGridLabels()), RelGridLabelsModule.INSTANCE))   // its header: label header cells
                 .build();

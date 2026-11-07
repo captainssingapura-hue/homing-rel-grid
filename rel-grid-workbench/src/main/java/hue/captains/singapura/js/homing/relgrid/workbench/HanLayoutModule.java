@@ -26,7 +26,7 @@ public record HanLayoutModule() implements EsModule<HanLayoutModule> {
 
     public static final HanLayoutModule INSTANCE = new HanLayoutModule();
 
-    @Override public ImportsFor<HanLayoutModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<HanLayoutModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<HanLayoutModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new HanLayout()));

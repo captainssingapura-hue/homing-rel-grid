@@ -21,7 +21,7 @@ public record RelGridHeadersModule() implements DomModule<RelGridHeadersModule> 
 
     public static final RelGridHeadersModule INSTANCE = new RelGridHeadersModule();
 
-    @Override public ImportsFor<RelGridHeadersModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridHeadersModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridHeadersModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridHeaders()));

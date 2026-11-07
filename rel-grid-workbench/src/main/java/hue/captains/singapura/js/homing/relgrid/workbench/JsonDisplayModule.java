@@ -27,7 +27,7 @@ public record JsonDisplayModule() implements DomModule<JsonDisplayModule> {
     public record JsonDisplay() implements SelfContainedWidget<JsonDisplayModule>, NeedKeyboard {
         @Override public String summary() { return "The JSON kit's tree view over the bench's one document, live: the last value that parsed."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the tree did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the tree did not take it"));
         }
     }
 
@@ -35,7 +35,7 @@ public record JsonDisplayModule() implements DomModule<JsonDisplayModule> {
 
     @Override
     public ImportsFor<JsonDisplayModule> imports() {
-        return ImportsFor.<JsonDisplayModule>builder()
+        return new ImportsFor._Builder<JsonDisplayModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new JsonTreeViewModule.JsonTreeView()), JsonTreeViewModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new JsonDocStoreModule.JsonDocStore()), JsonDocStoreModule.INSTANCE))

@@ -16,7 +16,7 @@ import java.util.List;
 public record RelTreeCursorModule() implements DomModule<RelTreeCursorModule> {
     public record RelTreeCursor() implements Exportable._Constant<RelTreeCursorModule> {}
     public static final RelTreeCursorModule INSTANCE = new RelTreeCursorModule();
-    @Override public ImportsFor<RelTreeCursorModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelTreeCursorModule> imports() { return new ImportsFor<>(); }
     @Override public ExportsOf<RelTreeCursorModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelTreeCursor()));
     }

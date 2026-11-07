@@ -26,12 +26,12 @@ public record ProseNotesModule() implements DomModule<ProseNotesModule> {
     public record ProseNotes() implements SelfContainedWidget<ProseNotesModule>, NeedKeyboard {
         @Override public String summary() { return "Release notes and what each surface offers: a document's tables, as a document has them."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the table did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the table did not take it"));
         }
     }
 
     @Override public ImportsFor<ProseNotesModule> imports() {
-        return ImportsFor.<ProseNotesModule>builder()
+        return new ImportsFor._Builder<ProseNotesModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new ProsePagesModule.ProseNotesPage()), ProsePagesModule.INSTANCE))
                 .build();

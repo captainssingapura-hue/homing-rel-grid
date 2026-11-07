@@ -19,7 +19,7 @@ public record GamesDatasetModule() implements EsModule<GamesDatasetModule>, Self
 
     public record GAMES_CATALOGUE() implements Exportable._Constant<GamesDatasetModule> {}
 
-    @Override public ImportsFor<GamesDatasetModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<GamesDatasetModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<GamesDatasetModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new GAMES_CATALOGUE())); }

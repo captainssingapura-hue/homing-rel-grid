@@ -17,7 +17,7 @@ public record DishesStewardModule() implements EsModule<DishesStewardModule> {
 
     public static final DishesStewardModule INSTANCE = new DishesStewardModule();
 
-    @Override public ImportsFor<DishesStewardModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<DishesStewardModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<DishesStewardModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new DishesSteward())); }

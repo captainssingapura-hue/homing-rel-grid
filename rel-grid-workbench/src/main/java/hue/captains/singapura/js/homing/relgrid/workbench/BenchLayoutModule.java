@@ -21,7 +21,7 @@ public record BenchLayoutModule() implements EsModule<BenchLayoutModule>, SelfCo
     public record WORKBENCH_GROUPS() implements Exportable._Constant<BenchLayoutModule> {}
     public record WORKBENCH_ARRANGEMENTS() implements Exportable._Constant<BenchLayoutModule> {}
 
-    @Override public ImportsFor<BenchLayoutModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<BenchLayoutModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<BenchLayoutModule> exports() {

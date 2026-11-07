@@ -23,7 +23,7 @@ public record RelGridClipboardModule() implements DomModule<RelGridClipboardModu
 
     @Override
     public ImportsFor<RelGridClipboardModule> imports() {
-        return ImportsFor.<RelGridClipboardModule>builder()
+        return new ImportsFor._Builder<RelGridClipboardModule>()
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_scratch()), RelGridStyles.INSTANCE))
                 .build();
     }

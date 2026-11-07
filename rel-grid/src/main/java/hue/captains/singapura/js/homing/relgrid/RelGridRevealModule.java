@@ -19,7 +19,7 @@ public record RelGridRevealModule() implements DomModule<RelGridRevealModule> {
 
     public static final RelGridRevealModule INSTANCE = new RelGridRevealModule();
 
-    @Override public ImportsFor<RelGridRevealModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridRevealModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridRevealModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridReveal()));

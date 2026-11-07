@@ -25,9 +25,9 @@ public final class RelGridGroupCrate implements Crate {
 
     @Override
     public List<CrateEntry> entries() {
-        return List.of(CrateEntry.of(RelGridGroupMintModule.INSTANCE), // undeclared = CONSUMER: a component, not a pane
-                       CrateEntry.of(RelGridGroupWalkModule.INSTANCE),
-                       CrateEntry.of(RelGridGroupModule.INSTANCE),
-                       CrateEntry.of(RelGridGroupStyles.INSTANCE));
+        return List.of(new CrateEntry(RelGridGroupMintModule.INSTANCE), // undeclared = CONSUMER: a component, not a pane
+                       new CrateEntry(RelGridGroupWalkModule.INSTANCE),
+                       new CrateEntry(RelGridGroupModule.INSTANCE),
+                       new CrateEntry(RelGridGroupStyles.INSTANCE));
     }
 }

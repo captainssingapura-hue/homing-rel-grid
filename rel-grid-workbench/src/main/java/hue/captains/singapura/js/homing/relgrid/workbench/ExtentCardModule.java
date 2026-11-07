@@ -24,14 +24,14 @@ public record ExtentCardModule() implements DomModule<ExtentCardModule> {
 
     public record ExtentCard() implements SelfContainedWidget<ExtentCardModule>, NeedKeyboard {
         @Override public String summary() { return "One card wearing three scaled words at the extent a slider sets; the colours tween."; }
-        @Override public List<KeyBinding> keys() { return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the slider did not take it")); }
+        @Override public List<KeyBinding> keys() { return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the slider did not take it")); }
     }
 
     public static final ExtentCardModule INSTANCE = new ExtentCardModule();
 
     @Override
     public ImportsFor<ExtentCardModule> imports() {
-        return ImportsFor.<ExtentCardModule>builder()
+        return new ImportsFor._Builder<ExtentCardModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new WorkbenchStyles.wb_hint(), new WorkbenchStyles.wb_bar()), WorkbenchStyles.INSTANCE))
                 .add(new ModuleImports<>(

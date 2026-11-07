@@ -17,7 +17,7 @@ import java.util.List;
 public record RelTreePlacesModule() implements DomModule<RelTreePlacesModule> {
     public record RelTreePlaces() implements Exportable._Class<RelTreePlacesModule> {}
     public static final RelTreePlacesModule INSTANCE = new RelTreePlacesModule();
-    @Override public ImportsFor<RelTreePlacesModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelTreePlacesModule> imports() { return new ImportsFor<>(); }
     @Override public ExportsOf<RelTreePlacesModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelTreePlaces()));
     }

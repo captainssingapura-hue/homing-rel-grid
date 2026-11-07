@@ -19,7 +19,7 @@ public record HanStoreModule() implements EsModule<HanStoreModule> {
 
     public static final HanStoreModule INSTANCE = new HanStoreModule();
 
-    @Override public ImportsFor<HanStoreModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<HanStoreModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<HanStoreModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new HanStore()));

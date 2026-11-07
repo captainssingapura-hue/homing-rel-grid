@@ -17,7 +17,7 @@ public record HanArticleStewardModule() implements EsModule<HanArticleStewardMod
 
     public static final HanArticleStewardModule INSTANCE = new HanArticleStewardModule();
 
-    @Override public ImportsFor<HanArticleStewardModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<HanArticleStewardModule> imports() { return new ImportsFor<>(); }
 
     @Override
     public ExportsOf<HanArticleStewardModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new HanArticleSteward())); }

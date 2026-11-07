@@ -24,7 +24,7 @@ public record HanFencesModule() implements DomModule<HanFencesModule> {
     public static final HanFencesModule INSTANCE = new HanFencesModule();
 
     @Override public ImportsFor<HanFencesModule> imports() {
-        return ImportsFor.<HanFencesModule>builder()
+        return new ImportsFor._Builder<HanFencesModule>()
                 .add(new ModuleImports<>(List.of(new HanFenceStyles.wb_hanf(), new HanFenceStyles.wb_hanf_title(),
                         new HanFenceStyles.wb_hanf_t(), new HanFenceStyles.wb_hanf_a(), new HanFenceStyles.wb_hanf_orn(),
                         new HanFenceStyles.wb_hanf_g(), new HanFenceStyles.wb_hanf_n(), new HanFenceStyles.wb_hanf_colophon()),

@@ -25,6 +25,6 @@ public final class RelGridSelectionCrate implements Crate {
     @Override
     public List<CrateEntry> entries() {
         return List.of(
-                CrateEntry.of(RelGridSelectionModule.INSTANCE, StandardJsModuleType.PURE_LOGIC));
+                new CrateEntry(RelGridSelectionModule.INSTANCE, StandardJsModuleType.PURE_LOGIC));
     }
 }

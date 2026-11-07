@@ -28,7 +28,7 @@ public record GamesTreeModule() implements DomModule<GamesTreeModule> {
     public record GamesTree() implements SelfContainedWidget<GamesTreeModule>, NeedKeyboard {
         @Override public String summary() { return "The catalogue as a lazy tree - type, series, title - the fold and the unfold questions on the channel, answered three ways."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the tree did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the tree did not take it"));
         }
     }
 
@@ -36,7 +36,7 @@ public record GamesTreeModule() implements DomModule<GamesTreeModule> {
 
     @Override
     public ImportsFor<GamesTreeModule> imports() {
-        return ImportsFor.<GamesTreeModule>builder()
+        return new ImportsFor._Builder<GamesTreeModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelTreeModule.RelTree()), RelTreeModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridStyles.hrg_frame(), new RelGridStyles.hrg_lit()), RelGridStyles.INSTANCE))

@@ -18,13 +18,13 @@ class RelChannelCrateConformanceTest {
 
     @Test
     void everyServedModuleIsCrated() {
-        assertEquals(List.of(), OrphanCheck.check(RelChannelCrate.INSTANCE),
+        assertEquals(List.of(), OrphanCheck.INSTANCE.check(RelChannelCrate.INSTANCE),
                 "every served JS module in rel-channel must be declared in its crate");
     }
 
     @Test
     void importsRespectCrateBoundaries() {
-        assertEquals(List.of(), CrateDependencyRule.check(RelChannelCrate.INSTANCE),
+        assertEquals(List.of(), CrateDependencyRule.INSTANCE.check(RelChannelCrate.INSTANCE),
                 "every JS import must resolve to the crate itself or one it directly requires");
     }
 

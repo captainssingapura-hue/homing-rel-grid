@@ -1,13 +1,12 @@
 package hue.captains.singapura.js.homing.relgrid.house;
 
+import hue.captains.singapura.js.homing.design.styling.StyledModule;
+import hue.captains.singapura.js.homing.design.styling.Styling;
 import hue.captains.singapura.js.homing.core.DomModule;
 import hue.captains.singapura.js.homing.core.Exportable;
 import hue.captains.singapura.js.homing.core.ExportsOf;
 import hue.captains.singapura.js.homing.core.ImportsFor;
 import hue.captains.singapura.js.homing.core.ModuleImports;
-import hue.captains.singapura.js.homing.core.ModuleNameResolver;
-import hue.captains.singapura.js.homing.core.SelfContent;
-import hue.captains.singapura.js.homing.design.styling.InstalledStyling;
 
 import java.util.List;
 
@@ -17,7 +16,7 @@ import java.util.List;
  * and refuses a leaf of another branch; it imports the local style's sheet, so the sheet loads wherever the local style is used.
  * A DOM module, honestly: what it does is put its classes on an element, as the look and the icon do theirs.
  */
-public record HouseGridModule() implements DomModule<HouseGridModule>, SelfContent {
+public record HouseGridModule() implements DomModule<HouseGridModule>, StyledModule {
 
     public static final HouseGridModule INSTANCE = new HouseGridModule();
 
@@ -26,7 +25,7 @@ public record HouseGridModule() implements DomModule<HouseGridModule>, SelfConte
 
     @Override
     public ImportsFor<HouseGridModule> imports() {
-        return ImportsFor.<HouseGridModule>builder()
+        return new ImportsFor._Builder<HouseGridModule>()
                 .add(new ModuleImports<>(List.of(new HouseGridSheet.house_grid_sheet()), HouseGridSheet.INSTANCE))
                 .build();
     }
@@ -34,7 +33,7 @@ public record HouseGridModule() implements DomModule<HouseGridModule>, SelfConte
     @Override public ExportsOf<HouseGridModule> exports() { return new ExportsOf<>(INSTANCE, List.of(new HouseGrid())); }
 
     @Override
-    public List<String> selfContent(ModuleNameResolver resolver) {
-        return InstalledStyling.get().localStyleObject(hue.captains.singapura.js.homing.relgrid.house.HouseGrid.INSTANCE, HouseGridSheet.INSTANCE);
+    public List<String> selfContent(Styling styling) {
+        return styling.localStyleObject(hue.captains.singapura.js.homing.relgrid.house.HouseGrid.INSTANCE, HouseGridSheet.INSTANCE);
     }
 }

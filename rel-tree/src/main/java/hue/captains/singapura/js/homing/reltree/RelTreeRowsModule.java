@@ -19,7 +19,7 @@ public record RelTreeRowsModule() implements DomModule<RelTreeRowsModule> {
     public record RelTreeRows() implements Exportable._Constant<RelTreeRowsModule> {}
     public static final RelTreeRowsModule INSTANCE = new RelTreeRowsModule();
     @Override public ImportsFor<RelTreeRowsModule> imports() {
-        return ImportsFor.<RelTreeRowsModule>builder()
+        return new ImportsFor._Builder<RelTreeRowsModule>()
                 .add(new ModuleImports<>(List.of(new RelTreeStyles.hrt_row(), new RelTreeStyles.hrt_caret(),
                         new RelTreeStyles.hrt_caret_open(), new RelTreeStyles.hrt_caret_leaf(),
                         new RelTreeStyles.hrt_folder(), new RelTreeStyles.hrt_folder_open(), new RelTreeStyles.hrt_folder_leaf(),

@@ -21,7 +21,7 @@ public record MinesweeperRelationModule() implements DomModule<MinesweeperRelati
 
     @Override
     public ImportsFor<MinesweeperRelationModule> imports() {
-        return ImportsFor.<MinesweeperRelationModule>builder()
+        return new ImportsFor._Builder<MinesweeperRelationModule>()
                 .add(new ModuleImports<>(List.of(new MineCellModule.MineCell()), MineCellModule.INSTANCE))
                 .build();
     }

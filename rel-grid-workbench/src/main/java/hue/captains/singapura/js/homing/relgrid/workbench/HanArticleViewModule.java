@@ -23,7 +23,7 @@ public record HanArticleViewModule() implements DomModule<HanArticleViewModule> 
 
     @Override
     public ImportsFor<HanArticleViewModule> imports() {
-        return ImportsFor.<HanArticleViewModule>builder()
+        return new ImportsFor._Builder<HanArticleViewModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridModule.RelGrid()), RelGridModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new HouseGridModule.HouseGrid()), HouseGridModule.INSTANCE))   // the design its grid is made with

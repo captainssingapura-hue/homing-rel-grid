@@ -32,7 +32,7 @@ public record DishClipboardModule() implements DomModule<DishClipboardModule> {
     public record DishClipboard() implements BranchComponent<DishClipboardModule>, NeedKeyboard {
         @Override public String summary() { return "The copy's format, chosen on the grid's panel: TSV, CSV or HTML, a header toggle and a live preview."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.T, "copied as TSV"), KeyBinding.of(Key.C, "copied as CSV"), KeyBinding.of(Key.H, "copied as HTML"), KeyBinding.of(Key.ARROW_LEFT, "the previous format"), KeyBinding.of(Key.ARROW_RIGHT, "the next format"), KeyBinding.of(Key.ENTER, "copied in the format focused"), KeyBinding.of(Key.ESCAPE, "the copy cancelled"));
+            return List.of(new KeyBinding(Key.T, "copied as TSV"), new KeyBinding(Key.C, "copied as CSV"), new KeyBinding(Key.H, "copied as HTML"), new KeyBinding(Key.ARROW_LEFT, "the previous format"), new KeyBinding(Key.ARROW_RIGHT, "the next format"), new KeyBinding(Key.ENTER, "copied in the format focused"), new KeyBinding(Key.ESCAPE, "the copy cancelled"));
         }
     }
 
@@ -40,7 +40,7 @@ public record DishClipboardModule() implements DomModule<DishClipboardModule> {
 
     @Override
     public ImportsFor<DishClipboardModule> imports() {
-        return ImportsFor.<DishClipboardModule>builder()
+        return new ImportsFor._Builder<DishClipboardModule>()
                 .add(new ModuleImports<>(List.of(new DishClipboardFormatsModule.DishClipboardFormats()), DishClipboardFormatsModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new DishCopyStyles.wb_copy(), new DishCopyStyles.wb_copy_head(),
                         new DishCopyStyles.wb_copy_title(), new DishCopyStyles.wb_copy_sub(), new DishCopyStyles.wb_copy_opts(),

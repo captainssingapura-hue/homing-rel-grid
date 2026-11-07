@@ -29,7 +29,7 @@ public record RelGridSelectionModule() implements DomModule<RelGridSelectionModu
 
     public static final RelGridSelectionModule INSTANCE = new RelGridSelectionModule();
 
-    @Override public ImportsFor<RelGridSelectionModule> imports() { return ImportsFor.noImports(); }
+    @Override public ImportsFor<RelGridSelectionModule> imports() { return new ImportsFor<>(); }
 
     @Override public ExportsOf<RelGridSelectionModule> exports() {
         return new ExportsOf<>(INSTANCE, List.of(new RelGridSelection()));

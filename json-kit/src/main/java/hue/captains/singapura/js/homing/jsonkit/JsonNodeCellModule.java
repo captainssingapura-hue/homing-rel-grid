@@ -17,7 +17,7 @@ public record JsonNodeCellModule() implements DomModule<JsonNodeCellModule> {
     public record JsonNodeCell() implements Exportable._Constant<JsonNodeCellModule> {}
     public static final JsonNodeCellModule INSTANCE = new JsonNodeCellModule();
     @Override public ImportsFor<JsonNodeCellModule> imports() {
-        return ImportsFor.<JsonNodeCellModule>builder()
+        return new ImportsFor._Builder<JsonNodeCellModule>()
                 .add(new ModuleImports<>(
                         List.of(new JsonTreeStyles.jk_cell(), new JsonTreeStyles.jk_cell_current(), new JsonTreeStyles.jk_key(),
                                 new JsonTreeStyles.jk_index(), new JsonTreeStyles.jk_punct(), new JsonTreeStyles.jk_string(),

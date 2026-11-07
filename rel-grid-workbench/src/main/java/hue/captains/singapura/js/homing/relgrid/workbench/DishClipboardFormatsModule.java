@@ -29,7 +29,7 @@ public record DishClipboardFormatsModule() implements EsModule<DishClipboardForm
 
     @Override
     public ImportsFor<DishClipboardFormatsModule> imports() {
-        return ImportsFor.<DishClipboardFormatsModule>builder()
+        return new ImportsFor._Builder<DishClipboardFormatsModule>()
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridClipboardContent()), RelGridProtocolModule.INSTANCE))
                 .build();
     }

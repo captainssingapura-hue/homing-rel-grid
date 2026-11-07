@@ -27,7 +27,7 @@ public record RelGridGroupWalkModule() implements DomModule<RelGridGroupWalkModu
 
     @Override
     public ImportsFor<RelGridGroupWalkModule> imports() {
-        return ImportsFor.<RelGridGroupWalkModule>builder()
+        return new ImportsFor._Builder<RelGridGroupWalkModule>()
                 .add(new ModuleImports<>(List.of(new RelGridGroupStyles.hrg_active(), new RelGridGroupStyles.hrg_dormant(),
                         new RelGridGroupStyles.hrg_fence_cursor(), new RelGridGroupStyles.hrg_on_fence()), RelGridGroupStyles.INSTANCE))
                 .build();

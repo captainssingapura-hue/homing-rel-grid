@@ -26,12 +26,12 @@ public record ProseReferenceModule() implements DomModule<ProseReferenceModule> 
     public record ProseReference() implements SelfContainedWidget<ProseReferenceModule>, NeedKeyboard {
         @Override public String summary() { return "ProseTable's own options, its code drawn by an inline drawing, and a table with no head."; }
         @Override public List<KeyBinding> keys() {
-            return List.of(KeyBinding.of(Key.ESCAPE, "the keys given back, when the table did not take it"));
+            return List.of(new KeyBinding(Key.ESCAPE, "the keys given back, when the table did not take it"));
         }
     }
 
     @Override public ImportsFor<ProseReferenceModule> imports() {
-        return ImportsFor.<ProseReferenceModule>builder()
+        return new ImportsFor._Builder<ProseReferenceModule>()
                 .add(new ModuleImports<>(List.of(new BenchWidgetModule.BenchWidget()), BenchWidgetModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new ProsePagesModule.ProseReferencePage()), ProsePagesModule.INSTANCE))
                 .build();

@@ -34,7 +34,7 @@ public record RelGridGroupModule() implements DomModule<RelGridGroupModule> {
 
     @Override
     public ImportsFor<RelGridGroupModule> imports() {
-        return ImportsFor.<RelGridGroupModule>builder()
+        return new ImportsFor._Builder<RelGridGroupModule>()
                 .add(new ModuleImports<>(List.of(new RelGridGroupMintModule.RelGridGroupMint()), RelGridGroupMintModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridGroupWalkModule.RelGridGroupWalk()), RelGridGroupWalkModule.INSTANCE))
                 .add(new ModuleImports<>(List.of(new RelGridProtocolModule.RelGridGroupFold()), RelGridProtocolModule.INSTANCE))
